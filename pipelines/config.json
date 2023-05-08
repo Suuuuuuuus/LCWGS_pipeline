@@ -1,0 +1,7 @@
+{
+	"fastq_filename_template": "data/fastq/{id}.fastq.gz",
+	"bam_filename_template": "results/bam/{id}.bam",
+
+	"ref38": "data/reference/GRCh38.fa",
+	"samples": "samples.tsv"
+}
