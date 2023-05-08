@@ -48,12 +48,12 @@ rule all:
         	fastqc = "results/fastqc/duplication_rate_fastqc.txt",
         	samtools = "results/dup_rate/duplication_rate_samtools.txt",
         	uncoverage_rate = "results/coverage/per_chromosome_coverage/uncoverage_rate.txt",
-            avg_coverage = "results/coverage/per_sample_coverage.txt",
+                avg_coverage = "results/coverage/per_sample_coverage.txt",
 
         	bedgraphs = expand("results/coverage/bedgraphs/{id}_bedgraph.txt", id = ids_1x_all),
 
         	per_chromosome_coverage = expand("results/coverage/per_chromosome_coverage/{id}_per_chromosome_coverage.txt", id = ids_1x_all),
-            per_bin_coverage_1x_coordinates = expand("results/coverage/per_bin_coverage/1x/{id}_chr{chr}_coordinate.txt", id = ids_1x_all, chr = chromosome),
+                per_bin_coverage_1x_coordinates = expand("results/coverage/per_bin_coverage/1x/{id}_chr{chr}_coordinate.txt", id = ids_1x_all, chr = chromosome),
         	per_bin_coverage_1x_bases = expand("results/coverage/per_bin_coverage/1x/{id}_chr{chr}_base.txt", id = ids_1x_all, chr = chromosome),
 #        	per_bin_coverage_20x_coordinates = expand("results/coverage/per_bin_coverage/20x/{id_20x}_chr{chr}_coordinate.txt", id_20x = ids_20x_all, chr = chromosome),
 #        	per_bin_coverage_20x_bases = expand("results/coverage/per_bin_coverage/20x/{id_20x}_chr{chr}_base.txt", id_20x = ids_20x_all, chr = chromosome),

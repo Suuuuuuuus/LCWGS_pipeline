@@ -116,8 +116,8 @@ rule calculate_uncoverage_rate:
     output:
         uncoverage_rate = temp("results/coverage/per_chromosome_coverage/{id}_uncoverage_rate.txt"),
     shell: """
-        total=$(cut -f3 {output.per_chromosome_coverage} | paste -sd+ | bc)
-        covered=$(cut -f5 {output.per_chromosome_coverage} | paste -sd+ | bc)
+        total=$(cut -f3 {input.per_chromosome_coverage} | paste -sd+ | bc)
+        covered=$(cut -f5 {input.per_chromosome_coverage} | paste -sd+ | bc)
         result=$(echo "scale=4; (1-$covered/$total)" | bc)
         echo "{wildcards.id} $result" > {output.uncoverage_rate}
     """
@@ -137,8 +137,8 @@ rule calculate_avg_coverage:
     output:
         avg_coverage = temp("results/coverage/tmp/{id}_avg_coverage.txt")
     shell: """
-        total=$(cut -f3 {output.per_chromosome_coverage} | paste -sd+ | bc)
-        sum_product=$(awk '{ sum += $3 * $7 } END { printf "%.2f", sum }' {output.per_chromosome_coverage})
+        total=$(cut -f3 {input.per_chromosome_coverage} | paste -sd+ | bc)
+        sum_product=$(awk '{{ sum += $3 * $7 }} END {{ printf "%.2f", sum }}' {input.per_chromosome_coverage})
         result=$(echo "scale=4; ($sum_product/$total)" | bc)
         echo "{wildcards.id} $result" > {output.avg_coverage}
     """
@@ -149,7 +149,7 @@ rule aggregate_avg_coverage:
     output:
         avg_coverage = "results/coverage/per_sample_coverage.txt"
     shell: """
-        cat {input.files} >> {output.uncoverage_rate}
+        cat {input.files} >> {output.avg_coverage}
     """
 
 rule plot_uncoverage_rate:
