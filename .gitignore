@@ -1,0 +1,8 @@
+.snakemake/
+.ipynb_checkpoints/
+data/
+results/
+*.tsv
+logs/
+graphs/
+tmp/
