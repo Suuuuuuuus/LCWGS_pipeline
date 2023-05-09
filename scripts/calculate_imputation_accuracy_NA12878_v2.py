@@ -96,7 +96,7 @@ MAF_ary = np.array([0, 0.0001, 0.0002, 0.0005, 0.001, 0.002, 0.005, 0.01, 0.02, 
 r2 = np.zeros(np.size(MAF_ary) - 1)
 r2_high_confidence = np.zeros(np.size(MAF_ary) - 1)
 for i in range(r2.size):
-    tmp = NA12878[(MAF_ary[i+1] > NA12878['MAF']) & (NA12878['MAF'] > MAF_ary[i])]
+    tmp = NA12878[(MAF_ary[i+1] >= NA12878['MAF']) & (NA12878['MAF'] > MAF_ary[i])]
     r2[i] = np.corrcoef(tmp['dosage'].values, tmp['call'].values)[0,1]**2
     tmp = NA12878_high_confidence[(MAF_ary[i+1] > NA12878_high_confidence['MAF']) & (NA12878_high_confidence['MAF'] > MAF_ary[i])]
     r2_high_confidence[i] = np.corrcoef(tmp['dosage'].values, tmp['call'].values)[0,1]**2
