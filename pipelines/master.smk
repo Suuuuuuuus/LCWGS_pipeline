@@ -59,9 +59,9 @@ rule all:
 #        	per_bin_coverage_20x_bases = expand("results/coverage/per_bin_coverage/20x/{id_20x}_chr{chr}_base.txt", id_20x = ids_20x_all, chr = chromosome),
 
 
-		jf_read = expand("results/kmer/{id}/read{read}/{id}_read{read}.txt", id = ids_1x_all, read = ['1','2']),
-        	jf_quality = expand("results/kmer/{id}/read{read}/{id}_quality{read}.txt", id = ids_1x_all, read = ['1','2']),
-        	jf_position = expand("results/kmer/{id}/read{read}/{id}_position{read}.txt", id = ids_1x_all, read = ['1','2']),
+		jf_read = expand("results/kmer/{id}/read{read}/{id}_read{read}.tsv.gz", id = ids_1x_all, read = ['1','2']),
+        	jf_quality = expand("results/kmer/{id}/read{read}/{id}_quality{read}.tsv.gz", id = ids_1x_all, read = ['1','2']),
+        	jf_position = expand("results/kmer/{id}/read{read}/{id}_position{read}.tsv.gz", id = ids_1x_all, read = ['1','2']),
 
  	        kmer_accuarcy = "results/kmer/kmer_accuracy.txt",
 

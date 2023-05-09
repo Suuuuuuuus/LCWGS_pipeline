@@ -14,10 +14,13 @@ rule extract_samtools_dup_rate:
     shell: """
         samtools sort -n -o "{params.tmpdir}{wildcards.id}_sorted.bam" -O BAM {input.bam}
         samtools fixmate -m "{params.tmpdir}{wildcards.id}_sorted.bam" "{params.tmpdir}{wildcards.id}_fixmate.bam"
+        rm "{params.tmpdir}{wildcards.id}_sorted.bam"
         samtools sort -o "{params.tmpdir}{wildcards.id}_position_sorted.bam" "{params.tmpdir}{wildcards.id}_fixmate.bam"
+        rm "{params.tmpdir}{wildcards.id}_fixmate.bam"
         samtools markdup "{params.tmpdir}{wildcards.id}_position_sorted.bam" "{params.tmpdir}{wildcards.id}_markdup.bam"
+        rm "{params.tmpdir}{wildcards.id}_position_sorted.bam"
         samtools flagstat "{params.tmpdir}{wildcards.id}_markdup.bam" > "{params.tmpdir}{wildcards.id}_result.txt"
-
+        
         total=$(cat "{params.tmpdir}{wildcards.id}_result.txt" | cut -f1 -d ' '| head -n 1)
         dup=$(cat "{params.tmpdir}{wildcards.id}_result.txt" | cut -f1 -d ' '| head -n 5 | tail -n 1)
         echo "{wildcards.id} $total $dup" > "{output.txt}"

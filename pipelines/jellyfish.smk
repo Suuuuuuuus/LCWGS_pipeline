@@ -6,14 +6,14 @@ ids_1x_all = list(config['samples']['Code'].values)
 
 rule classify_kmers:
     input:
-        fastq = "data/fastq/{id}_{read}.fastq.gz",
+        fastq = "data/subsampled_fastq/{id}_subsampled_{read}.fastq",
         jf = "data/jellyfish/NA12878_31mer.jf"
     output:
-        jf_read = "results/kmer/{id}/read{read}/{id}_read{read}.txt",
-        jf_quality = "results/kmer/{id}/read{read}/{id}_quality{read}.txt",
-        jf_position = "results/kmer/{id}/read{read}/{id}_position{read}.txt"
+        jf_read = "results/kmer/{id}/read{read}/{id}_read{read}.tsv.gz",
+        jf_quality = "results/kmer/{id}/read{read}/{id}_quality{read}.tsv.gz",
+        jf_position = "results/kmer/{id}/read{read}/{id}_position{read}.tsv.gz"
     params:
-        read_length = 150
+        read_length = 151
     resources:
         mem_mb = 60000
     shell: """
@@ -23,12 +23,12 @@ rule classify_kmers:
 
 rule calculate_kmer_error_rate:
     input:
-        jf_read = "results/kmer/{id}/read{read}/{id}_read{read}.txt"
+        jf_read = "results/kmer/{id}/read{read}/{id}_read{read}.tsv.gz"
     output:
         kmer_accuarcy = temp("results/kmer/{id}/tmp/kmer_accuracy_{read}.txt")
     shell: """
-        true=$(tail -n +2 {input.jf_read} | cut -d ' ' -f 16 | paste -sd+ | bc)
-        total=$(tail -n +2 {input.jf_read} | cut -d ' ' -f 15 | paste -sd+ | bc)
+        true=$(zcat {input.jf_read} | tail -n +2 | cut -d ' ' -f 16 | paste -sd+ | bc)
+        total=$(zcat {input.jf_read} | tail -n +2 | cut -d ' ' -f 15 | paste -sd+ | bc)
         err_prop=$(echo "scale=4; (1-$true/$total)" | bc)
         formatted_result=$(printf "%06.4f" $err_prop)
         echo -e "$formatted_result" >> {output.kmer_accuarcy}
@@ -36,8 +36,8 @@ rule calculate_kmer_error_rate:
 
 rule calculate_avg_kmer_error_rate:
     input:
-        res1 = "results/kmer/{id}/read1/{id}_read1.txt",
-        res2 = "results/kmer/{id}/read2/{id}_read2.txt"
+        res1 = "results/kmer/{id}/tmp/kmer_accuracy_1.txt",
+        res2 = "results/kmer/{id}/tmp/kmer_accuracy_2.txt"
     output:
         kmer_accuarcy = temp("results/kmer/{id}/tmp/kmer_accuracy.txt")
     params:
