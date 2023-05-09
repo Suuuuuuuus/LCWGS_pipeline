@@ -23,3 +23,4 @@ printshellcmds: True
 scheduler: greedy
 use-conda: True
 cluster-status: status-sacct.sh
+cluster-cancel: scancel
