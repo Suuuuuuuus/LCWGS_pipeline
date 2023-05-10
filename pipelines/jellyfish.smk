@@ -15,7 +15,7 @@ rule classify_kmers:
     params:
         read_length = 151
     resources:
-        mem_mb = 10000
+        mem_mb = 80000
     shell: """
         scripts/classify-kmers -jf {input.jf} -op {output.jf_position} -oq {output.jf_quality} -or {output.jf_read} \
         -reads {input.fastq} -length-to-track-5p {params.read_length} -length-to-track-3p 0
