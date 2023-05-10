@@ -25,7 +25,7 @@ for filename in glob.glob(path):
     rstrip = '_subsampled_bedgraph.txt'
     lstrip = 'results/coverage/subsampled_bedgraphs/'
     code = filename.replace(rstrip, "").replace(lstrip, "")
-    df = pd.read_csv(filename , header = None, sep = '\t', 
+    df = pd.read_csv(filename , header = None, sep = '\t',
                      names = ['chr', 'start', 'end', 'cov'],
                     dtype = {
                         'chr': 'string',
@@ -54,6 +54,6 @@ plt.xlabel('Coverage (x)')
 plt.ylabel('Proportion of genome at least coverage (%)')
 plt.legend()
 plt.title('Genome coverage')
-plt.figtext(.5, -0.1, 
+plt.figtext(.5, -0.1,
             'Figure 8. Proportion of the genome that is at least x-axis covered.', ha='center', wrap = True)
 plt.savefig('graphs/fig8_prop_genome_at_least_coverage.png', bbox_inches = "tight", dpi=300)

@@ -169,7 +169,7 @@ rule plot_per_bin_coverage:
         graph = "graphs/fig6_per_bin_coverage_chr{chr}.png"
     params:
         repeat_mask_bin_size = 100000,
-        ylim = 1
+        ylim = 20
     shell: """
         python {input.code} {wildcards.chr} {params.repeat_mask_bin_size} {params.ylim}
     """

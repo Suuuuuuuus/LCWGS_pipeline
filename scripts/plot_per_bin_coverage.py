@@ -42,7 +42,7 @@ ax[0].set_ylabel('Coverage (x)')
 ax[0].set_title('Coverage over chr' + chr + ' for 1x samples')
 ax[0].set_xlabel('Genomic position')
 ax[0].set_ylim(-0.2, ylim)
-ax[0].legend()
+#ax[0].legend()
 
 for j in range(repeat_mask.shape[0]):
     ax[1].plot(repeat_mask.iloc[j,:2].values, -5*np.ones(2), color='magenta', linewidth=2, alpha=0.3)
