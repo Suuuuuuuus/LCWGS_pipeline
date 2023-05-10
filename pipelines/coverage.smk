@@ -39,8 +39,7 @@ else:
 rule plot_separated_subsample_coverage:
     input:
         code = "scripts/plot_at_least_coverage_separated.py",
-	bases = expand("results/coverage/per_bin_coverage/1x/{id}_chr{chr}_base.txt", id = ids_1x_all, chr = chromosome),
-	coordinates = expand("results/coverage/per_bin_coverage/1x/{id}_chr{chr}_coordinate.txt", id = ids_1x_all, chr = chromosome)
+        ss_bedgraphs = expand("results/coverage/subsampled_bedgraphs/{subsample}_subsampled_bedgraph.txt", subsample = ids_1x_all)
     output:
         graph = "graphs/fig8_prop_genome_at_least_coverage.png"
     params:
@@ -54,13 +53,12 @@ rule plot_separated_subsample_coverage:
 rule plot_aggregated_subsample_coverage:
     input:
         code = "scripts/plot_at_least_coverage_aggregated.py",
-	bases = expand("results/coverage/per_bin_coverage/1x/{id}_chr{chr}_base.txt", id = ids_1x_all, chr = chromosome),
-	coordinates = expand("results/coverage/per_bin_coverage/1x/{id}_chr{chr}_coordinate.txt", id = ids_1x_all, chr = chromosome)
+        ss_bedgraphs = expand("results/coverage/subsampled_bedgraphs/{subsample}_subsampled_bedgraph.txt", subsample = ids_1x_all)
     output:
         graph = "graphs/fig8_prop_genome_at_least_coverage.png"
     params:
         num_coverage = 10, # Specify the length of the x-axis
-  	avg_coverage = 4
+  	avg_coverage = 1
     resources: mem_mb = 5000
     shell: """
 	python {input.code} {params.num_coverage} {params.avg_coverage}

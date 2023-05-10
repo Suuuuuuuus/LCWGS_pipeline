@@ -9,6 +9,7 @@ rule extract_samtools_dup_rate:
         bam = "data/bams/{id}.bam"
     output:
         txt = temp("results/dup_rate/tmp/{id}.txt")
+    resources: mem_mb = 50000
     params:
         tmpdir = "results/dup_rate/tmp/"
     shell: """
@@ -20,7 +21,7 @@ rule extract_samtools_dup_rate:
         samtools markdup "{params.tmpdir}{wildcards.id}_position_sorted.bam" "{params.tmpdir}{wildcards.id}_markdup.bam"
         rm "{params.tmpdir}{wildcards.id}_position_sorted.bam"
         samtools flagstat "{params.tmpdir}{wildcards.id}_markdup.bam" > "{params.tmpdir}{wildcards.id}_result.txt"
-        
+
         total=$(cat "{params.tmpdir}{wildcards.id}_result.txt" | cut -f1 -d ' '| head -n 1)
         dup=$(cat "{params.tmpdir}{wildcards.id}_result.txt" | cut -f1 -d ' '| head -n 5 | tail -n 1)
         echo "{wildcards.id} $total $dup" > "{output.txt}"
