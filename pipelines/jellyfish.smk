@@ -27,8 +27,8 @@ rule calculate_kmer_error_rate:
     output:
         kmer_accuarcy = temp("results/kmer/{id}/tmp/kmer_accuracy_{read}.txt")
     shell: """
-        true=$(zcat {input.jf_read} | tail -n +2 | cut -d ' ' -f 16 | paste -sd+ | bc)
-        total=$(zcat {input.jf_read} | tail -n +2 | cut -d ' ' -f 15 | paste -sd+ | bc)
+        true=$(zcat {input.jf_read} | tail -n +2 | cut -f 16 | paste -sd+ | bc)
+        total=$(zcat {input.jf_read} | tail -n +2 | cut -f 15 | paste -sd+ | bc)
         err_prop=$(echo "scale=4; (1-$true/$total)" | bc)
         formatted_result=$(printf "%06.4f" $err_prop)
         echo -e "$formatted_result" >> {output.kmer_accuarcy}
