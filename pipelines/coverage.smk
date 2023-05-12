@@ -59,7 +59,7 @@ rule plot_aggregated_subsample_coverage:
     params:
         num_coverage = 10, # Specify the length of the x-axis
   	avg_coverage = 1
-    resources: mem_mb = 5000
+    resources: mem_mb = 500000
     shell: """
 	python {input.code} {params.num_coverage} {params.avg_coverage}
     """

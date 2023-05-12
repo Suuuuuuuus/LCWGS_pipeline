@@ -34,37 +34,21 @@ rule calculate_kmer_error_rate:
         echo -e "$formatted_result" >> {output.kmer_accuarcy}
     """
 
-rule calculate_avg_kmer_error_rate:
+rule aggregate_kmer_error_rate_1:
     input:
-        res1 = "results/kmer/{id}/tmp/kmer_accuracy_1.txt",
-        res2 = "results/kmer/{id}/tmp/kmer_accuracy_2.txt"
+        files = expand("results/kmer/{id}/tmp/kmer_accuracy_1.txt", id = ids_1x_all)
     output:
-        kmer_accuarcy = temp("results/kmer/{id}/tmp/kmer_accuracy.txt")
-    params:
-        tmpdir = "results/dup_rate/tmp/"
-    shell: """
-        sum_err=$(cut -f2 -d ' ' results/kmer/{wildcards.id}/tmp/* | paste -sd+ | bc)
-        avg_err=$(echo "scale=4; $sum_err/2" | bc)
-        formatted_result=$(printf "%06.4f" $avg_err)
-        echo -e "{wildcards.id}\t$formatted_result" >> {output.kmer_accuarcy}
-    """
-
-rule aggregate_kmer_error_rate:
-    input:
-        files = expand("results/kmer/{id}/tmp/kmer_accuracy.txt", id = ids_1x_all)
-    output:
-        kmer_accuarcy = "results/kmer/kmer_accuracy.txt"
+        kmer_accuarcy = "results/kmer/kmer_accuracy_read1.txt"
     shell: """
         cat {input.files} >> {output.kmer_accuarcy}
     """
 
-'''
-rule plot_satools_dup_rate:
+rule aggregate_kmer_error_rate_2:
     input:
-        script = "scripts/plot_samtools_duplication_rate.py"
+        files = expand("results/kmer/{id}/tmp/kmer_accuracy_2.txt", id = ids_1x_all)
     output:
-        graph_samtools_dup_rate = "graphs/samtools_duplication_rate.png"
+        kmer_accuarcy = "results/kmer/kmer_accuracy_read2.txt"
     shell: """
-        python {input.script}
+        cat {input.files} >> {output.kmer_accuarcy}
     """
-'''
+
