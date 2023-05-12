@@ -54,13 +54,11 @@ rule aggregate_kmer_error_rate_2:
 
 rule plot_kmer_position:
     input:
-	jf_position1 = "results/kmer/{id}/read1/{id}_read1.tsv.gz",
-	jf_position2 = "results/kmer/{id}/read2/{id}_read2.tsv.gz",
-	script = "scripts/plot_kmer_position.py"
+        code = "scripts/plot_kmer_position.py",
+        jf_pos1 = "results/kmer/{id}/read1/{id}_position1.tsv.gz",
+        jf_pos2 = "results/kmer/{id}/read2/{id}_position2.tsv.gz"
     output:
-	graph_kmer_position = "graphs/kmer_position/{id}_kmer_position.png"
+        graph_kmer_position = "graphs/kmer_position/{id}_kmer_position.png"
     shell: """
-	mkdir -p graphs/kmer_position/
-	python {input.script} {wildcards.id}
+	python {input.code} {wildcards.id}
     """
-
