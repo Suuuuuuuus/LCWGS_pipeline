@@ -11,7 +11,6 @@ Future analysis to be added:
 * (Potentially) Lab prep analysis to examine data quality
 
 To Do:
-* Add QUILT imputation and corresponding imputation analysis 
-* Merge results of metrics (dup rate, avg coverage, etc.) to generate a whole file
+* Add QUILT imputation and corresponding imputation analysis
 * Modify interaction between smk files and python scripts so that they can better accommodate different file names, etc.
 * Add a global parameter specification file for users
