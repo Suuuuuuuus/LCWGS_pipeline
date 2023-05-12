@@ -31,14 +31,14 @@ rule calculate_kmer_error_rate:
         total=$(zcat {input.jf_read} | tail -n +2 | cut -f 15 | paste -sd+ | bc)
         err_prop=$(echo "scale=4; (1-$true/$total)" | bc)
         formatted_result=$(printf "%06.4f" $err_prop)
-        echo -e "$formatted_result" >> {output.kmer_accuarcy}
+        echo -e "{wildcards.id}\t$formatted_result" >> {output.kmer_accuarcy}
     """
 
 rule aggregate_kmer_error_rate_1:
     input:
         files = expand("results/kmer/{id}/tmp/kmer_accuracy_1.txt", id = ids_1x_all)
     output:
-        kmer_accuarcy = "results/kmer/kmer_accuracy_read1.txt"
+        kmer_accuracy = "results/kmer/kmer_accuracy_read1.txt"
     shell: """
         cat {input.files} >> {output.kmer_accuarcy}
     """
@@ -47,8 +47,20 @@ rule aggregate_kmer_error_rate_2:
     input:
         files = expand("results/kmer/{id}/tmp/kmer_accuracy_2.txt", id = ids_1x_all)
     output:
-        kmer_accuarcy = "results/kmer/kmer_accuracy_read2.txt"
+        kmer_accuracy = "results/kmer/kmer_accuracy_read2.txt"
     shell: """
         cat {input.files} >> {output.kmer_accuarcy}
+    """
+
+rule plot_kmer_position:
+    input:
+	jf_position1 = "results/kmer/{id}/read1/{id}_read1.tsv.gz",
+	jf_position2 = "results/kmer/{id}/read2/{id}_read2.tsv.gz",
+	script = "scripts/plot_kmer_position.py"
+    output:
+	graph_kmer_position = "graphs/kmer_position/{id}_kmer_position.png"
+    shell: """
+	mkdir -p graphs/kmer_position/
+	python {input.script} {wildcards.id}
     """
 

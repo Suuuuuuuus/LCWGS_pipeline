@@ -55,20 +55,36 @@ rule all:
         	per_chromosome_coverage = expand("results/coverage/per_chromosome_coverage/{id}_per_chromosome_coverage.txt", id = ids_1x_all),
                 per_bin_coverage_1x_coordinates = expand("results/coverage/per_bin_coverage/1x/{id}_chr{chr}_coordinate.txt", id = ids_1x_all, chr = chromosome),
         	per_bin_coverage_1x_bases = expand("results/coverage/per_bin_coverage/1x/{id}_chr{chr}_base.txt", id = ids_1x_all, chr = chromosome),
-#        	per_bin_coverage_20x_coordinates = expand("results/coverage/per_bin_coverage/20x/{id_20x}_chr{chr}_coordinate.txt", id_20x = ids_20x_all, chr = chromosome),
-#        	per_bin_coverage_20x_bases = expand("results/coverage/per_bin_coverage/20x/{id_20x}_chr{chr}_base.txt", id_20x = ids_20x_all, chr = chromosome),
-
 
 		jf_read = expand("results/kmer/{id}/read{read}/{id}_read{read}.tsv.gz", id = ids_1x_all, read = ['1','2']),
         	jf_quality = expand("results/kmer/{id}/read{read}/{id}_quality{read}.tsv.gz", id = ids_1x_all, read = ['1','2']),
         	jf_position = expand("results/kmer/{id}/read{read}/{id}_position{read}.tsv.gz", id = ids_1x_all, read = ['1','2']),
 
- 	        kmer_accuarcy = "results/kmer/kmer_accuracy.txt",
+ 	        kmer_accuarcy1 = "results/kmer/kmer_accuracy_read1.txt",
+ 	        kmer_accuarcy2 = "results/kmer/kmer_accuracy_read2.txt",
 
-        	graph_subsample_coverage = "graphs/fig8_prop_genome_at_least_coverage.png",
+		lcwgs_wrap_up = "results/lcwgs_results.csv",
+
+#        	graph_subsample_coverage = "graphs/fig8_prop_genome_at_least_coverage.png",
         	graph_samtools_dup_rate = "graphs/samtools_duplication_rate.png",
         	graph_uncoverage_rate = "graphs/uncoverage_rate.png",
-        	graph_chromosome_coverage = expand("graphs/fig6_per_bin_coverage_chr{chr}.png", chr = chromosome)
-
+        	graph_chromosome_coverage = expand("graphs/fig6_per_bin_coverage_chr{chr}.png", chr = chromosome),
+		graph_kmer_position = expand("graphs/kmer_position/{id}_kmer_position.png", id = ids_1x_all)
 #		graph = "graphs/NA12878_imputation_accuracy.png",
 #		graph_lcwgs = "graphs/lcwgs_imputation_accuracy.png",
+
+rule aggregate_results:
+    input:
+        script = "scripts/lcwgs_result_wrap_up.py",
+        fastqc_dup_rate = "results/fastqc/duplication_rate_fastqc.txt",
+        uncoverage_rate = "results/coverage/per_chromosome_coverage/uncoverage_rate.txt",
+        samtools_dup_rate = "results/dup_rate/duplication_rate_samtools.txt",
+        kmer_accuracy1 = "results/kmer/kmer_accuracy_read1.txt",
+        kmer_accuracy2 = "results/kmer/kmer_accuracy_read2.txt",
+        coverage = "results/coverage/per_sample_coverage.txt"
+    output:
+        result = "results/lcwgs_results.csv"
+    shell: """
+        python {input.script}
+    """
+
