@@ -14,3 +14,4 @@ To Do:
 * Add QUILT imputation and corresponding imputation analysis
 * Modify interaction between smk files and python scripts so that they can better accommodate different file names, etc.
 * Add a global parameter specification file for users
+* Modify breadth of coverage graph to solve memory issues

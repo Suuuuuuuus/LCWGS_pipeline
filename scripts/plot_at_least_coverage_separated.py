@@ -52,7 +52,7 @@ plt.plot(x_coordinate, poisson_expectation*100, label = 'Poisson', ls='--')
 plt.xticks(x_coordinate)
 plt.xlabel('Coverage (x)')
 plt.ylabel('Proportion of genome at least coverage (%)')
-plt.legend()
+#plt.legend()
 plt.title('Genome coverage')
 plt.figtext(.5, -0.1,
             'Figure 8. Proportion of the genome that is at least x-axis covered.', ha='center', wrap = True)
