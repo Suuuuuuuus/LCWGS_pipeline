@@ -152,7 +152,7 @@ rule aggregate_uncoverage_rate:
 
 rule aggregate_ss_uncoverage_rate:
     input:
-        files = expand("results/coverage/per_chromosome_ss_coverage/{subsample}_ss_uncoverage_rate.txt", id = ids_1x_all)
+        files = expand("results/coverage/per_chromosome_ss_coverage/{subsample}_ss_uncoverage_rate.txt", subsample = ids_1x_all)
     output:
         ss_uncoverage_rate = "results/coverage/per_chromosome_ss_coverage/ss_uncoverage_rate.txt"
     shell: """
