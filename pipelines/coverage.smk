@@ -108,6 +108,15 @@ rule samtools_coverage:
         samtools coverage {input.bam} | sed -n '2,23p' > {output.per_chromosome_coverage}
     """
 
+rule samtools_ss_coverage:
+    input:
+        ss_bam = "data/subsampled_bams/{subsample}_subsampled.bam"
+    output:
+        per_chromosome_ss_coverage = "results/coverage/per_chromosome_ss_coverage/{subsample}_per_chromosome_ss_coverage.txt"
+    shell: """
+        samtools coverage {input.ss_bam} | sed -n '2,23p' > {output.per_chromosome_ss_coverage}
+    """
+
 rule calculate_uncoverage_rate:
     input:
         per_chromosome_coverage = rules.samtools_coverage.output.per_chromosome_coverage
@@ -120,6 +129,18 @@ rule calculate_uncoverage_rate:
         echo "{wildcards.id} $result" > {output.uncoverage_rate}
     """
 
+rule calculate_ss_uncoverage_rate:
+    input:
+        per_chromosome_ss_coverage = rules.samtools_ss_coverage.output.per_chromosome_ss_coverage
+    output:
+        ss_uncoverage_rate = temp("results/coverage/per_chromosome_ss_coverage/{subsample}_ss_uncoverage_rate.txt"),
+    shell: """
+        total=$(cut -f3 {input.per_chromosome_ss_coverage} | paste -sd+ | bc)
+        covered=$(cut -f5 {input.per_chromosome_ss_coverage} | paste -sd+ | bc)
+        result=$(echo "scale=4; (1-$covered/$total)" | bc)
+        echo "{wildcards.subsample} $result" > {output.ss_uncoverage_rate}
+    """
+
 rule aggregate_uncoverage_rate:
     input:
         files = expand("results/coverage/per_chromosome_coverage/{id}_uncoverage_rate.txt", id = ids_1x_all)
@@ -127,6 +148,15 @@ rule aggregate_uncoverage_rate:
         uncoverage_rate = "results/coverage/per_chromosome_coverage/uncoverage_rate.txt"
     shell: """
         cat {input.files} >> {output.uncoverage_rate}
+    """
+
+rule aggregate_ss_uncoverage_rate:
+    input:
+        files = expand("results/coverage/per_chromosome_ss_coverage/{subsample}_ss_uncoverage_rate.txt", id = ids_1x_all)
+    output:
+        ss_uncoverage_rate = "results/coverage/per_chromosome_ss_coverage/ss_uncoverage_rate.txt"
+    shell: """
+        cat {input.files} >> {output.ss_uncoverage_rate}
     """
 
 rule calculate_avg_coverage:

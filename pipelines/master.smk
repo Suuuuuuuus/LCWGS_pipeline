@@ -30,6 +30,8 @@ rule all:
         	ss_bams = expand("data/subsampled_bams/{subsample}_subsampled.bam", subsample = ids_1x_all),
         	ss_bais = expand("data/subsampled_bams/{subsample}_subsampled.bam.bai", subsample = ids_1x_all),
         	ss_bedgraphs = expand("results/coverage/subsampled_bedgraphs/{subsample}_subsampled_bedgraph.txt", subsample = ids_1x_all),
+            ss_per_chromosome_coverage = expand("results/coverage/per_chromosome_ss_coverage/{subsample}_per_chromosome_ss_coverage.txt", subsample = ids_1x_all),
+            ss_uncoverage_rate = "results/coverage/per_chromosome_ss_coverage/ss_uncoverage_rate.txt",
 
         	amb = "data/reference/GRCh38.fa.amb",
         	ann = "data/reference/GRCh38.fa.ann",
