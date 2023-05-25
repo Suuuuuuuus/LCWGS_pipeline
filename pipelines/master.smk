@@ -51,7 +51,7 @@ rule all:
         	samtools = "results/dup_rate/duplication_rate_samtools.txt",
         	uncoverage_rate = "results/coverage/per_chromosome_coverage/uncoverage_rate.txt",
                 avg_coverage = "results/coverage/per_sample_coverage.txt",
-                fragment_size = "results/fragment_size/fragment_size.txt"
+                fragment_size = "results/fragment_size/fragment_size.txt",
 
         	bedgraphs = expand("results/coverage/bedgraphs/{id}_bedgraph.txt", id = ids_1x_all),
 
