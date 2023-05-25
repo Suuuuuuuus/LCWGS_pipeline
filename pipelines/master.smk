@@ -51,6 +51,7 @@ rule all:
         	samtools = "results/dup_rate/duplication_rate_samtools.txt",
         	uncoverage_rate = "results/coverage/per_chromosome_coverage/uncoverage_rate.txt",
                 avg_coverage = "results/coverage/per_sample_coverage.txt",
+                fragment_size = "results/fragment_size/fragment_size.txt"
 
         	bedgraphs = expand("results/coverage/bedgraphs/{id}_bedgraph.txt", id = ids_1x_all),
 
@@ -83,7 +84,8 @@ rule aggregate_results:
         samtools_dup_rate = "results/dup_rate/duplication_rate_samtools.txt",
         kmer_accuracy1 = "results/kmer/kmer_accuracy_read1.txt",
         kmer_accuracy2 = "results/kmer/kmer_accuracy_read2.txt",
-        coverage = "results/coverage/per_sample_coverage.txt"
+        coverage = "results/coverage/per_sample_coverage.txt",
+        fragment_size = "results/fragment_size/fragment_size.txt"
     output:
         result = "results/lcwgs_results.csv"
     shell: """

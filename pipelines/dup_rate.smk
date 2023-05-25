@@ -63,3 +63,26 @@ rule plot_samtools_dup_rate:
     shell: """
         python {input.script}
     """
+
+rule calculate_fragment_size:
+    input:
+        bam = "data/bams/{id}.bam"
+    output:
+        txt = temp("results/fragment_size/{id}/{id}.txt")
+    shell: """
+        mkdir -p results/fragment_size/
+        samtools stat {input.bam} | grep ^IS | cut -f 2,3 > results/fragment_size/{wildcards.id}/tmp.txt
+        total=$(cut -f2 results/fragment_size/{wildcards.id}/tmp.txt | paste -sd+ | bc)
+        sum_product=$(awk '{{ sum += $1 * $2 }} END {{ printf "%.2f", sum }}' results/fragment_size/{wildcards.id}/tmp.txt)
+        result=$(echo "scale=4; ($sum_product/$total)" | bc)
+        echo "{wildcards.id}\t$result" > {output.txt}
+    """
+
+rule aggregate_fragment_size:
+    input:
+        files = expand("results/fragment_size/{id}/{id}.txt", id = ids_1x_all)
+    output:
+        fragment_size = "results/fragment_size/fragment_size.txt"
+    shell: """
+        cat {input.files} >> {output.fragment_size}
+    """
