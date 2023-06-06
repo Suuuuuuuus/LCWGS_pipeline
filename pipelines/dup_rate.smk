@@ -93,12 +93,14 @@ rule calculate_proportion_ss_fragment_size:
     output:
         fragment_size = temp("results/fragment_size/{subsample}/fragment_size.txt"),
         txt = temp("results/fragment_size/{subsample}/{subsample}_proportion.txt")
+    params:
+        threshold = 500
     shell: """
         samtools view -f 66 -F 256 {input.ss_bam} > {output.fragment_size}
         file_path={output.fragment_size}
-        greater_than_500_count=$(awk '{ if ($1 > 500 || $1 < -500) count++ } END { print count }' "$file_path")
+        propn_count=$(awk '{ if ($1 > {params.threshold} || $1 < -{params.threshold}) count++ } END { print count }' "$file_path")
         total_count=$(wc -l < "$file_path")
-        proportion=$(awk "BEGIN { print $greater_than_500_count / $total_count }")
+        proportion=$(awk "BEGIN { print $propn_count / $total_count }")
         echo "{wildcards.subsample}\t$proportion" > {output.txt}
     """
 
