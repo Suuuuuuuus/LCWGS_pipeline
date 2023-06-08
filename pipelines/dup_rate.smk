@@ -112,3 +112,28 @@ rule aggregate_proportion_ss_fragment_size:
     shell: """
         cat {input.files} >> {output.proportion_ss_fragment_size}
     """
+rule calculate_proportion_fragment_size:
+    input:
+        bam = "data/bams/{id}.bam"
+    output:
+        fragment_size = temp("results/fragment_size/{id}/fragment_size_whole.txt"),
+        txt = temp("results/fragment_size/{id}/{id}_proportion_whole.txt")
+    params:
+	threshold = 302
+    shell: """
+	samtools view -f 66 -F 256 {input.bam} | cut -f9 > {output.fragment_size}
+        file_path={output.fragment_size}
+        propn_count=$(awk '{{ if ($1 < {params.threshold} || $1 > -{params.threshold}) count++ }} END {{ print count }}$
+        total_count=$(wc -l < "$file_path")
+        proportion=$(awk "BEGIN {{ print $propn_count / $total_count }}")
+	echo "{wildcards.id}\t$proportion" > {output.txt}
+    """
+
+rule aggregate_proportion_fragment_size:
+    input:
+        files = expand("results/fragment_size/{id}/{id}_proportion.txt", id = ids_1x_all)
+    output:
+        proportion_fragment_size = "results/fragment_size/porportion_fragment_size.txt"
+    shell: """
+	cat {input.files} >> {output.proportion_fragment_size}
+    """
