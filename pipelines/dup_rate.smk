@@ -123,7 +123,7 @@ rule calculate_proportion_fragment_size:
     shell: """
 	samtools view -f 66 -F 256 {input.bam} | cut -f9 > {output.fragment_size}
         file_path={output.fragment_size}
-        propn_count=$(awk '{{ if ($1 < {params.threshold} || $1 > -{params.threshold}) count++ }} END {{ print count }}$
+        propn_count=$(awk '{{ if ($1 < {params.threshold} || $1 > -{params.threshold}) count++ }} END {{ print count }}' "$file_path")
         total_count=$(wc -l < "$file_path")
         proportion=$(awk "BEGIN {{ print $propn_count / $total_count }}")
 	echo "{wildcards.id}\t$proportion" > {output.txt}
