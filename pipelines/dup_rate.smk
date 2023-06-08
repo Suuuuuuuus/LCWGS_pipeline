@@ -119,7 +119,7 @@ rule calculate_proportion_fragment_size:
         fragment_size = temp("results/fragment_size/{id}/fragment_size_whole.txt"),
         txt = temp("results/fragment_size/{id}/{id}_proportion_whole.txt")
     params:
-	threshold = 302
+        threshold = 302
     shell: """
 	samtools view -f 66 -F 256 {input.bam} | cut -f9 > {output.fragment_size}
         file_path={output.fragment_size}
