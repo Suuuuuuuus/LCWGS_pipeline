@@ -15,3 +15,4 @@ To Do:
 * Modify interaction between smk files and python scripts so that they can better accommodate different file names, etc.
 * Add a global parameter specification file for users
 * Modify breadth of coverage graph to solve memory issues
+* Integrate per_bin_kmer_error_rate calculation bash file to the pipeline
