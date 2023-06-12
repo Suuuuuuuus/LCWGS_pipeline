@@ -70,6 +70,7 @@ rule calculate_per_bin_kmer_error_rate:
         script = "scripts/calculate_per_bin_kmer_error_rate.py"
     output:
         per_bin_kmer_accuarcy = "results/per_bin_kmer/{id}_subsampled/read{read}_by_length/per_bin_kmer_error_rate_read{read}.txt"
+    resources: mem_mb = 5000
     shell: """
         python {input.script} {wildcards.id} {wildcards.read}
     """
