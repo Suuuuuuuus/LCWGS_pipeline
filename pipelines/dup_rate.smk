@@ -112,6 +112,7 @@ rule aggregate_proportion_ss_fragment_size:
     shell: """
         cat {input.files} >> {output.proportion_ss_fragment_size}
     """
+
 rule calculate_proportion_fragment_size:
     input:
         bam = "data/bams/{id}.bam"
@@ -123,7 +124,7 @@ rule calculate_proportion_fragment_size:
     shell: """
 	samtools view -f 66 -F 256 {input.bam} | cut -f9 > {output.fragment_size}
         file_path={output.fragment_size}
-        propn_count=$(awk '{{ if ($1 < {params.threshold} || $1 > -{params.threshold}) count++ }} END {{ print count }}' "$file_path")
+        propn_count=$(awk '{{ if ($1 < {params.threshold} && $1 > -{params.threshold}) count++ }} END {{ print count }}' "$file_path")
         total_count=$(wc -l < "$file_path")
         proportion=$(awk "BEGIN {{ print $propn_count / $total_count }}")
 	echo "{wildcards.id}\t$proportion" > {output.txt}
@@ -131,9 +132,32 @@ rule calculate_proportion_fragment_size:
 
 rule aggregate_proportion_fragment_size:
     input:
-        files = expand("results/fragment_size/{id}/{id}_proportion.txt", id = ids_1x_all)
+        files = expand("results/fragment_size/{id}/{id}_proportion_whole.txt", id = ids_1x_all)
     output:
         proportion_fragment_size = "results/fragment_size/porportion_fragment_size.txt"
     shell: """
 	cat {input.files} >> {output.proportion_fragment_size}
+    """
+
+rule calculate_fragment_overlap:
+    input:
+        bam = "data/bams/{id}.bam"
+    output:
+        fragment_overlap = temp("results/fragment_size/{id}/fragment_overlap.txt")
+    params:
+        threshold = 302
+    shell: """
+        total_overlap=$(samtools view -f 66 -F 256 {input.bam} | cut -f9 | \
+        awk '{{$1 = ($1 < 0 ? -$1 : $1); $1 = ({params.threshold} - $1); $1 = (0 > $1 ? 0 : $1); print}}' | \
+        paste -sd+ | bc)
+        echo "{wildcards.id}\t$total_overlap" > {output.fragment_overlap}
+    """
+
+rule aggregate_fragment_overlap:
+    input:
+        files = expand("results/fragment_size/{id}/fragment_overlap.txt", id = ids_1x_all)
+    output:
+        fragment_overlap = "results/fragment_size/fragment_overlap.txt"
+    shell: """
+        cat {input.files} >> {output.fragment_overlap}
     """

@@ -62,3 +62,33 @@ rule plot_kmer_position:
     shell: """
 	python {input.code} {wildcards.id}
     """
+
+rule calculate_per_bin_kmer_error_rate:
+    input:
+        read_tags = "results/per_bin_kmer/{id}_subsampled/trimmed_{read}.tsv",
+        reads = "results/per_bin_kmer/{id}_subsampled/read{read}_by_length/read_{read}.txt",
+        script = "scripts/calculate_per_bin_kmer_error_rate.py"
+    output:
+        per_bin_kmer_accuarcy = "results/per_bin_kmer/{id}_subsampled/read{read}_by_length/per_bin_kmer_error_rate_read{read}.txt"
+    shell: """
+        python {input.script} {wildcards.id} {wildcards.read}
+    """
+
+rule aggregate_per_bin_kmer_error_rate_1:
+    input:
+        files = expand("results/per_bin_kmer/{id}_subsampled/read1_by_length/per_bin_kmer_error_rate_read1.txt", id = ids_1x_all)
+    output:
+        per_bin_kmer_accuracy1 = "results/per_bin_kmer/per_bin_kmer_accuracy_read1.txt"
+    shell: """
+        cat {input.files} >> {output.per_bin_kmer_accuarcy1}
+    """
+
+rule aggregate_per_bin_kmer_error_rate_2:
+    input:
+        files = expand("results/per_bin_kmer/{id}_subsampled/read2_by_length/per_bin_kmer_error_rate_read2.txt", id = ids_1x_all)
+    output:
+        per_bin_kmer_accuracy2 = "results/per_bin_kmer/per_bin_kmer_accuracy_read2.txt"
+    shell: """
+        cat {input.files} >> {output.per_bin_kmer_accuarcy2}
+    """
+

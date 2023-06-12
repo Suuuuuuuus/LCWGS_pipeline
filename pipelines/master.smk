@@ -54,6 +54,9 @@ rule all:
                 fragment_size = "results/fragment_size/fragment_size.txt",
                 proportion_ss_fragment_size = "results/fragment_size/porportion_ss_fragment_size.txt",
 		proportion_fragment_size = "results/fragment_size/porportion_fragment_size.txt",
+		fragment_overlap = "results/fragment_size/fragment_overlap.txt",
+                per_bin_kmer_accuracy1 = "results/per_bin_kmer/per_bin_kmer_accuracy_read1.txt",
+		per_bin_kmer_accuracy2 = "results/per_bin_kmer/per_bin_kmer_accuracy_read2.txt",
 
         	bedgraphs = expand("results/coverage/bedgraphs/{id}_bedgraph.txt", id = ids_1x_all),
 
@@ -67,6 +70,7 @@ rule all:
 
  	        kmer_accuarcy1 = "results/kmer/kmer_accuracy_read1.txt",
  	        kmer_accuarcy2 = "results/kmer/kmer_accuracy_read2.txt",
+        	per_bin_kmer_accuracy = expand("results/per_bin_kmer/{id}_subsampled/read{read}_by_length/per_bin_kmer_error_rate_read{read}.txt", id = ids_1x_all, read = ['1', '2']),
 
 		lcwgs_wrap_up = "results/lcwgs_results.csv",
 
@@ -89,7 +93,8 @@ rule aggregate_results:
         coverage = "results/coverage/per_sample_coverage.txt",
         fragment_size = "results/fragment_size/fragment_size.txt",
         proportion_ss_fragment_size = "results/fragment_size/porportion_ss_fragment_size.txt",
-	proportion_fragment_size = "results/fragment_size/porportion_fragment_size.txt"
+	proportion_fragment_size = "results/fragment_size/porportion_fragment_size.txt",
+        fragment_overlap = "results/fragment_size/fragment_overlap.txt"
     output:
         result = "results/lcwgs_results.csv"
     shell: """
