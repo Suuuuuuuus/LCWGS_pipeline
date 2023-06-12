@@ -80,7 +80,7 @@ rule aggregate_per_bin_kmer_error_rate_1:
     output:
         per_bin_kmer_accuracy1 = "results/per_bin_kmer/per_bin_kmer_accuracy_read1.txt"
     shell: """
-        cat {input.files} >> {output.per_bin_kmer_accuarcy1}
+        cat {input.files} >> {output.per_bin_kmer_accuracy1}
     """
 
 rule aggregate_per_bin_kmer_error_rate_2:
@@ -89,6 +89,6 @@ rule aggregate_per_bin_kmer_error_rate_2:
     output:
         per_bin_kmer_accuracy2 = "results/per_bin_kmer/per_bin_kmer_accuracy_read2.txt"
     shell: """
-        cat {input.files} >> {output.per_bin_kmer_accuarcy2}
+        cat {input.files} >> {output.per_bin_kmer_accuracy2}
     """
 
