@@ -16,3 +16,6 @@ To Do:
 * Add a global parameter specification file for users
 * Modify breadth of coverage graph to solve memory issues
 * Integrate per_bin_kmer_error_rate calculation bash file to the pipeline
+
+Notes:
+* `bcftools concat` command has a `--ligate` option to join separatedly imputed regions together. Either should increase the buffer size or use `regionStart = 1e6 - 1e5, regionEnd = 2e6 + 1e5, buffer = 0` rather than `regionStart = 1e6, regionEnd = 2e6, buffer = 1e5` (and then use `--ligate-warn`)
