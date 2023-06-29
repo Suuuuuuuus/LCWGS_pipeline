@@ -121,7 +121,7 @@ rule calculate_uncoverage_rate:
     input:
         per_chromosome_coverage = rules.samtools_coverage.output.per_chromosome_coverage
     output:
-        uncoverage_rate = temp("results/coverage/per_chromosome_coverage/{id}_uncoverage_rate.txt"),
+        uncoverage_rate = temp("results/coverage/per_chromosome_coverage/{id}_uncoverage_rate.txt")
     shell: """
         total=$(cut -f3 {input.per_chromosome_coverage} | paste -sd+ | bc)
         covered=$(cut -f5 {input.per_chromosome_coverage} | paste -sd+ | bc)

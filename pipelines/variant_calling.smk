@@ -1,9 +1,9 @@
 configfile: "pipelines/config.json"
 
-ids_1x = [samples_1x['id'] for samples_1x in config['samples_1x']]
-ids_20x = [samples_20x['id'] for samples_20x in config['samples_20x']]
+import pandas as pd
+config['samples'] = pd.read_table("samples.tsv", header = None, names = ['Code'])
+ids_1x_all = list(config['samples']['Code'].values)
 chromosome = [i for i in range(1,23)]
-id_all = ids_1x + ids_20x
 
 rule imputation_accuracy_NA12878:
         input:
