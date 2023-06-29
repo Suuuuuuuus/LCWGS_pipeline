@@ -14,10 +14,10 @@ config['samples'] = pd.read_table("samples.tsv", header = None, names = ['Code']
 ids_1x_all = list(config['samples']['Code'].values)
 chromosome = [i for i in range(1,23)]
 
-rule alignment_all:
-    input:
-        bams = expand("data/bams/{id}.bam", id = ids_1x_all),
-        bais = expand("data/bams/{id}.bam.bai", id = ids_1x_all)
+#rule alignment_all:
+#    input:
+#        bams = expand("data/bams/{id}.bam", id = ids_1x_all),
+#        bais = expand("data/bams/{id}.bam.bai", id = ids_1x_all)
 
 rule index_reference_all:
     input:
@@ -30,7 +30,7 @@ rule index_reference_all:
 rule subsample_all:
     input:
         ss_fastq1 = expand("data/subsampled_fastq/{subsample}_subsampled_1.fastq", subsample = ids_1x_all),
-		ss_fastq2 = expand("data/subsampled_fastq/{subsample}_subsampled_2.fastq", subsample = ids_1x_all),
+        ss_fastq2 = expand("data/subsampled_fastq/{subsample}_subsampled_2.fastq", subsample = ids_1x_all),
         ss_bams = expand("data/subsampled_bams/{subsample}_subsampled.bam", subsample = ids_1x_all),
         ss_bais = expand("data/subsampled_bams/{subsample}_subsampled.bam.bai", subsample = ids_1x_all)
 
@@ -55,33 +55,33 @@ rule dup_rate_all:
         graph_samtools_dup_rate = "graphs/samtools_duplication_rate.png",
         avg_fragment_size = "results/fragment_size/fragment_size.txt",
         proportion_ss_fragment_size = "results/fragment_size/porportion_ss_fragment_size.txt",
-		proportion_fragment_size = "results/fragment_size/porportion_fragment_size.txt",
+        proportion_fragment_size = "results/fragment_size/porportion_fragment_size.txt",
         fragment_overlap = "results/fragment_size/fragment_overlap.txt"
 
 rule fastqc_all:
     input:
         html1 = expand("results/fastqc/{id}_1_fastqc.html", id = ids_1x_all),
-		html2 = expand("results/fastqc/{id}_2_fastqc.html", id = ids_1x_all),
-		zip1 = expand("results/fastqc/{id}_1_fastqc.zip", id = ids_1x_all),
-		zip2 = expand("results/fastqc/{id}_2_fastqc.zip", id = ids_1x_all),
+        html2 = expand("results/fastqc/{id}_2_fastqc.html", id = ids_1x_all),
+        zip1 = expand("results/fastqc/{id}_1_fastqc.zip", id = ids_1x_all),
+        zip2 = expand("results/fastqc/{id}_2_fastqc.zip", id = ids_1x_all),
         fastqc = "results/fastqc/duplication_rate_fastqc.txt"
 
-rule kmer_all: 
+rule kmer_all:
     input:
-		jf_read = expand("results/kmer/{id}/read{read}/{id}_read{read}.tsv", id = ids_1x_all, read = ['1','2']),
+        jf_read = expand("results/kmer/{id}/read{read}/{id}_read{read}.tsv", id = ids_1x_all, read = ['1','2']),
         jf_quality = expand("results/kmer/{id}/read{read}/{id}_quality{read}.tsv", id = ids_1x_all, read = ['1','2']),
         jf_position = expand("results/kmer/{id}/read{read}/{id}_position{read}.tsv", id = ids_1x_all, read = ['1','2']),
- 	    kmer_accuarcy1 = "results/kmer/kmer_accuracy_read1.txt",
- 	    kmer_accuarcy2 = "results/kmer/kmer_accuracy_read2.txt",
+        kmer_accuarcy1 = "results/kmer/kmer_accuracy_read1.txt",
+        kmer_accuarcy2 = "results/kmer/kmer_accuracy_read2.txt",
         per_bin_kmer_accuracy1 = "results/kmer/per_bin_kmer_accuracy_read1.txt",
-		per_bin_kmer_accuracy2 = "results/kmer/per_bin_kmer_accuracy_read2.txt",
+        per_bin_kmer_accuracy2 = "results/kmer/per_bin_kmer_accuracy_read2.txt",
         fragment_length = expand("results/kmer/{id}/fragment_length.tsv", id = ids_1x_all),
         per_bin_kmer_accuracy = expand("results/kmer/{id}/read{read}/per_bin_kmer_error_rate_read{read}.txt", id = ids_1x_all, read = ['1', '2']),
         graph_kmer_position = expand("graphs/kmer_position/{id}_kmer_position.png", id = ids_1x_all)
 
 rule all:
-	input:
-		lcwgs_wrap_up = "results/lcwgs_results.csv"
+    input:
+        lcwgs_wrap_up = "results/lcwgs_results.csv"
 
 rule aggregate_results:
     input:
