@@ -25,13 +25,13 @@ rule calculate_kmer_error_rate:
     input:
         jf_read = "results/kmer/{id}/read{read}/{id}_read{read}.tsv"
     output:
-        kmer_accuarcy = temp("results/kmer/{id}/tmp/kmer_accuracy_{read}.txt")
+        kmer_accuracy = temp("results/kmer/{id}/tmp/kmer_accuracy_{read}.txt")
     shell: """
         true=$(zcat {input.jf_read} | tail -n +2 | cut -f 16 | paste -sd+ | bc)
         total=$(zcat {input.jf_read} | tail -n +2 | cut -f 15 | paste -sd+ | bc)
         err_prop=$(echo "scale=4; (1-$true/$total)" | bc)
         formatted_result=$(printf "%06.4f" $err_prop)
-        echo -e "{wildcards.id}\t$formatted_result" >> {output.kmer_accuarcy}
+        echo -e "{wildcards.id}\t$formatted_result" >> {output.kmer_accuracy}
     """
 
 rule aggregate_kmer_error_rate_1:
@@ -40,7 +40,7 @@ rule aggregate_kmer_error_rate_1:
     output:
         kmer_accuracy = "results/kmer/kmer_accuracy_read1.txt"
     shell: """
-        cat {input.files} >> {output.kmer_accuarcy}
+        cat {input.files} >> {output.kmer_accuracy}
     """
 
 rule aggregate_kmer_error_rate_2:
@@ -49,7 +49,7 @@ rule aggregate_kmer_error_rate_2:
     output:
         kmer_accuracy = "results/kmer/kmer_accuracy_read2.txt"
     shell: """
-        cat {input.files} >> {output.kmer_accuarcy}
+        cat {input.files} >> {output.kmer_accuracy}
     """
 
 rule plot_kmer_position:
@@ -70,7 +70,7 @@ rule get_fragment_length:
         fragment_length = "results/kmer/{id}/fragment_length.tsv"
     shell: """
         samtools view -h {input.ss_bam} | grep -v '^@' | cut -f1,9 | \
-        awk '{$2 = ($2 < 0 ? -$2 : $2); $2 = int(($2 + 49) / 50) * 50; print}' | \
+        awk '{{$2 = ($2 < 0 ? -$2 : $2); $2 = int(($2 + 49) / 50) * 50; print}}' | \
         tr ' ' '\t' | \
         awk '$2 != 0' | \
         awk '!seen[$1]++' > {output.fragment_length}
@@ -82,7 +82,7 @@ rule calculate_per_bin_kmer_error_rate:
         reads = "results/kmer/{id}/read{read}/{id}_read{read}.tsv",
         script = "scripts/calculate_per_bin_kmer_error_rate.py"
     output:
-        per_bin_kmer_accuarcy = "results/kmer/{id}/read{read}/per_bin_kmer_error_rate_read{read}.txt"
+        per_bin_kmer_accuracy = "results/kmer/{id}/read{read}/per_bin_kmer_error_rate_read{read}.txt"
     resources: mem_mb = 50000
     shell: """
         python {input.script} {wildcards.id} {wildcards.read} {input.reads}
