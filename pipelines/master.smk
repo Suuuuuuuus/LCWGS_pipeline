@@ -5,7 +5,7 @@ include: "fastqc.smk"
 include: "subsample.smk"
 include: "index_reference.smk"
 include: "coverage.smk"
-#include: "imputation.smk"
+include: "imputation.smk"
 include: "imputation_prep.smk"
 
 configfile: "pipelines/config.json"
@@ -73,9 +73,9 @@ rule dup_rate_all:
 rule fastqc_all:
     input:
         html1 = expand("results/fastqc/{id}_1_fastqc.html", id = ids_1x_all),
-	html2 = expand("results/fastqc/{id}_2_fastqc.html", id = ids_1x_all),
-	zip1 = expand("results/fastqc/{id}_1_fastqc.zip", id = ids_1x_all),
-	zip2 = expand("results/fastqc/{id}_2_fastqc.zip", id = ids_1x_all),
+        html2 = expand("results/fastqc/{id}_2_fastqc.html", id = ids_1x_all),
+        zip1 = expand("results/fastqc/{id}_1_fastqc.zip", id = ids_1x_all),
+        zip2 = expand("results/fastqc/{id}_2_fastqc.zip", id = ids_1x_all),
         fastqc = "results/fastqc/duplication_rate_fastqc.txt"
 
 rule kmer_all:
@@ -83,23 +83,15 @@ rule kmer_all:
         jf_read = expand("results/kmer/{id}/read{read}/{id}_read{read}.tsv", id = ids_1x_all, read = ['1','2']),
         jf_quality = expand("results/kmer/{id}/read{read}/{id}_quality{read}.tsv", id = ids_1x_all, read = ['1','2']),
         jf_position = expand("results/kmer/{id}/read{read}/{id}_position{read}.tsv", id = ids_1x_all, read = ['1','2']),
- 	kmer_accuarcy1 = "results/kmer/kmer_accuracy_read1.txt",
- 	kmer_accuarcy2 = "results/kmer/kmer_accuracy_read2.txt",
+        kmer_accuarcy1 = "results/kmer/kmer_accuracy_read1.txt",
+        kmer_accuarcy2 = "results/kmer/kmer_accuracy_read2.txt",
         per_bin_kmer_accuracy1 = "results/kmer/per_bin_kmer_accuracy_read1.txt",
-	per_bin_kmer_accuracy2 = "results/kmer/per_bin_kmer_accuracy_read2.txt",
-	fragment_length = expand("results/kmer/{id}/fragment_length.tsv", id = ids_1x_all),
+        per_bin_kmer_accuracy2 = "results/kmer/per_bin_kmer_accuracy_read2.txt",
+        fragment_length = expand("results/kmer/{id}/fragment_length.tsv", id = ids_1x_all),
         per_bin_kmer_accuracy = expand("results/kmer/{id}/read{read}/per_bin_kmer_error_rate_read{read}.txt", id = ids_1x_all, read = ['1', '2']),
         graph_kmer_position = expand("graphs/kmer_position/{id}_kmer_position.png", id = ids_1x_all)
-
-rule imputation_prep_all:
-    input:
-        bamlist = "results/imputation/bamlist.txt",
-        recomb = expand("results/imputation/" + RECOMB_POP + "/" + RECOMB_POP + "-chr{chr}-final.b38.txt.gz", chr = chromosome),
-        json = "results/imputation/regions.json",
-        hap = expand("results/imputation/refs/ggvp.chr{chr}.hap.gz", chr = chromosome),
-        legend = expand("results/imputation/refs/ggvp.chr{chr}.legend.gz", chr = chromosome),
-        samples = expand("results/imputation/refs/ggvp.chr{chr}.samples", chr = chromosome)
-
+    
+# Dumps
 REGIONS={}
 for chr in chromosome:
     start=[10000001, 15000001]
@@ -110,7 +102,7 @@ file="results/imputation/regions.json"
 if exists(file):
     print("Replacing regions to impute with derived file")
     with open(file) as json_file:
-        REGIONS = json.load(json_file) ## python is dumb
+        REGIONS = json.load(json_file)
 
 regions_to_prep=[]
 vcfs_to_impute=[]
@@ -125,9 +117,40 @@ for chr in chromosome:
         file="results/imputation/vcfs/regions/quilt.chr" + str(chr) + "." + str(regionStart) + "." + str(regionEnd) + ".vcf.gz"
         vcfs_to_impute.append(file)
 
+rule imputation_prep_all:
+    input:
+        bamlist = "results/imputation/bamlist.txt",
+        recomb = expand("results/imputation/" + RECOMB_POP + "/" + RECOMB_POP + "-chr{chr}-final.b38.txt.gz", chr = chromosome),
+        json = "results/imputation/regions.json",
+        hap = expand("results/imputation/refs/ggvp.chr{chr}.hap.gz", chr = chromosome),
+        legend = expand("results/imputation/refs/ggvp.chr{chr}.legend.gz", chr = chromosome),
+        samples = expand("results/imputation/refs/ggvp.chr{chr}.samples", chr = chromosome)
+
+vcfs_to_concat={}
+final_vcfs=[]
+for chr in chromosome:
+    start=REGIONS[str(chr)]["start"]
+    end=REGIONS[str(chr)]["end"]
+    per_chr_vcfs=[]
+    for i in range(0, start.__len__()):
+        regionStart=start[i]
+        regionEnd=end[i]
+        file="results/imputation/vcfs/regions/quilt.chr" + str(chr) + "." + str(regionStart) + "." + str(regionEnd) + ".vcf.gz"
+        per_chr_vcfs.append(file)
+    vcfs_to_concat[str(chr)]=per_chr_vcfs
+    final_vcfs.append("results/imputation/vcfs/quilt.chr" + str(chr) + ".vcf.gz")
+
+def get_input_vcfs_as_list(wildcards):
+    return(vcfs_to_concat[str(wildcards.chr)])
+
+def get_input_vcfs_as_string(wildcards):
+    return(" ".join(map(str, vcfs_to_concat[str(wildcards.chr)])))
+
 rule imputation_all:
     input:
-        RData = [regions_to_prep]
+        RData = [regions_to_prep],
+        vcf_regions = [vcfs_to_impute],
+        vcfs = [final_vcfs]
 
 rule all:
 	input:
