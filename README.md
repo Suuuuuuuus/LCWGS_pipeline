@@ -16,6 +16,7 @@ Notes:
 * `bcftools concat` command has a `--ligate` option to join separatedly imputed regions together. Either should increase the buffer size or use `regionStart = 1e6 - 1e5, regionEnd = 2e6 + 1e5, buffer = 0` rather than `regionStart = 1e6, regionEnd = 2e6, buffer = 1e5` (and then use `--ligate-warn`)
 
 Inputs:
+* A `samples.tsv` file to save all sample names.
 * A `config.json` file to specify sample names, etc. You should modify this file which is under directory `pipelines`
 * A bunch of `fastq` files
 * An index `fa` file

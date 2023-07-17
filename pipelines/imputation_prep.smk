@@ -1,12 +1,8 @@
-configfile: "pipelines/config.json"
-
 from os.path import exists
 import json
 import pandas as pd
-config['samples'] = pd.read_table("samples.tsv", header = None, names = ['Code'])
-ids_1x_all = list(config['samples']['Code'].values)
-chromosome = [i for i in range(1,23)]
-
+#chromosome = [i for i in range(1,23)]
+chromosome = [11]
 # The followings are global parameters from `activate`:
 QUILT_HOME = "/well/band/users/rbx225/software/QUILT/"
 ANALYSIS_DIR = "/well/band/users/rbx225/GGVP/results/imputation/"
@@ -39,7 +35,9 @@ rule convert_recomb:
     wildcard_constraints:
         chr='\d{1,2}'
     shell: """
-        R -f ${{QUILT_HOME}}scripts/make_b38_recomb_map.R --args "./" {RECOMB_POP} {wildcards.chr}
+        #R -f scripts/make_b38_recomb_map.R --args "./" {RECOMB_POP} {wildcards.chr}
+        R -f {QUILT_HOME}scripts/make_b38_recomb_map.R \
+        --args {ANALYSIS_DIR} {RECOMB_POP} {wildcards.chr}
     """
 
 rule convert_ref:
@@ -48,9 +46,9 @@ rule convert_ref:
         tbi = f"data/imputation_refs/ggvp.chr{{chr}}.vcf.gz.tbi"
     output:
         tmp_vcf = temp("results/imputation/refs/tmp.ggvp.chr{chr}.vcf.gz"),
-        hap = temp("results/imputation/refs/ggvp.chr{chr}.hap.gz"),
-        legend = temp("results/imputation/refs/ggvp.chr{chr}.legend.gz"),
-        samples = temp("results/imputation/refs/ggvp.chr{chr}.samples")
+        hap = "results/imputation/refs/ggvp.chr{chr}.hap.gz",
+        legend = "results/imputation/refs/ggvp.chr{chr}.legend.gz",
+        samples = "results/imputation/refs/ggvp.chr{chr}.samples"
     params:
         threads=1
     wildcard_constraints:
@@ -60,7 +58,6 @@ rule convert_ref:
         bcftools view --output-file {output.tmp_vcf} --output-type z --min-alleles 2 --max-alleles 2 --types snps {input.vcf}
         tabix {output.tmp_vcf}
         bcftools convert --haplegendsample results/imputation/refs/ggvp.chr{wildcards.chr} {output.tmp_vcf}
-        rm {output.tmp_vcf} {output.tmp_vcf}.tbi
     """
 
 rule determine_chunks:

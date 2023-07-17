@@ -1,4 +1,4 @@
-#!/bin/bash
+##!/bin/bash
 ##SBATCH -J download_files_for_imputation
 ##SBATCH -A ansari.prj
 ##SBATCH -p short
