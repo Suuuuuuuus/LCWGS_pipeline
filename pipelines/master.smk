@@ -14,8 +14,8 @@ configfile: "pipelines/config.json"
 import pandas as pd
 config['samples'] = pd.read_table("samples.tsv", header = None, names = ['Code'])
 ids_1x_all = list(config['samples']['Code'].values)
-#chromosome = [i for i in range(1,23)]
-chromosome = [11]
+chromosome = [i for i in range(1,23)]
+# chromosome = [11]
 
 # The followings are global parameters from `activate`:
 QUILT_WRAP_HOME = "/well/band/users/rbx225/GGVP/QUILT-wrap/"
@@ -98,7 +98,7 @@ rule kmer_all:
         fragment_length = expand("results/kmer/{id}/fragment_length.tsv", id = ids_1x_all),
         per_bin_kmer_accuracy = expand("results/kmer/{id}/read{read}/per_bin_kmer_error_rate_read{read}.txt", id = ids_1x_all, read = ['1', '2']),
         graph_kmer_position = expand("graphs/kmer_position/{id}_kmer_position.png", id = ids_1x_all)
-    
+
 # Dumps
 REGIONS={}
 for chr in chromosome:
@@ -161,8 +161,8 @@ rule imputation_all:
         vcfs = [final_vcfs]
 
 rule all:
-	input:
-		lcwgs_wrap_up = "results/lcwgs_results.csv"
+    input:
+        lcwgs_wrap_up = "results/lcwgs_results.csv"
 
 rule aggregate_results:
     input:
