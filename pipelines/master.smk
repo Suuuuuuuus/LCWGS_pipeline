@@ -4,7 +4,7 @@ include: "kmer.smk"
 include: "dup_rate.smk"
 include: "fastqc.smk"
 include: "subsample.smk"
-include: "index_reference.smk"
+include: "reference.smk"
 include: "coverage.smk"
 include: "imputation.smk"
 include: "imputation_prep.smk"
@@ -39,13 +39,19 @@ rule alignment_all:
         bams = expand("data/bams/{id}.bam", id = ids_1x_all),
         bais = expand("data/bams/{id}.bam.bai", id = ids_1x_all)
 
-rule index_reference_all:
+rule reference_all:
     input:
-        amb = "data/reference/GRCh38.fa.amb",
-        ann = "data/reference/GRCh38.fa.ann",
-        bwt = "data/reference/GRCh38.fa.bwt",
-        pac = "data/reference/GRCh38.fa.pac",
-        sa = "data/reference/GRCh38.fa.sa"
+        ref = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta",
+        amb = "data/references/GRCh38_no_alt_Pf3D7_v3_phiX.fa.amb",
+        ann = "data/references/GRCh38_no_alt_Pf3D7_v3_phiX.fa.ann",
+        bwt = "data/references/GRCh38_no_alt_Pf3D7_v3_phiX.fa.bwt",
+        pac = "data/references/GRCh38_no_alt_Pf3D7_v3_phiX.fa.pac",
+        sa = "data/references/GRCh38_no_alt_Pf3D7_v3_phiX.fa.sa"
+        # amb = "data/reference/GRCh38.fa.amb",
+        # ann = "data/reference/GRCh38.fa.ann",
+        # bwt = "data/reference/GRCh38.fa.bwt",
+        # pac = "data/reference/GRCh38.fa.pac",
+        # sa = "data/reference/GRCh38.fa.sa"
 
 rule subsample_all:
     input:
