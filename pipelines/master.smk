@@ -1,3 +1,4 @@
+include: "preprocess.smk"
 include: "alignment.smk"
 include: "kmer.smk"
 include: "dup_rate.smk"
@@ -25,6 +26,13 @@ WINDOWSIZE=5000000
 BUFFER=1000000
 NGEN=100
 RECOMB_POP="ACB"
+
+rule preprocess_all:
+    input:
+        fwd_pair = expand("data/fastq_cleaned/{id}_1.fastq.gz", id = ids_1x_all),
+        rev_pair = expand("data/fastq_cleaned/{id}_2.fastq.gz", id = ids_1x_all),
+        fwd_unpair = expand("data/fastq_cleaned/{id}_unpaired_1.fastq.gz", id = ids_1x_all),
+        rev_unpair = expand("data/fastq_cleaned/{id}_unpaired_2.fastq.gz", id = ids_1x_all)
 
 rule alignment_all:
     input:
