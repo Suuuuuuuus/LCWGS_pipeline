@@ -19,9 +19,9 @@ rule compute_bedgraph:
 
 rule compute_subsampled_bedgraph:
     input:
-        ss_bam = "data/subsampled_bams/{subsample}_subsampled.bam"
+        ss_bam = "data/subsampled_bams/{id}_subsampled.bam"
     output:
-        ss_bedgraph = "results/coverage/subsampled_bedgraphs/{subsample}_subsampled_bedgraph.txt"
+        ss_bedgraph = "results/coverage/subsampled_bedgraphs/{id}_subsampled_bedgraph.txt"
     resources: mem_mb = 50000
     shell: """
         bedtools genomecov -ibam {input.ss_bam} -bga | \
@@ -30,7 +30,7 @@ rule compute_subsampled_bedgraph:
     """
 
 # If there are lots of subsamples, we only plot the most and least curves compared with the expectation, otherwise plot all
-num_subsamples, = glob_wildcards("data/subsampled_bams/{subsample}_subsampled.bam")
+num_subsamples, = glob_wildcards("data/subsampled_bams/{id}_subsampled.bam")
 if len(num_subsamples) >= 100:
     ruleorder: plot_aggregated_subsample_coverage > plot_separated_subsample_coverage
 else:
@@ -39,7 +39,7 @@ else:
 rule plot_separated_subsample_coverage:
     input:
         code = "scripts/plot_at_least_coverage_separated.py",
-        ss_bedgraphs = expand("results/coverage/subsampled_bedgraphs/{subsample}_subsampled_bedgraph.txt", subsample = ids_1x_all)
+        ss_bedgraphs = expand("results/coverage/subsampled_bedgraphs/{id}_subsampled_bedgraph.txt", subsample = ids_1x_all)
     output:
         graph = "graphs/fig8_prop_genome_at_least_coverage.png"
     params:
@@ -53,7 +53,7 @@ rule plot_separated_subsample_coverage:
 rule plot_aggregated_subsample_coverage:
     input:
         code = "scripts/plot_at_least_coverage_aggregated.py",
-        ss_bedgraphs = expand("results/coverage/subsampled_bedgraphs/{subsample}_subsampled_bedgraph.txt", subsample = ids_1x_all)
+        ss_bedgraphs = expand("results/coverage/subsampled_bedgraphs/{id}_subsampled_bedgraph.txt", subsample = ids_1x_all)
     output:
         graph = "graphs/fig8_prop_genome_at_least_coverage.png"
     params:
@@ -110,9 +110,9 @@ rule samtools_coverage:
 
 rule samtools_ss_coverage:
     input:
-        ss_bam = "data/subsampled_bams/{subsample}_subsampled.bam"
+        ss_bam = "data/subsampled_bams/{id}_subsampled.bam"
     output:
-        per_chromosome_ss_coverage = "results/coverage/per_chromosome_ss_coverage/{subsample}_per_chromosome_ss_coverage.txt"
+        per_chromosome_ss_coverage = "results/coverage/per_chromosome_ss_coverage/{id}_per_chromosome_ss_coverage.txt"
     shell: """
         samtools coverage {input.ss_bam} | sed -n '2,23p' > {output.per_chromosome_ss_coverage}
     """
@@ -133,7 +133,7 @@ rule calculate_ss_uncoverage_rate:
     input:
         per_chromosome_ss_coverage = rules.samtools_ss_coverage.output.per_chromosome_ss_coverage
     output:
-        ss_uncoverage_rate = temp("results/coverage/per_chromosome_ss_coverage/{subsample}_ss_uncoverage_rate.txt"),
+        ss_uncoverage_rate = temp("results/coverage/per_chromosome_ss_coverage/{id}_ss_uncoverage_rate.txt"),
     shell: """
         total=$(cut -f3 {input.per_chromosome_ss_coverage} | paste -sd+ | bc)
         covered=$(cut -f5 {input.per_chromosome_ss_coverage} | paste -sd+ | bc)
@@ -152,7 +152,7 @@ rule aggregate_uncoverage_rate:
 
 rule aggregate_ss_uncoverage_rate:
     input:
-        files = expand("results/coverage/per_chromosome_ss_coverage/{subsample}_ss_uncoverage_rate.txt", subsample = ids_1x_all)
+        files = expand("results/coverage/per_chromosome_ss_coverage/{id}_ss_uncoverage_rate.txt", subsample = ids_1x_all)
     output:
         ss_uncoverage_rate = "results/coverage/per_chromosome_ss_coverage/ss_uncoverage_rate.txt"
     shell: """

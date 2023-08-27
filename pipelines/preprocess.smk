@@ -1,5 +1,7 @@
 configfile: "pipelines/config.json"
 
+# adapter = config['adapter']
+
 # Borrowed from Annie Froster
 rule fastuniq:
     input:
@@ -36,7 +38,7 @@ rule trimmomatic:
         fwd_unpair = "data/fastq_cleaned/{id}_unpaired_1.fastq.gz",
         rev_unpair = "data/fastq_cleaned/{id}_unpaired_2.fastq.gz"
     params:
-        adapters = "/well/band/users/rbx225/conda/skylake/pkgs/trimmomatic-0.39-hdfd78af_2/share/trimmomatic-0.39-2/adapters/TruSeq-PE-2.fa"
+        adapters = config['adapter']
     threads: 1
     resources:
         mem = '10G'

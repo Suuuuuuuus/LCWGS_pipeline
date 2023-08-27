@@ -1,8 +1,8 @@
 from os.path import exists
 import json
 import pandas as pd
-#chromosome = [i for i in range(1,23)]
-chromosome = [11]
+chromosome = [i for i in range(1,23)]
+
 # The followings are global parameters from `activate`:
 QUILT_HOME = "/well/band/users/rbx225/software/QUILT/"
 ANALYSIS_DIR = "/well/band/users/rbx225/GGVP/results/imputation/"

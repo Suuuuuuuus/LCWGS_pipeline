@@ -15,13 +15,16 @@ import pandas as pd
 config['samples'] = pd.read_table("samples.tsv", header = None, names = ['Code'])
 ids_1x_all = list(config['samples']['Code'].values)
 chromosome = [i for i in range(1,23)]
-# chromosome = [11]
+
+# The followings are global parameters:
+clean_fastq = config['clean_fastq']
+reheader = config['reheader']
+concatenate = config['concatenate']
 
 # The followings are global parameters from `activate`:
 QUILT_WRAP_HOME = "/well/band/users/rbx225/GGVP/QUILT-wrap/"
 QUILT_HOME = "/well/band/users/rbx225/software/QUILT/"
 ANALYSIS_DIR = "/well/band/users/rbx225/GGVP/results/imputation/"
-RECOMB_POP="ACB"
 WINDOWSIZE=5000000
 BUFFER=1000000
 NGEN=100
@@ -41,12 +44,11 @@ rule alignment_all:
 
 rule reference_all:
     input:
-        ref = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta",
-        amb = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fa.amb",
-        ann = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fa.ann",
-        bwt = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fa.bwt",
-        pac = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fa.pac",
-        sa = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fa.sa"
+        amb = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fa.amb" if concatenate else "data/reference/GRCh38.fa.amb",
+        ann = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fa.ann" if concatenate else "data/reference/GRCh38.fa.ann",
+        bwt = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fa.bwt" if concatenate else "data/reference/GRCh38.fa.bwt",
+        pac = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fa.pac" if concatenate else "data/reference/GRCh38.fa.pac",
+        sa = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fa.sa" if concatenate else "data/reference/GRCh38.fa.sa"
         # amb = "data/reference/GRCh38.fa.amb",
         # ann = "data/reference/GRCh38.fa.ann",
         # bwt = "data/reference/GRCh38.fa.bwt",
@@ -55,20 +57,20 @@ rule reference_all:
 
 rule subsample_all:
     input:
-        ss_fastq1 = expand("data/subsampled_fastq/{subsample}_subsampled_1.fastq", subsample = ids_1x_all),
-        ss_fastq2 = expand("data/subsampled_fastq/{subsample}_subsampled_2.fastq", subsample = ids_1x_all),
-        ss_bams = expand("data/subsampled_bams/{subsample}_subsampled.bam", subsample = ids_1x_all),
-        ss_bais = expand("data/subsampled_bams/{subsample}_subsampled.bam.bai", subsample = ids_1x_all)
+        ss_fastq1 = expand("data/subsampled_fastq/{id}_subsampled_1.fastq", id = ids_1x_all),
+        ss_fastq2 = expand("data/subsampled_fastq/{id}_subsampled_2.fastq", id = ids_1x_all),
+        ss_bams = expand("data/subsampled_bams/{id}_subsampled.bam", id = ids_1x_all),
+        ss_bais = expand("data/subsampled_bams/{id}_subsampled.bam.bai", id = ids_1x_all)
 
 rule coverage_all:
     input:
         bedgraphs = expand("results/coverage/bedgraphs/{id}_bedgraph.txt", id = ids_1x_all),
-        ss_bedgraphs = expand("results/coverage/subsampled_bedgraphs/{subsample}_subsampled_bedgraph.txt", subsample = ids_1x_all),
+        ss_bedgraphs = expand("results/coverage/subsampled_bedgraphs/{id}_subsampled_bedgraph.txt", id = ids_1x_all),
         graph_subsample_coverage = "graphs/fig8_prop_genome_at_least_coverage.png", # This needs investigation
         per_bin_coverage_1x_coordinates = expand("results/coverage/per_bin_coverage/1x/{id}_chr{chr}_coordinate.txt", id = ids_1x_all, chr = chromosome),
         per_bin_coverage_1x_bases = expand("results/coverage/per_bin_coverage/1x/{id}_chr{chr}_base.txt", id = ids_1x_all, chr = chromosome),
         per_chromosome_coverage = expand("results/coverage/per_chromosome_coverage/{id}_per_chromosome_coverage.txt", id = ids_1x_all),
-        ss_per_chromosome_coverage = expand("results/coverage/per_chromosome_ss_coverage/{subsample}_per_chromosome_ss_coverage.txt", subsample = ids_1x_all),
+        ss_per_chromosome_coverage = expand("results/coverage/per_chromosome_ss_coverage/{id}_per_chromosome_ss_coverage.txt", id = ids_1x_all),
         uncoverage_rate = "results/coverage/per_chromosome_coverage/uncoverage_rate.txt",
         ss_uncoverage_rate = "results/coverage/per_chromosome_ss_coverage/ss_uncoverage_rate.txt",
         avg_coverage = "results/coverage/per_sample_coverage.txt",

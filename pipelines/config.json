@@ -1,7 +1,10 @@
 {
-	"fastq_filename_template": "data/fastq/{id}.fastq.gz",
-	"bam_filename_template": "results/bam/{id}.bam",
-
 	"ref38": "data/reference/GRCh38.fa",
-	"samples": "samples.tsv"
+	"samples": "samples.tsv",
+    "concatenate": true, 
+    "clean_fastq": true,
+    "adapter": "/well/band/users/rbx225/conda/skylake/pkgs/trimmomatic-0.39-hdfd78af_2/share/trimmomatic-0.39-2/adapters/TruSeq-PE-2.fa",
+    "reheader": true,
+    "subsample_depth_1x": 10596026,
+    "subsample_depth": 1
 }

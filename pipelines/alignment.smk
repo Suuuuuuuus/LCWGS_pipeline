@@ -1,17 +1,34 @@
 configfile: "pipelines/config.json"
 
+clean_fastq = config['clean_fastq']
+reheader = config['reheader']
+concatenate = config['concatenate']
+
 rule alignment:
     input:
-        fastq1 = "data/fastq/{id}_1.fastq.gz",
-        fastq2 = "data/fastq/{id}_2.fastq.gz", 
-        reference = config["ref38"]
+        fastq1 = "data/fastq_cleaned/{id}_1.fastq.gz" if clean_fastq else "data/fastq/{id}_1.fastq.gz",
+        fastq2 = "data/fastq_cleaned/{id}_2.fastq.gz" if clean_fastq else "data/fastq/{id}_2.fastq.gz",
+        reference = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta" if concatenate else reference = config["ref38"]
+        # fastq1 = "data/fastq/{id}_1.fastq.gz",
+        # fastq2 = "data/fastq/{id}_2.fastq.gz", 
+        # reference = config["ref38"]
     output: 
         bam = temp("data/bams/tmp/{id}.bam")
     resources: 
         mem_mb = 50000
     threads: 4
+    params: 
+        reheader = reheader
     shell: """
-	bwa mem -t {threads} {input.reference} {input.fastq1} {input.fastq2} | samtools view -b -o {output.bam}
+        bwa mem -t {threads} {input.reference} {input.fastq1} {input.fastq2} | samtools view -b -o {output.bam}
+	    if [[ -d "data/bam_headers" && {params.reheader} == "True" ]]
+        then
+            mkdir -p "data/tmp"
+            grep -v PG "data/bam_headers/{wildcards.id}.header.txt" > "data/tmp/{wildcards.id}.reheader.txt"
+            samtools reheader "data/tmp/{wildcards.id}.reheader.txt" {output.bam} > "data/tmp/{wildcards.id}.bam"
+            rm {output.bam}
+            mv "data/tmp/{wildcards.id}.bam" {output.bam}
+        fi
     """
 
 rule fixmate:

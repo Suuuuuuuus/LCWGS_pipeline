@@ -1,5 +1,7 @@
 configfile: "pipelines/config.json"
 
+concatenate = config['concatenate']
+
 # Borrowed from Annie Froster
 rule concatenate_refs:
     input:
@@ -19,19 +21,18 @@ rule concatenate_refs:
 
 rule index_reference:
     input:
-        reference = rules.concatenate_refs.output.ref
-        # reference = config["ref38"]
+        reference = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta" if concatenate else config["ref38"]
     output:
         # amb = "data/reference/GRCh38.fa.amb",
         # ann = "data/reference/GRCh38.fa.ann",
         # bwt = "data/reference/GRCh38.fa.bwt",
         # pac = "data/reference/GRCh38.fa.pac",
         # sa = "data/reference/GRCh38.fa.sa"
-        amb = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fa.amb",
-        ann = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fa.ann",
-        bwt = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fa.bwt",
-        pac = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fa.pac",
-        sa = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fa.sa"
+        amb = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fa.amb" if concatenate else "data/reference/GRCh38.fa.amb",
+        ann = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fa.ann" if concatenate else "data/reference/GRCh38.fa.ann",
+        bwt = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fa.bwt" if concatenate else "data/reference/GRCh38.fa.bwt",
+        pac = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fa.pac" if concatenate else "data/reference/GRCh38.fa.pac",
+        sa = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fa.sa" if concatenate else "data/reference/GRCh38.fa.sa"
     resources:
         mem = '10G'
     shell: """
