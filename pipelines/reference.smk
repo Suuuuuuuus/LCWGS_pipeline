@@ -34,7 +34,7 @@ rule index_reference:
         pac = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fa.pac" if concatenate else "data/reference/GRCh38.fa.pac",
         sa = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fa.sa" if concatenate else "data/reference/GRCh38.fa.sa"
     resources:
-        mem = '10G'
+        mem = '30G'
     shell: """
         bwa index {input.reference}
     """

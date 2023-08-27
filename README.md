@@ -27,9 +27,9 @@ Inputs:
 Explanation of Entries in the Config File:
 * `ref38`: Ready-in-use reference file
 * `samples`: A `samples.tsv` file to save all sample names
-* `concatenate`: `True` if several reference files are to be concatenated 
+* `concatenate`: `True` if several reference files are to be concatenated
 * `clean_fastq`: `True` if preprocessing of fastq files is required - drop duplicates, trim adapters, etc.
-* `reheader`: `True` if user has self-defined headers to replace after alignment
+* `reheader`: `True` if user has self-defined headers to replace after alignment, these header files should be put in `data/bam_headers/`
 * `subsample_depth_1x`: `=10596026`, number of reads for a read to be 1x
 * `subsample_depth`: depth to which subsample is performed
 

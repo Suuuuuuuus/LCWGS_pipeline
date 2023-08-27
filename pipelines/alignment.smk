@@ -8,7 +8,7 @@ rule alignment:
     input:
         fastq1 = "data/fastq_cleaned/{id}_1.fastq.gz" if clean_fastq else "data/fastq/{id}_1.fastq.gz",
         fastq2 = "data/fastq_cleaned/{id}_2.fastq.gz" if clean_fastq else "data/fastq/{id}_2.fastq.gz",
-        reference = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta" if concatenate else reference = config["ref38"]
+        reference = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta" if concatenate else config["ref38"]
         # fastq1 = "data/fastq/{id}_1.fastq.gz",
         # fastq2 = "data/fastq/{id}_2.fastq.gz", 
         # reference = config["ref38"]

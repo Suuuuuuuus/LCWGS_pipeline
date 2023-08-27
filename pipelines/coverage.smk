@@ -39,7 +39,7 @@ else:
 rule plot_separated_subsample_coverage:
     input:
         code = "scripts/plot_at_least_coverage_separated.py",
-        ss_bedgraphs = expand("results/coverage/subsampled_bedgraphs/{id}_subsampled_bedgraph.txt", subsample = ids_1x_all)
+        ss_bedgraphs = expand("results/coverage/subsampled_bedgraphs/{id}_subsampled_bedgraph.txt", id = ids_1x_all)
     output:
         graph = "graphs/fig8_prop_genome_at_least_coverage.png"
     params:
@@ -53,7 +53,7 @@ rule plot_separated_subsample_coverage:
 rule plot_aggregated_subsample_coverage:
     input:
         code = "scripts/plot_at_least_coverage_aggregated.py",
-        ss_bedgraphs = expand("results/coverage/subsampled_bedgraphs/{id}_subsampled_bedgraph.txt", subsample = ids_1x_all)
+        ss_bedgraphs = expand("results/coverage/subsampled_bedgraphs/{id}_subsampled_bedgraph.txt", id = ids_1x_all)
     output:
         graph = "graphs/fig8_prop_genome_at_least_coverage.png"
     params:
@@ -152,7 +152,7 @@ rule aggregate_uncoverage_rate:
 
 rule aggregate_ss_uncoverage_rate:
     input:
-        files = expand("results/coverage/per_chromosome_ss_coverage/{id}_ss_uncoverage_rate.txt", subsample = ids_1x_all)
+        files = expand("results/coverage/per_chromosome_ss_coverage/{id}_ss_uncoverage_rate.txt", id = ids_1x_all)
     output:
         ss_uncoverage_rate = "results/coverage/per_chromosome_ss_coverage/ss_uncoverage_rate.txt"
     shell: """
