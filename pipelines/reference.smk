@@ -27,13 +27,13 @@ rule index_reference:
         # bwt = "data/reference/GRCh38.fa.bwt",
         # pac = "data/reference/GRCh38.fa.pac",
         # sa = "data/reference/GRCh38.fa.sa"
-        amb = "data/references/GRCh38_no_alt_Pf3D7_v3_phiX.fa.amb",
-        ann = "data/references/GRCh38_no_alt_Pf3D7_v3_phiX.fa.ann",
-        bwt = "data/references/GRCh38_no_alt_Pf3D7_v3_phiX.fa.bwt",
-        pac = "data/references/GRCh38_no_alt_Pf3D7_v3_phiX.fa.pac",
-        sa = "data/references/GRCh38_no_alt_Pf3D7_v3_phiX.fa.sa"
-    resources: 
-        mem = '3G'
+        amb = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fa.amb",
+        ann = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fa.ann",
+        bwt = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fa.bwt",
+        pac = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fa.pac",
+        sa = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fa.sa"
+    resources:
+        mem = '10G'
     shell: """
         bwa index {input.reference}
     """
