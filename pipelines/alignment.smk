@@ -9,9 +9,6 @@ rule alignment:
         fastq1 = "data/fastq_cleaned/{id}_1.fastq.gz" if clean_fastq else "data/fastq/{id}_1.fastq.gz",
         fastq2 = "data/fastq_cleaned/{id}_2.fastq.gz" if clean_fastq else "data/fastq/{id}_2.fastq.gz",
         reference = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta" if concatenate else config["ref38"]
-        # fastq1 = "data/fastq/{id}_1.fastq.gz",
-        # fastq2 = "data/fastq/{id}_2.fastq.gz",
-        # reference = config["ref38"]
     output:
         bam = temp("data/bams/tmp/{id}.bam")
     resources:
@@ -24,17 +21,18 @@ rule alignment:
         if [[ -d "data/bam_headers" && {params.reheader} == "True" ]]
         then
             mkdir -p data/tmp
+            grep "^@RG" "data/bam_headers/{wildcards.id}.header.txt" | sed 's/\t/\n/g' > "data/tmp/{wildcards.id}.rgs.txt"
             picard AddOrReplaceReadGroups \
             I={output.bam} \
             O="data/tmp/{wildcards.id}.bam" \
-            RGLB=$(grep ^@RG "data/bam_headers/{wildcards.id}.header.txt" | sed 's/\t/\n/g' | grep ^LB: | sed 's/LB://') \
-            RGPL=$(grep ^@RG "data/bam_headers/{wildcards.id}.header.txt" | sed 's/\t/\n/g' | grep ^PL: | sed 's/PL://') \
-            RGPU=$(grep ^@RG "data/bam_headers/{wildcards.id}.header.txt" | sed 's/\t/\n/g' | grep ^PU: | sed 's/PU://') \
-            RGSM=$(grep ^@RG "data/bam_headers/{wildcards.id}.header.txt" | sed 's/\t/\n/g' | grep ^SM: | sed 's/SM://') \
-            RGID=$(grep ^@RG "data/bam_headers/{wildcards.id}.header.txt" | sed 's/\t/\n/g' | grep ^ID: | sed 's/ID://') \
-            RGCN=$(grep ^@RG "data/bam_headers/{wildcards.id}.header.txt" | sed 's/\t/\n/g' | grep ^CN: | sed 's/CN://')
-#            --RGDT $(grep ^@RG "data/bam_headers/{wildcards.id}.header.txt" | sed 's/\t/\n/g' | grep ^DT: | sed 's/DT://')
-            rm {output.bam}
+            RGLB=$(grep "^LB:" "data/tmp/{wildcards.id}.rgs.txt" | sed 's/LB://g') \
+            RGPL=$(grep "^PL:" "data/tmp/{wildcards.id}.rgs.txt" | sed 's/PL://g') \
+            RGPU=$(grep "^PU:" "data/tmp/{wildcards.id}.rgs.txt" | sed 's/PU://g') \
+            RGSM=$(grep "^SM:" "data/tmp/{wildcards.id}.rgs.txt" | sed 's/SM://g') \
+            RGID=$(grep "^ID:" "data/tmp/{wildcards.id}.rgs.txt" | sed 's/ID://g') \
+            RGCN=$(grep "^CN:" "data/tmp/{wildcards.id}.rgs.txt" | sed 's/CN://g')
+#           RGDT=$(grep "^DT:" "data/tmp/{wildcards.id}.rgs.txt" | sed 's/DT://g')
+            rm {output.bam} "data/tmp/{wildcards.id}.rgs.txt"
             cp "data/tmp/{wildcards.id}.bam" {output.bam}
         fi
     """
