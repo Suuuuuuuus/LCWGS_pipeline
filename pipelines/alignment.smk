@@ -21,7 +21,7 @@ rule alignment:
         if [[ -d "data/bam_headers" && {params.reheader} == "True" ]]
         then
             mkdir -p data/tmp
-            grep "^@RG" "data/bam_headers/{wildcards.id}.header.txt" | sed 's/\t/\n/g' > "data/tmp/{wildcards.id}.rgs.txt"
+            grep "^@RG" "data/bam_headers/{wildcards.id}.header.txt" | tr '\t' '\n' > "data/tmp/{wildcards.id}.rgs.txt"
             picard AddOrReplaceReadGroups \
             I={output.bam} \
             O="data/tmp/{wildcards.id}.bam" \
@@ -30,10 +30,10 @@ rule alignment:
             RGPU=$(grep "^PU:" "data/tmp/{wildcards.id}.rgs.txt" | sed 's/PU://g') \
             RGSM=$(grep "^SM:" "data/tmp/{wildcards.id}.rgs.txt" | sed 's/SM://g') \
             RGID=$(grep "^ID:" "data/tmp/{wildcards.id}.rgs.txt" | sed 's/ID://g') \
-            RGCN=$(grep "^CN:" "data/tmp/{wildcards.id}.rgs.txt" | sed 's/CN://g')
-#           RGDT=$(grep "^DT:" "data/tmp/{wildcards.id}.rgs.txt" | sed 's/DT://g')
+            RGCN=$(grep "^CN:" "data/tmp/{wildcards.id}.rgs.txt" | sed 's/CN://g') \
+            RGDT=$(grep "^DT:" "data/tmp/{wildcards.id}.rgs.txt" | sed 's/DT://g')
             rm {output.bam} "data/tmp/{wildcards.id}.rgs.txt"
-            cp "data/tmp/{wildcards.id}.bam" {output.bam}
+            mv "data/tmp/{wildcards.id}.bam" {output.bam}
         fi
     """
 
