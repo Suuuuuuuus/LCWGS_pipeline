@@ -10,18 +10,18 @@ rule alignment:
         fastq2 = "data/fastq_cleaned/{id}_2.fastq.gz" if clean_fastq else "data/fastq/{id}_2.fastq.gz",
         reference = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta" if concatenate else config["ref38"]
         # fastq1 = "data/fastq/{id}_1.fastq.gz",
-        # fastq2 = "data/fastq/{id}_2.fastq.gz", 
+        # fastq2 = "data/fastq/{id}_2.fastq.gz",
         # reference = config["ref38"]
-    output: 
+    output:
         bam = temp("data/bams/tmp/{id}.bam")
-    resources: 
+    resources:
         mem_mb = 50000
     threads: 4
-    params: 
+    params:
         reheader = reheader
     shell: """
         bwa mem -t {threads} {input.reference} {input.fastq1} {input.fastq2} | samtools view -b -o {output.bam}
-	    if [[ -d "data/bam_headers" && {params.reheader} == "True" ]]
+        if [[ -d "data/bam_headers" && {params.reheader} == "True" ]]
         then
             mkdir -p "data/tmp"
             grep -v PG "data/bam_headers/{wildcards.id}.header.txt" > "data/tmp/{wildcards.id}.reheader.txt"
@@ -32,24 +32,24 @@ rule alignment:
     """
 
 rule fixmate:
-	input:
-		bam = rules.alignment.output.bam
-	output:
-		fixmate = temp("data/bams/tmp/{id}.fixmate.bam")
-	resources: mem_mb = 50000
-	shell: """
-		samtools fixmate -m {input.bam} {output.fixmate}
-	"""
+    input:
+        bam = rules.alignment.output.bam
+    output:
+        fixmate = temp("data/bams/tmp/{id}.fixmate.bam")
+    resources: mem_mb = 50000
+    shell: """
+        samtools fixmate -m {input.bam} {output.fixmate}
+    """
 
 rule sort:
-	input:	
-		fixmate = rules.fixmate.output.fixmate
-	output:
-		sorted = temp("data/bams/tmp/{id}.sorted.bam")
-	resources: mem_mb = 50000
-	shell: """
-		samtools sort -o {output.sorted} {input.fixmate}
-	"""
+    input:
+        fixmate = rules.fixmate.output.fixmate
+    output:
+        sorted = temp("data/bams/tmp/{id}.sorted.bam")
+    resources: mem_mb = 50000
+    shell: """
+        samtools sort -o {output.sorted} {input.fixmate}
+    """
 
 rule index:
 	input:

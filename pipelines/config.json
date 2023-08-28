@@ -1,7 +1,7 @@
 {
-	"ref38": "data/reference/GRCh38.fa",
-	"samples": "samples.tsv",
-    "concatenate": true, 
+    "ref38": "data/reference/GRCh38.fa",
+    "samples": "samples.tsv",
+    "concatenate": true,
     "clean_fastq": true,
     "adapter": "/well/band/users/rbx225/conda/skylake/pkgs/trimmomatic-0.39-hdfd78af_2/share/trimmomatic-0.39-2/adapters/TruSeq-PE-2.fa",
     "reheader": true,

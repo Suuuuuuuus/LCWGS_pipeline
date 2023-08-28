@@ -34,7 +34,7 @@ Explanation of Entries in the Config File:
 * `subsample_depth`: depth to which subsample is performed
 
 Outputs:
-* `preprocess.smk`: 
+* `preprocess.smk`:
     * Cleaned fastq files
 * `alignment.smk`:
     * Aligned and sorted bam files and there indices
@@ -70,5 +70,6 @@ Outputs:
 
 Run the Pipeline:
 * For now, the whole pipeline is separated into different snakemake files that groups a bunch of jobs together. To run a specific file, use, for example, `snakemake -s pipelines/master.smk -c 1 alignment_all` (needless to say, don't forget to dry-run first by `-n`).
+* Alternatively, a `submit_snakemakesd
 * I don't know if there is a single command that you can run through the whole pipeline, but I deliberately leave a result-wrapper under `rule all` (which basically merge all results into a huge dataframe that hopefully eases downstream analysis).
 
