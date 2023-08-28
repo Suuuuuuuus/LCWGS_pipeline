@@ -23,11 +23,19 @@ rule alignment:
         bwa mem -t {threads} {input.reference} {input.fastq1} {input.fastq2} | samtools view -b -o {output.bam}
         if [[ -d "data/bam_headers" && {params.reheader} == "True" ]]
         then
-            mkdir -p "data/tmp"
-            grep -v PG "data/bam_headers/{wildcards.id}.header.txt" > "data/tmp/{wildcards.id}.reheader.txt"
-            samtools reheader "data/tmp/{wildcards.id}.reheader.txt" {output.bam} > "data/tmp/{wildcards.id}.bam"
+            mkdir -p data/tmp
+            picard AddOrReplaceReadGroups \
+            I={output.bam} \
+            O="data/tmp/{wildcards.id}.bam" \
+            RGLB=$(grep ^@RG "data/bam_headers/{wildcards.id}.header.txt" | sed 's/\t/\n/g' | grep ^LB: | sed 's/LB://') \
+            RGPL=$(grep ^@RG "data/bam_headers/{wildcards.id}.header.txt" | sed 's/\t/\n/g' | grep ^PL: | sed 's/PL://') \
+            RGPU=$(grep ^@RG "data/bam_headers/{wildcards.id}.header.txt" | sed 's/\t/\n/g' | grep ^PU: | sed 's/PU://') \
+            RGSM=$(grep ^@RG "data/bam_headers/{wildcards.id}.header.txt" | sed 's/\t/\n/g' | grep ^SM: | sed 's/SM://') \
+            RGID=$(grep ^@RG "data/bam_headers/{wildcards.id}.header.txt" | sed 's/\t/\n/g' | grep ^ID: | sed 's/ID://') \
+            RGCN=$(grep ^@RG "data/bam_headers/{wildcards.id}.header.txt" | sed 's/\t/\n/g' | grep ^CN: | sed 's/CN://')
+#            --RGDT $(grep ^@RG "data/bam_headers/{wildcards.id}.header.txt" | sed 's/\t/\n/g' | grep ^DT: | sed 's/DT://')
             rm {output.bam}
-            mv "data/tmp/{wildcards.id}.bam" {output.bam}
+            cp "data/tmp/{wildcards.id}.bam" {output.bam}
         fi
     """
 
@@ -38,7 +46,7 @@ rule fixmate:
         fixmate = temp("data/bams/tmp/{id}.fixmate.bam")
     resources: mem_mb = 50000
     shell: """
-        samtools fixmate -m {input.bam} {output.fixmate}
+        samtools sort -n {input.bam} | samtools fixmate -m - {output.fixmate}
     """
 
 rule sort:
