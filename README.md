@@ -70,6 +70,6 @@ Outputs:
 
 Run the Pipeline:
 * For now, the whole pipeline is separated into different snakemake files that groups a bunch of jobs together. To run a specific file, use, for example, `snakemake -s pipelines/master.smk -c 1 alignment_all` (needless to say, don't forget to dry-run first by `-n`).
-* Alternatively, a `submit_snakemakesd
+* Alternatively, a `submit_snakemake.sh` submission script is provided. This file takes two parameters, with the first to be number of cores required, and the second to be the name of the rules one'd like to run. For example, you can submit by `./submit_snakemake.sh 8 alignment_all`.
 * I don't know if there is a single command that you can run through the whole pipeline, but I deliberately leave a result-wrapper under `rule all` (which basically merge all results into a huge dataframe that hopefully eases downstream analysis).
 
