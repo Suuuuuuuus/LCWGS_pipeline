@@ -50,11 +50,6 @@ rule reference_all:
         pac = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta.pac" if concatenate else "data/reference/GRCh38.fa.pac",
         sa = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta.sa" if concatenate else "data/reference/GRCh38.fa.sa"
 
-rule merge_all:
-    input:
-        merged_bams = expand("data/merged_bams/{id}.bam", id = ids_1x_all),
-        merged_bais = expand("data/merged_bams/{id}.bam.bai", id = ids_1x_all)
-
 rule subsample_all:
     input:
         ss_fastq1 = expand("data/subsampled_fastq/{id}_subsampled_1.fastq", id = ids_1x_all),
