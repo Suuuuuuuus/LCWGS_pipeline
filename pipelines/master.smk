@@ -87,7 +87,9 @@ rule fastqc_all:
         html2 = expand("results/fastqc/{id}_2_fastqc.html", id = ids_1x_all),
         zip1 = expand("results/fastqc/{id}_1_fastqc.zip", id = ids_1x_all),
         zip2 = expand("results/fastqc/{id}_2_fastqc.zip", id = ids_1x_all),
-        fastqc = "results/fastqc/duplication_rate_fastqc.txt"
+        fastqc = "results/fastqc/duplication_rate_fastqc.txt",
+        multiqc = "results/fastqc/multiqc_report.html",
+        multiqcdir = "results/fastqc/multiqc_data"
 
 rule kmer_all:
     input:

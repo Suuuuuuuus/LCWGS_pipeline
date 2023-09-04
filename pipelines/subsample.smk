@@ -1,13 +1,11 @@
 configfile: "pipelines/config.json"
 
-clean_fastq = config['clean_fastq']
-concatenate = config['concatenate']
 subsample_depth = config['subsample_depth_1x']*config['subsample_depth']
 
 rule ss_fastq:
     input:
-        fastq1 = "data/fastq_cleaned/{id}_1.fastq.gz" if clean_fastq else "data/fastq/{id}_1.fastq.gz",
-        fastq2 = "data/fastq_cleaned/{id}_2.fastq.gz" if clean_fastq else "data/fastq/{id}_2.fastq.gz"
+        fastq1 = "data/fastq_cleaned/{id}_1.fastq.gz" if config['clean_fastq'] else "data/fastq/{id}_1.fastq.gz",
+        fastq2 = "data/fastq_cleaned/{id}_2.fastq.gz" if config['clean_fastq'] else "data/fastq/{id}_2.fastq.gz"
     output:
         ss_fastq1 = "data/subsampled_fastq/{id}_subsampled_1.fastq",
         ss_fastq2 = "data/subsampled_fastq/{id}_subsampled_2.fastq"
@@ -24,7 +22,7 @@ rule ss_alignment:
     input:
         ss_fastq1 = "data/subsampled_fastq/{id}_subsampled_1.fastq",
         ss_fastq2 = "data/subsampled_fastq/{id}_subsampled_2.fastq",
-        reference = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta" if concatenate else config["ref38"]
+        reference = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta" if config['concatenate'] else config["ref38"]
     output:
         bam = temp("data/subsampled_bams/tmp/{id}_subsampled.bam")
     resources:

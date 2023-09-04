@@ -6,8 +6,8 @@ ids_1x_all = list(config['samples']['Code'].values)
 
 rule fastqc:
     input:
-        fastq1 = "data/fastq/{id}_1.fastq.gz",
-        fastq2 = "data/fastq/{id}_2.fastq.gz"
+        fastq1 = "data/fastq_cleaned/{id}_1.fastq.gz" if clean_fastq else "data/fastq/{id}_1.fastq.gz",
+        fastq2 = "data/fastq_cleaned/{id}_2.fastq.gz" if clean_fastq else "data/fastq/{id}_2.fastq.gz"
     output:
         html1 = "results/fastqc/{id}_1_fastqc.html",
         html2 = "results/fastqc/{id}_2_fastqc.html",
@@ -21,6 +21,23 @@ rule fastqc:
         mkdir -p {params.outputdir}
         fastqc -q -o {params.outputdir} {input.fastq1} {input.fastq2}
     """
+
+rule multiqc:
+    input:
+        expand("results/fastqc/{id}_1_fastqc.html",id = ids_1x_all),
+        expand("results/fastqc/{id}_2_fastqc.html",id = ids_1x_all),
+        expand("results/fastqc/{id}_1_fastqc.zip",id = ids_1x_all),
+        expand("results/fastqc/{id}_2_fastqc.zip",id = ids_1x_all)
+    output:
+        "results/fastqc/multiqc_report.html",
+        directory("results/fastqc/multiqc_data")
+    threads: 1
+    resources:
+        mem = '10G'
+    params:
+        "results/fastqc/"
+    shell:
+        "multiqc {params} -o {params}"
 
 rule extract_fastqc_dup_rate:
     input:
