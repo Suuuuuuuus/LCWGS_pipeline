@@ -49,11 +49,11 @@ rule reference_all:
         bwt = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta.bwt" if concatenate else "data/reference/GRCh38.fa.bwt",
         pac = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta.pac" if concatenate else "data/reference/GRCh38.fa.pac",
         sa = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta.sa" if concatenate else "data/reference/GRCh38.fa.sa"
-        # amb = "data/reference/GRCh38.fa.amb",
-        # ann = "data/reference/GRCh38.fa.ann",
-        # bwt = "data/reference/GRCh38.fa.bwt",
-        # pac = "data/reference/GRCh38.fa.pac",
-        # sa = "data/reference/GRCh38.fa.sa"
+
+rule merge_all:
+    input:
+        merged_bams = expand("data/merged_bams/{id}.bam", id = ids_1x_all),
+        merged_bais = expand("data/merged_bams/{id}.bam.bai", id = ids_1x_all)
 
 rule subsample_all:
     input:
