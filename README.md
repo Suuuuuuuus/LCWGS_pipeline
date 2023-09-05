@@ -9,6 +9,7 @@ Sus' lcwgs pipeline to process low coverage Illumina sequencing data. Current an
 * Preprocess and cleaness
 
 To Do:
+* Think how to modify `subsample.smk` so that it does not depend on `preprocess.smk` if the fastq files are already cleaned.
 * Restructure parameter specification json file for users (less priority)
 * Optimisation: codes, names, structures, separation punctures, etc
 * Modify breadth of coverage graph to solve memory issues ("graphs/fig8_prop_genome_at_least_coverage.png" this maybe problematic)
