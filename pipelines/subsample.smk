@@ -2,16 +2,37 @@ configfile: "pipelines/config.json"
 
 subsample_depth = config['subsample_depth_1x']*config['subsample_depth']
 
+if config['clean_fastq']:
+    ruleorder: ss_fastq_alt > ss_fastq
+else:
+    ruleorder: ss_fastq > ss_fastq_alt
+
 rule ss_fastq:
     input:
-        fastq1 = "data/fastq_cleaned/{id}_1.fastq.gz" if config['clean_fastq'] else "data/fastq/{id}_1.fastq.gz",
-        fastq2 = "data/fastq_cleaned/{id}_2.fastq.gz" if config['clean_fastq'] else "data/fastq/{id}_2.fastq.gz"
+	fastq1 = "data/fastq/{id}_1.fastq.gz",
+        fastq2 = "data/fastq/{id}_2.fastq.gz"
     output:
-        ss_fastq1 = "data/subsampled_fastq/{id}_subsampled_1.fastq",
-        ss_fastq2 = "data/subsampled_fastq/{id}_subsampled_2.fastq"
+	ss_fastq1 = temp("data/subsampled_fastq/{id}_subsampled_1.fastq"),
+        ss_fastq2 = temp("data/subsampled_fastq/{id}_subsampled_2.fastq")
+    resources:
+	mem_mb = 30000
+    params:
+        n = subsample_depth
+    shell: """
+	seqtk sample -s100 {input.fastq1} {params.n} > {output.ss_fastq1}
+        seqtk sample -s100 {input.fastq2} {params.n} > {output.ss_fastq2}
+    """
+
+rule ss_fastq_alt:
+    input:
+        fastq1 = "data/fastq_cleaned/{id}_1.fastq.gz",
+        fastq2 = "data/fastq_cleaned/{id}_2.fastq.gz"
+    output:
+        ss_fastq1 = temp("data/subsampled_fastq/{id}_subsampled_1.fastq"),
+        ss_fastq2 = temp("data/subsampled_fastq/{id}_subsampled_2.fastq")
     resources:
         mem_mb = 30000
-    params: 
+    params:
         n = subsample_depth
     shell: """
         seqtk sample -s100 {input.fastq1} {params.n} > {output.ss_fastq1}
@@ -29,7 +50,7 @@ rule ss_alignment:
         mem_mb = 30000
     threads: 1
     shell: """
-	    bwa mem -t {threads} {input.reference} {input.ss_fastq1} {input.ss_fastq2} | samtools view -b -o {output.bam}
+        bwa mem -t {threads} -p {input.reference} {input.ss_fastq1} {input.ss_fastq2} | samtools view -b -o {output.bam}
     """
 
 rule ss_fixmate:

@@ -1,10 +1,10 @@
-include: "preprocess.smk"
-include: "alignment.smk"
+#include: "preprocess.smk"
+#include: "alignment.smk"
 include: "kmer.smk"
 include: "dup_rate.smk"
-include: "fastqc.smk"
+#include: "fastqc.smk"
 include: "subsample.smk"
-include: "reference.smk"
+#include: "reference.smk"
 include: "coverage.smk"
 include: "imputation.smk"
 include: "imputation_prep.smk"
@@ -30,6 +30,7 @@ BUFFER=1000000
 NGEN=100
 RECOMB_POP="ACB"
 
+'''
 rule preprocess_all:
     input:
         fwd_pair = expand("data/fastq_cleaned/{id}_1.fastq.gz", id = ids_1x_all),
@@ -49,7 +50,7 @@ rule reference_all:
         bwt = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta.bwt" if concatenate else "data/reference/GRCh38.fa.bwt",
         pac = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta.pac" if concatenate else "data/reference/GRCh38.fa.pac",
         sa = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta.sa" if concatenate else "data/reference/GRCh38.fa.sa"
-
+'''
 rule subsample_all:
     input:
         ss_bams = expand("data/subsampled_bams/{id}_subsampled.bam", id = ids_1x_all),
@@ -78,7 +79,7 @@ rule dup_rate_all:
         proportion_ss_fragment_size = "results/fragment_size/porportion_ss_fragment_size.txt",
         proportion_fragment_size = "results/fragment_size/porportion_fragment_size.txt",
         fragment_overlap = "results/fragment_size/fragment_overlap.txt"
-
+'''
 rule fastqc_all:
     input:
         html1 = expand("results/fastqc/{id}_1_fastqc.html", id = ids_1x_all),
@@ -88,7 +89,7 @@ rule fastqc_all:
         fastqc = "results/fastqc/duplication_rate_fastqc.txt",
         multiqc = "results/fastqc/multiqc_report.html",
         multiqcdir = "results/fastqc/multiqc_data"
-
+'''
 rule kmer_all:
     input:
         jf_read = expand("results/kmer/{id}/read{read}/{id}_read{read}.tsv", id = ids_1x_all, read = ['1','2']),
