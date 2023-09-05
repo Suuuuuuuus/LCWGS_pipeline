@@ -9,17 +9,17 @@ else:
 
 rule ss_fastq:
     input:
-	fastq1 = "data/fastq/{id}_1.fastq.gz",
+        fastq1 = "data/fastq/{id}_1.fastq.gz",
         fastq2 = "data/fastq/{id}_2.fastq.gz"
     output:
-	ss_fastq1 = temp("data/subsampled_fastq/{id}_subsampled_1.fastq"),
+        ss_fastq1 = temp("data/subsampled_fastq/{id}_subsampled_1.fastq"),
         ss_fastq2 = temp("data/subsampled_fastq/{id}_subsampled_2.fastq")
     resources:
-	mem_mb = 30000
+        mem_mb = 30000
     params:
         n = subsample_depth
     shell: """
-	seqtk sample -s100 {input.fastq1} {params.n} > {output.ss_fastq1}
+        seqtk sample -s100 {input.fastq1} {params.n} > {output.ss_fastq1}
         seqtk sample -s100 {input.fastq2} {params.n} > {output.ss_fastq2}
     """
 
