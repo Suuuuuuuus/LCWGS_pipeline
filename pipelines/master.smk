@@ -52,8 +52,6 @@ rule reference_all:
 
 rule subsample_all:
     input:
-        ss_fastq1 = expand("data/subsampled_fastq/{id}_subsampled_1.fastq", id = ids_1x_all),
-        ss_fastq2 = expand("data/subsampled_fastq/{id}_subsampled_2.fastq", id = ids_1x_all),
         ss_bams = expand("data/subsampled_bams/{id}_subsampled.bam", id = ids_1x_all),
         ss_bais = expand("data/subsampled_bams/{id}_subsampled.bam.bai", id = ids_1x_all)
 
