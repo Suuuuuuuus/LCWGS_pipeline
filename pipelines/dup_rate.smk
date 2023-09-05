@@ -89,10 +89,10 @@ rule aggregate_fragment_size:
 
 rule calculate_proportion_ss_fragment_size:
     input:
-        ss_bam = "data/subsampled_bams/{subsample}_subsampled.bam"
+        ss_bam = "data/subsampled_bams/{id}_subsampled.bam"
     output:
-        fragment_size = temp("results/fragment_size/{subsample}/fragment_size.txt"),
-        txt = temp("results/fragment_size/{subsample}/{subsample}_proportion.txt")
+        fragment_size = temp("results/fragment_size/{id}/fragment_size.txt"),
+        txt = temp("results/fragment_size/{id}/{id}_proportion.txt")
     params:
         threshold = 500
     shell: """
@@ -101,12 +101,12 @@ rule calculate_proportion_ss_fragment_size:
         propn_count=$(awk '{{ if ($1 > {params.threshold} || $1 < -{params.threshold}) count++ }} END {{ print count }}' "$file_path")
         total_count=$(wc -l < "$file_path")
         proportion=$(awk "BEGIN {{ print $propn_count / $total_count }}")
-        echo "{wildcards.subsample}\t$proportion" > {output.txt}
+        echo "{wildcards.id}\t$proportion" > {output.txt}
     """
 
 rule aggregate_proportion_ss_fragment_size:
     input:
-        files = expand("results/fragment_size/{subsample}/{subsample}_proportion.txt", subsample = ids_1x_all)
+        files = expand("results/fragment_size/{id}/{id}_proportion.txt", id = ids_1x_all)
     output:
         proportion_ss_fragment_size = "results/fragment_size/porportion_ss_fragment_size.txt"
     shell: """

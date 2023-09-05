@@ -138,7 +138,7 @@ rule calculate_ss_uncoverage_rate:
         total=$(cut -f3 {input.per_chromosome_ss_coverage} | paste -sd+ | bc)
         covered=$(cut -f5 {input.per_chromosome_ss_coverage} | paste -sd+ | bc)
         result=$(echo "scale=4; (1-$covered/$total)" | bc)
-        echo "{wildcards.subsample} $result" > {output.ss_uncoverage_rate}
+        echo "{wildcards.id} $result" > {output.ss_uncoverage_rate}
     """
 
 rule aggregate_uncoverage_rate:
