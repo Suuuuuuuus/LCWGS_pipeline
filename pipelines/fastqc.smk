@@ -4,10 +4,33 @@ import pandas as pd
 config['samples'] = pd.read_table("samples.tsv", header = None, names = ['Code'])
 ids_1x_all = list(config['samples']['Code'].values)
 
+if clean_fastq:
+    ruleorder: fastqc_alt > fastqc
+else:
+    ruleorder: fastqc > fastqc_alt
+
 rule fastqc:
     input:
-        fastq1 = "data/fastq_cleaned/{id}_1.fastq.gz" if clean_fastq else "data/fastq/{id}_1.fastq.gz",
-        fastq2 = "data/fastq_cleaned/{id}_2.fastq.gz" if clean_fastq else "data/fastq/{id}_2.fastq.gz"
+        fastq1 = "data/fastq/{id}_1.fastq.gz",
+        fastq2 = "data/fastq/{id}_2.fastq.gz"
+    output:
+        html1 = "results/fastqc/{id}_1_fastqc.html",
+        html2 = "results/fastqc/{id}_2_fastqc.html",
+        zip1 = "results/fastqc/{id}_1_fastqc.zip",
+        zip2 = "results/fastqc/{id}_2_fastqc.zip"
+    params:
+        outputdir = "results/fastqc/"
+    shell: """
+        mkdir -p results
+        mkdir -p results/fastqc
+        mkdir -p {params.outputdir}
+        fastqc -q -o {params.outputdir} {input.fastq1} {input.fastq2}
+    """
+
+rule fastqc_alt:
+    input:
+        fastq1 = "data/fastq_cleaned/{id}_1.fastq.gz",
+        fastq2 = "data/fastq_cleaned/{id}_2.fastq.gz"
     output:
         html1 = "results/fastqc/{id}_1_fastqc.html",
         html2 = "results/fastqc/{id}_2_fastqc.html",
