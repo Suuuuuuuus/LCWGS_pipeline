@@ -48,7 +48,7 @@ rule ss_alignment:
         bam = temp("data/subsampled_bams/tmp/{id}_subsampled.bam")
     resources:
         mem_mb = 30000
-    threads: 1
+    threads: 8
     shell: """
         bwa mem -t {threads} {input.reference} {input.ss_fastq1} {input.ss_fastq2} | samtools view -b -o {output.bam}
     """
