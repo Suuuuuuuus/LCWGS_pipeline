@@ -1,10 +1,10 @@
-#include: "preprocess.smk"
-#include: "alignment.smk"
+include: "preprocess.smk"
+include: "alignment.smk"
 include: "kmer.smk"
 include: "dup_rate.smk"
-#include: "fastqc.smk"
+include: "fastqc.smk"
 include: "subsample.smk"
-#include: "reference.smk"
+include: "reference.smk"
 include: "coverage.smk"
 include: "imputation.smk"
 include: "imputation_prep.smk"
@@ -30,7 +30,6 @@ BUFFER=1000000
 NGEN=100
 RECOMB_POP="ACB"
 
-'''
 rule preprocess_all:
     input:
         fwd_pair = expand("data/fastq_cleaned/{id}_1.fastq.gz", id = ids_1x_all),
@@ -50,7 +49,7 @@ rule reference_all:
         bwt = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta.bwt" if concatenate else "data/reference/GRCh38.fa.bwt",
         pac = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta.pac" if concatenate else "data/reference/GRCh38.fa.pac",
         sa = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta.sa" if concatenate else "data/reference/GRCh38.fa.sa"
-'''
+
 rule subsample_all:
     input:
         ss_fastq1 = expand("data/subsampled_fastq/{id}_subsampled_1.fastq", id = ids_1x_all),
@@ -63,15 +62,15 @@ rule coverage_all:
         bedgraphs = expand("results/coverage/bedgraphs/{id}_bedgraph.txt", id = ids_1x_all),
         ss_bedgraphs = expand("results/coverage/subsampled_bedgraphs/{id}_subsampled_bedgraph.txt", id = ids_1x_all),
         graph_subsample_coverage = "graphs/fig8_prop_genome_at_least_coverage.png", # This needs investigation
-        per_bin_coverage_1x_coordinates = expand("results/coverage/per_bin_coverage/1x/{id}_chr{chr}_coordinate.txt", id = ids_1x_all, chr = chromosome),
-        per_bin_coverage_1x_bases = expand("results/coverage/per_bin_coverage/1x/{id}_chr{chr}_base.txt", id = ids_1x_all, chr = chromosome),
-        per_chromosome_coverage = expand("results/coverage/per_chromosome_coverage/{id}_per_chromosome_coverage.txt", id = ids_1x_all),
-        ss_per_chromosome_coverage = expand("results/coverage/per_chromosome_ss_coverage/{id}_per_chromosome_ss_coverage.txt", id = ids_1x_all),
+#        per_bin_coverage_1x_coordinates = expand("results/coverage/per_bin_coverage/1x/{id}_chr{chr}_coordinate.txt", id = ids_1x_all, chr = chromosome),
+#        per_bin_coverage_1x_bases = expand("results/coverage/per_bin_coverage/1x/{id}_chr{chr}_base.txt", id = ids_1x_all, chr = chromosome),
+#        per_chromosome_coverage = expand("results/coverage/per_chromosome_coverage/{id}_per_chromosome_coverage.txt", id = ids_1x_all),
+#        ss_per_chromosome_coverage = expand("results/coverage/per_chromosome_ss_coverage/{id}_per_chromosome_ss_coverage.txt", id = ids_1x_all),
         uncoverage_rate = "results/coverage/per_chromosome_coverage/uncoverage_rate.txt",
         ss_uncoverage_rate = "results/coverage/per_chromosome_ss_coverage/ss_uncoverage_rate.txt",
         avg_coverage = "results/coverage/per_sample_coverage.txt",
         graph_uncoverage_rate = "graphs/uncoverage_rate.png",
-        graph_chromosome_coverage = expand("graphs/fig6_per_bin_coverage_chr{chr}.png", chr = chromosome)
+#        graph_chromosome_coverage = expand("graphs/fig6_per_bin_coverage_chr{chr}.png", chr = chromosome)
 
 rule dup_rate_all:
     input:
