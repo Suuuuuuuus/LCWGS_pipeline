@@ -1,6 +1,6 @@
 configfile: "pipelines/config.json"
 
-subsample_depth = config['subsample_depth_1x']*config['subsample_depth']
+subsample_depth = int(config['subsample_depth_1x']*config['subsample_depth'])
 
 if config['clean_fastq']:
     ruleorder: ss_fastq_alt > ss_fastq
@@ -19,8 +19,8 @@ rule ss_fastq:
     params:
         n = subsample_depth
     shell: """
-        seqtk sample -s100 {input.fastq1} {params.n} > {output.ss_fastq1}
-        seqtk sample -s100 {input.fastq2} {params.n} > {output.ss_fastq2}
+        zcat {input.fastq1} | seqtk sample -s100 - {params.n} > {output.ss_fastq1}
+        zcat {input.fastq2} | seqtk sample -s100 - {params.n} > {output.ss_fastq2}
     """
 
 rule ss_fastq_alt:
@@ -35,8 +35,8 @@ rule ss_fastq_alt:
     params:
         n = subsample_depth
     shell: """
-        seqtk sample -s100 {input.fastq1} {params.n} > {output.ss_fastq1}
-        seqtk sample -s100 {input.fastq2} {params.n} > {output.ss_fastq2}
+        zcat {input.fastq1} | seqtk sample -s100 - {params.n} > {output.ss_fastq1}
+        zcat {input.fastq2} | seqtk sample -s100 - {params.n} > {output.ss_fastq2}
     """
 
 rule ss_alignment:
