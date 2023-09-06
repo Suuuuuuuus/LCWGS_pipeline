@@ -60,7 +60,7 @@ rule multiqc:
     params:
         "results/fastqc/"
     shell:
-        "multiqc {params} -o {params}"
+        "multiqc {params} --interactive -o {params}"
 
 rule extract_fastqc_dup_rate:
     input:
