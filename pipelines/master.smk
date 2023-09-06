@@ -76,8 +76,8 @@ rule dup_rate_all:
         samtools = "results/dup_rate/duplication_rate_samtools.txt",
         graph_samtools_dup_rate = "graphs/samtools_duplication_rate.png",
         avg_fragment_size = "results/fragment_size/fragment_size.txt",
-        proportion_ss_fragment_size = "results/fragment_size/porportion_ss_fragment_size.txt",
-        proportion_fragment_size = "results/fragment_size/porportion_fragment_size.txt",
+        proportion_ss_fragment_size = "results/fragment_size/proportion_ss_fragment_size.txt",
+        proportion_fragment_size = "results/fragment_size/proportion_fragment_size.txt",
         fragment_overlap = "results/fragment_size/fragment_overlap.txt"
 '''
 rule fastqc_all:
@@ -178,8 +178,8 @@ rule aggregate_results:
         kmer_accuracy2 = "results/kmer/kmer_accuracy_read2.txt",
         coverage = "results/coverage/per_sample_coverage.txt",
         fragment_size = "results/fragment_size/fragment_size.txt",
-        proportion_ss_fragment_size = "results/fragment_size/porportion_ss_fragment_size.txt",
-        proportion_fragment_size = "results/fragment_size/porportion_fragment_size.txt",
+        proportion_ss_fragment_size = "results/fragment_size/proportion_ss_fragment_size.txt",
+        proportion_fragment_size = "results/fragment_size/proportion_fragment_size.txt",
         fragment_overlap = "results/fragment_size/fragment_overlap.txt"
     output:
         result = "results/lcwgs_results.csv"

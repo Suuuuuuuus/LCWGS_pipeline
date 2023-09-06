@@ -108,7 +108,7 @@ rule aggregate_proportion_ss_fragment_size:
     input:
         files = expand("results/fragment_size/{id}/{id}_proportion.txt", id = ids_1x_all)
     output:
-        proportion_ss_fragment_size = "results/fragment_size/porportion_ss_fragment_size.txt"
+        proportion_ss_fragment_size = "results/fragment_size/proportion_ss_fragment_size.txt"
     shell: """
         cat {input.files} >> {output.proportion_ss_fragment_size}
     """
@@ -134,7 +134,7 @@ rule aggregate_proportion_fragment_size:
     input:
         files = expand("results/fragment_size/{id}/{id}_proportion_whole.txt", id = ids_1x_all)
     output:
-        proportion_fragment_size = "results/fragment_size/porportion_fragment_size.txt"
+        proportion_fragment_size = "results/fragment_size/proportion_fragment_size.txt"
     shell: """
 	cat {input.files} >> {output.proportion_fragment_size}
     """
