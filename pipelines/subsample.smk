@@ -12,8 +12,8 @@ rule ss_fastq:
         fastq1 = "data/fastq/{id}_1.fastq.gz",
         fastq2 = "data/fastq/{id}_2.fastq.gz"
     output:
-        ss_fastq1 = temp("data/subsampled_fastq/{id}_subsampled_1.fastq"),
-        ss_fastq2 = temp("data/subsampled_fastq/{id}_subsampled_2.fastq")
+        ss_fastq1 = "data/subsampled_fastq/{id}_subsampled_1.fastq",
+        ss_fastq2 = "data/subsampled_fastq/{id}_subsampled_2.fastq"
     resources:
         mem_mb = 30000
     params:
@@ -28,8 +28,8 @@ rule ss_fastq_alt:
         fastq1 = "data/fastq_cleaned/{id}_1.fastq.gz",
         fastq2 = "data/fastq_cleaned/{id}_2.fastq.gz"
     output:
-        ss_fastq1 = temp("data/subsampled_fastq/{id}_subsampled_1.fastq"),
-        ss_fastq2 = temp("data/subsampled_fastq/{id}_subsampled_2.fastq")
+        ss_fastq1 = "data/subsampled_fastq/{id}_subsampled_1.fastq",
+        ss_fastq2 = "data/subsampled_fastq/{id}_subsampled_2.fastq"
     resources:
         mem_mb = 30000
     params:
@@ -50,7 +50,7 @@ rule ss_alignment:
         mem_mb = 30000
     threads: 1
     shell: """
-        bwa mem -t {threads} -p {input.reference} {input.ss_fastq1} {input.ss_fastq2} | samtools view -b -o {output.bam}
+        bwa mem -t {threads} {input.reference} {input.ss_fastq1} {input.ss_fastq2} | samtools view -b -o {output.bam}
     """
 
 rule ss_fixmate:
