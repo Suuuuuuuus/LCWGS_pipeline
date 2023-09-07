@@ -4,7 +4,7 @@
 #SBATCH -o output.out
 #SBATCH -D /well/band/users/rbx225/GAMCC_1x/scripts
 #SBATCH -c 8
-#SBATCH --array=1-241
+#SBATCH --array=1-2
 
 module purge
 module load Anaconda3/2022.05
