@@ -4,7 +4,7 @@ import pandas as pd
 config['samples'] = pd.read_table("samples.tsv", header = None, names = ['Code'])
 ids_1x_all = list(config['samples']['Code'].values)
 
-if clean_fastq:
+if config['clean_fastq']:
     ruleorder: fastqc_alt > fastqc
 else:
     ruleorder: fastqc > fastqc_alt
