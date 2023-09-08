@@ -78,7 +78,7 @@ rule dup_rate_all:
         proportion_ss_fragment_size = "results/fragment_size/proportion_ss_fragment_size.txt",
         proportion_fragment_size = "results/fragment_size/proportion_fragment_size.txt",
         fragment_overlap = "results/fragment_size/fragment_overlap.txt"
-'''
+
 rule fastqc_all:
     input:
         html1 = expand("results/fastqc/{id}_1_fastqc.html", id = ids_1x_all),
@@ -88,7 +88,7 @@ rule fastqc_all:
         fastqc = "results/fastqc/duplication_rate_fastqc.txt",
         multiqc = "results/fastqc/multiqc_report.html",
         multiqcdir = "results/fastqc/multiqc_data"
-'''
+
 rule kmer_all:
     input:
         jf_read = expand("results/kmer/{id}/read{read}/{id}_read{read}.tsv", id = ids_1x_all, read = ['1','2']),
