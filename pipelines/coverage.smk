@@ -5,7 +5,7 @@ config['samples'] = pd.read_table("samples.tsv", header = None, names = ['Code']
 ids_1x_all = list(config['samples']['Code'].values)
 chromosome = [i for i in range(1,23)]
 
-subsample_depth = int(config['subsample_depth_1x']*config['subsample_depth'])
+subsample_coverage = config['subsample_depth']
 
 rule compute_bedgraph:
     input:
@@ -33,13 +33,13 @@ rule compute_subsampled_bedgraph:
 
 rule calculate_ss_cumsum_coverage:
     input:
-        ss_bedgraphs = "results/coverage/subsampled_bedgraphs/{id}_subsampled_bedgraph.txt"
+        ss_bedgraphs = "results/coverage/subsampled_bedgraphs/{id}_subsampled_bedgraph.txt",
         code = "scripts/calculate_ss_cumsum_coverage.py"
     output:
         cumsum_ary = "results/coverage/subsampled_bedgraphs/{id}_cumsum_ary.txt"
     params:
         num_coverage = 10, # Specify the length of the x-axis
-        avg_coverage = subsample_depth # Specify the Poisson expectation loc parameter
+        avg_coverage = subsample_coverage # Specify the Poisson expectation loc parameter
     resources: mem_mb = 5000
     shell: """
         python {input.code} {input.ss_bedgraphs} {params.num_coverage} {params.avg_coverage}
@@ -54,7 +54,7 @@ rule plot_subsample_coverage:
     resources: mem_mb = 5000
     params:
         num_coverage = 10, # Specify the length of the x-axis
-        avg_coverage = subsample_depth # Specify the Poisson expectation loc parameter
+        avg_coverage = subsample_coverage # Specify the Poisson expectation loc parameter
     shell: """
         python {params.num_coverage} {params.avg_coverage}
     """
