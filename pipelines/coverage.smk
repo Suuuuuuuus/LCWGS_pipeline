@@ -5,6 +5,8 @@ config['samples'] = pd.read_table("samples.tsv", header = None, names = ['Code']
 ids_1x_all = list(config['samples']['Code'].values)
 chromosome = [i for i in range(1,23)]
 
+subsample_depth = int(config['subsample_depth_1x']*config['subsample_depth'])
+
 rule compute_bedgraph:
     input:
         bam = "data/bams/{id}.bam"
@@ -29,45 +31,38 @@ rule compute_subsampled_bedgraph:
         > {output.ss_bedgraph}
     """
 
-# If there are lots of subsamples, we only plot the most and least curves compared with the expectation, otherwise plot all
-num_subsamples, = glob_wildcards("data/subsampled_bams/{id}_subsampled.bam")
-if len(num_subsamples) >= 100:
-    ruleorder: plot_aggregated_subsample_coverage > plot_separated_subsample_coverage
-else:
-    ruleorder: plot_separated_subsample_coverage > plot_aggregated_subsample_coverage
-
-rule plot_separated_subsample_coverage:
+rule calculate_ss_cumsum_coverage:
     input:
-        code = "scripts/plot_at_least_coverage_separated.py",
-        ss_bedgraphs = expand("results/coverage/subsampled_bedgraphs/{id}_subsampled_bedgraph.txt", id = ids_1x_all)
+        ss_bedgraphs = "results/coverage/subsampled_bedgraphs/{id}_subsampled_bedgraph.txt"
+        code = "scripts/calculate_ss_cumsum_coverage.py"
     output:
-        graph = "graphs/fig8_prop_genome_at_least_coverage.png"
+        cumsum_ary = "results/coverage/subsampled_bedgraphs/{id}_cumsum_ary.txt"
     params:
         num_coverage = 10, # Specify the length of the x-axis
-	avg_coverage = 1 # Specify the Poisson expectation loc parameter
+        avg_coverage = subsample_depth # Specify the Poisson expectation loc parameter
     resources: mem_mb = 5000
     shell: """
-        python {input.code} {params.num_coverage} {params.avg_coverage}
+        python {input.code} {input.ss_bedgraphs} {params.num_coverage} {params.avg_coverage}
     """
 
-rule plot_aggregated_subsample_coverage:
+rule plot_subsample_coverage:
     input:
-        code = "scripts/plot_at_least_coverage_aggregated.py",
-        ss_bedgraphs = expand("results/coverage/subsampled_bedgraphs/{id}_subsampled_bedgraph.txt", id = ids_1x_all)
+        code = "scripts/plot_subsample_coverage.py",
+        cumsum_ary = expand("results/coverage/subsampled_bedgraphs/{id}_cumsum_ary.txt", id = ids_1x_all)
     output:
         graph = "graphs/fig8_prop_genome_at_least_coverage.png"
+    resources: mem_mb = 5000
     params:
         num_coverage = 10, # Specify the length of the x-axis
-  	avg_coverage = 1
-    resources: mem_mb = 500000
+        avg_coverage = subsample_depth # Specify the Poisson expectation loc parameter
     shell: """
-	python {input.code} {params.num_coverage} {params.avg_coverage}
+        python {params.num_coverage} {params.avg_coverage}
     """
-
+'''
 rule calculate_per_bin_coverage_1x:
     input:
         script = "scripts/calculate_per_bin_coverage.py",
-	bedgraph = "results/coverage/bedgraphs/{id}_bedgraph.txt"
+        bedgraph = "results/coverage/bedgraphs/{id}_bedgraph.txt"
     output:
         coordinates = "results/coverage/per_bin_coverage/1x/{id}_chr{chr}_coordinate.txt",
         bases = "results/coverage/per_bin_coverage/1x/{id}_chr{chr}_base.txt"
@@ -81,7 +76,6 @@ rule calculate_per_bin_coverage_1x:
         python {input.script} {wildcards.id} {wildcards.chr} {params.indir} {params.outdir} {params.bin_size}
     """
 
-'''
 rule calculate_per_bin_coverage_20x:
     input:
         script = "scripts/calculate_per_bin_coverage.py"
@@ -191,6 +185,7 @@ rule plot_uncoverage_rate:
 	python {input.code}
     """
 
+'''
 rule plot_per_bin_coverage:
     input:
         code = "scripts/plot_per_bin_coverage.py",
@@ -203,3 +198,4 @@ rule plot_per_bin_coverage:
     shell: """
         python {input.code} {wildcards.chr} {params.repeat_mask_bin_size} {params.ylim}
     """
+'''

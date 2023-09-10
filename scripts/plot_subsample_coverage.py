@@ -20,30 +20,14 @@ poisson_expectation = 1 - np.cumsum(poisson.pmf(np.arange(0, num_coverage), mu=a
 
 cov_dict = {}
 
-path = "results/coverage/subsampled_bedgraphs/*_bedgraph.txt"
+path = "results/coverage/subsampled_bedgraphs/*_cumsum_ary.txt"
 for filename in glob.glob(path):
-    rstrip = '_subsampled_bedgraph.txt'
+    rstrip = '_cumsum_ary.txt'
     lstrip = 'results/coverage/subsampled_bedgraphs/'
     code = filename.replace(rstrip, "").replace(lstrip, "")
-    df = pd.read_csv(filename , header = None, sep = '\t',
-                     names = ['chr', 'start', 'end', 'cov'],
-                    dtype = {
-                        'chr': 'string',
-                        'start': 'Int64',
-                        'end': 'Int64',
-                        'cov': 'Int64'
-                    })
-    df = df[df.chr.isin([str(i) for i in range(1,23)] + ['chr' + str(i) for i in range(1,23)])]
-    df['bases'] = df['end'] - df['start']
-    df = df.groupby(['cov']).bases.sum().reset_index()
-    df['prop bases'] = df['bases']/df.bases.sum()
-    df['cum prop'] = np.cumsum(df['prop bases'].to_numpy())
-    df['prop genome at least covered'] = (1-df['cum prop'].shift(1))
-    df = df.dropna()
-    coverage_ary = df['prop genome at least covered'].values[:num_coverage]
-    cov_dict[code] = coverage_ary
+    cov_dict[code] = np.loadtxt(filename)
 
-plt.figure(figsize=(6,4))
+plt.figure(figsize=(16,12))
 for code, coverage_ary in cov_dict.items():
     x_coordinate = np.arange(1, coverage_ary.size+1)
     plt.plot(x_coordinate, coverage_ary*100, label = code)
