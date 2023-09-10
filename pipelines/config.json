@@ -6,5 +6,13 @@
     "adapter": "/well/band/users/rbx225/conda/skylake/pkgs/trimmomatic-0.39-hdfd78af_2/share/trimmomatic-0.39-2/adapters/TruSeq3-PE-2.fa",
     "reheader": false,
     "subsample_depth_1x": 10596026,
-    "subsample_depth": 0.8
+    "subsample_depth": 0.8,
+
+    "QUILT_HOME": "/well/band/users/rbx225/software/QUILT/",
+    "ANALYSIS_DIR": "/well/band/users/rbx225/GAMCC/results/imputation/",
+    "RECOMB_POP": "ACB",
+    "NGEN": 100,
+    "WINDOWSIZE": 5000000,
+    "BUFFER": 1000000,
+    "BAMLIST": "/well/band/users/rbx225/GAMCC/results/imputation/bamlist.txt"
 }
