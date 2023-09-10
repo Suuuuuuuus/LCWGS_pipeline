@@ -18,21 +18,20 @@ avg_coverage = float(sys.argv[2])
 
 poisson_expectation = 1 - np.cumsum(poisson.pmf(np.arange(0, num_coverage), mu=avg_coverage, loc=0))
 
-cov_dict = {}
+x_coordinate = np.arange(1, num_coverage+1)
 
 path = "results/coverage/subsampled_bedgraphs/*_cumsum_ary.txt"
+plt.figure(figsize=(16,12))
+
 for filename in glob.glob(path):
     rstrip = '_cumsum_ary.txt'
     lstrip = 'results/coverage/subsampled_bedgraphs/'
     code = filename.replace(rstrip, "").replace(lstrip, "")
-    cov_dict[code] = np.loadtxt(filename)
-
-plt.figure(figsize=(16,12))
-for code, coverage_ary in cov_dict.items():
-    x_coordinate = np.arange(1, coverage_ary.size+1)
+    coverage_ary = np.loadtxt(filename)
     plt.plot(x_coordinate, coverage_ary*100, label = code)
+
 x_coordinate = np.arange(1, num_coverage+1)
-plt.plot(x_coordinate, poisson_expectation*100, label = 'Poisson', ls='--')
+plt.plot(x_coordinate, poisson_expectation*100, label = 'Poisson', ls='--', color = 'k', linewidth = 5)
 plt.xticks(x_coordinate)
 plt.xlabel('Coverage (x)')
 plt.ylabel('Proportion of genome at least coverage (%)')

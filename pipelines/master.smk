@@ -68,13 +68,13 @@ rule coverage_all:
         uncoverage_rate = "results/coverage/per_chromosome_coverage/uncoverage_rate.txt",
         ss_uncoverage_rate = "results/coverage/per_chromosome_ss_coverage/ss_uncoverage_rate.txt",
         avg_coverage = "results/coverage/per_sample_coverage.txt",
-        graph_uncoverage_rate = "graphs/uncoverage_rate.png",
+#        graph_uncoverage_rate = "graphs/uncoverage_rate.png",
 #        graph_chromosome_coverage = expand("graphs/fig6_per_bin_coverage_chr{chr}.png", chr = chromosome)
 
 rule dup_rate_all:
     input:
         samtools = "results/dup_rate/duplication_rate_samtools.txt",
-        graph_samtools_dup_rate = "graphs/samtools_duplication_rate.png",
+#        graph_samtools_dup_rate = "graphs/samtools_duplication_rate.png",
         avg_fragment_size = "results/fragment_size/fragment_size.txt",
         proportion_ss_fragment_size = "results/fragment_size/proportion_ss_fragment_size.txt",
         proportion_fragment_size = "results/fragment_size/proportion_fragment_size.txt",
