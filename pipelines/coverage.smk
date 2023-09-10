@@ -56,7 +56,7 @@ rule plot_subsample_coverage:
         num_coverage = 10, # Specify the length of the x-axis
         avg_coverage = subsample_coverage # Specify the Poisson expectation loc parameter
     shell: """
-        python {params.num_coverage} {params.avg_coverage}
+        python {input.code} {params.num_coverage} {params.avg_coverage}
     """
 '''
 rule calculate_per_bin_coverage_1x:
