@@ -19,11 +19,9 @@ rule prepare_bamlist:
         bamlist = "results/imputation/bamlist.txt"
     params:
         threads=1
-    wildcard_constraints:
-        chr='\d{1,2}'
     shell: """
         mkdir -p {ANALYSIS_DIR}
-        ls /data/bams/*.bam > {output.bamlist}
+        ls data/bams/*.bam > {output.bamlist}
     """
 
 rule convert_recomb:
