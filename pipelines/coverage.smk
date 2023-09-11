@@ -111,18 +111,6 @@ rule samtools_ss_coverage:
         samtools coverage {input.ss_bam} | sed -n '2,23p' > {output.per_chromosome_ss_coverage}
     """
 
-rule calculate_uncoverage_rate:
-    input:
-        per_chromosome_coverage = rules.samtools_coverage.output.per_chromosome_coverage
-    output:
-        uncoverage_rate = temp("results/coverage/per_chromosome_coverage/{id}_uncoverage_rate.txt")
-    shell: """
-        total=$(cut -f3 {input.per_chromosome_coverage} | paste -sd+ | bc)
-        covered=$(cut -f5 {input.per_chromosome_coverage} | paste -sd+ | bc)
-        result=$(echo "scale=4; (1-$covered/$total)" | bc)
-        echo "{wildcards.id} $result" > {output.uncoverage_rate}
-    """
-
 rule calculate_ss_uncoverage_rate:
     input:
         per_chromosome_ss_coverage = rules.samtools_ss_coverage.output.per_chromosome_ss_coverage
@@ -132,16 +120,7 @@ rule calculate_ss_uncoverage_rate:
         total=$(cut -f3 {input.per_chromosome_ss_coverage} | paste -sd+ | bc)
         covered=$(cut -f5 {input.per_chromosome_ss_coverage} | paste -sd+ | bc)
         result=$(echo "scale=4; (1-$covered/$total)" | bc)
-        echo "{wildcards.id} $result" > {output.ss_uncoverage_rate}
-    """
-
-rule aggregate_uncoverage_rate:
-    input:
-        files = expand("results/coverage/per_chromosome_coverage/{id}_uncoverage_rate.txt", id = ids_1x_all)
-    output:
-        uncoverage_rate = "results/coverage/per_chromosome_coverage/uncoverage_rate.txt"
-    shell: """
-        cat {input.files} >> {output.uncoverage_rate}
+        echo "{wildcards.id}\t$result" > {output.ss_uncoverage_rate}
     """
 
 rule aggregate_ss_uncoverage_rate:
@@ -162,7 +141,7 @@ rule calculate_avg_coverage:
         total=$(cut -f3 {input.per_chromosome_coverage} | paste -sd+ | bc)
         sum_product=$(awk '{{ sum += $3 * $7 }} END {{ printf "%.2f", sum }}' {input.per_chromosome_coverage})
         result=$(echo "scale=4; ($sum_product/$total)" | bc)
-        echo "{wildcards.id} $result" > {output.avg_coverage}
+        echo "{wildcards.id}\t$result" > {output.avg_coverage}
     """
 
 rule aggregate_avg_coverage:
@@ -174,6 +153,7 @@ rule aggregate_avg_coverage:
         cat {input.files} >> {output.avg_coverage}
     """
 
+'''
 rule plot_uncoverage_rate:
     input:
         code = "scripts/plot_uncoverage_rate.py",
@@ -185,7 +165,6 @@ rule plot_uncoverage_rate:
 	python {input.code}
     """
 
-'''
 rule plot_per_bin_coverage:
     input:
         code = "scripts/plot_per_bin_coverage.py",
