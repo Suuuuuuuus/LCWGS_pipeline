@@ -1,5 +1,5 @@
 include: "preprocess.smk"
-include: "alignment.smk"
+#include: "alignment.smk"
 include: "kmer.smk"
 include: "dup_rate.smk"
 include: "fastqc.smk"
@@ -22,13 +22,13 @@ reheader = config['reheader']
 concatenate = config['concatenate']
 
 # The followings are global parameters from `activate`:
-QUILT_WRAP_HOME = "/well/band/users/rbx225/GGVP/QUILT-wrap/"
-QUILT_HOME = "/well/band/users/rbx225/software/QUILT/"
-ANALYSIS_DIR = "/well/band/users/rbx225/GGVP/results/imputation/"
-WINDOWSIZE=5000000
-BUFFER=1000000
-NGEN=100
-RECOMB_POP="ACB"
+QUILT_HOME = config["QUILT_HOME"]
+ANALYSIS_DIR = config["ANALYSIS_DIR"]
+WINDOWSIZE=config["WINDOWSIZE"]
+BUFFER=config["BUFFER"]
+NGEN=config["NGEN"]
+RECOMB_POP=config["RECOMB_POP"]
+PANEL_NAME=config["PANEL_NAME"]
 
 rule preprocess_all:
     input:
@@ -134,9 +134,9 @@ rule imputation_prep_all:
         bamlist = "results/imputation/bamlist.txt",
         recomb = expand("results/imputation/" + RECOMB_POP + "/" + RECOMB_POP + "-chr{chr}-final.b38.txt.gz", chr = chromosome),
         json = "results/imputation/regions.json",
-        hap = expand("results/imputation/refs/ggvp.chr{chr}.hap.gz", chr = chromosome),
-        legend = expand("results/imputation/refs/ggvp.chr{chr}.legend.gz", chr = chromosome),
-        samples = expand("results/imputation/refs/ggvp.chr{chr}.samples", chr = chromosome)
+        hap = expand(f"results/imputation/refs/{PANEL_NAME}.chr{{chr}}.hap.gz", chr = chromosome),
+        legend = expand(f"results/imputation/refs/{PANEL_NAME}.chr{{chr}}.legend.gz", chr = chromosome),
+        samples = expand(f"results/imputation/refs/{PANEL_NAME}.chr{{chr}}.samples", chr = chromosome)
 
 vcfs_to_concat={}
 final_vcfs=[]

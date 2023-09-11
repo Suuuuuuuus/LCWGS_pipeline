@@ -8,12 +8,13 @@ ids_1x_all = list(config['samples']['Code'].values)
 chromosome = [i for i in range(1,23)]
 
 # The followings are global parameters from `activate`:
-QUILT_HOME = "/well/band/users/rbx225/software/QUILT/"
-ANALYSIS_DIR = "/well/band/users/rbx225/GGVP/results/imputation/"
-RECOMB_POP="ACB"
-NGEN=100
-WINDOWSIZE=5000000
-BUFFER=1000000
+QUILT_HOME = config["QUILT_HOME"]
+ANALYSIS_DIR = config["ANALYSIS_DIR"]
+RECOMB_POP=config["RECOMB_POP"]
+NGEN=config["NGEN"]
+WINDOWSIZE=config["WINDOWSIZE"]
+BUFFER=config["BUFFER"]
+PANEL_NAME=config["PANEL_NAME"]
 
 REGIONS={}
 for chr in chromosome:

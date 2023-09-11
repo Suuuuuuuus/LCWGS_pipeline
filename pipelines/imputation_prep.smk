@@ -4,12 +4,13 @@ import pandas as pd
 chromosome = [i for i in range(1,23)]
 
 # The followings are global parameters from `activate`:
-QUILT_HOME = "/well/band/users/rbx225/software/QUILT/"
-ANALYSIS_DIR = "/well/band/users/rbx225/GGVP/results/imputation/"
-RECOMB_POP="ACB"
-NGEN=100
-WINDOWSIZE=5000000
-BUFFER=1000000
+QUILT_HOME = config["QUILT_HOME"]
+ANALYSIS_DIR = config["ANALYSIS_DIR"]
+RECOMB_POP=config["RECOMB_POP"]
+NGEN=config["NGEN"]
+WINDOWSIZE=config["WINDOWSIZE"]
+BUFFER=config["BUFFER"]
+PANEL_NAME=config["PANEL_NAME"]
 
 rule prepare_bamlist:
     input:
@@ -22,7 +23,7 @@ rule prepare_bamlist:
         chr='\d{1,2}'
     shell: """
         mkdir -p {ANALYSIS_DIR}
-        ls /well/band/users/rbx225/GGVP/data/bams/*.bam > {output.bamlist}
+        ls /data/bams/*.bam > {output.bamlist}
     """
 
 rule convert_recomb:
@@ -42,27 +43,28 @@ rule convert_recomb:
 
 rule convert_ref:
     input:
-        vcf = f"data/imputation_refs/ggvp.chr{{chr}}.vcf.gz",
-        tbi = f"data/imputation_refs/ggvp.chr{{chr}}.vcf.gz.tbi"
+        vcf = f"data/imputation_refs/{PANEL_NAME}.chr{{chr}}.vcf.gz",
+        tbi = f"data/imputation_refs/{PANEL_NAME}.chr{{chr}}.vcf.gz.tbi"
     output:
-        tmp_vcf = temp("results/imputation/refs/tmp.ggvp.chr{chr}.vcf.gz"),
-        hap = "results/imputation/refs/ggvp.chr{chr}.hap.gz",
-        legend = "results/imputation/refs/ggvp.chr{chr}.legend.gz",
-        samples = "results/imputation/refs/ggvp.chr{chr}.samples"
-    params:
-        threads=1
+        tmp_vcf = temp(f"results/imputation/refs/tmp.{PANEL_NAME}.chr{{chr}}.vcf.gz"),
+        hap = f"results/imputation/refs/{PANEL_NAME}.chr{{chr}}.hap.gz",
+        legend = f"results/imputation/refs/{PANEL_NAME}.chr{{chr}}.legend.gz",
+        samples = f"results/imputation/refs/{PANEL_NAME}.chr{{chr}}.samples"
     wildcard_constraints:
         chr='\d{1,2}'
+    params:
+        panel = PANEL_NAME,
+        threads=1
     shell: """
         mkdir -p results/imputation/refs/
         bcftools view --output-file {output.tmp_vcf} --output-type z --min-alleles 2 --max-alleles 2 --types snps {input.vcf}
         tabix {output.tmp_vcf}
-        bcftools convert --haplegendsample results/imputation/refs/ggvp.chr{wildcards.chr} {output.tmp_vcf}
+        bcftools convert --haplegendsample results/imputation/refs/{params.panel}.chr{wildcards.chr} {output.tmp_vcf}
     """
 
 rule determine_chunks:
     input:
-        legend = expand("results/imputation/refs/ggvp.chr{chr}.legend.gz", chr = chromosome)
+        legend = expand(f"results/imputation/refs/{PANEL_NAME}.chr{{chr}}.legend.gz", chr = chromosome)
     output:
         json = "results/imputation/regions.json"
     shell: """
