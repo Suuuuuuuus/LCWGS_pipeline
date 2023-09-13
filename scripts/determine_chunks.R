@@ -18,7 +18,7 @@ library("parallel")
 #ANALYSIS_DIR <- "/well/band/users/rbx225/GGVP/results/imputation/"
 #WINDOWSIZE <- 5000000
 #BUFFER <- 1000000
-#CHRLIST <- 1:22
+CHRLIST <- 1:22
 
 data <- mclapply(
     CHRLIST,
