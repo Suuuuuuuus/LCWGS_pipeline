@@ -7,6 +7,7 @@
     "reheader": false,
     "subsample_depth_1x": 10596026,
     "subsample_depth": 0.8,
+    "dedup": true,
 
     "QUILT_HOME": "/well/band/users/rbx225/software/QUILT/",
     "ANALYSIS_DIR": "/well/band/users/rbx225/GAMCC/results/imputation/",

@@ -11,6 +11,7 @@ NGEN=config["NGEN"]
 WINDOWSIZE=config["WINDOWSIZE"]
 BUFFER=config["BUFFER"]
 PANEL_NAME=config["PANEL_NAME"]
+dedup=config["dedup"]
 
 rule prepare_bamlist:
     input:
@@ -21,7 +22,12 @@ rule prepare_bamlist:
         threads=1
     shell: """
         mkdir -p {ANALYSIS_DIR}
-        ls data/bams/*.bam > {output.bamlist}
+        if [[ {dedup} == "True" ]]
+        then
+            ls data/bams/*.bam > {output.bamlist}
+        else
+            ls data/dedup_bams/*.bam > {output.bamlist}
+        fi
     """
 
 rule convert_recomb:
@@ -66,5 +72,5 @@ rule determine_chunks:
     output:
         json = "results/imputation/regions.json"
     shell: """
-        R -f scripts/determine_chunks.R
+        R -f scripts/determine_chunks.R {ANALYSIS_DIR} {WINDOWSIZE} {BUFFER} {PANEL_NAME}
     """
