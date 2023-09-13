@@ -30,15 +30,15 @@ if exists(file):
 rule prepare_ref:
     input:
         json = "results/imputation/regions.json",
-        hap = "results/imputation/refs/ggvp.chr{chr}.hap.gz",
-        legend = "results/imputation/refs/ggvp.chr{chr}.legend.gz",
+        hap = f"results/imputation/refs/{PANEL_NAME}.chr{{chr}}.hap.gz",
+        legend = f"results/imputation/refs/{PANEL_NAME}.chr{{chr}}.legend.gz",
         recomb = f"results/imputation/{RECOMB_POP}/{RECOMB_POP}-chr{{chr}}-final.b38.txt.gz"
     output:
         RData = f"results/imputation/refs/RData/ref_package.chr{{chr}}.{{regionStart}}.{{regionEnd}}.RData"
     resources:
         mem_mb = 30000
     params:
-        threads = 1
+        threads = 8
     shell: """
         mkdir -p results/imputation/refs/RData/other/
         R -e 'library("data.table"); library("QUILT"); QUILT_prepare_reference( \
@@ -63,7 +63,8 @@ rule quilt:
     resources:
         mem_mb = 30000
     params:
-        threads = 1
+        threads = 8,
+        nCores = 4
     resources:
         mem_mb = 30000
     wildcard_constraints:
@@ -77,6 +78,7 @@ rule quilt:
         R -e 'library("data.table"); library("QUILT"); QUILT( \
         outputdir="results/imputation/refs/RData/other/", \
         chr="chr{wildcards.chr}", \
+        nCores = {params.nCores}, \
         regionStart={wildcards.regionStart}, \
         regionEnd={wildcards.regionEnd}, \
         buffer=0, \
@@ -180,17 +182,4 @@ rule imputation_accuracy_lcwgs:
                 python {input.script}
         """
 
-rule extract_gnomAD_MAF:
-	input:	
-		gnomAD_vcf = "data/gnomAD_vcf/gnomad.genomes.v3.1.2.sites.chr{chr}.vcf.bgz"
-	output:
-		gnomAD_MAF = "results/variant_calling/gnomAD_MAFs/gnomAD_MAF_chr{chr}.txt"
-	threads: 4
-	shell: """
-		/bin/bash -c "zgrep -v '#' {input.gnomAD_vcf} | \
-		awk -v "OFS=\t" '{$8=$8;sub(/^.*AF=/, "", $8); sub(/;.*/, "", $8); print $1,$2,$4,$5,$8}' | \
-		awk '$5 !~ /^[[:alpha:]]/' | \
-		awk '!(length($3)>1 || length($4)>1)' | \
-		awk '!($5==0.00000)' > {output.gnomAD_MAF}"
-	"""
 '''
