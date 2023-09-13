@@ -2,6 +2,7 @@ include: "preprocess.smk"
 #include: "alignment.smk"
 include: "kmer.smk"
 include: "dup_rate.smk"
+include: "rmdup.smk"
 include: "fastqc.smk"
 include: "subsample.smk"
 include: "reference.smk"
@@ -79,6 +80,10 @@ rule dup_rate_all:
         proportion_ss_fragment_size = "results/fragment_size/proportion_ss_fragment_size.txt",
         proportion_fragment_size = "results/fragment_size/proportion_fragment_size.txt",
         fragment_overlap = "results/fragment_size/fragment_overlap.txt"
+
+rule rmdup_all:
+    input:
+        dedup_bams = expand("data/dedup_bams/{id}.bam", id = ids_1x_all)
 
 rule fastqc_all:
     input:
