@@ -68,9 +68,11 @@ rule convert_ref:
 
 rule determine_chunks:
     input:
-        legend = expand(f"results/imputation/refs/{PANEL_NAME}.chr{{chr}}.legend.gz", chr = chromosome)
+        legend = expand(f"results/imputation/refs/{PANEL_NAME}.chr{{chr}}.legend.gz", chr = chromosome),
+        code = "scripts/determine_chunks.R"
     output:
         json = "results/imputation/regions.json"
+    resources: mem = '10G'
     shell: """
-        R -f scripts/determine_chunks.R {ANALYSIS_DIR} {WINDOWSIZE} {BUFFER} {PANEL_NAME}
+        Rscript {input.code} {ANALYSIS_DIR:q} {WINDOWSIZE} {BUFFER} {PANEL_NAME:q}
     """

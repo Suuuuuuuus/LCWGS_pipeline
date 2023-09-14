@@ -1,7 +1,7 @@
 args <- commandArgs(trailingOnly = TRUE)
 ANALYSIS_DIR <- args[1]
-WINDOWSIZE <- args[2]
-BUFFER <- args[3]
+WINDOWSIZE <- as.integer(args[2])
+BUFFER <- as.integer(args[3])
 PANEL_NAME <- args[4]
 
 for(package in c("data.table", "rjson")) {
@@ -24,6 +24,10 @@ data <- mclapply(
     CHRLIST,
     mc.cores = 4,
     function(chr) {
+        path <- paste0(ANALYSIS_DIR, "refs")
+        if (!dir.exists(path)){
+            dir.create(path)
+        }
         file <- file.path(ANALYSIS_DIR, "refs", paste0(PANEL_NAME, ".chr", chr, ".legend.gz"))
         data <- fread(
             cmd = paste0("gunzip -c ", file), ##  | grep -v '#' | cut -f2"
