@@ -24,9 +24,9 @@ rule prepare_bamlist:
         mkdir -p {ANALYSIS_DIR}
         if [[ {dedup} == "True" ]]
         then
-            ls data/bams/*.bam > {output.bamlist}
-        else
             ls data/dedup_bams/*.bam > {output.bamlist}
+        else
+            ls data/bams/*.bam > {output.bamlist}
         fi
     """
 

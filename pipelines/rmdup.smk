@@ -8,3 +8,12 @@ rule rmdup:
     shell: """
         samtools rmdup {input.bam} {output.dedup_bam}
     """
+
+rule rmdup_index:
+    input:
+        dedup_bam = rules.rmdup.output.dedup_bam
+    output:
+        dedup_bai = "data/dedup_bams/{id}.bam.bai"
+    shell: """
+        samtools index {intput.dedup_bam}
+    """

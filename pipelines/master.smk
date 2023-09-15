@@ -83,7 +83,8 @@ rule dup_rate_all:
 
 rule rmdup_all:
     input:
-        dedup_bams = expand("data/dedup_bams/{id}.bam", id = ids_1x_all)
+        dedup_bams = expand("data/dedup_bams/{id}.bam", id = ids_1x_all),
+        dedup_bais = expand("data/dedup_bams/{id}.bam.bai", id = ids_1x_all)
 
 rule fastqc_all:
     input:
