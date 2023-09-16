@@ -63,8 +63,8 @@ rule quilt:
     resources:
         mem_mb = 30000
     params:
-        threads = 8,
-        nCores = 4
+        threads = 1,
+        nCores = 1
     resources:
         mem_mb = 30000
     wildcard_constraints:
