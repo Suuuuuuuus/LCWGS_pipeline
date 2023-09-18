@@ -140,7 +140,7 @@ rule concat:
         regionEnd='\d{1,9}'
     shell: """
         bcftools concat \
-        --ligate \
+        --ligate-force \
         --output-type z \
         --output {output.vcf}.temp1.vcf.gz \
         {params.input_string}
