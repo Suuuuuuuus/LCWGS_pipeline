@@ -5,7 +5,9 @@ import json
 import pandas as pd
 config['samples'] = pd.read_table("samples.tsv", header = None, names = ['Code'])
 ids_1x_all = list(config['samples']['Code'].values)
-chromosome = [i for i in range(1,23)]
+
+#chromosome = [i for i in range(1,23)]
+chromosome = [9,16]
 
 # The followings are global parameters from `activate`:
 QUILT_HOME = config["QUILT_HOME"]
@@ -139,6 +141,13 @@ rule concat:
         regionStart='\d{1,9}',
         regionEnd='\d{1,9}'
     shell: """
+        if [ -e {output.vcf}.temp1.vcf.gz ]; then
+            rm {output.vcf}.temp1.vcf.gz
+        fi
+        if [ -e {output.vcf}.temp2.vcf.gz ]; then
+            rm {output.vcf}.temp2.vcf.gz
+        fi
+
         bcftools concat \
         --ligate-warn \
         --output-type z \
@@ -146,7 +155,7 @@ rule concat:
         {params.input_string}
 
         gunzip -c {output.vcf}.temp1.vcf.gz | grep '#' > {output.vcf}.temp2.vcf
-        bcftools query -f '%CHROM\t%POS\t%ID\t%REF\t%ALT\t%QUAL\t%FILTER\t%INFO\tGT:GP:DS:PS\t[%GT:%GP:%DS:%PS\t]\n' {output.vcf}.temp1.vcf.gz  >> {output.vcf}.temp2.vcf
+        bcftools query -f '%CHROM\t%POS\t%ID\t%REF\t%ALT\t%QUAL\t%FILTER\t%INFO\tGT:GP:DS\t[%GT:%GP:%DS\t]\n' {output.vcf}.temp1.vcf.gz  >> {output.vcf}.temp2.vcf
         bgzip {output.vcf}.temp2.vcf
         tabix {output.vcf}.temp2.vcf.gz
 

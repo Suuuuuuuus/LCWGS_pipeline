@@ -15,7 +15,8 @@ configfile: "pipelines/config.json"
 import pandas as pd
 config['samples'] = pd.read_table("samples.tsv", header = None, names = ['Code'])
 ids_1x_all = list(config['samples']['Code'].values)
-chromosome = [i for i in range(1,23)]
+#chromosome = [i for i in range(1,23)]
+chromosome = [9,16]
 
 # The followings are global parameters:
 clean_fastq = config['clean_fastq']
