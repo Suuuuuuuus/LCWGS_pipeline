@@ -6,8 +6,7 @@ import pandas as pd
 config['samples'] = pd.read_table("samples.tsv", header = None, names = ['Code'])
 ids_1x_all = list(config['samples']['Code'].values)
 
-#chromosome = [i for i in range(1,23)]
-chromosome = [9,16]
+chromosome = [i for i in range(1,23)]
 
 # The followings are global parameters from `activate`:
 QUILT_HOME = config["QUILT_HOME"]
@@ -149,18 +148,18 @@ rule concat:
         fi
 
         bcftools concat \
-        --ligate-warn \
+        --ligate \
         --output-type z \
         --output {output.vcf}.temp1.vcf.gz \
         {params.input_string}
 
         gunzip -c {output.vcf}.temp1.vcf.gz | grep '#' > {output.vcf}.temp2.vcf
         bcftools query -f '%CHROM\t%POS\t%ID\t%REF\t%ALT\t%QUAL\t%FILTER\t%INFO\tGT:GP:DS\t[%GT:%GP:%DS\t]\n' {output.vcf}.temp1.vcf.gz  >> {output.vcf}.temp2.vcf
-        bgzip {output.vcf}.temp2.vcf
-        tabix {output.vcf}.temp2.vcf.gz
+        bcftools sort -Oz -o {output.vcf} {output.vcf}.temp2.vcf
+        tabix {output.vcf}
 
-        mv {output.vcf}.temp2.vcf.gz {output.vcf}
-        mv {output.vcf}.temp2.vcf.gz.tbi {output.vcf}.tbi
+        #mv {output.vcf}.temp2.vcf.gz {output.vcf}
+        #mv {output.vcf}.temp2.vcf.gz.tbi {output.vcf}.tbi
         rm {output.vcf}.temp1.vcf.gz
     """
 
