@@ -148,7 +148,7 @@ rule concat:
         fi
 
         bcftools concat \
-        --ligate \
+        --ligate-force \
         --output-type z \
         --output {output.vcf}.temp1.vcf.gz \
         {params.input_string}
@@ -160,7 +160,7 @@ rule concat:
 
         #mv {output.vcf}.temp2.vcf.gz {output.vcf}
         #mv {output.vcf}.temp2.vcf.gz.tbi {output.vcf}.tbi
-        rm {output.vcf}.temp1.vcf.gz
+        rm {output.vcf}.temp*
     """
 
 '''
