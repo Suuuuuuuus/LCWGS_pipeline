@@ -148,7 +148,7 @@ rule concat:
         fi
 
         bcftools concat \
-        --ligate-warn \
+        --ligate \
         --output-type z \
         --output {output.vcf}.temp1.vcf.gz \
         {params.input_string}
