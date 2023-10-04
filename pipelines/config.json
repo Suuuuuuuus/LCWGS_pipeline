@@ -14,7 +14,7 @@
     "RECOMB_POP": "ACB",
     "NGEN": 100,
     "WINDOWSIZE": 5000000,
-    "BUFFER": 2000000,
+    "BUFFER": 0,
     "BAMLIST": "/well/band/users/rbx225/GAMCC/results/imputation/bamlist.txt",
     "PANEL_NAME": "oneKG"
 }
