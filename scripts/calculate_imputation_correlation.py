@@ -4,11 +4,14 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy as sp
-import statsmodels.api as sm
-import csv
+import sys
 from scipy.stats import poisson
 import itertools
 import collections
+
+vcf1 = sys.argv[1]
+vcf2 = sys.argv[2]
+AFs = sys.argv[3]
 
 def get_imputed_dosage(df, colname='call'):
     ref = df['ref']
@@ -17,7 +20,7 @@ def get_imputed_dosage(df, colname='call'):
     if alt == '.' or len(alt) > 1 or len(ref) > 1 :
         return pd.NaT
     else:
-	return s.split(':')[2]
+	    return s.split(':')[2]
 def get_genotype(df, colname='call'):
     ref = df['ref']
     alt = df['alt']
@@ -34,10 +37,10 @@ def get_genotype(df, colname='call'):
     elif s[:3] == '1|1' or s[:3] == '1/1':
         return 2.
     else:
-	return pd.NaT
+	    return pd.NaT
 
 for i in range(1,23):
-    tmp = pd.read_csv('../results/variant_calling/gnomAD_MAFs/nfe/gnomAD_MAF_nfe_chr'+str(i)+'.txt', header = None, sep$
+    tmp = pd.read_csv('../results/variant_calling/gnomAD_MAFs/nfe/gnomAD_MAF_nfe_chr'+str(i)+'.txt', header = None, sep = '\t', names = ['chr', 'pos', 'ref', 'alt', 'MAF'],
                       dtype = {
         'chr': 'string',
         'pos': 'Int64',
@@ -48,11 +51,11 @@ for i in range(1,23):
     tmp = tmp.dropna()
     tmp['MAF'] = pd.to_numeric(tmp['MAF'])
     if i==1:
-	gnomAD_vcf = tmp
+        gnomAD_vcf = tmp
     else:
-	gnomAD_vcf = pd.concat([gnomAD_vcf,tmp])
+        gnomAD_vcf = pd.concat([gnomAD_vcf,tmp])
 for i in range(1,23):
-    tmp = pd.read_csv('../results/variant_calling/NA12878_1x_calling/72155287_variant_calling_chr'+str(i)+'.txt', heade$
+    tmp = pd.read_csv('../results/variant_calling/NA12878_1x_calling/72155287_variant_calling_chr'+str(i)+'.txt', header = None, sep = '\t', names = ['chr', 'pos', 'ref', 'alt', 'attributes', 'call'],
                     dtype = {
         'chr': 'string',
         'pos': 'Int64',
@@ -67,12 +70,12 @@ for i in range(1,23):
     tmp = tmp.drop(columns = ['call', 'attributes'])
     tmp['dosage'] = pd.to_numeric(tmp['dosage'])
     if i==1:
-	NA12878_1x_vcf = tmp
+        NA12878_1x_vcf = tmp
     else:
-	NA12878_1x_vcf = pd.concat([NA12878_1x_vcf,tmp])
+        NA12878_1x_vcf = pd.concat([NA12878_1x_vcf,tmp])
 
 for i in range(1,23):
-    tmp = pd.read_csv('../results/variant_calling/oneKG_vcfs/oneKG_NA12878_chr'+str(i)+'.txt', header = None, sep = '\t$
+    tmp = pd.read_csv('../results/variant_calling/oneKG_vcfs/oneKG_NA12878_chr'+str(i)+'.txt', header = None, sep = '\t', names = ['chr', 'pos', 'ref', 'alt', 'call'],
                         dtype = {
         'chr': 'string',
         'pos': 'Int64',
@@ -86,9 +89,9 @@ for i in range(1,23):
     tmp = tmp.drop(columns = ['call'])
     tmp['genotype'] = pd.to_numeric(tmp['genotype'])
     if i==1:
-	NA12878_20x_vcf = tmp
+        NA12878_20x_vcf = tmp
     else:
-	NA12878_20x_vcf = pd.concat([NA12878_20x_vcf,tmp])
+        NA12878_20x_vcf = pd.concat([NA12878_20x_vcf,tmp])
 
 NA12878 = pd.merge(NA12878_20x_vcf, NA12878_1x_vcf, on=['chr', 'pos', 'ref', 'alt'], how="left")
 NA12878 = NA12878.fillna(0)
