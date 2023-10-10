@@ -1,7 +1,0 @@
-export QUILT_HOME=/well/band/users/rbx225/software/QUILT/
-export ANALYSIS_DIR=/well/band/users/rbx225/GGVP/results/imputation/
-export RECOMB_POP=ACB
-export NGEN=100
-export WINDOWSIZE=5000000
-export BUFFER=1000000
-export BAMLIST=${ANALYSIS_DIR}/bamlist.txt
