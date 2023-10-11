@@ -134,7 +134,10 @@ rule concat:
         mem_mb = 30000
     params:
         threads = 1,
-        input_string=get_input_vcfs_as_string
+        input_string=get_input_vcfs_as_string,
+        rename_samples = config["rename_samples"],
+        rename_samples_file = config["rename_samples_file"]
+
     wildcard_constraints:
         chr='\w{1,2}',
         regionStart='\d{1,9}',
@@ -158,9 +161,16 @@ rule concat:
         bcftools sort -Oz -o {output.vcf} {output.vcf}.temp2.vcf
         tabix {output.vcf}
 
-        #mv {output.vcf}.temp2.vcf.gz {output.vcf}
-        #mv {output.vcf}.temp2.vcf.gz.tbi {output.vcf}.tbi
         rm {output.vcf}.temp*
+
+        if [[ -d {params.rename_samples_file} && {params.rename_samples} == "True"]]
+        then
+            mv {output.vcf} tmp.{output.vcf}
+            rm {output.vcf}.tbi
+            bcftools reheader -o {output.vcf} -s {params.rename_samples_file} tmp.{output.vcf}
+            tabix {output.vcf}
+            rm tmp.{output.vcf}
+        fi
     """
 
 '''
@@ -169,19 +179,6 @@ rule imputation_accuracy_NA12878:
                 script = "scripts/calculate_imputation_accuracy_NA12878_v2.py"
         output:
                 graph = "graphs/NA12878_imputation_accuracy.png"
-        resources:
-                mem_mb = 300000
-        threads:
-                16
-        shell: """
-                python {input.script}
-        """
-
-rule imputation_accuracy_lcwgs:
-        input:
-                script = "scripts/calculate_imputation_accuracy_lcwgs_v2.py"
-        output:
-                graph = "graphs/lcwgs_imputation_accuracy.png"
         resources:
                 mem_mb = 300000
         threads:
