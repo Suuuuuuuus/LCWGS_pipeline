@@ -5,8 +5,8 @@
 #SBATCH -D /well/band/users/rbx225/GAMCC/scripts/
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=3
-#SBATCH --mem=1000
+#SBATCH --cpus-per-task=9
+##SBATCH --mem=10000
 ##SBATCH --array=1-2
 
 module purge
