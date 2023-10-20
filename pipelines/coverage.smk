@@ -6,12 +6,14 @@ ids_1x_all = list(config['samples']['Code'].values)
 chromosome = [i for i in range(1,23)]
 
 subsample_coverage = config['subsample_depth']
+rm_bed_regions = config['rm_bed_regions']
+bed_regions = config['bed_regions']
 
 rule compute_bedgraph:
     input:
         bam = "data/bams/{id}.bam"
     output:
-        bedgraph = "results/coverage/bedgraphs/{id}_bedgraph.txt"
+        bedgraph = "results/coverage/bedgraphs/{id}_bedgraph.bed"
     resources: mem_mb = 50000
     shell: """
         bedtools genomecov -ibam {input.bam} -bga | \
@@ -102,6 +104,27 @@ rule samtools_coverage:
         samtools coverage {input.bam} | sed -n '2,23p' > {output.per_chromosome_coverage}
     """
 
+rule calculate_uncoverage_rate:
+    input:
+	per_chromosome_coverage = rules.samtools_coverage.output.per_chromosome_coverage
+    output:
+	uncoverage_rate = temp("results/coverage/per_chromosome_coverage/{id}_uncoverage_rate.txt"),
+    shell: """
+	total=$(cut -f3 {input.per_chromosome_coverage} | paste -sd+ | bc)
+        covered=$(cut -f5 {input.per_chromosome_coverage} | paste -sd+ | bc)
+        result=$(echo "scale=4; (1-$covered/$total)" | bc)
+        echo "{wildcards.id}\t$result" > {output.uncoverage_rate}
+    """
+
+rule aggregate_uncoverage_rate:
+    input:
+	files = expand("results/coverage/per_chromosome_coverage/{id}_uncoverage_rate.txt", id = ids_1x_all)
+    output:
+        uncoverage_rate = "results/coverage/per_chromosome_coverage/uncoverage_rate.txt"
+    shell: """
+	cat {input.files} >> {output.uncoverage_rate}
+    """
+
 rule samtools_ss_coverage:
     input:
         ss_bam = "data/subsampled_bams/{id}_subsampled.bam"
@@ -152,29 +175,3 @@ rule aggregate_avg_coverage:
     shell: """
         cat {input.files} >> {output.avg_coverage}
     """
-
-'''
-rule plot_uncoverage_rate:
-    input:
-        code = "scripts/plot_uncoverage_rate.py",
-	uncoverage_rate = rules.aggregate_uncoverage_rate.output.uncoverage_rate
-    output:
-        graph = "graphs/uncoverage_rate.png"
-    resources: mem_mb = 50000
-    shell: """
-	python {input.code}
-    """
-
-rule plot_per_bin_coverage:
-    input:
-        code = "scripts/plot_per_bin_coverage.py",
-	bases = expand("results/coverage/per_bin_coverage/1x/{id}_chr{chr}_base.txt", id = ids_1x_all, allow_missing=True)
-    output:
-        graph = "graphs/fig6_per_bin_coverage_chr{chr}.png"
-    params:
-        repeat_mask_bin_size = 100000,
-        ylim = 20
-    shell: """
-        python {input.code} {wildcards.chr} {params.repeat_mask_bin_size} {params.ylim}
-    """
-'''

@@ -10,6 +10,8 @@
     "dedup": true,
     "rename_samples": true,
     "rename_samples_file": "data/metadata/rename_samples.txt",
+    "rm_bed_regions": true,
+    "bed_regions": "data/bedgraph/rm_regions.bed",
 
     "QUILT_HOME": "/well/band/users/rbx225/software/QUILT/",
     "ANALYSIS_DIR": "/well/band/users/rbx225/GAMCC/results/imputation/",

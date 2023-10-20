@@ -68,9 +68,7 @@ rule coverage_all:
 #        ss_per_chromosome_coverage = expand("results/coverage/per_chromosome_ss_coverage/{id}_per_chromosome_ss_coverage.txt", id = ids_1x_all),
         uncoverage_rate = "results/coverage/per_chromosome_coverage/uncoverage_rate.txt",
         ss_uncoverage_rate = "results/coverage/per_chromosome_ss_coverage/ss_uncoverage_rate.txt",
-        avg_coverage = "results/coverage/per_sample_coverage.txt",
-#        graph_uncoverage_rate = "graphs/uncoverage_rate.png",
-#        graph_chromosome_coverage = expand("graphs/fig6_per_bin_coverage_chr{chr}.png", chr = chromosome)
+        avg_coverage = "results/coverage/per_sample_coverage.txt"
 
 rule dup_rate_all:
     input:
