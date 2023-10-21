@@ -25,7 +25,7 @@ rule compute_subsampled_bedgraph:
     input:
         ss_bam = "data/subsampled_bams/{id}_subsampled.bam"
     output:
-        ss_bedgraph = "results/coverage/subsampled_bedgraphs/{id}_subsampled_bedgraph.txt"
+        ss_bedgraph = "results/coverage/subsampled_bedgraphs/{id}_subsampled_bedgraph.bed"
     resources: mem_mb = 50000
     shell: """
         bedtools genomecov -ibam {input.ss_bam} -bga | \
@@ -35,7 +35,7 @@ rule compute_subsampled_bedgraph:
 
 rule calculate_ss_cumsum_coverage:
     input:
-        ss_bedgraphs = "results/coverage/subsampled_bedgraphs/{id}_subsampled_bedgraph.txt",
+        ss_bedgraphs = "results/coverage/subsampled_bedgraphs/{id}_subsampled_bedgraph.bed",
         code = "scripts/calculate_ss_cumsum_coverage.py"
     output:
         cumsum_ary = "results/coverage/subsampled_bedgraphs/{id}_cumsum_ary.txt"
@@ -64,7 +64,7 @@ rule plot_subsample_coverage:
 rule calculate_per_bin_coverage_1x:
     input:
         script = "scripts/calculate_per_bin_coverage.py",
-        bedgraph = "results/coverage/bedgraphs/{id}_bedgraph.txt"
+        bedgraph = "results/coverage/bedgraphs/{id}_bedgraph.bed"
     output:
         coordinates = "results/coverage/per_bin_coverage/1x/{id}_chr{chr}_coordinate.txt",
         bases = "results/coverage/per_bin_coverage/1x/{id}_chr{chr}_base.txt"
@@ -106,9 +106,9 @@ rule samtools_coverage:
 
 rule calculate_uncoverage_rate:
     input:
-	per_chromosome_coverage = rules.samtools_coverage.output.per_chromosome_coverage
+        per_chromosome_coverage = rules.samtools_coverage.output.per_chromosome_coverage
     output:
-	uncoverage_rate = temp("results/coverage/per_chromosome_coverage/{id}_uncoverage_rate.txt"),
+        uncoverage_rate = temp("results/coverage/per_chromosome_coverage/{id}_uncoverage_rate.txt")
     shell: """
 	total=$(cut -f3 {input.per_chromosome_coverage} | paste -sd+ | bc)
         covered=$(cut -f5 {input.per_chromosome_coverage} | paste -sd+ | bc)
@@ -118,7 +118,7 @@ rule calculate_uncoverage_rate:
 
 rule aggregate_uncoverage_rate:
     input:
-	files = expand("results/coverage/per_chromosome_coverage/{id}_uncoverage_rate.txt", id = ids_1x_all)
+        files = expand("results/coverage/per_chromosome_coverage/{id}_uncoverage_rate.txt", id = ids_1x_all)
     output:
         uncoverage_rate = "results/coverage/per_chromosome_coverage/uncoverage_rate.txt"
     shell: """

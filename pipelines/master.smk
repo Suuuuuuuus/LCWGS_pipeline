@@ -1,4 +1,4 @@
-include: "preprocess.smk"
+#include: "preprocess.smk"
 #include: "alignment.smk"
 include: "kmer.smk"
 include: "dup_rate.smk"
@@ -58,9 +58,9 @@ rule subsample_all:
 
 rule coverage_all:
     input:
-        bedgraphs = expand("results/coverage/bedgraphs/{id}_bedgraph.txt", id = ids_1x_all),
-        ss_bedgraphs = expand("results/coverage/subsampled_bedgraphs/{id}_subsampled_bedgraph.txt", id = ids_1x_all),
-        graph_subsample_coverage = "graphs/fig8_prop_genome_at_least_coverage.png",
+        bedgraphs = expand("results/coverage/bedgraphs/{id}_bedgraph.bed", id = ids_1x_all),
+        ss_bedgraphs = expand("results/coverage/subsampled_bedgraphs/{id}_subsampled_bedgraph.bed", id = ids_1x_all),
+#        graph_subsample_coverage = "graphs/fig8_prop_genome_at_least_coverage.png",
         cumsum_ary = expand("results/coverage/subsampled_bedgraphs/{id}_cumsum_ary.txt", id = ids_1x_all),
 #        per_bin_coverage_1x_coordinates = expand("results/coverage/per_bin_coverage/1x/{id}_chr{chr}_coordinate.txt", id = ids_1x_all, chr = chromosome),
 #        per_bin_coverage_1x_bases = expand("results/coverage/per_bin_coverage/1x/{id}_chr{chr}_base.txt", id = ids_1x_all, chr = chromosome),
