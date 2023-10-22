@@ -67,11 +67,11 @@ rule calculate_ss_cumsum_coverage:
         cumsum_ary = lcwgSus.calculate_ss_cumsum_coverage(bed, num_coverage = params.num_coverage)
         np.savetxt(output.cumsum_ary, cumsum_ary, newline = ' ', fmt = '%1.7f')
 
-rule plot_subsample_coverage:
+rule plot_sequencing_skew:
     input:
         cumsum_ary = expand("results/coverage/subsampled_bedgraphs/{id}_cumsum_ary.txt", id = ids_1x_all)
     output:
-        graph = "graphs/prop_genome_at_least_coverage.png"
+        graph_seq_skew = "graphs/prop_genome_at_least_coverage.png"
     resources: mem_mb = 5000
     params:
         num_coverage = config["num_coverage"], # Specify the length of the x-axis
@@ -80,7 +80,7 @@ rule plot_subsample_coverage:
         ary_lst = []
         for i in input.cumsum_ary:
             ary_lst.append(np.loadtxt(i))
-        lcwgSus.plot_depth_coverage(ary_lst, params.avg_coverage, num_coverage = params.num_coverage, save_fig = True)
+        lcwgSus.plot_sequencing_skew(ary_lst, params.avg_coverage, num_coverage = params.num_coverage, save_fig = True)
 
 '''
 rule calculate_per_bin_coverage_1x:
