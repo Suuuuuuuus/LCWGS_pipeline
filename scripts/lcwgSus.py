@@ -191,20 +191,20 @@ def calculate_ss_cumsum_coverage(df, num_coverage=5):
     df = df.dropna()
     coverage_ary = df['prop genome at least covered'].values[:num_coverage]
     return coverage_ary
-def plot_depth_coverage(arys, avg_coverage, n_se = 1.96, code = None, num_coverage=5, save_fig = False, outdir = 'graphs/'):
+def plot_sequencing_skew(arys, avg_coverage, n_se = 1.96, code = None, num_coverage=5, save_fig = False, outdir = 'graphs/'):
     poisson_expectation = 1 - np.cumsum(poisson.pmf(np.arange(num_coverage), mu=avg_coverage, loc=0))
     se = np.sqrt(avg_coverage/len(arys))
     x_coordinate = np.arange(1, num_coverage+1)
     plt.figure(figsize=(16,12))
     for i in range(len(arys)):
         coverage_ary = arys[i]
-        plt.plot(x_coordinate, coverage_ary*100, label = code) # Can put code in as well
-    plt.plot(x_coordinate, poisson_expectation*100, label = 'Poisson', ls='--', color = 'k', linewidth = 5)
-    plt.plot(x_coordinate, (poisson_expectation + n_se*se)*100, ls='--', color = 'k', linewidth = 5)
-    plt.plot(x_coordinate, (poisson_expectation - n_se*se)*100, ls='--', color = 'k', linewidth = 5)
+        plt.plot(x_coordinate, coverage_ary*100/poisson_expectation, label = code) # Can put code in as well
+    plt.plot(x_coordinate, poisson_expectation*100/poisson_expectation, label = 'Poisson', ls='--', color = 'k', linewidth = 5)
+    plt.plot(x_coordinate, (poisson_expectation + n_se*se)*100/poisson_expectation, ls='--', color = 'k', linewidth = 5)
+    plt.plot(x_coordinate, (poisson_expectation - n_se*se)*100/poisson_expectation, ls='--', color = 'k', linewidth = 5)
     plt.xticks(x_coordinate)
     plt.xlabel('Coverage (x)')
-    plt.ylabel('Proportion of genome at least coverage (%)')
+    plt.ylabel('Sequencing Skew')
     #plt.legend()
     plt.title('Genome coverage')
     if save_fig:
