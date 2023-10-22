@@ -1,6 +1,11 @@
 configfile: "pipelines/config.json"
 
 import pandas as pd
+import numpy as np
+import sys
+sys.path.append("scripts")
+import lcwgSus
+
 config['samples'] = pd.read_table("samples.tsv", header = None, names = ['Code'])
 ids_1x_all = list(config['samples']['Code'].values)
 chromosome = [i for i in range(1,23)]
@@ -35,31 +40,48 @@ rule compute_subsampled_bedgraph:
 
 rule calculate_ss_cumsum_coverage:
     input:
-        ss_bedgraphs = "results/coverage/subsampled_bedgraphs/{id}_subsampled_bedgraph.bed",
-        code = "scripts/calculate_ss_cumsum_coverage.py"
+        ss_bedgraph = "results/coverage/subsampled_bedgraphs/{id}_subsampled_bedgraph.bed"
     output:
-        cumsum_ary = "results/coverage/subsampled_bedgraphs/{id}_cumsum_ary.txt"
+        cumsum_ary = temp("results/coverage/subsampled_bedgraphs/{id}_cumsum_ary.txt")
     params:
-        num_coverage = 10, # Specify the length of the x-axis
-        avg_coverage = subsample_coverage # Specify the Poisson expectation loc parameter
-    resources: mem_mb = 5000
-    shell: """
-        python {input.code} {input.ss_bedgraphs} {params.num_coverage} {params.avg_coverage}
-    """
+        num_coverage = config["num_coverage"], # Specify the length of the x-axis
+        rm_bed_regions = config["rm_bed_regions"],
+        bed_regions = config["bed_regions"]
+    resources:
+        mem_mb = 20000
+    threads: 22
+    run:
+        chromosomes = [i for i in range(1,23)]
+        cols = ['chr', 'start', 'end', 'cov']
+        cov = pd.read_csv(input.ss_bedgraph, sep = '\t', header = None, names = cols)
+        cov['chr'] = cov['chr'].str.extract(r'(\d+)').astype(int)
+        cov = cov.sort_values(by = ['chr', 'start'])
+        if params.rm_bed_regions:
+            region = pd.read_csv(params.bed_regions, sep = '\t', header = None, names = cols[:-1])
+            region = region[region['chr'].isin(['chr' + str(i) for i in range(1,23)])]
+            region['chr'] = region['chr'].str.extract(r'(\d+)').astype(int)
+            region = region.sort_values(by = ['chr', 'start'])
+            bed = lcwgSus.multi_subtract_bed(chromosomes, lcwgSus.file_to_list(cov), lcwgSus.file_to_list(region))
+        else:
+            bed = cov
+        cumsum_ary = lcwgSus.calculate_ss_cumsum_coverage(bed, num_coverage = params.num_coverage)
+        np.savetxt(output.cumsum_ary, cumsum_ary, newline = ' ', fmt = '%1.7f')
 
 rule plot_subsample_coverage:
     input:
-        code = "scripts/plot_subsample_coverage.py",
         cumsum_ary = expand("results/coverage/subsampled_bedgraphs/{id}_cumsum_ary.txt", id = ids_1x_all)
     output:
-        graph = "graphs/fig8_prop_genome_at_least_coverage.png"
+        graph = "graphs/prop_genome_at_least_coverage.png"
     resources: mem_mb = 5000
     params:
-        num_coverage = 10, # Specify the length of the x-axis
-        avg_coverage = subsample_coverage # Specify the Poisson expectation loc parameter
-    shell: """
-        python {input.code} {params.num_coverage} {params.avg_coverage}
-    """
+        num_coverage = config["num_coverage"], # Specify the length of the x-axis
+        avg_coverage = config["subsample_depth"] # Specify the Poisson expectation loc parameter
+    run:
+        ary_lst = []
+        for i in input.cumsum_ary:
+            ary_lst.append(np.loadtxt(i))
+        lcwgSus.plot_depth_coverage(ary_lst, params.avg_coverage, num_coverage = params.num_coverage, save_fig = True)
+
 '''
 rule calculate_per_bin_coverage_1x:
     input:

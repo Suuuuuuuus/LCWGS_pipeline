@@ -10,6 +10,7 @@
     "dedup": true,
     "rename_samples": true,
     "rename_samples_file": "data/metadata/rename_samples.txt",
+    "num_coverage": 5,
     "rm_bed_regions": true,
     "bed_regions": "data/bedgraph/rm_regions.bed",
 

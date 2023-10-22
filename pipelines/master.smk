@@ -9,10 +9,15 @@ include: "reference.smk"
 include: "coverage.smk"
 include: "imputation.smk"
 include: "imputation_prep.smk"
+include: "variant_calling.smk"
 
 configfile: "pipelines/config.json"
 
 import pandas as pd
+import sys
+sys.path.append("scripts")
+import lcwgSus
+
 config['samples'] = pd.read_table("samples.tsv", header = None, names = ['Code'])
 ids_1x_all = list(config['samples']['Code'].values)
 chromosome = [i for i in range(1,23)]
@@ -30,6 +35,10 @@ BUFFER=config["BUFFER"]
 NGEN=config["NGEN"]
 RECOMB_POP=config["RECOMB_POP"]
 PANEL_NAME=config["PANEL_NAME"]
+
+rule variant_calling_all:
+    input:
+        graph = "results/test.txt"
 
 rule preprocess_all:
     input:
@@ -60,8 +69,8 @@ rule coverage_all:
     input:
         bedgraphs = expand("results/coverage/bedgraphs/{id}_bedgraph.bed", id = ids_1x_all),
         ss_bedgraphs = expand("results/coverage/subsampled_bedgraphs/{id}_subsampled_bedgraph.bed", id = ids_1x_all),
-#        graph_subsample_coverage = "graphs/fig8_prop_genome_at_least_coverage.png",
-        cumsum_ary = expand("results/coverage/subsampled_bedgraphs/{id}_cumsum_ary.txt", id = ids_1x_all),
+        graph_subsample_coverage = "graphs/prop_genome_at_least_coverage.png",
+#        cumsum_ary = expand("results/coverage/subsampled_bedgraphs/{id}_cumsum_ary.txt", id = ids_1x_all),
 #        per_bin_coverage_1x_coordinates = expand("results/coverage/per_bin_coverage/1x/{id}_chr{chr}_coordinate.txt", id = ids_1x_all, chr = chromosome),
 #        per_bin_coverage_1x_bases = expand("results/coverage/per_bin_coverage/1x/{id}_chr{chr}_base.txt", id = ids_1x_all, chr = chromosome),
 #        per_chromosome_coverage = expand("results/coverage/per_chromosome_coverage/{id}_per_chromosome_coverage.txt", id = ids_1x_all),
