@@ -42,9 +42,9 @@ rule calculate_ss_cumsum_coverage:
     input:
         ss_bedgraph = "results/coverage/subsampled_bedgraphs/{id}_subsampled_bedgraph.bed"
     output:
-        cumsum_ary = temp("results/coverage/subsampled_bedgraphs/{id}_cumsum_ary.txt")
+        cumsum_ary = "results/coverage/subsampled_bedgraphs/{id}_cumsum_ary.txt"
     params:
-        num_coverage = config["num_coverage"], # Specify the length of the x-axis
+        num_coverage = config["num_coverage"], 
         rm_bed_regions = config["rm_bed_regions"],
         bed_regions = config["bed_regions"]
     resources:
