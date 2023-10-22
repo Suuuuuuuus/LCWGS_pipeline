@@ -49,7 +49,7 @@ rule calculate_ss_cumsum_coverage:
         bed_regions = config["bed_regions"]
     resources:
         mem_mb = 20000
-    threads: 22
+    threads: 11
     run:
         chromosomes = [i for i in range(1,23)]
         cols = ['chr', 'start', 'end', 'cov']
