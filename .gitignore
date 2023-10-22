@@ -9,3 +9,4 @@ scripts/submit_test.sh
 logs/
 graphs/
 tmp/
+__pycache__
