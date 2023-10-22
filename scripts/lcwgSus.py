@@ -42,6 +42,24 @@ def read_vcf(file):
         ).rename(columns={'#CHROM':'CHROM'})
     df['CHROM'] = df['CHROM'].str.extract(r'(\d+)').astype(int)
     return df
+def read_af(chromosomes, files):
+    for i in range(len(chromosomes)):
+        tmp = pd.read_csv(file[i], header = None, sep = '\t', names = ['chr', 'pos', 'ref', 'alt', 'MAF'],
+                          dtype = {
+            'chr': 'string',
+            'pos': 'Int64',
+            'ref': 'string',
+            'alt': 'string',
+            'MAF': 'string'
+        })
+        tmp = tmp.dropna()
+        tmp['MAF'] = pd.to_numeric(tmp['MAF'])
+        tmp['chr'] = tmp['chr'].str.extract(r'(\d+)').astype(int)
+        if i==0:
+            AFs = tmp
+        else:
+            AFs = pd.concat([AFs,tmp])
+    return AFs
 def extract_info(df, info_cols = ['EAF', 'INFO_SCORE'], attribute = 'INFO', drop_attribute = True):
     for i in info_cols:
         df[i] = df[attribute].str.extract( i + '=([^;]+)' ).astype(float)
@@ -198,14 +216,28 @@ def plot_sequencing_skew(arys, avg_coverage, n_se = 1.96, code = None, num_cover
     plt.figure(figsize=(16,12))
     for i in range(len(arys)):
         coverage_ary = arys[i]
-        plt.plot(x_coordinate, coverage_ary*100/poisson_expectation, label = code) # Can put code in as well
-    plt.plot(x_coordinate, poisson_expectation*100/poisson_expectation, label = 'Poisson', ls='--', color = 'k', linewidth = 5)
-    plt.plot(x_coordinate, (poisson_expectation + n_se*se)*100/poisson_expectation, ls='--', color = 'k', linewidth = 5)
-    plt.plot(x_coordinate, (poisson_expectation - n_se*se)*100/poisson_expectation, ls='--', color = 'k', linewidth = 5)
+        plt.plot(x_coordinate, coverage_ary/poisson_expectation[0], label = code) # Can put code in as well
+    plt.plot(x_coordinate, poisson_expectation/poisson_expectation[0], label = 'Poisson', ls='--', color = 'k', linewidth = 5)
+    plt.plot(x_coordinate, (poisson_expectation + n_se*se)/poisson_expectation[0], ls='--', color = 'k', linewidth = 5)
+    plt.plot(x_coordinate, (poisson_expectation - n_se*se)/poisson_expectation[0], ls='--', color = 'k', linewidth = 5)
     plt.xticks(x_coordinate)
     plt.xlabel('Coverage (x)')
     plt.ylabel('Sequencing Skew')
     #plt.legend()
-    plt.title('Genome coverage')
+    plt.title('Sequencing Skew')
     if save_fig:
         plt.savefig(outdir + 'prop_genome_at_least_coverage.png', bbox_inches = "tight", dpi=300)
+def plot_info_vs_af(vcf, afs, MAF_ary = np.array([0, 0.0001, 0.0002, 0.0005, 0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 0.95, 1]),
+                   save_fig = False, outdir = '', save_name = 'info_vs_af.png'):
+    vcf = vcf.rename(columns = {'CHROM': 'chr', 'POS': 'pos', 'REF': 'ref', 'ALT': 'alt', 'INFO_SCORE': 'info'})
+    df = pd.merge(vcf[['chr', 'pos', 'ref', 'alt', 'info']], AFs, on=['chr', 'pos', 'ref', 'alt'], how="left").dropna()
+    df['classes'] = np.digitize(df['MAF'], MAF_ary)
+    plt.figure(figsize = (12,8))
+    sns.violinplot(data=df, x="classes", y="info")
+    plt.xlabel('Allele Frequencies (%)')
+    plt.ylabel('INFO_SCORE')
+    plt.title('INFO Score vs Allele Frequencies')
+    ax = plt.gca()
+    ax.set_xticklabels(MAF_ary[np.sort(df['classes'].unique()) - 1])
+    if save_fig:
+        plt.savefig(outdir + save_name, bbox_inches = "tight", dpi=300)
