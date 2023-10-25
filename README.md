@@ -1,5 +1,5 @@
 # LCWGS_pipeline
-Sus' lcwgs pipeline to process low coverage Illumina sequencing data. Current analysis includes:
+Sus' lcwgs pipeline to process low (and high in the near future) coverage Illumina sequencing data. Current analysis includes:
 * Breadth of coverage (see `mosdepth`)
 * Depth of coverage
 * Jellyfish k-mer analysis of error rate
@@ -12,10 +12,7 @@ To Do:
 * Think how to modify `subsample.smk` so that it does not depend on `preprocess.smk` if the fastq files are already cleaned.
 * Restructure parameter specification json file for users (less priority)
 * Optimisation: codes, names, structures, separation punctures, etc
-* Modify breadth of coverage graph to solve memory issues ("graphs/fig8_prop_genome_at_least_coverage.png" this maybe problematic)
-
-Notes:
-* `bcftools concat` command has a `--ligate` option to join separatedly imputed regions together. Either should increase the buffer size or use `regionStart = 1e6 - 1e5, regionEnd = 2e6 + 1e5, buffer = 0` rather than `regionStart = 1e6, regionEnd = 2e6, buffer = 1e5` (and then use `--ligate-warn`)
+* Rewrite the python scripts into a package and call them from the pipeline
 
 Inputs:
 * A `config.json` file to specify sample names, etc. You should modify this file which is under directory `pipelines`
