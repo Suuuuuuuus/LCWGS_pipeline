@@ -1,5 +1,5 @@
 {
-    "ref38": "data/reference/GRCh38.fa",
+    "ref38": "data/references/GRCh38.fa",
     "samples": "samples.tsv",
     "concatenate": true,
     "clean_fastq": true,
