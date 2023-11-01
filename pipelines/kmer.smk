@@ -68,6 +68,7 @@ rule get_fragment_length:
         ss_bam = "data/subsampled_bams/{id}_subsampled.bam"
     output:
         fragment_length = "results/kmer/{id}/fragment_length.tsv"
+    resources: mem_mb = 5000
     shell: """
         samtools view -h {input.ss_bam} | grep -v '^@' | cut -f1,9 | \
         awk '{{$2 = ($2 < 0 ? -$2 : $2); $2 = int(($2 + 49) / 50) * 50; print}}' | \
