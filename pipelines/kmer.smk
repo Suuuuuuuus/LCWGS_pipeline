@@ -17,7 +17,7 @@ rule classify_kmers:
     resources:
         mem_mb = 80000
     shell: """
-        scripts/classify-kmers -jf {input.jf} -op {output.jf_position} -oq {output.jf_quality} -or {output.jf_read} \
+        /well/band/users/rbx225/software/dir/build/apps/classify-kmers -jf {input.jf} -op {output.jf_position} -oq {output.jf_quality} -or {output.jf_read} \
         -reads {input.ss_fastq} -length-to-track-5p {params.read_length} -length-to-track-3p 0
     """
 
@@ -27,8 +27,8 @@ rule calculate_kmer_error_rate:
     output:
         kmer_accuracy = temp("results/kmer/{id}/tmp/kmer_accuracy_{read}.txt")
     shell: """
-        true=$(zcat {input.jf_read} | tail -n +2 | cut -f 16 | paste -sd+ | bc)
-        total=$(zcat {input.jf_read} | tail -n +2 | cut -f 15 | paste -sd+ | bc)
+        true=$(cat {input.jf_read} | tail -n +2 | cut -f 16 | paste -sd+ | bc)
+        total=$(cat {input.jf_read} | tail -n +2 | cut -f 15 | paste -sd+ | bc)
         err_prop=$(echo "scale=4; (1-$true/$total)" | bc)
         formatted_result=$(printf "%06.4f" $err_prop)
         echo -e "{wildcards.id}\t$formatted_result" >> {output.kmer_accuracy}

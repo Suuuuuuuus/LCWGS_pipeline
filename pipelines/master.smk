@@ -69,7 +69,6 @@ rule coverage_all:
     input:
         bedgraphs = expand("results/coverage/bedgraphs/{id}_bedgraph.bed", id = ids_1x_all),
         ss_bedgraphs = expand("results/coverage/subsampled_bedgraphs/{id}_subsampled_bedgraph.bed", id = ids_1x_all),
-        graph_subsample_coverage = "graphs/prop_genome_at_least_coverage.png",
         cumsum_ary = expand("results/coverage/subsampled_bedgraphs/{id}_cumsum_ary.txt", id = ids_1x_all),
 #        per_bin_coverage_1x_coordinates = expand("results/coverage/per_bin_coverage/1x/{id}_chr{chr}_coordinate.txt", id = ids_1x_all, chr = chromosome),
 #        per_bin_coverage_1x_bases = expand("results/coverage/per_bin_coverage/1x/{id}_chr{chr}_base.txt", id = ids_1x_all, chr = chromosome),
@@ -82,7 +81,6 @@ rule coverage_all:
 rule dup_rate_all:
     input:
         samtools = "results/dup_rate/duplication_rate_samtools.txt",
-#        graph_samtools_dup_rate = "graphs/samtools_duplication_rate.png",
         avg_fragment_size = "results/fragment_size/fragment_size.txt",
         proportion_ss_fragment_size = "results/fragment_size/proportion_ss_fragment_size.txt",
         proportion_fragment_size = "results/fragment_size/proportion_fragment_size.txt",

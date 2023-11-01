@@ -77,7 +77,7 @@ rule alignment_alt:
 
 rule fixmate:
     input:
-        bam = rules.alignment.output.bam
+        bam = rules.alignment_alt.output.bam if clean_fastq else rules.alignment.output.bam
     output:
         fixmate = temp("data/bams/tmp/{id}.fixmate.bam")
     resources: mem_mb = 50000
