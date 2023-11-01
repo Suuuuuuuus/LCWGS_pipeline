@@ -18,7 +18,7 @@ strand = sys.argv[2]
 file = sys.argv[3]
 
 def calculate_per_bin_kmer_error_rate(code, strand, file, intervals = [50,100,150,200,250,300,350,400,450,500,550,600]):
-    result = pd.read_csv(file, sep = ' ', usecols = ['read_id', 'number_of_kmers_at_threshold', 'number_of_solid_kmers_at_threshold'])
+    result = pd.read_csv(file, sep = '\t', usecols = ['read_id', 'number_of_kmers_at_threshold', 'number_of_solid_kmers_at_threshold'])
     result['read_id'] = result['read_id'].str.split().str[0]
     bins = pd.read_csv('results/kmer/'+code+'/fragment_length.tsv', sep = '\t', header = None, names = ['read_id', 'bin'], dtype={'read_id': 'string', 'bin': 'int'})
     df = pd.merge(result, bins, on='read_id', how="left")
