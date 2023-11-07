@@ -13,13 +13,21 @@ include: "variant_calling.smk"
 
 configfile: "pipelines/config.json"
 
+from os.path import exists
+import json
 import pandas as pd
+import numpy as np
 import sys
 sys.path.append("scripts")
 import lcwgSus
 
-config['samples'] = pd.read_table("samples.tsv", header = None, names = ['Code'])
-ids_1x_all = list(config['samples']['Code'].values)
+# samples = pd.read_table(config['samples'], header = None, names = ['Code'])
+sample_linker = pd.read_table(config['sample_linker'], sep = ',')
+ids_1x_all = list(sample_linker['Seq_Name'].values) # to be deprecated
+seq_names = list(sample_linker['Seq_Name'].values)
+chip_names = list(sample_linker['Chip_Name'].values)
+sample_names = list(sample_linker['Sample_Name'].values)
+
 chromosome = [i for i in range(1,23)]
 
 # The followings are global parameters:
@@ -38,7 +46,7 @@ PANEL_NAME=config["PANEL_NAME"]
 
 rule variant_calling_all:
     input:
-        graph = "results/test.txt"
+        imputation_vcf = expand("results/imputation/tmp/{id}/res.txt", id = ids_1x_all)
 
 rule preprocess_all:
     input:

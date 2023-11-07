@@ -3,8 +3,17 @@ configfile: "pipelines/config.json"
 from os.path import exists
 import json
 import pandas as pd
-config['samples'] = pd.read_table("samples.tsv", header = None, names = ['Code'])
-ids_1x_all = list(config['samples']['Code'].values)
+import numpy as np
+import sys
+sys.path.append("scripts")
+import lcwgSus
+
+# samples = pd.read_table(config['samples'], header = None, names = ['Code'])
+sample_linker = pd.read_table(config['sample_linker'], sep = ',')
+ids_1x_all = list(sample_linker['Seq_Name'].values) # to be deprecated
+seq_names = list(sample_linker['Seq_Name'].values)
+chip_names = list(sample_linker['Chip_Name'].values)
+sample_names = list(sample_linker['Sample_Name'].values)
 
 chromosome = [i for i in range(1,23)]
 
@@ -137,7 +146,6 @@ rule concat:
         input_string=get_input_vcfs_as_string,
         rename_samples = config["rename_samples"],
         rename_samples_file = config["rename_samples_file"]
-
     wildcard_constraints:
         chr='\w{1,2}',
         regionStart='\d{1,9}',
@@ -173,18 +181,37 @@ rule concat:
         fi
     """
 
-'''
-rule imputation_accuracy_NA12878:
-        input:
-                script = "scripts/calculate_imputation_accuracy_NA12878_v2.py"
-        output:
-                graph = "graphs/NA12878_imputation_accuracy.png"
-        resources:
-                mem_mb = 300000
-        threads:
-                16
-        shell: """
-                python {input.script}
-        """
+rule get_sample_imputation_result:
+    input:
+        imputation_result = expand("results/imputation/vcfs/{panel}/quilt.chr{chr}.vcf.gz", chr = chromosome, panel = ['oneKG', 'oneKG_ggvp']),
+        chip_result = "results/chip/filtered_snps.vcf.gz"
+    output:
+        imputation_vcf = temp("results/imputation/tmp/{id}/{panel}_chr{chr}.vcf.gz"),
+        chip_vcf = temp("results/chip/tmp/{id}/{id}.vcf.gz")
+    params:
+        seq_name = lambda w: w.get("id"),
+        sample_name = sample_linker[sample_linker['Seq_Name'] == seq_name]['Sample_Name'].values,
+        chip_name = sample_linker[sample_linker['Seq_Name'] == seq_name]['Chip_Name'].values
+    resources:
+        mem_mb = 30000
+    shell: """
+        bcftools view -s {params.sample_name} -Oz -o {output.imputation_vcf} {input.imputation_result}
+        bcftools view -s {params.chip_name} -Oz -o {output.chip_vcf} {input.chip_result}
+    """
 
-'''
+rule calculate_imputation_accuracy:
+    input:
+        imputation_vcf = "results/imputation/tmp/{sample_id}/{panel}_chr{chr}.vcf.gz",
+        chip_vcf = "results/chip/tmp/{chip_id}/{chip_id}.vcf.gz"
+    output:
+        r2 = "something"
+    resources:
+        mem_mb = 30000
+    run: 
+        chromosomes = chromosome
+        vcfs = ["/well/band/users/rbx225/test_files/lcwgs/chr" + str(i) + ".vcf.gz" for i in chromosomes]
+        mafs = ["/well/band/users/rbx225/test_files/maf/maf_chr" + str(i) + ".txt" for i in chromosomes]
+        vcf = lcwgSus.multi_parse_vcf(chromosomes, vcfs)
+        af = lcwgSus.multi_read_af(chromosomes, mafs)
+        chip = lcwgSus.read_vcf("/well/band/users/rbx225/test_files/chip/GAM013489.vcf.gz")
+        chip = lcwgSus.drop_cols(chip, drop_lst = ['id', 'qual', 'filter','info','format'])
