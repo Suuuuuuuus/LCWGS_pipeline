@@ -182,22 +182,33 @@ rule concat:
         fi
     """
 
-rule get_sample_vcf:
+rule get_chip_vcf:
     input:
-        imputation_result = expand("results/imputation/vcfs/{panel}/quilt.chr{chr}.vcf.gz", chr = chromosome, panel = panels),
         chip_result = "results/chip/filtered_snps.vcf.gz"
     output:
-        imputation_vcf = temp("results/imputation/tmp/{id}/{panel}_chr{chr}.vcf.gz"),
         chip_vcf = temp("results/chip/tmp/{id}/{id}.vcf.gz")
     params:
-        eq_name = lambda wildcards: wildcards.id,
-        sample_name = lambda wildcards: sample_linker[sample_linker['Seq_Name'] == wildcards.id]['Sample_Name'].values[0],
+        seq_name = lambda wildcards: wildcards.id,
         chip_name = lambda wildcards: sample_linker[sample_linker['Seq_Name'] == wildcards.id]['Chip_Name'].values[0]
     resources:
         mem_mb = 30000
     shell: """
-        bcftools view -s {params.sample_name} -Oz -o {output.imputation_vcf} {input.imputation_result}
         bcftools view -s {params.chip_name} -Oz -o {output.chip_vcf} {input.chip_result}
+    """
+
+
+rule get_imputation_vcf:
+    input:
+        imputation_result = expand("results/imputation/vcfs/{panel}/quilt.chr{chr}.vcf.gz", chr = chromosome, panel = panels),
+    output:
+        imputation_vcf = temp("results/imputation/tmp/{id}/{panel}_chr{chr}.vcf.gz"),
+    params:
+        seq_name = lambda wildcards: wildcards.id,
+        sample_name = lambda wildcards: sample_linker[sample_linker['Seq_Name'] == wildcards.id]['Sample_Name'].values[0],
+    resources:
+        mem_mb = 30000
+    shell: """
+        bcftools view -s {params.sample_name} -Oz -o {output.imputation_vcf} {input.imputation_result}
     """
 
 # vcf_dict = {}

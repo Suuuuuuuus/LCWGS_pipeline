@@ -7,7 +7,7 @@
 #include: "subsample.smk"
 #include: "reference.smk"
 #include: "coverage.smk"
-#include: "imputation.smk"
+include: "imputation.smk"
 #include: "imputation_prep.smk"
 include: "variant_calling.smk"
 
