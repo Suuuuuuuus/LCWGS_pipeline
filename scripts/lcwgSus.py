@@ -1,22 +1,21 @@
 import io
 import os
+import sys
 import csv
 import gzip
 import time
-import multiprocessing
-import resource
-import pandas as pd
-import matplotlib.pyplot as plt
-import numpy as np
-import scipy as sp
-import statsmodels.api as sm
 import random
-from collections import Counter
-import matplotlib.colors as mcolors
-from scipy.stats import poisson
+import resource
 import itertools
-import collections
+import multiprocessing
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
+import seaborn as sns
+import statsmodels.api as sm
 import scipy
+from scipy.stats import poisson
 from scipy.stats import chi2
 from scipy.stats import friedmanchisquare
 from scipy.stats import studentized_range
@@ -26,7 +25,31 @@ def get_mem():
     current_memory_usage = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
     current_memory_usage_mb = current_memory_usage / 1024
     print(f"Current memory usage: {current_memory_usage_mb:.2f} MB")
-def read_vcf(file):
+def get_genotype(df, colname='call'):
+    ref = df['ref']
+    alt = df['alt']
+    s = df[colname]
+    if len(alt) != 1 or len(ref) != 1:
+        return np.NaN
+    if s == '0|0' or s == '0/0':
+        return 0.
+    elif s == '1|0' or s == '1/0':
+        return 1.
+    elif s == '0|1' or s == '0/1':
+        return 1.
+    elif s == '1|1' or s == '1/1':
+        return 2.
+    else:
+        return np.NaN
+def get_imputed_dosage(df, colname='call'): # Currently deprecated
+    ref = df['ref']
+    alt = df['alt']
+    s = df[colname]
+    if alt == '.' or len(alt) > 1 or len(ref) > 1 :
+        return pd.NaT
+    else:
+        return s.split(':')[2]
+def read_vcf(file, sample = None): # Continue for now, but need to change this later if we are not merely considering autosomes
     with io.TextIOWrapper(gzip.open(file,'r')) as f:
         lines =[l for l in f if not l.startswith('##')]
         dynamic_header_as_key = []
@@ -40,33 +63,37 @@ def read_vcf(file):
             dtype=columns2detype,
             sep='\t'
         ).rename(columns={'#CHROM':'CHROM'})
-    df['CHROM'] = df['CHROM'].str.extract(r'(\d+)').astype(int)
+    if df.dtypes[0] != int:
+        df['CHROM'] = df['CHROM'].str.extract(r'(\d+)').astype(int)
+    if df.dtypes[1] != int:
+        df['POS'] = df['POS'].astype(int)
+    df.columns = ['chr', 'pos', 'id', 'ref', 'alt', 'qual', 'filter', 'info', 'format', 'call']
+    if sample is not None:
+        df.columns[-1] = sample
     return df
-def read_af(chromosomes, files):
-    for i in range(len(chromosomes)):
-        tmp = pd.read_csv(file[i], header = None, sep = '\t', names = ['chr', 'pos', 'ref', 'alt', 'MAF'],
-                          dtype = {
-            'chr': 'string',
-            'pos': 'Int64',
-            'ref': 'string',
-            'alt': 'string',
-            'MAF': 'string'
-        })
-        tmp = tmp.dropna()
-        tmp['MAF'] = pd.to_numeric(tmp['MAF'])
-        tmp['chr'] = tmp['chr'].str.extract(r'(\d+)').astype(int)
-        if i==0:
-            AFs = tmp
-        else:
-            AFs = pd.concat([AFs,tmp])
-    return AFs
-def extract_info(df, info_cols = ['EAF', 'INFO_SCORE'], attribute = 'INFO', drop_attribute = True):
+def read_af(file, q = None):
+    df = pd.read_csv(file, header = None, sep = '\t', names = ['chr', 'pos', 'ref', 'alt', 'MAF'],
+                      dtype = {
+        'chr': 'string',
+        'pos': 'Int64',
+        'ref': 'string',
+        'alt': 'string',
+        'MAF': 'string'
+    })
+    df = df.dropna()
+    df['MAF'] = pd.to_numeric(df['MAF'])
+    df['chr'] = df['chr'].str.extract(r'(\d+)').astype(int)
+    if q is None:
+        return df
+    else:
+        q.put(df)
+def extract_info(df, info_cols = ['EAF', 'INFO_SCORE'], attribute = 'info', drop_attribute = True):
     for i in info_cols:
         df[i] = df[attribute].str.extract( i + '=([^;]+)' ).astype(float)
     if drop_attribute:
         df = df.drop(columns = [attribute])
     return df
-def extract_format(df, sample, fmt = 'FORMAT'):
+def extract_format(df, sample, fmt = 'format'):
     fields = df[fmt].values[0].split(':')
     try:
         df[fields] = df[sample].str.split(':', expand=True)
@@ -76,11 +103,11 @@ def extract_format(df, sample, fmt = 'FORMAT'):
     except ValueError as e:
         print(f"Error: {e}")
     return df.drop(columns = [fmt, sample])
-def drop_cols(df, drop_lst = ['ID', 'QUAL', 'FILTER']):
+def drop_cols(df, drop_lst = ['id', 'qual', 'filter']):
     return df.drop(columns = drop_lst)
 
-def parse_vcf(file, sample, q = None, 
-              info_cols = ['EAF', 'INFO_SCORE'], attribute = 'INFO', fmt = 'FORMAT', drop_attribute = True, drop_lst = ['ID', 'QUAL', 'FILTER']):
+def parse_vcf(file, sample = 'call', q = None, 
+              info_cols = ['EAF', 'INFO_SCORE'], attribute = 'info', fmt = 'format', drop_attribute = True, drop_lst = ['id', 'qual', 'filter']):
     df = read_vcf(file)
     df = extract_info(df, info_cols = info_cols, attribute = attribute, drop_attribute = drop_attribute)
     df = extract_format(df, sample, fmt = fmt)
@@ -164,13 +191,30 @@ def subtract_bed_by_chr(cov, region, q = None):
     else:
         q.put(res)
 
-def multi_parse(chromosomes, files, sample, combine = True,
-               info_cols = ['EAF', 'INFO_SCORE'], attribute = 'INFO', fmt = 'FORMAT', drop_attribute = True, drop_lst = ['ID', 'QUAL', 'FILTER']):
+def multi_parse_vcf(chromosomes, files, sample = 'call', combine = True,
+               info_cols = ['EAF', 'INFO_SCORE'], attribute = 'info', fmt = 'format', drop_attribute = True, drop_lst = ['id', 'qual', 'filter']):
     manager = multiprocessing.Manager()
     q = manager.Queue()
     processes = []
     for i in range(len(chromosomes)):
         tmp = multiprocessing.Process(target=parse_vcf, args=(files[i], sample, q, info_cols, attribute, fmt, drop_attribute, drop_lst))
+        tmp.start()
+        processes.append(tmp)
+    for process in processes:
+        process.join()
+    res_lst = []
+    while not q.empty():
+        res_lst.append(q.get())
+    if combine:
+        return combine_df(res_lst)
+    else:
+        return res_lst
+def multi_read_af(chromosomes, files, combine = True):
+    manager = multiprocessing.Manager()
+    q = manager.Queue()
+    processes = []
+    for i in range(len(chromosomes)):
+        tmp = multiprocessing.Process(target=read_af, args=(files[i], q))
         tmp.start()
         processes.append(tmp)
     for process in processes:
@@ -199,7 +243,15 @@ def multi_subtract_bed(chromosomes, covs, regions, combine = True):
         return combine_df(res_lst)
     else:
         return res_lst
-    
+def calculate_af(df):
+    # df should have columns chr, pos, ref, alt and genotypes
+    df['prop'] = 0
+    for i in range(len(df.index)):
+        count = 0
+        for j in range(4, len(df.columns) - 2):
+            count += df.iloc[i, j].split('/').count('1')
+        df.iloc[i, -1] = count/(2*(len(df.columns) - 5))
+    return df[['chr', 'pos', 'ref', 'alt', 'prop']]
 def calculate_ss_cumsum_coverage(df, num_coverage=5):
     df['bases'] = df['end'] - df['start']
     df = df.groupby(['cov']).bases.sum().reset_index()
@@ -209,7 +261,64 @@ def calculate_ss_cumsum_coverage(df, num_coverage=5):
     df = df.dropna()
     coverage_ary = df['prop genome at least covered'].values[:num_coverage]
     return coverage_ary
-def plot_sequencing_skew(arys, avg_coverage, n_se = 1.96, code = None, num_coverage=5, save_fig = False, outdir = 'graphs/'):
+def calculate_imputation_accuracy(df1, df2, af, 
+                                  MAF_ary = np.array([0, 0.0001, 0.0002, 0.0005, 0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 0.95, 1]),
+                                 how = 'inner', save_fig = False, plot_title = 'Imputation accuracy', save_name = 'imputation_corr_vs_af.png', outdir = 'graphs/'):
+    df2 = df2.copy()
+    if len(df1.columns) != 5:
+        df1 = df1[['chr', 'pos', 'ref', 'alt', 'DS']]
+    col1 = df1.columns[-1]
+    if type(df2.iloc[0, len(df2.columns)-1]) == str:
+        df2['genotype'] = df2.apply(get_genotype, axis = 1)
+        df2 = df2.dropna()
+        df2['genotype'] = df2['genotype'].astype(float)
+        df2 = df2.drop(columns = df2.columns[-2])
+        col2 = 'genotype'
+    else:
+        col2 = df2.columns[-1]
+    
+    df = pd.merge(df2, df1, on=['chr', 'pos', 'ref', 'alt'], how=how)
+    df = df.fillna(0)
+    df = pd.merge(df, af, on=['chr', 'pos', 'ref', 'alt'], how='left')
+    df = df.dropna()
+
+    r2 = np.zeros((2, np.size(MAF_ary) - 1))
+    for i in range(r2.shape[1]):
+        tmp = df[(MAF_ary[i+1] > df['MAF']) & (df['MAF'] > MAF_ary[i])]
+        if tmp.shape[0] == 0:
+            r2[0,i] = 0
+        else:
+            r2[0, i] = np.corrcoef(tmp[col1].values, tmp[col2].values)[0,1]**2
+        r2[1, i] = int(tmp.shape[0])
+        
+    r2_df = pd.DataFrame(r2.T, columns = ['Imputation Accuracy','Bin Count'], index = MAF_ary[1:])
+    return r2_df
+def plot_afs(df1, df2, save_fig = False, outdir = 'graphs/', save_name = 'af_vs_af.png'):
+    # df1 is the chip df with cols chr, pos, ref, alt and prop
+    # df2 is the other df with the same cols
+    df = pd.merge(df1, df2, on = ['chr', 'pos', 'ref', 'alt'], how = 'inner')
+    plt.scatter(df['prop_x']*100, df['prop_y']*100)
+    plt.xlabel('ChIP MAF (%)')
+    plt.ylabel('QUILT EAF (%)')
+    plt.ylabel('Sequencing Skew')
+    plt.title('Check AFs')
+    if save_fig:
+        plt.savefig(outdir + save_name, bbox_inches = "tight", dpi=300)
+    return np.corrcoef(df['prop_x'], df['prop_y'])[0,1]
+def plot_imputation_accuracy(r2, save_fig = False, plot_title = 'Imputation accuracy', label = None, save_name = 'imputation_corr_vs_af.png', outdir = 'graphs/'):
+    if type(r2) == pd.DataFrame:
+        plt.plot(r2.index, r2['Imputation Accuracy'], label = label, color = 'g')
+    else:
+        for i in range(len(r2)):
+            plt.plot(r2[i].index, r2[i]['Imputation Accuracy'], label = label[i])
+    plt.xlabel('gnomAD AF (%)')
+    plt.ylabel('$r^2$')
+    plt.legend()
+    plt.title(plot_title)
+    plt.xscale('log')
+    if save_fig:
+        plt.savefig(outdir + save_name, bbox_inches = "tight", dpi=300)
+def plot_sequencing_skew(arys, avg_coverage, n_se = 1.96, code = None, num_coverage=5, save_fig = False, save_name = 'prop_genome_at_least_coverage.png', outdir = 'graphs/'):
     poisson_expectation = 1 - np.cumsum(poisson.pmf(np.arange(num_coverage), mu=avg_coverage, loc=0))
     se = np.sqrt(avg_coverage/len(arys))
     x_coordinate = np.arange(1, num_coverage+1)
@@ -226,11 +335,10 @@ def plot_sequencing_skew(arys, avg_coverage, n_se = 1.96, code = None, num_cover
     #plt.legend()
     plt.title('Sequencing Skew')
     if save_fig:
-        plt.savefig(outdir + 'prop_genome_at_least_coverage.png', bbox_inches = "tight", dpi=300)
+        plt.savefig(outdir + save_name, bbox_inches = "tight", dpi=300)
 def plot_info_vs_af(vcf, afs, MAF_ary = np.array([0, 0.0001, 0.0002, 0.0005, 0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 0.95, 1]),
-                   save_fig = False, outdir = '', save_name = 'info_vs_af.png'):
-    vcf = vcf.rename(columns = {'CHROM': 'chr', 'POS': 'pos', 'REF': 'ref', 'ALT': 'alt', 'INFO_SCORE': 'info'})
-    df = pd.merge(vcf[['chr', 'pos', 'ref', 'alt', 'info']], AFs, on=['chr', 'pos', 'ref', 'alt'], how="left").dropna()
+                   save_fig = False, outdir = 'graphs/', save_name = 'info_vs_af.png'):
+    df = pd.merge(vcf[['chr', 'pos', 'ref', 'alt', 'info']], afs, on=['chr', 'pos', 'ref', 'alt'], how="left").dropna()
     df['classes'] = np.digitize(df['MAF'], MAF_ary)
     plt.figure(figsize = (12,8))
     sns.violinplot(data=df, x="classes", y="info")
