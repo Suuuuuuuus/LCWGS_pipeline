@@ -19,7 +19,8 @@ chromosome = [i for i in range(1,23)]
 
 rule test:
     output:
-        imputation_vcf = "results/imputation/tmp/{res.txt"
-    run: 
+        imputation_vcf = "results/imputation/tmp/res.txt"
+    run:
         chromosomes = chromosome
-        print(len(chromosomes))
+        with open(output.imputation_vcf, 'w') as f:
+            print(len(chromosomes), file = f)

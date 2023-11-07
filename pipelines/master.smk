@@ -46,7 +46,7 @@ PANEL_NAME=config["PANEL_NAME"]
 
 rule variant_calling_all:
     input:
-        imputation_vcf = expand("results/imputation/tmp/{id}/res.txt", id = ids_1x_all)
+        imputation_vcf = "results/imputation/tmp/res.txt"
 
 rule preprocess_all:
     input:
