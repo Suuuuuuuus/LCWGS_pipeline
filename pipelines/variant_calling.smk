@@ -19,11 +19,7 @@ chromosome = [i for i in range(1,23)]
 
 rule test:
     output:
-        imputation_vcf = "results/imputation/tmp/{id}/res.txt"
-    params:
-        seq_name = lambda wildcards: wildcards.id,
-        sample_name = lambda wildcards: sample_linker[sample_linker['Seq_Name'] == wildcards.id]['Sample_Name'].values,
-        chip_name = lambda wildcards: sample_linker[sample_linker['Seq_Name'] == wildcards.id]['Chip_Name'].values
-    shell: """
-        echo {params.seq_name}\t{params.sample_name}\t{params.chip_name} > {output.imputation_vcf}
-    """
+        imputation_vcf = "results/imputation/tmp/{res.txt"
+    run: 
+        chromosomes = chromosome
+        print(len(chromosomes))

@@ -14,6 +14,7 @@ ids_1x_all = list(sample_linker['Seq_Name'].values) # to be deprecated
 seq_names = list(sample_linker['Seq_Name'].values)
 chip_names = list(sample_linker['Chip_Name'].values)
 sample_names = list(sample_linker['Sample_Name'].values)
+panels = config["panels"]
 
 chromosome = [i for i in range(1,23)]
 
@@ -181,17 +182,17 @@ rule concat:
         fi
     """
 
-rule get_sample_imputation_result:
+rule get_sample_vcf:
     input:
-        imputation_result = expand("results/imputation/vcfs/{panel}/quilt.chr{chr}.vcf.gz", chr = chromosome, panel = ['oneKG', 'oneKG_ggvp']),
+        imputation_result = expand("results/imputation/vcfs/{panel}/quilt.chr{chr}.vcf.gz", chr = chromosome, panel = panels),
         chip_result = "results/chip/filtered_snps.vcf.gz"
     output:
         imputation_vcf = temp("results/imputation/tmp/{id}/{panel}_chr{chr}.vcf.gz"),
         chip_vcf = temp("results/chip/tmp/{id}/{id}.vcf.gz")
     params:
-        seq_name = lambda w: w.get("id"),
-        sample_name = sample_linker[sample_linker['Seq_Name'] == seq_name]['Sample_Name'].values,
-        chip_name = sample_linker[sample_linker['Seq_Name'] == seq_name]['Chip_Name'].values
+        eq_name = lambda wildcards: wildcards.id,
+        sample_name = lambda wildcards: sample_linker[sample_linker['Seq_Name'] == wildcards.id]['Sample_Name'].values[0],
+        chip_name = lambda wildcards: sample_linker[sample_linker['Seq_Name'] == wildcards.id]['Chip_Name'].values[0]
     resources:
         mem_mb = 30000
     shell: """
@@ -201,16 +202,17 @@ rule get_sample_imputation_result:
 
 rule calculate_imputation_accuracy:
     input:
-        imputation_vcf = "results/imputation/tmp/{sample_id}/{panel}_chr{chr}.vcf.gz",
-        chip_vcf = "results/chip/tmp/{chip_id}/{chip_id}.vcf.gz"
+        imputation_vcf = expand("results/imputation/tmp/{id}/{panel}_chr{chr}.vcf.gz", chr = chromosome, panel = panels, allow_missing=True)
+        chip_vcf = "results/chip/tmp/{id}/{id}.vcf.gz",
+        afs = expand("data/gnomAD_MAFs/gnomAD_MAF_afr_chr{chr}.txt", chr = chromosome)
     output:
-        r2 = "something"
+        r2 = expand("results/imputation/tmp/{id}/{panel}_imputation_accuracy.csv", panel = panels)
     resources:
         mem_mb = 30000
     run: 
         chromosomes = chromosome
-        vcfs = ["/well/band/users/rbx225/test_files/lcwgs/chr" + str(i) + ".vcf.gz" for i in chromosomes]
-        mafs = ["/well/band/users/rbx225/test_files/maf/maf_chr" + str(i) + ".txt" for i in chromosomes]
+        vcfs = input.imputation_vcf
+        mafs = input.afs
         vcf = lcwgSus.multi_parse_vcf(chromosomes, vcfs)
         af = lcwgSus.multi_read_af(chromosomes, mafs)
         chip = lcwgSus.read_vcf("/well/band/users/rbx225/test_files/chip/GAM013489.vcf.gz")
