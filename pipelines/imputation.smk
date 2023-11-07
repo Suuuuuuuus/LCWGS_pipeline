@@ -200,13 +200,20 @@ rule get_sample_vcf:
         bcftools view -s {params.chip_name} -Oz -o {output.chip_vcf} {input.chip_result}
     """
 
+# vcf_dict = {}
+# for panel in panels:
+#     for id in seq_names:
+#         vcf_dict[panel + id] = ["results/imputation/tmp/"+id+"/"+panel+"_chr"+str(chr)+".vcf.gz" for chr in chromosomes]
+
+
+# Write a wildcard constraint such that it skips IDT0658
 rule calculate_imputation_accuracy:
     input:
-        imputation_vcf = expand("results/imputation/tmp/{id}/{panel}_chr{chr}.vcf.gz", chr = chromosome, panel = panels, allow_missing=True)
+        imputation_vcf = expand("results/imputation/tmp/{id}/{panel}_chr{chr}.vcf.gz", chr = chromosome, allow_missing=True),
         chip_vcf = "results/chip/tmp/{id}/{id}.vcf.gz",
         afs = expand("data/gnomAD_MAFs/gnomAD_MAF_afr_chr{chr}.txt", chr = chromosome)
     output:
-        r2 = expand("results/imputation/tmp/{id}/{panel}_imputation_accuracy.csv", panel = panels)
+        r2 = "results/imputation/tmp/{id}/{panel}_imputation_accuracy.csv"
     resources:
         mem_mb = 30000
     run: 
@@ -215,5 +222,12 @@ rule calculate_imputation_accuracy:
         mafs = input.afs
         vcf = lcwgSus.multi_parse_vcf(chromosomes, vcfs)
         af = lcwgSus.multi_read_af(chromosomes, mafs)
-        chip = lcwgSus.read_vcf("/well/band/users/rbx225/test_files/chip/GAM013489.vcf.gz")
+        chip = lcwgSus.read_vcf(input.chip_vcf)
         chip = lcwgSus.drop_cols(chip, drop_lst = ['id', 'qual', 'filter','info','format'])
+        r2 = lcwgSus.calculate_imputation_accuracy(vcf, chip, af)
+        r2.to_csv(output.r2, sep='\t', mode='a')
+
+# Write a lcwgSus function which plots imputation accuracy in box plots.
+
+        # x = [r2,r2]
+        # lcwgSus.plot_imputation_accuracy(x, label = ['sample1', 'sample2'])

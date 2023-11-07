@@ -27,6 +27,7 @@ ids_1x_all = list(sample_linker['Seq_Name'].values) # to be deprecated
 seq_names = list(sample_linker['Seq_Name'].values)
 chip_names = list(sample_linker['Chip_Name'].values)
 sample_names = list(sample_linker['Sample_Name'].values)
+panels = config['panels']
 
 chromosome = [i for i in range(1,23)]
 
@@ -179,9 +180,10 @@ def get_input_vcfs_as_string(wildcards):
 
 rule imputation_all:
     input:
-        RData = [regions_to_prep],
-        vcf_regions = [vcfs_to_impute],
-        vcfs = [final_vcfs]
+        # RData = [regions_to_prep],
+        # vcf_regions = [vcfs_to_impute],
+        # vcfs = [final_vcfs],
+        r2 = expand("results/imputation/tmp/{id}/{panel}_imputation_accuracy.csv", id = ids_1x_all, panel = panels)
 
 rule all:
     input:
