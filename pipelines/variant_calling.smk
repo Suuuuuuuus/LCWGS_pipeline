@@ -18,15 +18,12 @@ sample_names = list(sample_linker['Sample_Name'].values)
 chromosome = [i for i in range(1,23)]
 
 rule test:
-    # input:
-    #     imputation_result = expand("results/imputation/vcfs/{panel}/quilt.chr{chr}.vcf.gz", chr = chromosome, panel = ['oneKG', 'oneKG_ggvp']),
-    #     chip_result = "results/chip/filtered_snps.vcf.gz"
     output:
         imputation_vcf = "results/imputation/tmp/{id}/res.txt"
     params:
-        seq_name = lambda w: w.get("id"),
-        sample_name = sample_linker[sample_linker['Seq_Name'] == seq_name]['Sample_Name'].values,
-        chip_name = sample_linker[sample_linker['Seq_Name'] == seq_name]['Chip_Name'].values
+        seq_name = lambda wildcards: wildcards.id,
+        sample_name = lambda wildcards: sample_linker[sample_linker['Seq_Name'] == wildcards.id]['Sample_Name'].values,
+        chip_name = lambda wildcards: sample_linker[sample_linker['Seq_Name'] == wildcards.id]['Chip_Name'].values
     shell: """
         echo {params.seq_name}\t{params.sample_name}\t{params.chip_name} > {output.imputation_vcf}
     """
