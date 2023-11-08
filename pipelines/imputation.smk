@@ -187,13 +187,19 @@ rule get_chip_vcf:
         chip_result = "results/chip/filtered_snps.vcf.gz"
     output:
         chip_vcf = temp("results/chip/tmp/{id}/{id}.vcf.gz")
+    wildcard_constraints:
+        sample = lambda wildcards: wildcards.id != "IDT0658"
     params:
         seq_name = lambda wildcards: wildcards.id,
         chip_name = lambda wildcards: sample_linker[sample_linker['Seq_Name'] == wildcards.id]['Chip_Name'].values[0]
     resources:
         mem_mb = 30000
     shell: """
-        bcftools view -s {params.chip_name} -Oz -o {output.chip_vcf} {input.chip_result}
+        if (bcftools query -l {input.chip_result} | grep -q {wildcards.id}); then
+            bcftools view -s {params.chip_name} -Oz -o {output.chip_vcf} {input.chip_result}
+        else
+            touch {output.chip_vcf}
+        fi
     """
 
 
@@ -202,13 +208,19 @@ rule get_imputation_vcf:
         imputation_result = "results/imputation/vcfs/{panel}/quilt.chr{chr}.vcf.gz"
     output:
         imputation_vcf = temp("results/imputation/tmp/{id}/{panel}_chr{chr}.vcf.gz"),
+    wildcard_constraints:
+        sample = lambda wildcards: wildcards.id != "IDT0658"
     params:
         seq_name = lambda wildcards: wildcards.id,
         sample_name = lambda wildcards: sample_linker[sample_linker['Seq_Name'] == wildcards.id]['Sample_Name'].values[0],
     resources:
         mem_mb = 30000
     shell: """
-        bcftools view -s {params.sample_name} -Oz -o {output.imputation_vcf} {input.imputation_result}
+        if (bcftools query -l {input.imputation_result} | grep -q {wildcards.id}); then
+            bcftools view -s {params.sample_name} -Oz -o {output.imputation_vcf} {input.imputation_result}
+        else
+            touch {output.imputation_vcf}
+        fi
     """
 
 #vcf_dict = {}
@@ -227,9 +239,14 @@ rule calculate_imputation_accuracy:
         r2 = "results/imputation/tmp/{id}/{panel}_imputation_accuracy.csv"
     resources:
         mem_mb = 100000
+    wildcard_constraints:
+        sample = lambda wildcards: wildcards.id != "IDT0658"
     threads: 4
     run:
         chromosomes = chromosome
+        
+        check_empty = input.imputation_vcf + [input.chip_vcf]
+        
         vcfs = input.imputation_vcf
         mafs = input.afs
         vcf = lcwgSus.multi_parse_vcf(chromosomes, vcfs)
