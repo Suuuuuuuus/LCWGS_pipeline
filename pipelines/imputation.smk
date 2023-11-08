@@ -199,7 +199,7 @@ rule get_chip_vcf:
 
 rule get_imputation_vcf:
     input:
-        imputation_result = expand("results/imputation/vcfs/{panel}/quilt.chr{chr}.vcf.gz", chr = chromosome, panel = panels),
+        imputation_result = "results/imputation/vcfs/{panel}/quilt.chr{chr}.vcf.gz"
     output:
         imputation_vcf = temp("results/imputation/tmp/{id}/{panel}_chr{chr}.vcf.gz"),
     params:
@@ -211,10 +211,10 @@ rule get_imputation_vcf:
         bcftools view -s {params.sample_name} -Oz -o {output.imputation_vcf} {input.imputation_result}
     """
 
-# vcf_dict = {}
-# for panel in panels:
-#     for id in seq_names:
-#         vcf_dict[panel + id] = ["results/imputation/tmp/"+id+"/"+panel+"_chr"+str(chr)+".vcf.gz" for chr in chromosomes]
+#vcf_dict = {}
+#for panel in panels:
+#    for id in seq_names:
+#        vcf_dict[panel + id] = ["results/imputation/tmp/"+id+"/"+panel+"_chr"+str(chr)+".vcf.gz" for chr in chromosomes]
 
 
 # Write a wildcard constraint such that it skips IDT0658
@@ -226,8 +226,9 @@ rule calculate_imputation_accuracy:
     output:
         r2 = "results/imputation/tmp/{id}/{panel}_imputation_accuracy.csv"
     resources:
-        mem_mb = 30000
-    run: 
+        mem_mb = 100000
+    threads: 4
+    run:
         chromosomes = chromosome
         vcfs = input.imputation_vcf
         mafs = input.afs
