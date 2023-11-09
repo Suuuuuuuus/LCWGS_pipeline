@@ -193,9 +193,12 @@ rule get_chip_vcf:
     resources:
         mem_mb = 30000
     shell: """
-        bcftools view -s {params.chip_name} -Oz -o {output.chip_vcf} {input.chip_result}
+        if (bcftools query -l {input.chip_result} | grep -q {wildcards.id}); then
+            bcftools view -s {params.chip_name} -Oz -o {output.chip_vcf} {input.chip_result}
+        else
+            touch {output.chip_vcf}
+        fi
     """
-
 
 rule get_imputation_vcf:
     input:
@@ -208,7 +211,11 @@ rule get_imputation_vcf:
     resources:
         mem_mb = 30000
     shell: """
-        bcftools view -s {params.sample_name} -Oz -o {output.imputation_vcf} {input.imputation_result}
+        if (bcftools query -l {input.imputation_result} | grep -q {wildcards.id}); then
+            bcftools view -s {params.sample_name} -Oz -o {output.imputation_vcf} {input.imputation_>
+        else
+            touch {output.imputation_vcf}
+        fi
     """
 
 #vcf_dict = {}
@@ -216,8 +223,6 @@ rule get_imputation_vcf:
 #    for id in seq_names:
 #        vcf_dict[panel + id] = ["results/imputation/tmp/"+id+"/"+panel+"_chr"+str(chr)+".vcf.gz" for chr in chromosomes]
 
-
-# Write a wildcard constraint such that it skips IDT0658
 rule calculate_imputation_accuracy:
     input:
         imputation_vcf = expand("results/imputation/tmp/{id}/{panel}_chr{chr}.vcf.gz", chr = chromosome, allow_missing=True),
