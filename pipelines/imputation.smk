@@ -226,7 +226,7 @@ rule calculate_imputation_accuracy:
     output:
         r2 = "results/imputation/tmp/{id}/{panel}_imputation_accuracy.csv"
     resources:
-        mem_mb = 100000
+        mem_mb = 300000
     threads: 4
     run:
         chromosomes = chromosome
