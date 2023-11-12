@@ -23,5 +23,5 @@
     "WINDOWSIZE": 5000000,
     "BUFFER": 0,
     "BAMLIST": "/well/band/users/rbx225/GAMCC/results/imputation/bamlist.txt",
-    "PANEL_NAME": "final"
+    "PANEL_NAME": "oneKG_ggvp"
 }

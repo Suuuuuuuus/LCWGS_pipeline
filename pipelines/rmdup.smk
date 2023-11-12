@@ -15,5 +15,5 @@ rule rmdup_index:
     output:
         dedup_bai = "data/dedup_bams/{id}.bam.bai"
     shell: """
-        samtools index {intput.dedup_bam}
+        tabix {input.dedup_bam}
     """

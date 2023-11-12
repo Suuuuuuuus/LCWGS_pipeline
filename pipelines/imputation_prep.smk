@@ -1,6 +1,15 @@
+configfile: "pipelines/config.json"
+
+import os
 from os.path import exists
 import json
 import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import sys
+sys.path.append("scripts")
+import lcwgSus
 chromosome = [i for i in range(1,23)]
 
 # The followings are global parameters from `activate`:
@@ -12,6 +21,13 @@ WINDOWSIZE=config["WINDOWSIZE"]
 BUFFER=config["BUFFER"]
 PANEL_NAME=config["PANEL_NAME"]
 dedup=config["dedup"]
+
+sample_linker = pd.read_table(config['sample_linker'], sep = ',')
+ids_1x_all = list(sample_linker['Seq_Name'].values) # to be deprecated
+seq_names = list(sample_linker['Seq_Name'].values)
+chip_names = list(sample_linker['Chip_Name'].values)
+sample_names = list(sample_linker['Sample_Name'].values)
+panels = config["panels"]
 
 rule prepare_bamlist:
     input:
