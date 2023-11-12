@@ -292,6 +292,7 @@ def calculate_imputation_accuracy(df1, df2, af,
         r2[1, i] = int(tmp.shape[0])
         
     r2_df = pd.DataFrame(r2.T, columns = ['Imputation Accuracy','Bin Count'], index = MAF_ary[1:])
+    r2_df.index.name = 'MAF'
     return r2_df
 def plot_afs(df1, df2, save_fig = False, outdir = 'graphs/', save_name = 'af_vs_af.png'):
     # df1 is the chip df with cols chr, pos, ref, alt and prop
@@ -305,17 +306,24 @@ def plot_afs(df1, df2, save_fig = False, outdir = 'graphs/', save_name = 'af_vs_
     if save_fig:
         plt.savefig(outdir + save_name, bbox_inches = "tight", dpi=300)
     return np.corrcoef(df['prop_x'], df['prop_y'])[0,1]
-def plot_imputation_accuracy(r2, save_fig = False, plot_title = 'Imputation accuracy', label = None, save_name = 'imputation_corr_vs_af.png', outdir = 'graphs/'):
-    if type(r2) == pd.DataFrame:
-        plt.plot(r2.index, r2['Imputation Accuracy'], label = label, color = 'g')
+def plot_imputation_accuracy(r2, plot_title = 'Imputation accuracy', single_sample = True, save_fig = False, save_name = 'imputation_corr_vs_af.png', outdir = 'graphs/'):
+    if single_sample:
+        if type(r2) == pd.DataFrame:
+            plt.plot(r2.index, r2['Imputation Accuracy'], color = 'g')
+        else:
+            for i in range(len(r2)):
+                plt.plot(r2[i].index, r2[i]['Imputation Accuracy'])
+        plt.xlabel('gnomAD AF (%)')
+        plt.ylabel('$r^2$')
+        plt.title(plot_title)
+        plt.xscale('log')
     else:
-        for i in range(len(r2)):
-            plt.plot(r2[i].index, r2[i]['Imputation Accuracy'], label = label[i])
-    plt.xlabel('gnomAD AF (%)')
-    plt.ylabel('$r^2$')
-    plt.legend()
-    plt.title(plot_title)
-    plt.xscale('log')
+        sns.set(style="whitegrid")
+        plt.figure(figsize = (10,6))
+        sns.stripplot(data=r2, x="corr", y="AF", hue="panel", dodge=True)
+        plt.xlabel('Imputation Accuracy')
+        plt.ylabel('gnomAD allele frequencies')
+        plt.title(plot_title)
     if save_fig:
         plt.savefig(outdir + save_name, bbox_inches = "tight", dpi=300)
 def plot_sequencing_skew(arys, avg_coverage, n_se = 1.96, code = None, num_coverage=5, save_fig = False, save_name = 'prop_genome_at_least_coverage.png', outdir = 'graphs/'):

@@ -9,7 +9,7 @@
 #include: "coverage.smk"
 include: "imputation.smk"
 #include: "imputation_prep.smk"
-include: "variant_calling.smk"
+#include: "variant_calling.smk"
 
 configfile: "pipelines/config.json"
 
@@ -183,7 +183,8 @@ rule imputation_all:
         # RData = [regions_to_prep],
         # vcf_regions = [vcfs_to_impute],
         # vcfs = [final_vcfs],
-        r2 = expand("results/imputation/tmp/{id}/{panel}_imputation_accuracy.csv", id = ids_1x_all, panel = panels)
+        r2 = expand("results/imputation/imputation_accuracy/{id}/{panel}_imputation_accuracy.csv", id = ids_1x_all, panel = panels),
+        graph = "graphs/imputation_vs_chip.png"
 
 rule all:
     input:

@@ -1,9 +1,12 @@
 configfile: "pipelines/config.json"
 
+import os
 from os.path import exists
 import json
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
 import sys
 sys.path.append("scripts")
 import lcwgSus
@@ -229,7 +232,7 @@ rule calculate_imputation_accuracy:
         chip_vcf = "results/chip/tmp/{id}/{id}.vcf.gz",
         afs = expand("data/gnomAD_MAFs/gnomAD_MAF_afr_chr{chr}.txt", chr = chromosome)
     output:
-        r2 = "results/imputation/tmp/{id}/{panel}_imputation_accuracy.csv"
+        r2 = "results/imputation/imputation_accuracy/{id}/{panel}_imputation_accuracy.csv"
     resources:
         mem_mb = 300000
     threads: 4
@@ -237,14 +240,52 @@ rule calculate_imputation_accuracy:
         chromosomes = chromosome
         vcfs = input.imputation_vcf
         mafs = input.afs
+        chip = input.chip_vcf
+        
+        MAF_ary = np.array([0, 0.0001, 0.0002, 0.0005, 0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 0.95, 1])
+
+        check_lst = vcfs + [chip]
+        for i in check_lst: # If there is an empty file, report all imputation accuracy to be -1
+            if os.path.getsize(i) == 0:
+                r2 = -1*np.ones((2, np.size(MAF_ary) - 1))
+                r2 = pd.DataFrame(r2.T, columns = ['Imputation Accuracy','Bin Count'], index = MAF_ary[1:])
+                r2.index.name = 'MAF'
+                r2.to_csv(output.r2, sep=',', mode='a')
+                sys.exit(0)
+
         vcf = lcwgSus.multi_parse_vcf(chromosomes, vcfs)
         af = lcwgSus.multi_read_af(chromosomes, mafs)
-        chip = lcwgSus.read_vcf(input.chip_vcf)
+        chip = lcwgSus.read_vcf(chip)
         chip = lcwgSus.drop_cols(chip, drop_lst = ['id', 'qual', 'filter','info','format'])
         r2 = lcwgSus.calculate_imputation_accuracy(vcf, chip, af)
-        r2.to_csv(output.r2, sep='\t', mode='a')
+        r2.to_csv(output.r2, sep=',', mode='a')
 
-# Write a lcwgSus function which plots imputation accuracy in box plots.
-
-        # x = [r2,r2]
-        # lcwgSus.plot_imputation_accuracy(x, label = ['sample1', 'sample2'])
+rule plot_imputation_accuracy:
+    input:
+        r2 = expand("results/imputation/imputation_accuracy/{id}/{panel}_imputation_accuracy.csv", id = seq_names, panel = panels)
+    output:
+        graph = "graphs/imputation_vs_chip.png"
+    resources:
+        mem_mb = 30000
+    params:
+        samples = seq_names,
+        panels = panels
+    run:
+        samples = params.seq_names
+        panels = params.panels
+        dfs = []
+        for i in panels:
+            for j in samples:
+                tmp = pd.read_csv("results/imputation/imputation_accuracy/"+j+"/"+i+"_imputation_accuracy.csv", sep = ',', dtype = {
+                    'MAF': str,
+                    'Imputation Accuracy': float,
+                    'Bin Count': str
+                }).iloc[2:,:]
+                tmp['panel'] = i
+                tmp['Bin Count'] = j
+                tmp.columns = ['AF', 'corr', 'sample', 'panel']
+                tmp['AF'] = tmp['AF'].shift(1).fillna('0') + '-' + tmp['AF']
+                tmp['AF'] = tmp['AF'].astype("category")
+                dfs.append(tmp)
+        res = pd.concat(dfs).reset_index(drop = True)
+        lcwgSus.plot_imputation_accuracy(res, plot_title = 'Imputation accuracy vs. ChIP, two reference panels', single_sample = False, save_fig = True, save_name = output.graph, outdir = None)
