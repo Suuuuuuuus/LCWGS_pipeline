@@ -73,7 +73,7 @@ rule quilt:
         bamlist = "results/imputation/bamlist.txt",
         RData = rules.prepare_ref.output.RData
     output:
-        vcf = f"results/imputation/vcfs/regions/quilt.chr{{chr}}.{{regionStart}}.{{regionEnd}}.vcf.gz"
+        vcf = f"results/imputation/vcfs/{PANEL_NAME}/regions/quilt.chr{{chr}}.{{regionStart}}.{{regionEnd}}.vcf.gz"
     resources:
         mem_mb = 30000
     params:
@@ -104,9 +104,9 @@ rule quilt:
 '''
 rule quilt_info:
     input:
-        vcf = f"results/imputation/vcfs/regions/quilt.chr{{chr}}.{{regionStart}}.{{regionEnd}}.vcf.gz"
+        vcf = f"results/imputation/vcfs/{PANEL_NAME}/regions/quilt.chr{{chr}}.{{regionStart}}.{{regionEnd}}.vcf.gz"
     output:
-        vcf = f"results/imputation/vcfs/regions/quilt.chr{{chr}}.{{regionStart}}.{{regionEnd}}.vcf.gz.output.RData"
+        vcf = f"results/imputation/vcfs/{PANEL_NAME}/regions/quilt.chr{{chr}}.{{regionStart}}.{{regionEnd}}.vcf.gz.output.RData"
     params:
         threads = 1
     wildcard_constraints:
@@ -127,10 +127,10 @@ for chr in chromosome:
     for i in range(0, start.__len__()):
         regionStart=start[i]
         regionEnd=end[i]
-        file="results/imputation/vcfs/regions/quilt.chr" + str(chr) + "." + str(regionStart) + "." + str(regionEnd) + ".vcf.gz"
+        file="results/imputation/vcfs/" + PANEL_NAME + "/regions/quilt.chr" + str(chr) + "." + str(regionStart) + "." + str(regionEnd) + ".vcf.gz"
         per_chr_vcfs.append(file)
     vcfs_to_concat[str(chr)]=per_chr_vcfs
-    final_vcfs.append("results/imputation/vcfs/quilt.chr" + str(chr) + ".vcf.gz")
+    final_vcfs.append("results/imputation/vcfs/" + PANEL_NAME + "/quilt.chr" + str(chr) + ".vcf.gz")
 
 def get_input_vcfs_as_list(wildcards):
     return(vcfs_to_concat[str(wildcards.chr)])
@@ -142,7 +142,7 @@ rule concat:
     input:
         vcfs = get_input_vcfs_as_list
     output:
-        vcf = f"results/imputation/vcfs/quilt.chr{{chr}}.vcf.gz"
+        vcf = f"results/imputation/vcfs/{PANEL_NAME}/quilt.chr{{chr}}.vcf.gz"
     resources:
         mem_mb = 30000
     params:
@@ -207,15 +207,15 @@ rule get_imputation_vcf:
     input:
         imputation_result = "results/imputation/vcfs/{panel}/quilt.chr{chr}.vcf.gz"
     output:
-        imputation_vcf = temp("results/imputation/tmp/{id}/{panel}_chr{chr}.vcf.gz"),
+        imputation_vcf = temp("results/imputation/tmp/{id}/{panel}_chr{chr}.vcf.gz")
     params:
         seq_name = lambda wildcards: wildcards.id,
-        sample_name = lambda wildcards: sample_linker[sample_linker['Seq_Name'] == wildcards.id]['Sample_Name'].values[0],
+        sample_name = lambda wildcards: sample_linker[sample_linker['Seq_Name'] == wildcards.id]['Sample_Name'].values[0]
     resources:
         mem_mb = 30000
     shell: """
         if (bcftools query -l {input.imputation_result} | grep -q {wildcards.id}); then
-            bcftools view -s {params.sample_name} -Oz -o {output.imputation_vcf} {input.imputation_>
+            bcftools view -s {params.sample_name} -Oz -o {output.imputation_vcf} {input.imputation_result}
         else
             touch {output.imputation_vcf}
         fi

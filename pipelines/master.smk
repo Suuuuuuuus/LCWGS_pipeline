@@ -2,13 +2,13 @@
 #include: "alignment.smk"
 #include: "kmer.smk"
 #include: "dup_rate.smk"
-include: "rmdup.smk"
+#include: "rmdup.smk"
 #include: "fastqc.smk"
 #include: "subsample.smk"
 #include: "reference.smk"
 #include: "coverage.smk"
-#include: "imputation.smk"
-include: "imputation_prep.smk"
+include: "imputation.smk"
+#include: "imputation_prep.smk"
 #include: "variant_calling.smk"
 
 configfile: "pipelines/config.json"
@@ -146,7 +146,7 @@ for chr in chromosome:
         regionEnd=end[i]
         file="results/imputation/refs/RData/ref_package.chr" + str(chr) + "." + str(regionStart) + "." + str(regionEnd) + ".RData"
         regions_to_prep.append(file)
-        file="results/imputation/vcfs/regions/quilt.chr" + str(chr) + "." + str(regionStart) + "." + str(regionEnd) + ".vcf.gz"
+        file="results/imputation/vcfs/" + PANEL_NAME + "/regions/quilt.chr" + str(chr) + "." + str(regionStart) + "." + str(regionEnd) + ".vcf.gz"
         vcfs_to_impute.append(file)
 
 rule imputation_prep_all:
@@ -167,10 +167,10 @@ for chr in chromosome:
     for i in range(0, start.__len__()):
         regionStart=start[i]
         regionEnd=end[i]
-        file="results/imputation/vcfs/regions/quilt.chr" + str(chr) + "." + str(regionStart) + "." + str(regionEnd) + ".vcf.gz"
+        file="results/imputation/vcfs/" + PANEL_NAME + "/regions/quilt.chr" + str(chr) + "." + str(regionStart) + "." + str(regionEnd) + ".vcf.gz"
         per_chr_vcfs.append(file)
     vcfs_to_concat[str(chr)]=per_chr_vcfs
-    final_vcfs.append("results/imputation/vcfs/quilt.chr" + str(chr) + ".vcf.gz")
+    final_vcfs.append("results/imputation/vcfs/" + PANEL_NAME + "/quilt.chr" + str(chr) + ".vcf.gz")
 
 def get_input_vcfs_as_list(wildcards):
     return(vcfs_to_concat[str(wildcards.chr)])
@@ -180,11 +180,11 @@ def get_input_vcfs_as_string(wildcards):
 
 rule imputation_all:
     input:
-        # RData = [regions_to_prep],
-        # vcf_regions = [vcfs_to_impute],
-        # vcfs = [final_vcfs],
-        r2 = expand("results/imputation/imputation_accuracy/{id}/{panel}_imputation_accuracy.csv", id = ids_1x_all, panel = panels),
-        graph = "graphs/imputation_vs_chip.png"
+        RData = [regions_to_prep],
+        vcf_regions = [vcfs_to_impute],
+        vcfs = [final_vcfs],
+        #r2 = expand("results/imputation/imputation_accuracy/{id}/{panel}_imputation_accuracy.csv", id = ids_1x_all, panel = panels),
+        #graph = "graphs/imputation_vs_chip.png"
 
 rule all:
     input:
