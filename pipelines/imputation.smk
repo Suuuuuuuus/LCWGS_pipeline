@@ -76,23 +76,21 @@ rule quilt:
         vcf = f"results/imputation/vcfs/{PANEL_NAME}/regions/quilt.chr{{chr}}.{{regionStart}}.{{regionEnd}}.vcf.gz"
     resources:
         mem_mb = 30000
-    params:
-        threads = 1,
-        nCores = 1
     resources:
         mem_mb = 30000
     wildcard_constraints:
         chr='\w{1,2}',
         regionStart='\d{1,9}',
         regionEnd='\d{1,9}'
+    params:
+        panel = PANEL_NAME
     shell: """
         ## set a seed here, randomly, so can try to reproduce if it fails
         SEED=`echo $RANDOM`
-        mkdir -p results/imputation/vcfs/regions/
+        mkdir -p "results/imputation/vcfs/{params.panel}/regions/"
         R -e 'library("data.table"); library("QUILT"); QUILT( \
         outputdir="results/imputation/refs/RData/other/", \
         chr="chr{wildcards.chr}", \
-        nCores = {params.nCores}, \
         regionStart={wildcards.regionStart}, \
         regionEnd={wildcards.regionEnd}, \
         buffer=0, \
