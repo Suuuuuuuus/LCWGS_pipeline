@@ -9,7 +9,7 @@
     "subsample_depth_1x": 10596026,
     "subsample_depth": 0.6,
     "dedup": true,
-    "rename_samples": true,
+    "rename_samples": false,
     "rename_samples_file": "data/metadata/rename_samples.txt",
     "num_coverage": 5,
     "rm_bed_regions": true,

@@ -170,9 +170,9 @@ rule concat:
         bcftools query -f '%CHROM\t%POS\t%ID\t%REF\t%ALT\t%QUAL\t%FILTER\t%INFO\tGT:GP:DS\t[%GT:%GP:%DS\t]\n' {output.vcf}.temp1.vcf.gz  >> {output.vcf}.temp2.vcf
         bcftools sort -Oz -o {output.vcf} {output.vcf}.temp2.vcf
         tabix {output.vcf}
-
         rm {output.vcf}.temp*
-
+    """
+"""
         if [[ -d {params.rename_samples_file} && {params.rename_samples} == "True"]]
         then
             mv {output.vcf} tmp.{output.vcf}
@@ -181,7 +181,7 @@ rule concat:
             tabix {output.vcf}
             rm tmp.{output.vcf}
         fi
-    """
+"""
 
 rule get_chip_vcf:
     input:
