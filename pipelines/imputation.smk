@@ -183,6 +183,9 @@ rule concat:
         fi
 """
 
+chip_to_extract = pd.read_table("chip.tsv", header = None).loc[:, 0].to_list()
+seq_to_extract = sample_linker[sample_linker['Chip_Name'].isin(chip_to_extract)].Seq_Name.to_list()
+
 rule get_chip_vcf:
     input:
         chip_result = "results/chip/filtered_snps.vcf.gz"
@@ -228,7 +231,7 @@ rule calculate_imputation_accuracy:
     input:
         imputation_vcf = expand("results/imputation/tmp/{id}/{panel}_chr{chr}.vcf.gz", chr = chromosome, allow_missing=True),
         chip_vcf = "results/chip/tmp/{id}/{id}.vcf.gz",
-        afs = expand("data/gnomAD_MAFs/gnomAD_MAF_afr_chr{chr}.txt", chr = chromosome)
+        afs = expand("data/oneKG_MAFs/oneKG_MAF_afr_chr{chr}.txt", chr = chromosome)
     output:
         r2 = "results/imputation/imputation_accuracy/{id}/{panel}_imputation_accuracy.csv"
     resources:
@@ -259,7 +262,7 @@ rule calculate_imputation_accuracy:
 
 rule plot_imputation_accuracy:
     input:
-        r2 = expand("results/imputation/imputation_accuracy/{id}/{panel}_imputation_accuracy.csv", id = seq_names, panel = panels)
+        r2 = expand("results/imputation/imputation_accuracy/{id}/{panel}_imputation_accuracy.csv", id = seq_to_extract, panel = panels)
     output:
         graph = "graphs/imputation_vs_chip.png"
     resources:

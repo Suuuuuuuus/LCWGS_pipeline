@@ -263,7 +263,7 @@ def calculate_ss_cumsum_coverage(df, num_coverage=5):
     return coverage_ary
 def calculate_imputation_accuracy(df1, df2, af, 
                                   MAF_ary = np.array([0, 0.0001, 0.0002, 0.0005, 0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 0.95, 1]),
-                                 how = 'inner', save_fig = False, plot_title = 'Imputation accuracy', save_name = 'imputation_corr_vs_af.png', outdir = 'graphs/'):
+                                 how = 'left'):
     df2 = df2.copy()
     if len(df1.columns) != 5:
         df1 = df1[['chr', 'pos', 'ref', 'alt', 'DS']]

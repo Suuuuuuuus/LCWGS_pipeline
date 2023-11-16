@@ -178,13 +178,16 @@ def get_input_vcfs_as_list(wildcards):
 def get_input_vcfs_as_string(wildcards):
     return(" ".join(map(str, vcfs_to_concat[str(wildcards.chr)])))
 
+chip_to_extract = pd.read_table("chip.tsv", header = None).loc[:, 0].to_list()
+seq_to_extract = sample_linker[sample_linker['Chip_Name'].isin(chip_to_extract)].Seq_Name.to_list()
+
 rule imputation_all:
     input:
         RData = [regions_to_prep],
         vcf_regions = [vcfs_to_impute],
         vcfs = [final_vcfs],
-        r2 = expand("results/imputation/imputation_accuracy/{id}/{panel}_imputation_accuracy.csv", id = ids_1x_all, panel = panels),
-        graph = "graphs/imputation_vs_chip.png"
+        r2 = expand("results/imputation/imputation_accuracy/{id}/{panel}_imputation_accuracy.csv", id = seq_to_extract, panel = panels)
+        #graph = "graphs/imputation_vs_chip.png"
 
 rule all:
     input:
