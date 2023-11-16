@@ -261,7 +261,7 @@ def calculate_ss_cumsum_coverage(df, num_coverage=5):
     df = df.dropna()
     coverage_ary = df['prop genome at least covered'].values[:num_coverage]
     return coverage_ary
-def calculate_imputation_accuracy(df1, df2, af, 
+def calculate_imputation_accuracy(df1, df2, af,
                                   MAF_ary = np.array([0, 0.0001, 0.0002, 0.0005, 0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 0.95, 1]),
                                  how = 'left'):
     df2 = df2.copy()
@@ -276,7 +276,7 @@ def calculate_imputation_accuracy(df1, df2, af,
         col2 = 'genotype'
     else:
         col2 = df2.columns[-1]
-    
+
     df = pd.merge(df2, df1, on=['chr', 'pos', 'ref', 'alt'], how=how)
     df = df.fillna(0)
     df = pd.merge(df, af, on=['chr', 'pos', 'ref', 'alt'], how='left')
@@ -290,7 +290,7 @@ def calculate_imputation_accuracy(df1, df2, af,
         else:
             r2[0, i] = np.corrcoef(tmp[col1].values, tmp[col2].values)[0,1]**2
         r2[1, i] = int(tmp.shape[0])
-        
+
     r2_df = pd.DataFrame(r2.T, columns = ['Imputation Accuracy','Bin Count'], index = MAF_ary[1:])
     r2_df.index.name = 'MAF'
     return r2_df
