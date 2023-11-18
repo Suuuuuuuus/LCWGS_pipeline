@@ -19,6 +19,9 @@ chip_names = list(sample_linker['Chip_Name'].values)
 sample_names = list(sample_linker['Sample_Name'].values)
 panels = config["panels"]
 
+chip_to_extract = pd.read_table("chip.tsv", header = None).loc[:, 0].to_list()
+seq_to_extract = sample_linker[sample_linker['Chip_Name'].isin(chip_to_extract)].Seq_Name.to_list()
+
 chromosome = [i for i in range(1,23)]
 
 # The followings are global parameters from `activate`:
@@ -231,7 +234,7 @@ rule calculate_imputation_accuracy:
     input:
         imputation_vcf = expand("results/imputation/tmp/{id}/{panel}_chr{chr}.vcf.gz", chr = chromosome, allow_missing=True),
         chip_vcf = "results/chip/tmp/{id}/{id}.vcf.gz",
-        afs = expand("data/oneKG_MAFs/oneKG_MAF_afr_chr{chr}.txt", chr = chromosome)
+        afs = expand("data/gnomAD_MAFs/afr/gnomAD_MAF_afr_chr{chr}.txt", chr = chromosome)
     output:
         r2 = "results/imputation/imputation_accuracy/{id}/{panel}_imputation_accuracy.csv"
     resources:
@@ -268,24 +271,11 @@ rule plot_imputation_accuracy:
     resources:
         mem_mb = 30000
     params:
-        samples = seq_names,
+        samples = seq_to_extract,
         panels = panels
     run:
-        samples = params.seq_names
+        samples = params.samples
         panels = params.panels
-        dfs = []
-        for i in panels:
-            for j in samples:
-                tmp = pd.read_csv("results/imputation/imputation_accuracy/"+j+"/"+i+"_imputation_accuracy.csv", sep = ',', dtype = {
-                    'MAF': str,
-                    'Imputation Accuracy': float,
-                    'Bin Count': str
-                }).iloc[2:,:]
-                tmp['panel'] = i
-                tmp['Bin Count'] = j
-                tmp.columns = ['AF', 'corr', 'sample', 'panel']
-                tmp['AF'] = tmp['AF'].shift(1).fillna('0') + '-' + tmp['AF']
-                tmp['AF'] = tmp['AF'].astype("category")
-                dfs.append(tmp)
-        res = pd.concat(dfs).reset_index(drop = True)
-        lcwgSus.plot_imputation_accuracy(res, plot_title = 'Imputation accuracy vs. ChIP, two reference panels', single_sample = False, save_fig = True, save_name = output.graph, outdir = None)
+        r2 = lcwgSus.read_r2(panels, samples)
+        r2 = lcwgSus.aggregate_r2(r2)
+        lcwgSus.plot_imputation_accuracy(r2, single_sample = False, aggregate = True, save_fig = True, save_name = output.graph, outdir = None)

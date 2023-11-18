@@ -151,7 +151,7 @@ rule calculate_uncoverage_rate:
         bedtools genomecov -ibam {input.bam} -bg | \
         awk '$1 ~ /^chr(1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22)$/' \
         > {output.bedgraph}
-        result = $(bedtools coverage -a {params.access_bed} -b {output.bedgraph} -hist | grep all | head -n 1 | cut -f5)
+        result=$(bedtools coverage -a {params.access_bed} -b {output.bedgraph} -hist | grep all | head -n 1 | cut -f5)
         echo "{wildcards.id}\t$result" > {output.uncoverage_rate}
     """
 

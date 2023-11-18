@@ -7,7 +7,7 @@
 #include: "subsample.smk"
 #include: "reference.smk"
 include: "coverage.smk"
-include: "imputation.smk"
+#include: "imputation.smk"
 #include: "imputation_prep.smk"
 #include: "variant_calling.smk"
 
@@ -83,7 +83,7 @@ rule coverage_all:
 #        per_bin_coverage_1x_bases = expand("results/coverage/per_bin_coverage/1x/{id}_chr{chr}_base.txt", id = ids_1x_all, chr = chromosome),
 #        per_chromosome_coverage = expand("results/coverage/per_chromosome_coverage/{id}_per_chromosome_coverage.txt", id = ids_1x_all),
 #        ss_per_chromosome_coverage = expand("results/coverage/per_chromosome_ss_coverage/{id}_per_chromosome_ss_coverage.txt", id = ids_1x_all),
-#        uncoverage_rate = "results/coverage/per_chromosome_coverage/uncoverage_rate.txt",
+        uncoverage_rate = "results/coverage/per_chromosome_coverage/uncoverage_rate.txt",
         ss_uncoverage_rate = "results/coverage/per_chromosome_ss_coverage/ss_uncoverage_rate.txt"
 #        avg_coverage = "results/coverage/per_sample_coverage.txt"
 
@@ -186,8 +186,8 @@ rule imputation_all:
         RData = [regions_to_prep],
         vcf_regions = [vcfs_to_impute],
         vcfs = [final_vcfs],
-        r2 = expand("results/imputation/imputation_accuracy/{id}/{panel}_imputation_accuracy.csv", id = seq_to_extract, panel = panels)
-        #graph = "graphs/imputation_vs_chip.png"
+        r2 = expand("results/imputation/imputation_accuracy/{id}/{panel}_imputation_accuracy.csv", id = seq_to_extract, panel = panels),
+        graph = "graphs/imputation_vs_chip.png"
 
 rule all:
     input:
