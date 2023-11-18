@@ -144,8 +144,8 @@ rule calculate_uncoverage_rate:
         bedgraph = temp("results/coverage/bedgraphs/{id}_bedgraph_nozero.bed"),
         uncoverage_rate = temp("results/coverage/per_chromosome_coverage/{id}_uncoverage_rate.txt")
     params:
-        access = config['access_bed']
-    resources: 
+        access_bed = config['access_bed']
+    resources:
         mem_mb = 30000
     shell: """
         bedtools genomecov -ibam {input.bam} -bg | \
@@ -161,31 +161,24 @@ rule aggregate_uncoverage_rate:
     output:
         uncoverage_rate = "results/coverage/per_chromosome_coverage/uncoverage_rate.txt"
     shell: """
-	    cat {input.files} >> {output.uncoverage_rate}
+        cat {input.files} >> {output.uncoverage_rate}
     """
-
-'''
-rule samtools_ss_coverage:
-    input:
-        ss_bam = "data/subsampled_bams/{id}_subsampled.bam"
-    output:
-        per_chromosome_ss_coverage = "results/coverage/per_chromosome_ss_coverage/{id}_per_chromosome_ss_coverage.txt"
-    shell: """
-        samtools coverage {input.ss_bam} | sed -n '2,23p' > {output.per_chromosome_ss_coverage}
-    """
-'''
 
 rule calculate_ss_uncoverage_rate:
     input:
         ss_bam = "data/subsampled_bams/{id}_subsampled.bam"
     output:
         bedgraph = temp("results/coverage/bedgraphs/{id}_ss_bedgraph_nozero.bed"),
-        uncoverage_rate = temp("results/coverage/per_chromosome_coverage/{id}_ss_uncoverage_rate.txt")
+        uncoverage_rate = temp("results/coverage/per_chromosome_ss_coverage/{id}_ss_uncoverage_rate.txt")
+    params:
+        access_bed = config['access_bed']
+    resources:
+        mem_mb = 30000
     shell: """
         bedtools genomecov -ibam {input.ss_bam} -bg | \
         awk '$1 ~ /^chr(1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22)$/' \
         > {output.bedgraph}
-        result = $(bedtools coverage -a {params.access_bed} -b {output.bedgraph} -hist | grep all | head -n 1 | cut -f5)
+        result=$(bedtools coverage -a {params.access_bed} -b {output.bedgraph} -hist | grep all | head -n 1 | cut -f5)
         echo "{wildcards.id}\t$result" > {output.uncoverage_rate}
     """
 
@@ -197,7 +190,7 @@ rule aggregate_ss_uncoverage_rate:
     shell: """
         cat {input.files} >> {output.ss_uncoverage_rate}
     """
-
+'''
 rule calculate_avg_coverage:
     input:
         per_chromosome_coverage = rules.samtools_coverage.output.per_chromosome_coverage
@@ -218,3 +211,4 @@ rule aggregate_avg_coverage:
     shell: """
         cat {input.files} >> {output.avg_coverage}
     """
+'''
