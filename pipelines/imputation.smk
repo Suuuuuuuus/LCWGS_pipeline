@@ -278,4 +278,4 @@ rule plot_imputation_accuracy:
         panels = params.panels
         r2 = lcwgSus.read_r2(panels, samples)
         r2 = lcwgSus.aggregate_r2(r2)
-        lcwgSus.plot_imputation_accuracy(r2, single_sample = False, aggregate = True, save_fig = True, save_name = output.graph, outdir = None)
+        lcwgSus.plot_imputation_accuracy(r2, single_sample = False, aggregate = True, save_fig = True, save_name = output.graph, outdir = '')

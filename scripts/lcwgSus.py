@@ -49,6 +49,11 @@ def get_imputed_dosage(df, colname='call'): # Currently deprecated
         return pd.NaT
     else:
         return s.split(':')[2]
+def convert_to_str(x):
+    if x == int(x):
+        return str(int(x))
+    else:
+        return str(x)
 def read_vcf(file, sample = None): # Continue for now, but need to change this later if we are not merely considering autosomes
     with io.TextIOWrapper(gzip.open(file,'r')) as f:
         lines =[l for l in f if not l.startswith('##')]
@@ -87,6 +92,33 @@ def read_af(file, q = None):
         return df
     else:
         q.put(df)
+def read_r2(panels, samples, drop=3):
+    dfs = []
+    for i in panels:
+        for j in samples:
+            tmp = pd.read_csv("results/imputation/imputation_accuracy/"+j+"/"+i+"_imputation_accuracy.csv", sep = ',', dtype = {
+                'MAF': float,
+                'Imputation Accuracy': float,
+                'Bin Count': str
+            }).iloc[drop:,:]
+            tmp['panel'] = i
+            tmp['Bin Count'] = j
+            tmp.columns = ['AF', 'corr', 'sample', 'panel']
+            tmp['AF'] = (100*tmp['AF']).apply(convert_to_str)
+            tmp['AF'] = tmp['AF'].shift(1).fillna('0') + '-' + tmp['AF']
+            tmp['AF'] = tmp['AF'].astype("category")
+            dfs.append(tmp)
+    res = pd.concat(dfs).reset_index(drop = True)
+    return res
+def aggregate_r2(df):
+    tmp = df.copy().groupby(['AF', 'panel'])['corr'].mean().reset_index()
+    res_ary = []
+    for i in tmp['panel'].unique():
+        imp_res = tmp[tmp['panel'] == i]
+        imp_res['sort'] = imp_res['AF'].apply(lambda x: x.split('-')[0]).astype(float)
+        imp_res = imp_res.sort_values(by = 'sort', ascending = True).drop(columns = 'sort')
+        res_ary.append(imp_res)
+    return res_ary
 def extract_info(df, info_cols = ['EAF', 'INFO_SCORE'], attribute = 'info', drop_attribute = True):
     for i in info_cols:
         df[i] = df[attribute].str.extract( i + '=([^;]+)' ).astype(float)
@@ -306,7 +338,8 @@ def plot_afs(df1, df2, save_fig = False, outdir = 'graphs/', save_name = 'af_vs_
     if save_fig:
         plt.savefig(outdir + save_name, bbox_inches = "tight", dpi=300)
     return np.corrcoef(df['prop_x'], df['prop_y'])[0,1]
-def plot_imputation_accuracy(r2, plot_title = 'Imputation accuracy', single_sample = True, save_fig = False, save_name = 'imputation_corr_vs_af.png', outdir = 'graphs/'):
+def plot_imputation_accuracy(r2, single_sample = True, aggregate = True, save_fig = False, save_name = 'imputation_corr_vs_af.png', outdir = 'graphs/'):
+    plt.figure(figsize = (10,6))
     if single_sample:
         if type(r2) == pd.DataFrame:
             plt.plot(r2.index, r2['Imputation Accuracy'], color = 'g')
@@ -318,12 +351,20 @@ def plot_imputation_accuracy(r2, plot_title = 'Imputation accuracy', single_samp
         plt.title(plot_title)
         plt.xscale('log')
     else:
-        sns.set(style="whitegrid")
-        plt.figure(figsize = (10,6))
-        sns.stripplot(data=r2, x="corr", y="AF", hue="panel", dodge=True)
-        plt.xlabel('Imputation Accuracy')
-        plt.ylabel('gnomAD allele frequencies')
-        plt.title(plot_title)
+        if aggregate:
+            for df in r2:
+                panel = df['panel'].values[0]
+                plt.plot(np.arange(1, df.shape[0]+1), df['corr'], label = panel)
+            plt.xticks(np.arange(1, r2[0].shape[0]+1), r2[0]['AF'], rotation = 45)
+            plt.xlabel('Allele frequencies (%)')
+            plt.legend()
+            plt.text(x = -1.5, y = 1.02, s = 'Aggregated imputation accuracy ($r^2$)')
+            plt.grid(alpha = 0.5)
+        else:
+            sns.set(style="whitegrid")
+            sns.stripplot(data=r2, x="corr", y="AF", hue="panel", dodge=True)
+            plt.xlabel('Imputation Accuracy')
+            plt.ylabel('gnomAD allele frequencies')
     if save_fig:
         plt.savefig(outdir + save_name, bbox_inches = "tight", dpi=300)
 def plot_sequencing_skew(arys, avg_coverage, n_se = 1.96, code = None, num_coverage=5, save_fig = False, save_name = 'prop_genome_at_least_coverage.png', outdir = 'graphs/'):
