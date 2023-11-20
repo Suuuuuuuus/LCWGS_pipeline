@@ -272,10 +272,31 @@ rule plot_imputation_accuracy:
         mem_mb = 30000
     params:
         samples = seq_to_extract,
-        panels = panels
+        panels = panels,
+        linker = config['sample_linker']
     run:
         samples = params.samples
         panels = params.panels
-        r2 = lcwgSus.read_r2(panels, samples)
-        r2 = lcwgSus.aggregate_r2(r2)
-        lcwgSus.plot_imputation_accuracy(r2, single_sample = False, aggregate = True, save_fig = True, save_name = output.graph, outdir = '')
+        linker = pd.read_table(params.linker, sep = ',')
+        fv = linker[(linker['Seq_Name'].isin(samples)) & (~linker['Sample_Name'].str.contains('mini'))]
+        mini = linker[(linker['Seq_Name'].isin(samples)) & (linker['Sample_Name'].str.contains('mini'))]
+        samples_fv = fv['Seq_Name'].to_list()
+        samples_mini = mini['Seq_Name'].to_list()
+        r2_fv = lcwgSus.read_r2(panels, samples_fv)
+        r2_fv = lcwgSus.aggregate_r2(r2_fv)
+        r2_mini = lcwgSus.read_r2(panels, samples_mini)
+        r2_mini = lcwgSus.aggregate_r2(r2_mini)
+
+        plt.figure(figsize = (10,6))
+        for df in r2_fv:
+            panel = df['panel'].values[0]
+            plt.plot(np.arange(1, df.shape[0]+1), df['corr'], label = panel)
+        for df in r2_mini:
+            panel = df['panel'].values[0]
+            plt.plot(np.arange(1, df.shape[0]+1), df['corr'], label = panel + '_mini', ls ='--')
+        plt.xticks(np.arange(1, r2_fv[0].shape[0]+1), r2_fv[0]['AF'], rotation = 45)
+        plt.xlabel('Allele frequencies (%)')
+        plt.legend()
+        plt.text(x = -1.5, y = 1.04, s = 'Aggregated imputation accuracy ($r^2$)')
+        plt.grid(alpha = 0.5)
+        plt.savefig(output.graph, bbox_inches = "tight", dpi=300)
