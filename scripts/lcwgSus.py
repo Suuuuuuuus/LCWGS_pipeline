@@ -5,6 +5,7 @@ import csv
 import gzip
 import time
 import random
+import secrets
 import resource
 import itertools
 import multiprocessing
@@ -54,28 +55,62 @@ def convert_to_str(x):
         return str(int(x))
     else:
         return str(x)
-def read_vcf(file, sample = None): # Continue for now, but need to change this later if we are not merely considering autosomes
-    with io.TextIOWrapper(gzip.open(file,'r')) as f:
-        lines =[l for l in f if not l.startswith('##')]
-        dynamic_header_as_key = []
-        for liness in f:
-            if liness.startswith("#CHROM"):
-                dynamic_header_as_key.append(liness)
-        values = [str,int,str,str,str,int,str,str,str,str]
-        columns2detype = dict(zip(dynamic_header_as_key,values))
-        df = pd.read_csv(
-            io.StringIO(''.join(lines)),
-            dtype=columns2detype,
-            sep='\t'
-        ).rename(columns={'#CHROM':'CHROM'})
-    if df.dtypes[0] != int:
+def read_metadata(file, filetype = 'gzip', comment = '#'):
+    if filetype == 'gzip':
+        with io.TextIOWrapper(gzip.open(file,'r')) as f:
+            metadata = [l for l in f if l.startswith(comment)]
+    else:
+        with open(file, 'r') as f:
+            metadata = [l for l in f if l.startswith(comment)]
+    return metadata
+def read_vcf(file, sample = 'call', q = None): 
+    colname = read_metadata(file)
+    header = colname[-1].replace('\n', '').split('\t')
+    df = pd.read_csv(file, compression='gzip', comment='#', sep = '\t', header = None, names = header).rename(columns={'#CHROM':'CHROM'})
+#     with io.TextIOWrapper(gzip.open(file,'r')) as f:
+#         lines =[l for l in f if not l.startswith('##')]
+#         dynamic_header_as_key = []
+#         for liness in f:
+#             if liness.startswith("#CHROM"):
+#                 dynamic_header_as_key.append(liness)
+#         values = [str,int,str,str,str,int,str,str,str,str]
+#         columns2detype = dict(zip(dynamic_header_as_key,values))
+#         df = pd.read_csv(
+#             io.StringIO(''.join(lines)),
+#             dtype=columns2detype,
+#             sep='\t'
+#         ).rename(columns={'#CHROM':'CHROM'})
+    if df.dtypes[0] != int: # Continue for now, but need to change this later if we are not merely considering autosomes
         df['CHROM'] = df['CHROM'].str.extract(r'(\d+)').astype(int)
     if df.dtypes[1] != int:
         df['POS'] = df['POS'].astype(int)
-    df.columns = ['chr', 'pos', 'id', 'ref', 'alt', 'qual', 'filter', 'info', 'format', 'call']
-    if sample is not None:
-        df.columns[-1] = sample
-    return df
+    if len(df.columns) == 10: 
+        df.columns = ['chr', 'pos', 'id', 'ref', 'alt', 'qual', 'filter', 'info', 'format', 'call']
+        if sample != 'call':
+            df.columns[-1] = sample
+    if q is None:
+        return df
+    else:
+        q.put(df)
+def save_vcf(df, metadata, save_name = 'test.vcf.gz'): # Only use this if no cols are removed from the original vcf
+    # df is the vcf_df to be saved
+    # metadata is a list generated from read_metadata
+    if type(df.iloc[0,0] != str):
+        df[df.columns[0]] = 'chr' + df[df.columns[0]].astype(str)
+    random_str = secrets.token_hex(8) + '_'
+    file_path = random_str + 'test.vcf'
+    metadata_path = random_str + 'metadata.txt'
+    df.to_csv(file_path, index=False, sep = '\t', header = False)
+    with open(metadata_path, 'w') as metadata_file:
+        metadata_file.write(''.join(metadata))
+    gzipped_file_path = save_name
+    with open(metadata_path, 'rb') as metadata_file:
+        metadata_content = metadata_file.read()
+    with open(file_path, 'rb') as data_file, gzip.open(gzipped_file_path, 'wb') as gzipped_file:
+        gzipped_file.write(metadata_content)
+        gzipped_file.writelines(data_file)
+    os.remove(file_path)
+    os.remove(metadata_path)
 def read_af(file, q = None):
     df = pd.read_csv(file, header = None, sep = '\t', names = ['chr', 'pos', 'ref', 'alt', 'MAF'],
                       dtype = {
@@ -92,7 +127,7 @@ def read_af(file, q = None):
         return df
     else:
         q.put(df)
-def read_r2(panels, samples, drop=3):
+def read_r2(panels, samples, drop=3): # Modify indir
     dfs = []
     for i in panels:
         for j in samples:
@@ -223,13 +258,16 @@ def subtract_bed_by_chr(cov, region, q = None):
     else:
         q.put(res)
 
-def multi_parse_vcf(chromosomes, files, sample = 'call', combine = True,
+def multi_parse_vcf(chromosomes, files, parse = True, sample = 'call', combine = True,
                info_cols = ['EAF', 'INFO_SCORE'], attribute = 'info', fmt = 'format', drop_attribute = True, drop_lst = ['id', 'qual', 'filter']):
     manager = multiprocessing.Manager()
     q = manager.Queue()
     processes = []
     for i in range(len(chromosomes)):
-        tmp = multiprocessing.Process(target=parse_vcf, args=(files[i], sample, q, info_cols, attribute, fmt, drop_attribute, drop_lst))
+        if parse:
+            tmp = multiprocessing.Process(target=parse_vcf, args=(files[i], sample, q, info_cols, attribute, fmt, drop_attribute, drop_lst))
+        else:
+            tmp = multiprocessing.Process(target=read_vcf, args=(files[i], sample, q))
         tmp.start()
         processes.append(tmp)
     for process in processes:
@@ -332,8 +370,7 @@ def plot_afs(df1, df2, save_fig = False, outdir = 'graphs/', save_name = 'af_vs_
     df = pd.merge(df1, df2, on = ['chr', 'pos', 'ref', 'alt'], how = 'inner')
     plt.scatter(df['prop_x']*100, df['prop_y']*100)
     plt.xlabel('ChIP MAF (%)')
-    plt.ylabel('QUILT EAF (%)')
-    plt.ylabel('Sequencing Skew')
+    plt.ylabel('GGVP AF (%)')
     plt.title('Check AFs')
     if save_fig:
         plt.savefig(outdir + save_name, bbox_inches = "tight", dpi=300)
