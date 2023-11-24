@@ -66,7 +66,7 @@ def read_metadata(file, filetype = 'gzip', comment = '#'):
 def read_vcf(file, sample = 'call', q = None): 
     colname = read_metadata(file)
     header = colname[-1].replace('\n', '').split('\t')
-    df = pd.read_csv(file, compression='gzip', comment='#', sep = '\t', header = None, names = header).rename(columns={'#CHROM':'CHROM'})
+    df = pd.read_csv(file, compression='gzip', comment='#', sep = '\t', header = None, names = header).rename(columns={'#CHROM': 'chr', 'POS': 'pos', 'REF': 'ref', 'ALT': 'alt'})
 #     with io.TextIOWrapper(gzip.open(file,'r')) as f:
 #         lines =[l for l in f if not l.startswith('##')]
 #         dynamic_header_as_key = []
@@ -313,7 +313,7 @@ def multi_subtract_bed(chromosomes, covs, regions, combine = True):
         return combine_df(res_lst)
     else:
         return res_lst
-def calculate_af(df):
+def calculate_af(df, drop = True):
     # df should have columns chr, pos, ref, alt and genotypes
     df['prop'] = 0
     for i in range(len(df.index)):
@@ -321,7 +321,23 @@ def calculate_af(df):
         for j in range(4, len(df.columns) - 2):
             count += df.iloc[i, j].split('/').count('1')
         df.iloc[i, -1] = count/(2*(len(df.columns) - 5))
-    return df[['chr', 'pos', 'ref', 'alt', 'prop']]
+    if drop:
+        return df[['chr', 'pos', 'ref', 'alt', 'prop']]
+    else:
+        return df
+def filter_afs(df1, df2, diff = 0.2, z_score = None):
+    # df1 is the main vcf in which afs are to be filtered out
+    # df2 is the ref panel afs
+    # Either filter by z-score (suggested 2 sds so 1.96 or diff=0.2)
+    res = pd.merge(df1, df2, on = ['chr', 'pos', 'ref', 'alt'])
+    if z_score is not None:
+        res = res[(res['prop_y'] != 0) & (res['prop_y'] != 1)]
+        res['z'] = (res['prop_x'] - res['prop_y'])/np.sqrt(res['prop_y']*(1-res['prop_y']))
+        res = res[abs(res['z']) <= z_score]
+        return res.drop(columns = ['prop_x', 'prop_y', 'z'])
+    else:
+        res = res[abs(res['prop_x'] - res['prop_y']) < diff]
+        return res.drop(columns = ['prop_y']).rename(columns = {'prop_x': 'prop'})
 def calculate_ss_cumsum_coverage(df, num_coverage=5):
     df['bases'] = df['end'] - df['start']
     df = df.groupby(['cov']).bases.sum().reset_index()
