@@ -191,7 +191,7 @@ seq_to_extract = sample_linker[sample_linker['Chip_Name'].isin(chip_to_extract)]
 
 rule get_chip_vcf:
     input:
-        chip_result = "results/chip/filtered_snps.vcf.gz"
+        chip_result = "results/chip/filtered_snps.qced.vcf.gz"
     output:
         chip_vcf = temp("results/chip/tmp/{id}/{id}.vcf.gz")
     params:
