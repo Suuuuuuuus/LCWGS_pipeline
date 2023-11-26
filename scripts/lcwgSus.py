@@ -81,9 +81,9 @@ def read_vcf(file, sample = 'call', q = None):
 #             sep='\t'
 #         ).rename(columns={'#CHROM':'CHROM'})
     if df.dtypes[0] != int: # Continue for now, but need to change this later if we are not merely considering autosomes
-        df['CHROM'] = df['CHROM'].str.extract(r'(\d+)').astype(int)
+        df['chr'] = df['chr'].str.extract(r'(\d+)').astype(int)
     if df.dtypes[1] != int:
-        df['POS'] = df['POS'].astype(int)
+        df['pos'] = df['pos'].astype(int)
     if len(df.columns) == 10: 
         df.columns = ['chr', 'pos', 'id', 'ref', 'alt', 'qual', 'filter', 'info', 'format', 'call']
         if sample != 'call':
@@ -95,7 +95,7 @@ def read_vcf(file, sample = 'call', q = None):
 def save_vcf(df, metadata, save_name = 'test.vcf.gz'): # Only use this if no cols are removed from the original vcf
     # df is the vcf_df to be saved
     # metadata is a list generated from read_metadata
-    if type(df.iloc[0,0] != str):
+    if type(df.iloc[0,0] == int):
         df[df.columns[0]] = 'chr' + df[df.columns[0]].astype(str)
     random_str = secrets.token_hex(8) + '_'
     file_path = random_str + 'test.vcf'
@@ -127,11 +127,11 @@ def read_af(file, q = None):
         return df
     else:
         q.put(df)
-def read_r2(panels, samples, drop=3): # Modify indir
+def read_r2(panels, samples, indir = '../imputation_accuracy/imputation_accuracy_oneKGafs/', drop=3):
     dfs = []
     for i in panels:
         for j in samples:
-            tmp = pd.read_csv("results/imputation/imputation_accuracy/"+j+"/"+i+"_imputation_accuracy.csv", sep = ',', dtype = {
+            tmp = pd.read_csv(indir+j+"/"+i+"_imputation_accuracy.csv", sep = ',', dtype = {
                 'MAF': float,
                 'Imputation Accuracy': float,
                 'Bin Count': str
@@ -143,8 +143,13 @@ def read_r2(panels, samples, drop=3): # Modify indir
             tmp['AF'] = tmp['AF'].shift(1).fillna('0') + '-' + tmp['AF']
             tmp['AF'] = tmp['AF'].astype("category")
             dfs.append(tmp)
+    bin_count = pd.read_csv(indir+j+"/"+i+"_imputation_accuracy.csv", sep = ',', dtype = {
+                'MAF': float,
+                'Imputation Accuracy': float,
+                'Bin Count': int
+            }).iloc[drop:,:].reset_index(drop = True)[['Bin Count']]
     res = pd.concat(dfs).reset_index(drop = True)
-    return res
+    return res, bin_count
 def aggregate_r2(df):
     tmp = df.copy().groupby(['AF', 'panel'])['corr'].mean().reset_index()
     res_ary = []
@@ -152,7 +157,7 @@ def aggregate_r2(df):
         imp_res = tmp[tmp['panel'] == i]
         imp_res['sort'] = imp_res['AF'].apply(lambda x: x.split('-')[0]).astype(float)
         imp_res = imp_res.sort_values(by = 'sort', ascending = True).drop(columns = 'sort')
-        res_ary.append(imp_res)
+        res_ary.append(imp_res.reset_index(drop = True))
     return res_ary
 def extract_info(df, info_cols = ['EAF', 'INFO_SCORE'], attribute = 'info', drop_attribute = True):
     for i in info_cols:
@@ -347,6 +352,18 @@ def calculate_ss_cumsum_coverage(df, num_coverage=5):
     df = df.dropna()
     coverage_ary = df['prop genome at least covered'].values[:num_coverage]
     return coverage_ary
+def calculate_average_info_score(chromosomes, vcf, af, chip_df, 
+                   MAF_ary = np.array([0, 0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 0.95, 1])):
+    # Input vcf is a df that contains chr, pos, ref, alt, info
+    # af and chip_df are used to filtered out variants by position
+    # returns average INFO in each MAF bin
+    info = pd.merge(vcf, chip_df, on = ['chr', 'pos', 'ref', 'alt'], how = 'inner')
+    info = pd.merge(info, af, on = ['chr', 'pos', 'ref', 'alt'], how = 'inner')
+    info = info[['chr', 'pos', 'ref', 'alt', 'INFO_SCORE', 'MAF']]
+    info['classes'] = np.digitize(info['MAF'], MAF_ary)
+    info['classes'] = info['classes'].apply(lambda x: len(MAF_ary)-1 if x == len(MAF_ary) else x)
+    score = info.copy().groupby(['classes'])['INFO_SCORE'].mean().reset_index()
+    return score
 def calculate_imputation_accuracy(df1, df2, af,
                                   MAF_ary = np.array([0, 0.0001, 0.0002, 0.0005, 0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 0.95, 1]),
                                  how = 'left'):
@@ -449,5 +466,20 @@ def plot_info_vs_af(vcf, afs, MAF_ary = np.array([0, 0.0001, 0.0002, 0.0005, 0.0
     plt.title('INFO Score vs Allele Frequencies')
     ax = plt.gca()
     ax.set_xticklabels(MAF_ary[np.sort(df['classes'].unique()) - 1])
+    if save_fig:
+        plt.savefig(outdir + save_name, bbox_inches = "tight", dpi=300)
+def plot_r2_vs_info(df, save_fig = False, outdir = 'graphs/', save_name = 'r2_vs_info.png'):
+    # Input df has AF bins, r2, avg_info, and bin counts
+    pivot = df.pivot('corr', 'INFO_SCORE', 'Bin Count')
+    plt.figure(figsize = (8,6))
+    plt.imshow(pivot, cmap='viridis', interpolation='nearest', origin='lower')
+    plt.colorbar(label='Bin Count')
+    y_ticks = sorted(df['corr'].unique().round(3))
+    x_ticks = sorted(df['INFO_SCORE'].unique().round(3))
+    plt.xlabel('Average INFO')
+    plt.ylabel('Average $r^2$')
+    plt.title('Heatmap of correlation vs info_score with bin counts')
+    plt.xticks(np.arange(len(x_ticks)), x_ticks, rotation = 45)
+    plt.yticks(np.arange(len(y_ticks)), y_ticks)
     if save_fig:
         plt.savefig(outdir + save_name, bbox_inches = "tight", dpi=300)
