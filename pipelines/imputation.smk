@@ -282,9 +282,9 @@ rule plot_imputation_accuracy:
         mini = linker[(linker['Seq_Name'].isin(samples)) & (linker['Sample_Name'].str.contains('mini'))]
         samples_fv = fv['Seq_Name'].to_list()
         samples_mini = mini['Seq_Name'].to_list()
-        r2_fv = lcwgSus.read_r2(panels, samples_fv)
+        r2_fv, _ = lcwgSus.read_r2(panels, samples_fv)
         r2_fv = lcwgSus.aggregate_r2(r2_fv)
-        r2_mini = lcwgSus.read_r2(panels, samples_mini)
+        r2_mini, _ = lcwgSus.read_r2(panels, samples_mini)
         r2_mini = lcwgSus.aggregate_r2(r2_mini)
 
         plt.figure(figsize = (10,6))
