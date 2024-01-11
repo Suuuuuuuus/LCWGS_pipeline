@@ -1,5 +1,5 @@
 include: "preprocess.smk"
-include: "fastqc.smk"
+#include: "fastqc.smk"
 #include: "reference.smk"
 include: "alignment.smk"
 
@@ -13,7 +13,7 @@ include: "rmdup.smk"
 #include: "imputation_prep.smk"
 #include: "imputation.smk"
 
-include: "test.smk"
+#include: "test.smk"
 configfile: "pipelines/config.json"
 
 from os.path import exists

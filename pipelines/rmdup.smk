@@ -5,6 +5,7 @@ rule rmdup:
         bam = "data/bams/{id}.bam"
     output:
         dedup_bam = "data/dedup_bams/{id}.bam"
+    resources: mem = '50G'
     shell: """
         samtools rmdup {input.bam} {output.dedup_bam}
     """
@@ -14,6 +15,7 @@ rule rmdup_index:
         dedup_bam = rules.rmdup.output.dedup_bam
     output:
         dedup_bai = "data/dedup_bams/{id}.bam.bai"
+    resources: mem = '50G'
     shell: """
         samtools index {input.dedup_bam}
     """
