@@ -1,5 +1,5 @@
 # LCWGS_pipeline
-Sus' lcwgs pipeline to process low (and high in the near future) coverage Illumina sequencing data. Current analysis includes:
+Sus' lcwgs pipeline to process low and high coverage paired Illumina short-read sequencing data. Current analysis includes:
 * Breadth of coverage (see `mosdepth`)
 * Depth of coverage
 * Jellyfish k-mer analysis of error rate
@@ -9,14 +9,12 @@ Sus' lcwgs pipeline to process low (and high in the near future) coverage Illumi
 * Preprocess and cleaness
 
 To Do:
-* Think how to modify `subsample.smk` so that it does not depend on `preprocess.smk` if the fastq files are already cleaned.
-* Restructure parameter specification json file for users (less priority)
-* Optimisation: codes, names, structures, separation punctures, etc
-* Rewrite the python scripts into a package and call them from the pipeline
+* Finish variant-calling
+* Restructure and optimisation
 
 Inputs:
 * A `config.json` file to specify sample names, etc. You should modify this file which is under directory `pipelines`
-* A `samples.tsv` file to save all sample names
+* A `samples.tsv` file to save all sample names, with optional `chip.tsv` and `samples_hc.tsv` files if those comparisons are to be performed
 * A bunch of `fastq` files
 * An index `fa` file, or several `fa` files if concatenate is set `True`
 * If k-mer analysis is to be performed, high coverage jellyfish `jf` files should be provided for classify-kmers to find errors
@@ -24,12 +22,16 @@ Inputs:
 
 Explanation of Entries in the Config File:
 * `ref38`: Ready-in-use reference file
-* `samples`: A `samples.tsv` file to save all sample names
+* `samples`: All low-coverage (lc) sample names
+* `samples_hc`: All high-coverage (hc) sample names
+* `sample_linker`: A linker file that tells correspondance of samples
 * `concatenate`: `True` if several reference files are to be concatenated
 * `clean_fastq`: `True` if preprocessing of fastq files is required - drop duplicates, trim adapters, etc.
+* `adapter`: File for performing adapter trimming
 * `reheader`: `True` if user has self-defined headers to replace after alignment, these header files should be put in `data/bam_headers/`
-* `subsample_depth_1x`: `=10596026`, number of reads for a read to be 1x
-* `subsample_depth`: depth to which subsample is performed
+* `subsample_depth_1x`: `=10666667`, number of reads for a read of length 150 to be 1x
+* `subsample_depth`: Depth to which subsample is performed
+* `num_coverage`: Length of cumsum coverage array (skew plot)
 
 Outputs:
 * `preprocess.smk`:

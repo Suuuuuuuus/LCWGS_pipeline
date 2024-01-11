@@ -13,9 +13,9 @@ rule fastuniq:
         fastq2_uncompress = temp("data/tmp/input_{id}_fast_uniq_2.fastq.gz"),
         fastq1_unzip = temp("data/tmp/{id}_fast_uniq_1.fastq"),
         fastq2_unzip = temp("data/tmp/{id}_fast_uniq_2.fastq")
-    threads: 50
+    threads: 10
     resources:
-        mem = '200G'
+        mem = '300G'
     shell: """
         pigz -p {threads} -dc {input.fastq1} > {output.fastq1_uncompress}
         pigz -p {threads} -dc {input.fastq2} > {output.fastq2_uncompress}
@@ -38,9 +38,9 @@ rule trimmomatic:
         rev_unpair = "data/fastq_cleaned/{id}_unpaired_2.fastq.gz"
     params:
         adapters = config['adapter']
-    threads: 50
+    threads: 10
     resources:
-        mem = '200G'
+        mem = '300G'
     shell: """
         trimmomatic PE \
         {input.fastq1} {input.fastq2} \
