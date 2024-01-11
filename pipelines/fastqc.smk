@@ -18,12 +18,12 @@ rule fastqc:
         zip1 = "results/fastqc/{id}_1_fastqc.zip",
         zip2 = "results/fastqc/{id}_2_fastqc.zip"
     params:
-        outputdir = "results/fastqc/"
+        outdir = "results/fastqc/"
     shell: """
         mkdir -p results
         mkdir -p results/fastqc
-        mkdir -p {params.outputdir}
-        fastqc -q -o {params.outputdir} {input.fastq1} {input.fastq2}
+        mkdir -p {params.outdir}
+        fastqc -q -o {params.outdir} {input.fastq1} {input.fastq2}
     """
 
 rule fastqc_alt:
@@ -36,44 +36,42 @@ rule fastqc_alt:
         zip1 = "results/fastqc/{id}_1_fastqc.zip",
         zip2 = "results/fastqc/{id}_2_fastqc.zip"
     params:
-        outputdir = "results/fastqc/"
+        outdir = "results/fastqc/"
     shell: """
         mkdir -p results
         mkdir -p results/fastqc
-        mkdir -p {params.outputdir}
-        fastqc -q -o {params.outputdir} {input.fastq1} {input.fastq2}
+        mkdir -p {params.outdir}
+        fastqc -q -o {params.outdir} {input.fastq1} {input.fastq2}
     """
 
 rule multiqc_lc:
     input:
-        expand("results/fastqc/{id}_1_fastqc.html",id = ids_1x_all),
-        expand("results/fastqc/{id}_2_fastqc.html",id = ids_1x_all),
-        expand("results/fastqc/{id}_1_fastqc.zip",id = ids_1x_all),
-        expand("results/fastqc/{id}_2_fastqc.zip",id = ids_1x_all)
+        html1 = expand("results/fastqc/{id}_1_fastqc.html",id = ids_1x_all),
+        html2 = expand("results/fastqc/{id}_2_fastqc.html",id = ids_1x_all),
+        zip = expand("results/fastqc/{id}_{read}_fastqc.zip",id = ids_1x_all, read = ['1', '2'])
     output:
-        "results/fastqc/multiqc_report_lc.html",
-        directory("results/fastqc/multiqc_data")
+        html = "results/fastqc/multiqc_lc/multiqc_report.html",
+        directory("results/fastqc/multiqc_lc")
     threads: 1
     resources:
         mem = '10G'
     params:
-        "results/fastqc/"
+        outdir = "results/fastqc/multiqc_lc"
     shell:
-        "multiqc {params} --interactive -o {params}"
+        "multiqc {input.zip} --interactive -o {params.outdir}"
 
-rule multiqc_hc:
+rule multiqc_lc:
     input:
-        expand("results/fastqc/{id}_1_fastqc.html",id = samples_hc),
-        expand("results/fastqc/{id}_2_fastqc.html",id = samples_hc),
-        expand("results/fastqc/{id}_1_fastqc.zip",id = samples_hc),
-        expand("results/fastqc/{id}_2_fastqc.zip",id = samples_hc)
+        html1 = expand("results/fastqc/{id}_1_fastqc.html",id = samples_hc),
+        html2 = expand("results/fastqc/{id}_2_fastqc.html",id = samples_hc),
+        zip = expand("results/fastqc/{id}_{read}_fastqc.zip",id = samples_hc, read = ['1', '2'])
     output:
-        "results/fastqc/multiqc_report.html",
-        directory("results/fastqc/multiqc_data")
+        html = "results/fastqc/multiqc_hc/multiqc_report.html",
+        directory("results/fastqc/multiqc_hc")
     threads: 1
     resources:
         mem = '10G'
     params:
-        "results/fastqc/"
+        outdir = "results/fastqc/multiqc_hc"
     shell:
-        "multiqc {params} --interactive -o {params}"
+        "multiqc {input.zip} --interactive -o {params.outdir}"

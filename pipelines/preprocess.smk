@@ -15,7 +15,7 @@ rule fastuniq:
         fastq2_unzip = temp("data/tmp/{id}_fast_uniq_2.fastq")
     threads: 2
     resources:
-        mem = '100G'
+        mem = '150G'
     shell: """
         pigz -p {threads} -dc {input.fastq1} > {output.fastq1_uncompress}
         pigz -p {threads} -dc {input.fastq2} > {output.fastq2_uncompress}
@@ -40,7 +40,7 @@ rule trimmomatic:
         adapters = config['adapter']
     threads: 1
     resources:
-        mem = '100G'
+        mem = '150G'
     shell: """
         trimmomatic PE \
         {input.fastq1} {input.fastq2} \
