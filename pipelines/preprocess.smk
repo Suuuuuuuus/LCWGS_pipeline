@@ -13,7 +13,7 @@ rule fastuniq:
         fastq2_uncompress = temp("data/tmp/input_{id}_fast_uniq_2.fastq.gz"),
         fastq1_unzip = temp("data/tmp/{id}_fast_uniq_1.fastq"),
         fastq2_unzip = temp("data/tmp/{id}_fast_uniq_2.fastq")
-    threads: 10
+    threads: 20
     resources:
         mem = '300G',
         disk = '300G'
@@ -39,7 +39,7 @@ rule trimmomatic:
         rev_unpair = "data/fastq_cleaned/{id}_unpaired_2.fastq.gz"
     params:
         adapters = config['adapter']
-    threads: 10
+    threads: 20
     resources:
         mem = '300G',
         disk = '300G'
