@@ -50,10 +50,10 @@ PANEL_NAME=config["PANEL_NAME"]
 
 rule preprocess_all:
     input:
-        fwd_pair = expand("data/fastq_cleaned/{id}_1.fastq.gz", id = ids_1x_all + samples_hc),
-        rev_pair = expand("data/fastq_cleaned/{id}_2.fastq.gz", id = ids_1x_all + samples_hc),
-        fwd_unpair = expand("data/fastq_cleaned/{id}_unpaired_1.fastq.gz", id = ids_1x_all + samples_hc),
-        rev_unpair = expand("data/fastq_cleaned/{id}_unpaired_2.fastq.gz", id = ids_1x_all + samples_hc)
+        fwd_pair = expand("data/fastq_cleaned/{id}_1.fastq.gz", id = samples_hc),
+        rev_pair = expand("data/fastq_cleaned/{id}_2.fastq.gz", id = samples_hc),
+        fwd_unpair = expand("data/fastq_cleaned/{id}_unpaired_1.fastq.gz", id = samples_hc),
+        rev_unpair = expand("data/fastq_cleaned/{id}_unpaired_2.fastq.gz", id = samples_hc)
 
 rule reference_all:
     input:
@@ -65,18 +65,18 @@ rule reference_all:
 
 rule fastqc_all:
     input:
-        html1 = expand("results/fastqc/{id}_1_fastqc.html", id = ids_1x_all + samples_hc),
-        html2 = expand("results/fastqc/{id}_2_fastqc.html", id = ids_1x_all + samples_hc),
-        zip1 = expand("results/fastqc/{id}_1_fastqc.zip", id = ids_1x_all + samples_hc),
-        zip2 = expand("results/fastqc/{id}_2_fastqc.zip", id = ids_1x_all + samples_hc),
+        html1 = expand("results/fastqc/{id}_1_fastqc.html", id = samples_hc),
+        html2 = expand("results/fastqc/{id}_2_fastqc.html", id = samples_hc),
+        zip1 = expand("results/fastqc/{id}_1_fastqc.zip", id = samples_hc),
+        zip2 = expand("results/fastqc/{id}_2_fastqc.zip", id = samples_hc),
         fastqc = "results/fastqc/duplication_rate_fastqc.txt",
         multiqc = "results/fastqc/multiqc_report.html",
         multiqcdir = "results/fastqc/multiqc_data"
 
 rule alignment_all:
     input:
-        bams = expand("data/bams/{id}.bam", id = ids_1x_all + samples_hc),
-        bais = expand("data/bams/{id}.bam.bai", id = ids_1x_all + samples_hc)
+        bams = expand("data/bams/{id}.bam", id = samples_hc),
+        bais = expand("data/bams/{id}.bam.bai", id = samples_hc)
 
 rule subsample_all:
     input:
@@ -106,8 +106,8 @@ rule dup_rate_all:
 
 rule rmdup_all:
     input:
-        dedup_bams = expand("data/dedup_bams/{id}.bam", id = ids_1x_all + samples_hc),
-        dedup_bais = expand("data/dedup_bams/{id}.bam.bai", id = ids_1x_all + samples_hc)
+        dedup_bams = expand("data/dedup_bams/{id}.bam", id = samples_hc),
+        dedup_bais = expand("data/dedup_bams/{id}.bam.bai", id = samples_hc)
 
 rule kmer_all:
     input:
