@@ -13,7 +13,7 @@ rule fastuniq:
         fastq2_uncompress = temp("data/tmp/input_{id}_fast_uniq_2.fastq.gz"),
         fastq1_unzip = temp("data/tmp/{id}_fast_uniq_1.fastq"),
         fastq2_unzip = temp("data/tmp/{id}_fast_uniq_2.fastq")
-    threads: 2
+    threads: 8
     resources:
         mem = '150G'
     shell: """
