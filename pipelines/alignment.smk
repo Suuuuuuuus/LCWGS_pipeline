@@ -17,7 +17,7 @@ rule alignment:
     output:
         bam = temp("data/bams/tmp/{id}.bam")
     resources:
-        mem = '50G'
+        mem = '100G'
     threads: 8
     params:
         reheader = reheader
@@ -50,7 +50,7 @@ rule alignment_alt:
     output:
         bam = temp("data/bams/tmp/{id}.bam")
     resources:
-        mem = '50G'
+        mem = '100G'
     threads: 8
     params:
         reheader = reheader
@@ -80,7 +80,7 @@ rule fixmate:
         bam = rules.alignment_alt.output.bam if clean_fastq else rules.alignment.output.bam
     output:
         fixmate = temp("data/bams/tmp/{id}.fixmate.bam")
-    resources: mem = '50G'
+    resources: mem = '100G'
     shell: """
         samtools sort -n {input.bam} | samtools fixmate -m - {output.fixmate}
     """
@@ -90,7 +90,7 @@ rule sort:
         fixmate = rules.fixmate.output.fixmate
     output:
         sorted = temp("data/bams/tmp/{id}.sorted.bam")
-    resources: mem = '50G'
+    resources: mem = '100G'
     shell: """
         samtools sort -o {output.sorted} {input.fixmate}
     """
@@ -100,7 +100,7 @@ rule index:
 		sorted = rules.sort.output.sorted
 	output:
 		bai = temp("data/bams/tmp/{id}.sorted.bam.bai")
-	resources: mem = '50G'
+	resources: mem = '100G'
 	shell: """
 		samtools index {input.sorted}
 	"""
