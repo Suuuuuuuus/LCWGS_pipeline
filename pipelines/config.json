@@ -1,6 +1,7 @@
 {
     "ref38": "data/references/GRCh38.fa",
     "samples": "samples.tsv",
+    "samples_hc": "samples_hc.tsv",
     "sample_linker": "data/metadata/sample_linker.csv",
     "concatenate": true,
     "clean_fastq": true,

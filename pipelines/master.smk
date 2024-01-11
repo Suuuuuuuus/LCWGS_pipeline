@@ -7,6 +7,8 @@
 #include: "subsample.smk"
 #include: "reference.smk"
 include: "coverage.smk"
+include: "variant_calling.smk"
+include: "test.smk"
 #include: "imputation.smk"
 #include: "imputation_prep.smk"
 #include: "variant_calling.smk"
@@ -21,7 +23,7 @@ import sys
 sys.path.append("scripts")
 import lcwgSus
 
-# samples = pd.read_table(config['samples'], header = None, names = ['Code'])
+samples_hc = list(pd.read_table(config['samples_hc'], header = None, names = ['Code'])['Code'].values)
 sample_linker = pd.read_table(config['sample_linker'], sep = ',')
 ids_1x_all = list(sample_linker['Seq_Name'].values) # to be deprecated
 seq_names = list(sample_linker['Seq_Name'].values)
@@ -51,15 +53,15 @@ rule variant_calling_all:
 
 rule preprocess_all:
     input:
-        fwd_pair = expand("data/fastq_cleaned/{id}_1.fastq.gz", id = ids_1x_all),
-        rev_pair = expand("data/fastq_cleaned/{id}_2.fastq.gz", id = ids_1x_all),
-        fwd_unpair = expand("data/fastq_cleaned/{id}_unpaired_1.fastq.gz", id = ids_1x_all),
-        rev_unpair = expand("data/fastq_cleaned/{id}_unpaired_2.fastq.gz", id = ids_1x_all)
+        fwd_pair = expand("data/fastq_cleaned/{id}_1.fastq.gz", id = ids_1x_all + samples_hc),
+        rev_pair = expand("data/fastq_cleaned/{id}_2.fastq.gz", id = ids_1x_all + samples_hc),
+        fwd_unpair = expand("data/fastq_cleaned/{id}_unpaired_1.fastq.gz", id = ids_1x_all + samples_hc),
+        rev_unpair = expand("data/fastq_cleaned/{id}_unpaired_2.fastq.gz", id = ids_1x_all + samples_hc)
 
 rule alignment_all:
     input:
-        bams = expand("data/bams/{id}.bam", id = ids_1x_all),
-        bais = expand("data/bams/{id}.bam.bai", id = ids_1x_all)
+        bams = expand("data/bams/{id}.bam", id = ids_1x_all + samples_hc),
+        bais = expand("data/bams/{id}.bam.bai", id = ids_1x_all + samples_hc)
 
 rule reference_all:
     input:
@@ -97,15 +99,15 @@ rule dup_rate_all:
 
 rule rmdup_all:
     input:
-        dedup_bams = expand("data/dedup_bams/{id}.bam", id = ids_1x_all),
-        dedup_bais = expand("data/dedup_bams/{id}.bam.bai", id = ids_1x_all)
+        dedup_bams = expand("data/dedup_bams/{id}.bam", id = ids_1x_all + samples_hc),
+        dedup_bais = expand("data/dedup_bams/{id}.bam.bai", id = ids_1x_all + samples_hc)
 
 rule fastqc_all:
     input:
-        html1 = expand("results/fastqc/{id}_1_fastqc.html", id = ids_1x_all),
-        html2 = expand("results/fastqc/{id}_2_fastqc.html", id = ids_1x_all),
-        zip1 = expand("results/fastqc/{id}_1_fastqc.zip", id = ids_1x_all),
-        zip2 = expand("results/fastqc/{id}_2_fastqc.zip", id = ids_1x_all),
+        html1 = expand("results/fastqc/{id}_1_fastqc.html", id = ids_1x_all + samples_hc),
+        html2 = expand("results/fastqc/{id}_2_fastqc.html", id = ids_1x_all + samples_hc),
+        zip1 = expand("results/fastqc/{id}_1_fastqc.zip", id = ids_1x_all + samples_hc),
+        zip2 = expand("results/fastqc/{id}_2_fastqc.zip", id = ids_1x_all + samples_hc),
         fastqc = "results/fastqc/duplication_rate_fastqc.txt",
         multiqc = "results/fastqc/multiqc_report.html",
         multiqcdir = "results/fastqc/multiqc_data"

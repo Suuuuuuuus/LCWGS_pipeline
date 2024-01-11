@@ -1,8 +1,6 @@
 configfile: "pipelines/config.json"
 
-# adapter = config['adapter']
-
-# Borrowed from Annie Froster
+# Removing duplicates
 rule fastuniq:
     input:
         fastq1 = "data/fastq/{id}_1.fastq.gz",
@@ -28,6 +26,7 @@ rule fastuniq:
         gzip -c {output.fastq2_unzip} > {output.fastq2}
     """
 
+# Adapter trimming
 rule trimmomatic:
     input:
         fastq1 = rules.fastuniq.output.fastq1,
