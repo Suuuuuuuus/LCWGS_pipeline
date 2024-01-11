@@ -1,18 +1,19 @@
-#include: "preprocess.smk"
-#include: "alignment.smk"
+include: "preprocess.smk"
+include: "fastqc.smk"
+#include: "reference.smk"
+include: "alignment.smk"
+
+include: "rmdup.smk"
+#include: "subsample.smk"
 #include: "kmer.smk"
 #include: "dup_rate.smk"
-#include: "rmdup.smk"
-#include: "fastqc.smk"
-#include: "subsample.smk"
-#include: "reference.smk"
-include: "coverage.smk"
-include: "variant_calling.smk"
-include: "test.smk"
-#include: "imputation.smk"
-#include: "imputation_prep.smk"
-#include: "variant_calling.smk"
+#include: "coverage.smk"
 
+#include: "variant_calling.smk"
+#include: "imputation_prep.smk"
+#include: "imputation.smk"
+
+include: "test.smk"
 configfile: "pipelines/config.json"
 
 from os.path import exists
@@ -47,21 +48,12 @@ NGEN=config["NGEN"]
 RECOMB_POP=config["RECOMB_POP"]
 PANEL_NAME=config["PANEL_NAME"]
 
-rule variant_calling_all:
-    input:
-        imputation_vcf = "results/imputation/tmp/res.txt"
-
 rule preprocess_all:
     input:
         fwd_pair = expand("data/fastq_cleaned/{id}_1.fastq.gz", id = ids_1x_all + samples_hc),
         rev_pair = expand("data/fastq_cleaned/{id}_2.fastq.gz", id = ids_1x_all + samples_hc),
         fwd_unpair = expand("data/fastq_cleaned/{id}_unpaired_1.fastq.gz", id = ids_1x_all + samples_hc),
         rev_unpair = expand("data/fastq_cleaned/{id}_unpaired_2.fastq.gz", id = ids_1x_all + samples_hc)
-
-rule alignment_all:
-    input:
-        bams = expand("data/bams/{id}.bam", id = ids_1x_all + samples_hc),
-        bais = expand("data/bams/{id}.bam.bai", id = ids_1x_all + samples_hc)
 
 rule reference_all:
     input:
@@ -70,6 +62,21 @@ rule reference_all:
         bwt = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta.bwt" if concatenate else "data/references/GRCh38.fa.bwt",
         pac = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta.pac" if concatenate else "data/references/GRCh38.fa.pac",
         sa = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta.sa" if concatenate else "data/references/GRCh38.fa.sa"
+
+rule fastqc_all:
+    input:
+        html1 = expand("results/fastqc/{id}_1_fastqc.html", id = ids_1x_all + samples_hc),
+        html2 = expand("results/fastqc/{id}_2_fastqc.html", id = ids_1x_all + samples_hc),
+        zip1 = expand("results/fastqc/{id}_1_fastqc.zip", id = ids_1x_all + samples_hc),
+        zip2 = expand("results/fastqc/{id}_2_fastqc.zip", id = ids_1x_all + samples_hc),
+        fastqc = "results/fastqc/duplication_rate_fastqc.txt",
+        multiqc = "results/fastqc/multiqc_report.html",
+        multiqcdir = "results/fastqc/multiqc_data"
+
+rule alignment_all:
+    input:
+        bams = expand("data/bams/{id}.bam", id = ids_1x_all + samples_hc),
+        bais = expand("data/bams/{id}.bam.bai", id = ids_1x_all + samples_hc)
 
 rule subsample_all:
     input:
@@ -101,16 +108,6 @@ rule rmdup_all:
     input:
         dedup_bams = expand("data/dedup_bams/{id}.bam", id = ids_1x_all + samples_hc),
         dedup_bais = expand("data/dedup_bams/{id}.bam.bai", id = ids_1x_all + samples_hc)
-
-rule fastqc_all:
-    input:
-        html1 = expand("results/fastqc/{id}_1_fastqc.html", id = ids_1x_all + samples_hc),
-        html2 = expand("results/fastqc/{id}_2_fastqc.html", id = ids_1x_all + samples_hc),
-        zip1 = expand("results/fastqc/{id}_1_fastqc.zip", id = ids_1x_all + samples_hc),
-        zip2 = expand("results/fastqc/{id}_2_fastqc.zip", id = ids_1x_all + samples_hc),
-        fastqc = "results/fastqc/duplication_rate_fastqc.txt",
-        multiqc = "results/fastqc/multiqc_report.html",
-        multiqcdir = "results/fastqc/multiqc_data"
 
 rule kmer_all:
     input:
@@ -190,6 +187,14 @@ rule imputation_all:
         vcfs = [final_vcfs],
         r2 = expand("results/imputation/imputation_accuracy/{id}/{panel}_imputation_accuracy.csv", id = seq_to_extract, panel = panels),
         graph = "graphs/imputation_vs_chip.png"
+
+rule variant_calling_all:
+    input:
+        imputation_vcf = "results/imputation/tmp/res.txt"
+
+rule test_all:
+    input:
+        imputation_vcf = "results/imputation/tmp/res.txt"
 
 rule all:
     input:
