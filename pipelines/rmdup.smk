@@ -10,7 +10,7 @@ rule rmdup:
         samtools rmdup {input.bam} {output.dedup_bam}
     """
 
-rule rmdup_index:
+rule index_dedup:
     input:
         dedup_bam = rules.rmdup.output.dedup_bam
     output:

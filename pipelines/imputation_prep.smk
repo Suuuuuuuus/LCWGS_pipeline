@@ -20,7 +20,7 @@ NGEN=config["NGEN"]
 WINDOWSIZE=config["WINDOWSIZE"]
 BUFFER=config["BUFFER"]
 PANEL_NAME=config["PANEL_NAME"]
-dedup=config["dedup"]
+rmdup=config["rmdup"]
 
 sample_linker = pd.read_table(config['sample_linker'], sep = ',')
 ids_1x_all = list(sample_linker['Seq_Name'].values) # to be deprecated
@@ -38,7 +38,7 @@ rule prepare_bamlist:
         threads=1
     shell: """
         mkdir -p {ANALYSIS_DIR}
-        if [[ {dedup} == "True" ]]
+        if [[ {rmdup} == "True" ]]
         then
             ls data/dedup_bams/*.bam > {output.bamlist}
         else

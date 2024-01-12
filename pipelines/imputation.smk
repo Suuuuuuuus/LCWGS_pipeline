@@ -102,23 +102,7 @@ rule quilt:
         output_filename="{output.vcf}", \
         seed='${{SEED}}')'
     """
-'''
-rule quilt_info:
-    input:
-        vcf = f"results/imputation/vcfs/{PANEL_NAME}/regions/quilt.chr{{chr}}.{{regionStart}}.{{regionEnd}}.vcf.gz"
-    output:
-        vcf = f"results/imputation/vcfs/{PANEL_NAME}/regions/quilt.chr{{chr}}.{{regionStart}}.{{regionEnd}}.vcf.gz.output.RData"
-    params:
-        threads = 1
-    wildcard_constraints:
-        chr='\w{1,2}',
-        regionStart='\d{1,9}',
-        regionEnd='\d{1,9}'
-    shell: """
-        R -f ${{QUILT_WRAP_HOME}}info.R --args {output.vcf}
-    """
-'''
-
+    
 vcfs_to_concat={}
 final_vcfs=[]
 for chr in chromosome:

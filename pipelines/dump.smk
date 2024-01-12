@@ -109,3 +109,18 @@ rule calculate_fastqc_dup_rate:
             echo -e "$col1\t$formatted_result" >> {output.fastqc_dup_rate_res}
         done < {input.fastqc_dup_rate}
     """
+
+rule quilt_info:
+    input:
+        vcf = f"results/imputation/vcfs/{PANEL_NAME}/regions/quilt.chr{{chr}}.{{regionStart}}.{{regionEnd}}.vcf.gz"
+    output:
+        vcf = f"results/imputation/vcfs/{PANEL_NAME}/regions/quilt.chr{{chr}}.{{regionStart}}.{{regionEnd}}.vcf.gz.output.RData"
+    params:
+        threads = 1
+    wildcard_constraints:
+        chr='\w{1,2}',
+        regionStart='\d{1,9}',
+        regionEnd='\d{1,9}'
+    shell: """
+        R -f ${{QUILT_WRAP_HOME}}info.R --args {output.vcf}
+    """
