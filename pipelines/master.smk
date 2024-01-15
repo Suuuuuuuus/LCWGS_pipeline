@@ -1,3 +1,4 @@
+include: "chunk.smk"
 include: "preprocess.smk"
 #include: "fastqc.smk"
 #include: "reference.smk"
@@ -47,6 +48,10 @@ BUFFER=config["BUFFER"]
 NGEN=config["NGEN"]
 RECOMB_POP=config["RECOMB_POP"]
 PANEL_NAME=config["PANEL_NAME"]
+
+rule chunk_all:
+    input:
+        fastq_lsts = expand("data/file_lsts/hc_fastq_split/{id}_split.txt", id = samples_hc)
 
 rule preprocess_all:
     input:

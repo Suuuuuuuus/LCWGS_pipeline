@@ -1,4 +1,7 @@
 {
+    "make_chunk": true,
+    "fastq_chunk_size": 1000000,
+    "bam_chunk_size": 200000, 
     "ref38": "data/references/GRCh38.fa",
     "samples": "samples.tsv",
     "samples_hc": "samples_hc.tsv",
