@@ -13,10 +13,9 @@ rule fastuniq:
         fastq2_uncompress = temp("data/tmp/input_{id}_fast_uniq_2.fastq.gz"),
         fastq1_unzip = temp("data/tmp/{id}_fast_uniq_1.fastq"),
         fastq2_unzip = temp("data/tmp/{id}_fast_uniq_2.fastq")
-    threads: 20
+    threads: 2
     resources:
-        mem = '300G',
-        disk = '300G'
+        mem = '10G'
     shell: """
         pigz -p {threads} -dc {input.fastq1} > {output.fastq1_uncompress}
         pigz -p {threads} -dc {input.fastq2} > {output.fastq2_uncompress}
@@ -30,10 +29,10 @@ rule fastuniq:
 # Adapter trimming
 rule trimmomatic:
     input:
-        fastq1 = "data/fastq/{id}_1.fastq.gz",
-        fastq2 = "data/fastq/{id}_2.fastq.gz"
-        #fastq1 = rules.fastuniq.output.fastq1,
-        #fastq2 = rules.fastuniq.output.fastq2
+        # fastq1 = "data/fastq/{id}_1.fastq.gz",
+        # fastq2 = "data/fastq/{id}_2.fastq.gz"
+        fastq1 = rules.fastuniq.output.fastq1,
+        fastq2 = rules.fastuniq.output.fastq2
     output:
         fwd_pair = "data/fastq_cleaned/{id}_1.fastq.gz",
         rev_pair = "data/fastq_cleaned/{id}_2.fastq.gz",
@@ -41,10 +40,9 @@ rule trimmomatic:
         rev_unpair = "data/fastq_cleaned/{id}_unpaired_2.fastq.gz"
     params:
         adapters = config['adapter']
-    threads: 20
+    threads: 2
     resources:
-        mem = '300G',
-        disk = '300G'
+        mem = '10G'
     shell: """
         trimmomatic PE \
         {input.fastq1} {input.fastq2} \

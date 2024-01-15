@@ -49,16 +49,22 @@ NGEN=config["NGEN"]
 RECOMB_POP=config["RECOMB_POP"]
 PANEL_NAME=config["PANEL_NAME"]
 
+test = ids_1x_all[:2]
+
 rule chunk_all:
     input:
-        fastq_lsts = expand("data/file_lsts/hc_fastq_split/{id}_split.txt", id = samples_hc)
+        fastq_lsts = expand("data/file_lsts/hc_fastq_split/{id}_split.txt", id = test)
+
+samples_hc_split = []
+for i in samples_hc:
+    samples_hc_split = samples_hc_split + list(pd.read_table("data/file_lsts/hc_fastq_split/" + i + "_split.txt", header = None, names = ['Code'])['Code'].values)
 
 rule preprocess_all:
     input:
-        fwd_pair = expand("data/fastq_cleaned/{id}_1.fastq.gz", id = samples_hc),
-        rev_pair = expand("data/fastq_cleaned/{id}_2.fastq.gz", id = samples_hc),
-        fwd_unpair = expand("data/fastq_cleaned/{id}_unpaired_1.fastq.gz", id = samples_hc),
-        rev_unpair = expand("data/fastq_cleaned/{id}_unpaired_2.fastq.gz", id = samples_hc)
+        fwd_pair = expand("data/fastq_cleaned/{id}_1.fastq.gz", id = samples_hc_split),
+        rev_pair = expand("data/fastq_cleaned/{id}_2.fastq.gz", id = samples_hc_split),
+        fwd_unpair = expand("data/fastq_cleaned/{id}_unpaired_1.fastq.gz", id = samples_hc_split),
+        rev_unpair = expand("data/fastq_cleaned/{id}_unpaired_2.fastq.gz", id = samples_hc_split)
 
 rule reference_all:
     input:
@@ -70,18 +76,18 @@ rule reference_all:
 
 rule fastqc_all:
     input:
-        html1 = expand("results/fastqc/{id}_1_fastqc.html", id = samples_hc),
-        html2 = expand("results/fastqc/{id}_2_fastqc.html", id = samples_hc),
-        zip1 = expand("results/fastqc/{id}_1_fastqc.zip", id = samples_hc),
-        zip2 = expand("results/fastqc/{id}_2_fastqc.zip", id = samples_hc),
+        html1 = expand("results/fastqc/{id}_1_fastqc.html", id = samples_hc_split),
+        html2 = expand("results/fastqc/{id}_2_fastqc.html", id = samples_hc_split),
+        zip1 = expand("results/fastqc/{id}_1_fastqc.zip", id = samples_hc_split),
+        zip2 = expand("results/fastqc/{id}_2_fastqc.zip", id = samples_hc_split),
         fastqc = "results/fastqc/duplication_rate_fastqc.txt",
         multiqc_lc = "results/fastqc/multiqc_lc/multiqc_report.html",
         multiqc_hc = "results/fastqc/multiqc_hc/multiqc_report.html"
 
 rule alignment_all:
     input:
-        bams = expand("data/bams/{id}.bam", id = samples_hc),
-        bais = expand("data/bams/{id}.bam.bai", id = samples_hc)
+        bams = expand("data/bams/{id}.bam", id = samples_hc_split),
+        bais = expand("data/bams/{id}.bam.bai", id = samples_hc_split)
 
 rule subsample_all:
     input:
