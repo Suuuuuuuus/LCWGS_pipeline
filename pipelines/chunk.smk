@@ -12,7 +12,7 @@ rule split_fastq:
     params:
         chunk_size = config["fastq_chunk_size"]
     shell: """
-        mkdir -p "data/fastq/tmp/{id}/"
+        mkdir -p "data/fastq/tmp/{wildcards.id}/"
         seqkit split2 -1 {input.fastq1} -2 {input.fastq2} -s {params.chunk_size} -O "data/fastq/tmp/{wildcards.id}" -f -e .gz
         echo "done!" > {output.flag}
     """
