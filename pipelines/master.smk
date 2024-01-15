@@ -1,10 +1,10 @@
 include: "chunk.smk"
-include: "preprocess.smk"
+#include: "preprocess.smk"
 #include: "fastqc.smk"
 #include: "reference.smk"
-include: "alignment.smk"
+#include: "alignment.smk"
 
-include: "rmdup.smk"
+#include: "rmdup.smk"
 #include: "subsample.smk"
 #include: "kmer.smk"
 #include: "dup_rate.smk"
@@ -54,8 +54,8 @@ test = ids_1x_all[:2]
 
 rule chunk_all:
     input:
-        dirs = expand("data/fastq/tmp/{id}/", id = test),
-        fastq_lsts = expand("data/file_lsts/hc_fastq_split/{id}_split.tsv", id = test)
+        dirs = expand("data/fastq/tmp/{id}/", id = samples_hc),
+        fastq_lsts = expand("data/file_lsts/hc_fastq_split/{id}_split.tsv", id = samples_hc)
 
 samples_hc_split = []
 for i in samples_hc:
