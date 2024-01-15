@@ -22,6 +22,7 @@ import json
 import pandas as pd
 import numpy as np
 import sys
+import os
 sys.path.append("scripts")
 import lcwgSus
 
@@ -57,7 +58,9 @@ rule chunk_all:
 
 samples_hc_split = []
 for i in samples_hc:
-    samples_hc_split = samples_hc_split + list(pd.read_table("data/file_lsts/hc_fastq_split/" + i + "_split.txt", header = None, names = ['Code'])['Code'].values)
+    path = "data/file_lsts/hc_fastq_split/" + i + "_split.txt"
+    if os.path.exists(path)
+        samples_hc_split = samples_hc_split + list(pd.read_table(path, header = None, names = ['Code'])['Code'].values)
 
 rule preprocess_all:
     input:
