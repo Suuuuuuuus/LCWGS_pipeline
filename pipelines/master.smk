@@ -54,7 +54,7 @@ test = ids_1x_all[:2]
 
 rule chunk_all:
     input:
-        dirs = expand(directory("data/fastq/tmp/{id}/"), id = test),
+        dirs = expand("data/fastq/tmp/{id}/", id = test),
         fastq_lsts = expand("data/file_lsts/hc_fastq_split/{id}_split.tsv", id = test)
 
 samples_hc_split = []
