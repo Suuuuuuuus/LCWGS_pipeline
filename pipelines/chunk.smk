@@ -29,12 +29,12 @@ rule make_fastq_tsv:
         ls "{params.tmpdir}*_1.part*" | sed 's/_1.part//g' | sed 's/.fastq.gz/_1.fastq.gz/g' > "{params.tmpdir}tmp1.txt"
         ls "{params.tmpdir}*_2.part*" | sed 's/_2.part//g' | sed 's/.fastq.gz/_2.fastq.gz/g' > "{params.tmpdir}tmp2.txt"
         n=1
-        for i in $(ls "{params.tmpdir}*_1.part*"); do
+        for i in $(ls {params.tmpdir}*_1.part*); do
             mv $i $(sed -n "${{n}}p" "{params.tmpdir}tmp1.txt")
             n=$((n+1))
         done
         n=1
-        for i in $(ls "{params.tmpdir}*_2.part*"); do
+        for i in $(ls {params.tmpdir}*_2.part*); do
             mv $i $(sed -n "${{n}}p" "{params.tmpdir}tmp2.txt")
             n=$((n+1))
         done
