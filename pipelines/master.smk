@@ -59,7 +59,7 @@ rule chunk_all:
 samples_hc_split = []
 for i in samples_hc:
     path = "data/file_lsts/hc_fastq_split/" + i + "_split.txt"
-    if os.path.exists(path)
+    if os.path.exists(path):
         samples_hc_split = samples_hc_split + list(pd.read_table(path, header = None, names = ['Code'])['Code'].values)
 
 rule preprocess_all:
