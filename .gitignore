@@ -10,3 +10,4 @@ logs/
 graphs/
 tmp/
 __pycache__
+scripts/__pycache__
