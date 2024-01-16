@@ -1,5 +1,7 @@
 configfile: "pipelines/config.json"
 
+chunks = list(pd.read_table("data/bedgraph/bam_chunks.bed", header = None, names = ['Code'])['Code'].values)
+
 # Spliting fastq files
 rule split_fastq:
     input:
@@ -40,4 +42,32 @@ rule make_fastq_tsv:
         done
         cat "{params.tmpdir}tmp1.txt" | rev | cut -d '/' -f1 | rev | sed 's/_1.fastq.gz//g' > {output.fastq_lsts}
         rm "{params.tmpdir}tmp1.txt" "{params.tmpdir}tmp2.txt"
+    """
+
+# Generate bed chunk files from UCSC genome sizes
+rule get_bam_bed_chunks: # Need to resolve the dependence with split_bams
+    input:
+        bed = "data/bedgraph/GRCh38.autosome.size.bed"
+    output:
+        bed_chunks_samtools = "data/bedgraph/bam_chunks.bed",
+        bed_chunks_names = "data/bedgraph/bam_chunks_names.bed"
+    threads: 1
+    params:
+        bam_chunk_size = config["bam_chunk_size"]
+    shell: """
+        bedtools makewindows -b {input.bed} -w {params.bam_chunk_size} | awk '{print $1":"$2"-"$3}' > {output.bed_chunks_samtools}
+        sed 's/:/-/g' {output.bed_chunks_samtools} > {output.bed_chunks_names}
+    """
+
+rule split_bams:
+    input:
+        bam = "data/merge_bams/{id}.bam",
+        bed_chunks = "data/bedgraph/bam_chunks_names.bed"
+    output:
+        bam_chunk = "data/chunk_bams/{id}/{id}.{chunk}.bam"
+    threads: 8
+    params:
+        bam_chunk_size = config["bam_chunk_size"]
+    shell: """
+        samtools view -h -o {output.bam_chunk}
     """

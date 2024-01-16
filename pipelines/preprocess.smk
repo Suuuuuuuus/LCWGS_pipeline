@@ -1,7 +1,7 @@
 configfile: "pipelines/config.json"
 
 # Removing duplicates
-rule fastuniq:
+rule fastuniq: # Currently deprecated as we are basically gonna remove in markdup
     input:
         fastq1 = "data/fastq/{id}_1.fastq.gz",
         fastq2 = "data/fastq/{id}_2.fastq.gz"
@@ -29,10 +29,10 @@ rule fastuniq:
 # Adapter trimming
 rule trimmomatic:
     input:
-        # fastq1 = "data/fastq/{id}_1.fastq.gz",
-        # fastq2 = "data/fastq/{id}_2.fastq.gz"
-        fastq1 = rules.fastuniq.output.fastq1,
-        fastq2 = rules.fastuniq.output.fastq2
+        fastq1 = "data/fastq/{id}_1.fastq.gz",
+        fastq2 = "data/fastq/{id}_2.fastq.gz"
+        # fastq1 = rules.fastuniq.output.fastq1,
+        # fastq2 = rules.fastuniq.output.fastq2
     output:
         fwd_pair = "data/fastq_cleaned/{id}_1.fastq.gz",
         rev_pair = "data/fastq_cleaned/{id}_2.fastq.gz",

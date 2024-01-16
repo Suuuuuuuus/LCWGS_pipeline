@@ -1,9 +1,10 @@
 include: "chunk.smk"
-#include: "preprocess.smk"
+include: "preprocess.smk"
 #include: "fastqc.smk"
 #include: "reference.smk"
-#include: "alignment.smk"
+include: "alignment.smk"
 
+#include: "merge.smk"
 #include: "rmdup.smk"
 #include: "subsample.smk"
 #include: "kmer.smk"
@@ -55,13 +56,20 @@ test = ids_1x_all[:2]
 rule chunk_all:
     input:
         dirs = expand("data/fastq/tmp/{id}/", id = samples_hc),
-        fastq_lsts = expand("data/file_lsts/hc_fastq_split/{id}_split.tsv", id = samples_hc)
+        fastq_lsts = expand("data/file_lsts/hc_fastq_split/{id}_split.tsv", id = samples_hc),
+        bed_chunks_samtools = "data/bedgraph/bam_chunks.bed",
+        bed_chunks_names = "data/bedgraph/bam_chunks_names.bed",
+        #bam_chunk = expand("data/chunk_bams/{id}/{id}.{chunk}.bam", id = samples_hc, chunk = chunks)
 
 samples_hc_split = []
 for i in samples_hc:
-    path = "data/file_lsts/hc_fastq_split/" + i + "_split.txt"
+    path = "data/file_lsts/hc_fastq_split/" + i + "_split.tsv"
     if os.path.exists(path):
         samples_hc_split = samples_hc_split + list(pd.read_table(path, header = None, names = ['Code'])['Code'].values)
+
+chunks = []
+if os.path.exists("data/bedgraph/bam_chunks.bed"):
+    chunks = list(pd.read_table("data/bedgraph/bam_chunks.bed", header = None, names = ['Code'])['Code'].values)
 
 rule preprocess_all:
     input:
@@ -92,6 +100,11 @@ rule alignment_all:
     input:
         bams = expand("data/bams/{id}.bam", id = samples_hc_split),
         bais = expand("data/bams/{id}.bam.bai", id = samples_hc_split)
+
+rule merge_all:
+    input:
+        bams = expand("data/merge_bams/{id}.bam", id = samples_hc),
+        bais = expand("data/merge_bams/{id}.bam.bai", id = samples_hc)
 
 rule subsample_all:
     input:
