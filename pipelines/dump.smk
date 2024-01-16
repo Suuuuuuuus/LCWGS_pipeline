@@ -127,3 +127,22 @@ rule quilt_info:
     shell: """
         R -f ${{QUILT_WRAP_HOME}}info.R --args {output.vcf}
     """
+
+rule aggregate_results:
+    input:
+        script = "scripts/lcwgs_result_wrap_up.py",
+        fastqc_dup_rate = "results/fastqc/duplication_rate_fastqc.txt",
+        uncoverage_rate = "results/coverage/per_chromosome_coverage/uncoverage_rate.txt",
+        samtools_dup_rate = "results/dup_rate/duplication_rate_samtools.txt",
+        kmer_accuracy1 = "results/kmer/kmer_accuracy_read1.txt",
+        kmer_accuracy2 = "results/kmer/kmer_accuracy_read2.txt",
+        coverage = "results/coverage/per_sample_coverage.txt",
+        fragment_size = "results/fragment_size/fragment_size.txt",
+        proportion_ss_fragment_size = "results/fragment_size/proportion_ss_fragment_size.txt",
+        proportion_fragment_size = "results/fragment_size/proportion_fragment_size.txt",
+        fragment_overlap = "results/fragment_size/fragment_overlap.txt"
+    output:
+        result = "results/lcwgs_results.csv"
+    shell: """
+        python {input.script}
+    """

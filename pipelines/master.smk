@@ -1,8 +1,8 @@
-include: "chunk.smk"
-include: "preprocess.smk"
+#include: "chunk.smk"
+#include: "preprocess.smk"
 #include: "fastqc.smk"
 #include: "reference.smk"
-include: "alignment.smk"
+#include: "alignment.smk"
 
 #include: "merge.smk"
 #include: "rmdup.smk"
@@ -52,7 +52,7 @@ NGEN=config["NGEN"]
 RECOMB_POP=config["RECOMB_POP"]
 PANEL_NAME=config["PANEL_NAME"]
 
-test = ids_1x_all[:2]
+test_hc = ids_1x_all[:2]
 
 chunks = []
 if os.path.exists("data/bedgraph/bam_chunks.bed"):
@@ -225,26 +225,7 @@ rule test_all:
     input:
         vcf = "results/imputation/tmp/res.txt"
 
-rule all:
-    input:
-        lcwgs_wrap_up = "results/lcwgs_results.csv"
-
-rule aggregate_results:
-    input:
-        script = "scripts/lcwgs_result_wrap_up.py",
-        fastqc_dup_rate = "results/fastqc/duplication_rate_fastqc.txt",
-        uncoverage_rate = "results/coverage/per_chromosome_coverage/uncoverage_rate.txt",
-        samtools_dup_rate = "results/dup_rate/duplication_rate_samtools.txt",
-        kmer_accuracy1 = "results/kmer/kmer_accuracy_read1.txt",
-        kmer_accuracy2 = "results/kmer/kmer_accuracy_read2.txt",
-        coverage = "results/coverage/per_sample_coverage.txt",
-        fragment_size = "results/fragment_size/fragment_size.txt",
-        proportion_ss_fragment_size = "results/fragment_size/proportion_ss_fragment_size.txt",
-        proportion_fragment_size = "results/fragment_size/proportion_fragment_size.txt",
-        fragment_overlap = "results/fragment_size/fragment_overlap.txt"
-    output:
-        result = "results/lcwgs_results.csv"
-    shell: """
-        python {input.script}
-    """
+# rule all:
+#     input:
+#         lcwgs_wrap_up = "results/lcwgs_results.csv"
 
