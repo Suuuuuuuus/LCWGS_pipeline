@@ -146,3 +146,18 @@ rule aggregate_results:
     shell: """
         python {input.script}
     """
+
+# Generate bed chunk files from UCSC genome sizes
+rule get_bam_bed_chunks: # Need to resolve the dependence with split_bams
+    input:
+        bed = "data/bedgraph/GRCh38.autosomes.bed"
+    output:
+        bed_chunks_samtools = "data/bedgraph/bam_chunks.bed", # samtools use chr1:1-2
+        bed_chunks_names = "data/bedgraph/bam_chunks_names.bed" # names use chr1-1-2 to avoid naming errors
+    threads: 1
+    params:
+        bam_chunk_size = config["bam_chunk_size"]
+    shell: """
+        bedtools makewindows -b {input.bed} -w {params.bam_chunk_size} | awk '{{print $1":"$2"-"$3}}' > {output.bed_chunks_samtools}
+        sed 's/:/-/g' {output.bed_chunks_samtools} > {output.bed_chunks_names}
+    """

@@ -59,9 +59,7 @@ rule chunk_all:
     input:
         dirs = expand("data/fastq/tmp/{id}/", id = test_hc),
         fastq_lsts = expand("data/file_lsts/hc_fastq_split/{id}_split.tsv", id = test_hc),
-        bed_chunks_samtools = "data/bedgraph/bam_chunks.bed",
-        bed_chunks_names = "data/bedgraph/bam_chunks_names.bed"
-        #bam_chunk = expand("data/chunk_bams/{id}/{id}.{chunk}.bam", id = samples_hc, chunk = chunks)
+        bam_chunk = expand("data/chunk_bams/{id}/{id}.chr{chr}.bam", id = test_hc, chr = chromosome)
 
 samples_hc_split = []
 for i in test_hc:
@@ -145,6 +143,12 @@ rule kmer_all:
         fragment_length = expand("results/kmer/{id}/fragment_length.tsv", id = ids_1x_all),
         per_bin_kmer_accuracy = expand("results/kmer/{id}/read{read}/per_bin_kmer_error_rate_read{read}.txt", id = ids_1x_all, read = ['1', '2']),
         graph_kmer_position = expand("graphs/kmer_position/{id}_kmer_position.png", id = ids_1x_all)
+
+# This bit should never get executed
+rule dump_all:
+    input:
+        bed_chunks_samtools = "data/bedgraph/bam_chunks.bed",
+        bed_chunks_names = "data/bedgraph/bam_chunks_names.bed"
 
 # Dumps
 REGIONS={}

@@ -1,4 +1,5 @@
 configfile: "pipelines/config.json"
+include: "auxiliary.smk"
 
 from os.path import exists
 import json
@@ -9,10 +10,8 @@ import os
 sys.path.append("scripts")
 import lcwgSus
 
-chunks = []
-if os.path.exists("data/bedgraph/bam_chunks.bed"):
-    chunks = list(pd.read_table("data/bedgraph/bam_chunks.bed", header = None, names = ['Code'])['Code'].values)
-
+chunks = read_tsv_as_lst("data/bedgraph/bam_chunks.bed")
+    
 # Spliting fastq files
 rule split_fastq:
     input:
@@ -55,29 +54,17 @@ rule make_fastq_tsv:
         rm "{params.tmpdir}tmp1.txt" "{params.tmpdir}tmp2.txt"
     """
 
-# Generate bed chunk files from UCSC genome sizes
-rule get_bam_bed_chunks: # Need to resolve the dependence with split_bams
-    input:
-        bed = "data/bedgraph/GRCh38.autosomes.bed"
-    output:
-        bed_chunks_samtools = "data/bedgraph/bam_chunks.bed", # samtools use chr1:1-2
-        bed_chunks_names = "data/bedgraph/bam_chunks_names.bed" # names use chr1-1-2 to avoid naming errors
-    threads: 1
-    params:
-        bam_chunk_size = config["bam_chunk_size"]
-    shell: """
-        bedtools makewindows -b {input.bed} -w {params.bam_chunk_size} | awk '{{print $1":"$2"-"$3}}' > {output.bed_chunks_samtools}
-        sed 's/:/-/g' {output.bed_chunks_samtools} > {output.bed_chunks_names}
-    """
-
 rule split_bams:
     input:
-        bam = "data/merge_bams/{id}.bam",
-        bed_chunks = "data/bedgraph/bam_chunks_names.bed"
+        bam = "data/merge_bams/{id}.bam"
     output:
-        bam_chunk = temp("data/chunk_bams/{id}/{id}.{chunk}.bam")
+        bam_chunk = temp("data/chunk_bams/{id}/{id}.chr{chr}.bam")
     threads: 8
     resources: mem = '100G'
     shell: """
-        samtools view -h -o {output.bam_chunk} {input.bam} {wildcards.chunk}
+        samtools view -h {input.bam} {wildcards.chr} | \
+        samtools sort -n | \
+        samtools fixmate -m | \
+        samtools sort | \
+        samtools markdup -O BAM -o {output.bam_chunk}
     """
