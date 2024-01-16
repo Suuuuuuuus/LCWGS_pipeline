@@ -1,5 +1,14 @@
 configfile: "pipelines/config.json"
 
+from os.path import exists
+import json
+import pandas as pd
+import numpy as np
+import sys
+import os
+sys.path.append("scripts")
+import lcwgSus
+
 samples_hc = list(pd.read_table(config['samples_hc'], header = None, names = ['Code'])['Code'].values)
 samples_hc_split = {}
 for i in samples_hc:

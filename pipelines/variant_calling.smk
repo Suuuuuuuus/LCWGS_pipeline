@@ -3,6 +3,7 @@ configfile: "pipelines/config.json"
 from os.path import exists
 import json
 import pandas as pd
+import os
 import numpy as np
 import sys
 sys.path.append("scripts")

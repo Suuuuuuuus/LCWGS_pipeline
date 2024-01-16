@@ -1,5 +1,14 @@
 configfile: "pipelines/config.json"
 
+from os.path import exists
+import json
+import pandas as pd
+import numpy as np
+import sys
+import os
+sys.path.append("scripts")
+import lcwgSus
+
 chunks = list(pd.read_table("data/bedgraph/bam_chunks.bed", header = None, names = ['Code'])['Code'].values)
 
 # Spliting fastq files
