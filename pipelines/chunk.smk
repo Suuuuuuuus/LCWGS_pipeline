@@ -59,7 +59,7 @@ rule make_fastq_tsv:
 # Generate bed chunk files from UCSC genome sizes
 rule get_bam_bed_chunks: # Need to resolve the dependence with split_bams
     input:
-        bed = "data/bedgraph/GRCh38.autosome.size.bed"
+        bed = "data/bedgraph/GRCh38.autosomes.bed"
     output:
         bed_chunks_samtools = "data/bedgraph/bam_chunks.bed",
         bed_chunks_names = "data/bedgraph/bam_chunks_names.bed"
