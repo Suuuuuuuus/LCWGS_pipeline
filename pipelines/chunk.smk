@@ -81,5 +81,5 @@ rule split_bams:
     params:
         bam_chunk_size = config["bam_chunk_size"]
     shell: """
-        samtools view -h -o {output.bam_chunk}
+        samtools view -h -o {output.bam_chunk} {input.bam} {wildcards.chunk}
     """

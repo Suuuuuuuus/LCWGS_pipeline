@@ -53,6 +53,10 @@ PANEL_NAME=config["PANEL_NAME"]
 
 test = ids_1x_all[:2]
 
+hunks = []
+if os.path.exists("data/bedgraph/bam_chunks.bed"):
+    chunks = list(pd.read_table("data/bedgraph/bam_chunks.bed", header = None, names = ['Code'])['Code'].values)
+
 rule chunk_all:
     input:
         dirs = expand("data/fastq/tmp/{id}/", id = samples_hc),
@@ -66,10 +70,6 @@ for i in samples_hc:
     path = "data/file_lsts/hc_fastq_split/" + i + "_split.tsv"
     if os.path.exists(path):
         samples_hc_split = samples_hc_split + list(pd.read_table(path, header = None, names = ['Code'])['Code'].values)
-
-chunks = []
-if os.path.exists("data/bedgraph/bam_chunks.bed"):
-    chunks = list(pd.read_table("data/bedgraph/bam_chunks.bed", header = None, names = ['Code'])['Code'].values)
 
 rule preprocess_all:
     input:
