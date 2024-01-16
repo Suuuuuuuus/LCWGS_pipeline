@@ -1,4 +1,5 @@
 configfile: "pipelines/config.json"
+include: "auxiliary.smk"
 
 from os.path import exists
 import json
@@ -18,9 +19,9 @@ sample_names = list(sample_linker['Sample_Name'].values)
 chromosome = [i for i in range(1,23)]
 
 rule test:
+    input:
+        read_tsv_as_lst(config['samples_hc'])
     output:
-        imputation_vcf = "results/imputation/tmp/res.txt"
-    run:
-        chromosomes = chromosome
-        with open(output.imputation_vcf, 'w') as f:
-            print(len(chromosomes), file = f)
+        vcf = "results/imputation/tmp/res.txt"
+    shell:
+        echo "Hi" >> {output.vcf}

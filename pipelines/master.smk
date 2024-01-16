@@ -15,7 +15,8 @@ include: "alignment.smk"
 #include: "imputation_prep.smk"
 #include: "imputation.smk"
 
-#include: "test.smk"
+include: "test.smk"
+include: "auxiliary.smk"
 configfile: "pipelines/config.json"
 
 from os.path import exists
@@ -222,7 +223,7 @@ rule variant_calling_all:
 
 rule test_all:
     input:
-        imputation_vcf = "results/imputation/tmp/res.txt"
+        vcf = "results/imputation/tmp/res.txt"
 
 rule all:
     input:
