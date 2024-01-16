@@ -58,7 +58,7 @@ rule chunk_all:
         dirs = expand("data/fastq/tmp/{id}/", id = samples_hc),
         fastq_lsts = expand("data/file_lsts/hc_fastq_split/{id}_split.tsv", id = samples_hc),
         bed_chunks_samtools = "data/bedgraph/bam_chunks.bed",
-        bed_chunks_names = "data/bedgraph/bam_chunks_names.bed",
+        bed_chunks_names = "data/bedgraph/bam_chunks_names.bed"
         #bam_chunk = expand("data/chunk_bams/{id}/{id}.{chunk}.bam", id = samples_hc, chunk = chunks)
 
 samples_hc_split = []
