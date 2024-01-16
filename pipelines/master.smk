@@ -53,7 +53,7 @@ PANEL_NAME=config["PANEL_NAME"]
 
 test = ids_1x_all[:2]
 
-hunks = []
+chunks = []
 if os.path.exists("data/bedgraph/bam_chunks.bed"):
     chunks = list(pd.read_table("data/bedgraph/bam_chunks.bed", header = None, names = ['Code'])['Code'].values)
 

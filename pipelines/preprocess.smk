@@ -1,5 +1,14 @@
 configfile: "pipelines/config.json"
 
+from os.path import exists
+import json
+import pandas as pd
+import numpy as np
+import sys
+import os
+sys.path.append("scripts")
+import lcwgSus
+
 # Removing duplicates
 rule fastuniq: # Currently deprecated as we are basically gonna remove in markdup
     input:
@@ -26,11 +35,25 @@ rule fastuniq: # Currently deprecated as we are basically gonna remove in markdu
         gzip -c {output.fastq2_unzip} > {output.fastq2}
     """
 
+samples_hc = list(pd.read_table(config['samples_hc'], header = None, names = ['Code'])['Code'].values)
+samples_hc_split = {}
+for i in samples_hc:
+    path = "data/file_lsts/hc_fastq_split/" + i + "_split.tsv"
+    if os.path.exists(path):
+        samples_hc_split[i] = list(pd.read_table(path, header = None, names = ['Code'])['Code'].values)
+
+def sample_hc_fastq1(wildcards):
+    sample = (wildcards.id).rsplit('_', 1)[0]
+    return "data/fastq/tmp/" + sample + "/" + wildcards.id + "_1.fastq.gz"
+def sample_hc_fastq2(wildcards):
+    sample = (wildcards.id).rsplit('_', 1)[0]
+    return "data/fastq/tmp/" + sample + "/" + wildcards.id + "_2.fastq.gz"
+
 # Adapter trimming
 rule trimmomatic:
     input:
-        fastq1 = "data/fastq/tmp/{id}/{id}_1.fastq.gz", # For chunked fastq files
-        fastq2 = "data/fastq/tmp/{id}/{id}_2.fastq.gz"
+        fastq1 = sample_hc_fastq1, # For chunked fastq files
+        fastq2 = sample_hc_fastq2
         # fastq1 = "data/fastq/{id}_1.fastq.gz", # For non-fastuniq fastq files
         # fastq2 = "data/fastq/{id}_2.fastq.gz"
         # fastq1 = rules.fastuniq.output.fastq1, # For fast-uniq'ed fastq files

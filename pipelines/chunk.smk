@@ -13,7 +13,6 @@ chunks = []
 if os.path.exists("data/bedgraph/bam_chunks.bed"):
     chunks = list(pd.read_table("data/bedgraph/bam_chunks.bed", header = None, names = ['Code'])['Code'].values)
 
-
 # Spliting fastq files
 rule split_fastq:
     input:
