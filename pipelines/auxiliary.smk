@@ -14,5 +14,7 @@ sys.path.append("scripts")
 import lcwgSus
 
 def read_tsv_as_lst(path): # tsv file should ALWAYS have a single column without header
-    return list(pd.read_table(path, header = None, names = ['Code'])['Code'].values)
-
+    if os.path.exists(path):
+        return list(pd.read_table(path, header = None, names = ['Code'])['Code'].values)
+    else:
+        return []

@@ -1,11 +1,11 @@
-#include: "chunk.smk"
-#include: "preprocess.smk"
+include: "chunk.smk"
+include: "preprocess.smk"
 #include: "fastqc.smk"
 #include: "reference.smk"
-#include: "alignment.smk"
+include: "alignment.smk"
 
-#include: "merge.smk"
-#include: "rmdup.smk"
+include: "merge.smk"
+include: "rmdup.smk"
 #include: "subsample.smk"
 #include: "kmer.smk"
 #include: "dup_rate.smk"
@@ -15,11 +15,10 @@
 #include: "imputation_prep.smk"
 #include: "imputation.smk"
 
-include: "test.smk"
+#include: "test.smk"
 include: "auxiliary.smk"
 configfile: "pipelines/config.json"
 
-from os.path import exists
 import json
 import pandas as pd
 import numpy as np
@@ -54,23 +53,19 @@ PANEL_NAME=config["PANEL_NAME"]
 
 test_hc = ids_1x_all[:2]
 
-chunks = []
-if os.path.exists("data/bedgraph/bam_chunks.bed"):
-    chunks = list(pd.read_table("data/bedgraph/bam_chunks.bed", header = None, names = ['Code'])['Code'].values)
+chunks = read_tsv_as_lst("data/bedgraph/bam_chunks.bed")
 
 rule chunk_all:
     input:
-        dirs = expand("data/fastq/tmp/{id}/", id = samples_hc),
-        fastq_lsts = expand("data/file_lsts/hc_fastq_split/{id}_split.tsv", id = samples_hc),
+        dirs = expand("data/fastq/tmp/{id}/", id = test_hc),
+        fastq_lsts = expand("data/file_lsts/hc_fastq_split/{id}_split.tsv", id = test_hc),
         bed_chunks_samtools = "data/bedgraph/bam_chunks.bed",
         bed_chunks_names = "data/bedgraph/bam_chunks_names.bed"
         #bam_chunk = expand("data/chunk_bams/{id}/{id}.{chunk}.bam", id = samples_hc, chunk = chunks)
 
 samples_hc_split = []
-for i in samples_hc:
-    path = "data/file_lsts/hc_fastq_split/" + i + "_split.tsv"
-    if os.path.exists(path):
-        samples_hc_split = samples_hc_split + list(pd.read_table(path, header = None, names = ['Code'])['Code'].values)
+for i in test_hc:
+    samples_hc_split = samples_hc_split + read_tsv_as_lst("data/file_lsts/hc_fastq_split/" + i + "_split.tsv")
 
 rule preprocess_all:
     input:
@@ -104,8 +99,8 @@ rule alignment_all:
 
 rule merge_all:
     input:
-        bams = expand("data/merge_bams/{id}.bam", id = samples_hc),
-        bais = expand("data/merge_bams/{id}.bam.bai", id = samples_hc)
+        bams = expand("data/merge_bams/{id}.bam", id = test_hc),
+        bais = expand("data/merge_bams/{id}.bam.bai", id = test_hc)
 
 rule subsample_all:
     input:
@@ -159,7 +154,7 @@ for chr in chromosome:
     REGIONS[str(chr)]={"start":start, "end":end}
 
 file="results/imputation/regions.json"
-if exists(file):
+if os.path.exists(file):
     print("Replacing regions to impute with derived file")
     with open(file) as json_file:
         REGIONS = json.load(json_file)
