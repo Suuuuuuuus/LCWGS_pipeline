@@ -29,9 +29,11 @@ rule fastuniq: # Currently deprecated as we are basically gonna remove in markdu
 # Adapter trimming
 rule trimmomatic:
     input:
-        fastq1 = "data/fastq/{id}_1.fastq.gz",
-        fastq2 = "data/fastq/{id}_2.fastq.gz"
-        # fastq1 = rules.fastuniq.output.fastq1,
+        fastq1 = "data/fastq/tmp/{id}/{id}_1.fastq.gz", # For chunked fastq files
+        fastq2 = "data/fastq/tmp/{id}/{id}_2.fastq.gz"
+        # fastq1 = "data/fastq/{id}_1.fastq.gz", # For non-fastuniq fastq files
+        # fastq2 = "data/fastq/{id}_2.fastq.gz"
+        # fastq1 = rules.fastuniq.output.fastq1, # For fast-uniq'ed fastq files
         # fastq2 = rules.fastuniq.output.fastq2
     output:
         fwd_pair = "data/fastq_cleaned/{id}_1.fastq.gz",
