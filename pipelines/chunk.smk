@@ -76,10 +76,9 @@ rule split_bams:
         bam = "data/merge_bams/{id}.bam",
         bed_chunks = "data/bedgraph/bam_chunks_names.bed"
     output:
-        bam_chunk = "data/chunk_bams/{id}/{id}.{chunk}.bam"
+        bam_chunk = temp("data/chunk_bams/{id}/{id}.{chunk}.bam")
     threads: 8
-    params:
-        bam_chunk_size = config["bam_chunk_size"]
+    resources: mem = '100G'
     shell: """
         samtools view -h -o {output.bam_chunk} {input.bam} {wildcards.chunk}
     """
