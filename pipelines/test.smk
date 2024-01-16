@@ -23,5 +23,6 @@ rule test:
         read_tsv_as_lst(config['samples_hc'])
     output:
         vcf = "results/imputation/tmp/res.txt"
-    shell:
+    shell: """
         echo "Hi" >> {output.vcf}
+    """
