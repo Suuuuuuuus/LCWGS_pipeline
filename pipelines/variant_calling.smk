@@ -66,6 +66,7 @@ rule haplotype_call:
     output:
         vcf = "results/call/vcfs/regions/{hc}/{hc}.chr{chr}.vcf.gz"
     resources: mem = '20G'
+    threads: 8
     shell: """
         gatk --java-options "-Xmx20G" HaplotypeCaller \
         -R {input.reference} \
@@ -73,14 +74,37 @@ rule haplotype_call:
         -O {output.vcf} \
         -ERC GVCF
     """
+rule genomics_db_import:
+    input:
+        vcfs = expand("results/call/vcfs/regions/{hc}/{hc}.chr{chr}.vcf.gz", hc = test_hc),
+        reference = rules.get_bqsr_report.input.reference
+    output:
+        temp(directory("results/call/tmp/{chr}.combined.db"))
+    resources:
+        mem = '15G'
+    threads: 4
+    run:
+        gvcf_files = ""
+        for gvcf in input.gvcfs:
+            gvcf_files = gvcf_files + "--variant " + gvcf + " "
+        shell("""
+        gatk --java-options "-Xmx55g -Xms2g" GenomicsDBImport \
+        -R {input_ref} \
+        {gvcfs} \
+        --tmp-dir=/well/band/projects/pf-GAMCC/tmp \
+        --genomicsdb-workspace-path {output}
+        """.format(gvcfs = gvcf_files, params_chunk_region = params.chunk_region, input_ref = input.reference, output = output, threads = threads))
+
+
+
 
 rule concat_hc_vcfs:
     input:
-        vcfs = expand("data/recal_bams/{hc}.chr{chr}.recal.bam", chr = chromosomes)
+        vcfs = expand("results/call/vcfs/regions/{hc}/{hc}.chr{chr}.vcf.gz", chr = chromosomes)
     output:
-        recal_bam = "data/recal_bams/{hc}.recal.bam"
-    threads: 8
-    resources: mem = '100G'
+        vcf = "results/call/vcfs/{hc}.vcf.gz" # Need to expand this if we're calling at different sites
+    threads: 4
+    resources: mem = '10G'
     shell: """
-        samtools concat
+        bcftools concat --ligate -Oz -o {output.vcf} {input.vcfs}
     """
