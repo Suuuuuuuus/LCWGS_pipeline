@@ -25,14 +25,14 @@ def merge_bam_input(wildcards):
 nest = {}
 for i in test_hc:
     for j in chromosome:
-        nest[i][str(j)] = ["data/chunk_bams/tmp/tmp/" + k + "/" + k + ".chr" + str(j) + ".bam" for k in test_hc_dict[i]]
+        nest[str(i)][str(j)] = ["data/chunk_bams/tmp/tmp/" + k + "/" + k + ".chr" + str(j) + ".bam" for k in test_hc_dict[str(i)]]
 
 # Merging bams
 rule merge_bam:
     input:
         # bams = lambda wildcards: expand("data/chunk_bams/tmp/tmp/{id_ary}/{id_ary}.chr{wildcards.chr}.bam", id_ary = test_hc_dict[wildcards.hc])
         # bams = ["data/chunk_bams/tmp/tmp/" + id + "/" + id + ".chr{wildcards.chr}.bam" for id in test_hc_dict[wildcards.hc]]
-        bams = lambda wildcards: nest[wildcards.hc][str(wildcards.chr)]
+        bams = lambda wildcards: nest[str(wildcards.hc)][str(wildcards.chr)]
     output:
         bam = temp("data/chunk_bams/tmp/{hc}/{hc}.chr{chr}.bam"), ### Now the wildcards are messed up to avoid intermediate files... Need to come back later
         bai = temp("data/chunk_bams/tmp/{hc}/{hc}.chr{chr}.bam.bai")
