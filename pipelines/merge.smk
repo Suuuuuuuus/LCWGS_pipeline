@@ -13,10 +13,10 @@ import lcwgSus
 sample_linker = pd.read_table(config['sample_linker'], sep = ',')
 ids_1x_all = list(sample_linker['Seq_Name'].values) # to be deprecated
 test_hc = ids_1x_all[:2]
-samples_hc_split = read_tsv_as_dict(test_hc, "data/file_lsts/hc_fastq_split/", "_split.tsv")
+test_hc_dict = read_tsv_as_dict(test_hc, "data/file_lsts/hc_fastq_split/", "_split.tsv")
 
 def sample_hc_to_sample_hc_lst(wildcards):
-    return expand("data/bams/{id_ary}.bam", id_ary = samples_hc_split[wildcards.id])
+    return expand("data/bams/{id_ary}.bam", id_ary = test_hc_dict[wildcards.id])
 
 # Merging bams
 rule merge_bam:
