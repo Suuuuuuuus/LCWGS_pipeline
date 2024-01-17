@@ -1,17 +1,17 @@
-include: "chunk.smk"
-include: "preprocess.smk"
+#include: "chunk.smk"
+#include: "preprocess.smk"
 #include: "fastqc.smk"
 #include: "reference.smk"
-include: "alignment.smk"
+#include: "alignment.smk"
 
-include: "merge.smk"
-include: "rmdup.smk"
+#include: "merge.smk"
+#include: "rmdup.smk"
 #include: "subsample.smk"
 #include: "kmer.smk"
 #include: "dup_rate.smk"
 #include: "coverage.smk"
 
-#include: "variant_calling.smk"
+include: "variant_calling.smk"
 #include: "imputation_prep.smk"
 #include: "imputation.smk"
 
@@ -220,7 +220,7 @@ rule imputation_all:
 
 rule variant_calling_all:
     input:
-        imputation_vcf = "results/imputation/tmp/res.txt"
+        bqsr_reports = expand("results/call/BQSR/BQSR_reports/{hc}.chr{chr}.BQSR.report", hc = test_hc, chr = chromosome)
 
 rule test_all:
     input:
