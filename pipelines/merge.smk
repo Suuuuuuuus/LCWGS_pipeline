@@ -24,6 +24,7 @@ def merge_bam_input(wildcards):
 
 nest = {}
 for i in test_hc:
+    nest[i] = {}
     for j in chromosome:
         nest[str(i)][str(j)] = ["data/chunk_bams/tmp/tmp/" + k + "/" + k + ".chr" + str(j) + ".bam" for k in test_hc_dict[str(i)]]
 
