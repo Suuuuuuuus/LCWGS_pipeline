@@ -23,7 +23,9 @@ def merge_bam_input(wildcards):
 # Merging bams
 rule merge_bam:
     input:
-        bams = merge_bam_input
+        bams = expand("data/chunk_bams/tmp/tmp/{id_ary}/{id_ary}.chr{wildcards.chr}.bam", id_ary = test_hc_dict[wildcards.hc])
+        # bams = ["data/chunk_bams/tmp/tmp/" + id + "/" + id + ".chr{wildcards.chr}.bam" for id in test_hc_dict[wildcards.hc]]
+        # bams = merge_bam_input
     output:
         bam = temp("data/chunk_bams/tmp/{hc}/{hc}.chr{chr}.bam"), ### Now the wildcards are messed up to avoid intermediate files... Need to come back later
         bai = temp("data/chunk_bams/tmp/{hc}/{hc}.chr{chr}.bam.bai")
