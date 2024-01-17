@@ -23,7 +23,7 @@ rule split_fastq:
         flag = temp("data/fastq/tmp/{id}/flag.txt")
     threads: 1
     params:
-        # chunk_size = config["fastq_chunk_size"]
+        chunk_size = config["fastq_chunk_size"]
     shell: """
         mkdir -p "data/fastq/tmp/{wildcards.id}/"
         seqkit split2 -1 {input.fastq1} -2 {input.fastq2} -s {params.chunk_size} -O "data/fastq/tmp/{wildcards.id}" -f -e .gz
