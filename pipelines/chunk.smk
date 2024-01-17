@@ -64,6 +64,7 @@ test_hc_all_chunks = []
 for value_list in test_hc_dict.values():
     test_hc_all_chunks.extend(value_list)
 
+# probably remove markdup
 rule split_bams:
     input:
         bam = "data/bams/{id}.bam"

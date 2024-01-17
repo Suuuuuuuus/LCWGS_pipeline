@@ -43,7 +43,7 @@ rule merge_bam:
     shell: """
         mkdir -p data/chunk_bams/tmp/{wildcards.hc}/
         
-        samtools merge {input.bams} | \
+        samtools merge -u - {input.bams} | \
         samtools sort -n - | \
         samtools fixmate -m - - -u | \
         samtools sort - -u | \
