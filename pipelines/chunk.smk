@@ -71,9 +71,11 @@ rule split_bams:
         bam_chunk = temp("data/chunk_bams/tmp/tmp/{id}/{id}.chr{chr}.bam")
     threads: 1
     resources: mem = '10G'
+    params:
+        chr_str = "chr{wildcards.chr}"
     shell: """
         mkdir -p data/chunk_bams/tmp/tmp/{wildcards.id}/
-        samtools view -h {input.bam} {wildcards.chr} | \
+        samtools view -h {input.bam} {params.chr_str} | \
         samtools sort -n | \
         samtools fixmate -m | \
         samtools sort | \
