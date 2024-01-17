@@ -23,7 +23,7 @@ def merge_bam_input(wildcards):
 # Merging bams
 rule merge_bam:
     input:
-        bams = lambda wildcards: expand("data/chunk_bams/tmp/tmp/{id_ary}/{id_ary}.chr{chr}.bam", id_ary = test_hc_dict[wildcards.hc])
+        bams = lambda wildcards: expand("data/chunk_bams/tmp/tmp/{id_ary}/{id_ary}.chr{wildcards.chr}.bam", id_ary = test_hc_dict[wildcards.hc])
         # bams = ["data/chunk_bams/tmp/tmp/" + id + "/" + id + ".chr{wildcards.chr}.bam" for id in test_hc_dict[wildcards.hc]]
         # bams = merge_bam_input
     output:
