@@ -68,8 +68,8 @@ rule split_bams:
     input:
         bam = "data/bams/{id}.bam"
     output:
-        bam_chunk = "data/chunk_bams/tmp/{id}/{id}.chr{chr}.bam"
-    threads: 8
+        bam_chunk = temp("data/chunk_bams/tmp/{id}/{id}.chr{chr}.bam")
+    threads: 1
     resources: mem = '10G'
     shell: """
         mkdir -p data/chunk_bams/tmp/{wildcards.id}/

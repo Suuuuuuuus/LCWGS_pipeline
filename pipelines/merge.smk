@@ -16,7 +16,7 @@ test_hc = ids_1x_all[:2]
 test_hc_dict = read_tsv_as_dict(test_hc, "data/file_lsts/hc_fastq_split/", "_split.tsv")
 
 def merge_bam_input(wildcards):
-    return expand("data/chunk_bams/tmp/{id_ary}/{id_ary}.chr{chr}.bam", id_ary = test_hc_dict[wildcards.id])
+    return expand("data/chunk_bams/tmp/{id_ary}/{id_ary}.chr{chr}.bam", id_ary = test_hc_dict[wildcards.hc])
 # def merge_bam_output(wildcards):
 #     return expand("data/chunk_bams/tmp/{id}/{id}.chr{chr}.bam", id_ary = test_hc_dict[wildcards.id], chr = chromosome)
 
@@ -25,13 +25,13 @@ rule merge_bam:
     input:
         bams = merge_bam_input
     output:
-        bam = temp("data/chunk_bams/tmp/{id}/{id}.chr{chr}.bam"),
-        bai = temp("data/chunk_bams/tmp/{id}/{id}.chr{chr}.bam.bai")
+        bam = temp("data/chunk_bams/tmp/{hc}/{hc}.chr{chr}.bam"),
+        bai = temp("data/chunk_bams/tmp/{hc}/{hc}.chr{chr}.bam.bai")
     threads: 2
     resources:
         mem = '50G'
     shell: """
-        mkdir -p data/chunk_bams/tmp/{wildcards.id}/
+        mkdir -p data/chunk_bams/tmp/{wildcards.hc}/
         
         samtools merge {input.bams} | \
         samtools sort -n | \

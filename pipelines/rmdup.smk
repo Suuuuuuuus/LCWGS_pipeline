@@ -31,10 +31,10 @@ rule index_dedup:
 
 rule rmdup_split:
     input:
-        bam_chunk = "data/chunk_bams/tmp/{id}/{id}.chr{chr}.bam"
+        bam_chunk = "data/chunk_bams/tmp/{hc}/{hc}.chr{chr}.bam"
     output:
-        dedup_bam_chunk = "data/chunk_bams/{id}/{id}.chr{chr}.bam",
-        dedup_bai_chunk = "data/chunk_bams/{id}/{id}.chr{chr}.bam.bai"
+        dedup_bam_chunk = "data/chunk_bams/{hc}/{hc}.chr{chr}.bam",
+        dedup_bai_chunk = "data/chunk_bams/{hc}/{hc}.chr{chr}.bam.bai"
     threads: 8
     resources: mem = '10G'
     shell: """
