@@ -33,10 +33,10 @@ rule get_bqsr_report:
         for file in params.bqsr_known_sites:
             cmd = cmd + "--known-sites " + file + " "
         shell("""
-            cmd="gatk --java-options "-Xmx8G" BaseRecalibrator \
+            gatk --java-options "-Xmx8G" BaseRecalibrator \
             -I {dedup_bam_chunk} \
             -R {ref} \
-            -O {report}" \
+            -O {report} \
             {cmd}
         """.format(dedup_bam_chunk = input.dedup_bam_chunk, ref = input.reference, report = output.bqsr_report))
 
