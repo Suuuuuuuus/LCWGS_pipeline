@@ -35,7 +35,7 @@ rule rmdup_split:
     output:
         dedup_bam_chunk = "data/chunk_bams/{hc}/{hc}.chr{chr}.bam",
         dedup_bai_chunk = "data/chunk_bams/{hc}/{hc}.chr{chr}.bam.bai"
-    threads: 8
+    threads: 2
     resources: mem = '10G'
     shell: """
         samtools rmdup {input.bam_chunk} {output.dedup_bam_chunk}
