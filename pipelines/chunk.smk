@@ -72,7 +72,7 @@ rule split_bams:
     threads: 1
     resources: mem = '10G'
     params:
-        chr_str = "chr{wildcards.chr}"
+        chr_str = "chr{chr}"
     shell: """
         mkdir -p data/chunk_bams/tmp/tmp/{wildcards.id}/
         samtools view -h {input.bam} {params.chr_str} | \
