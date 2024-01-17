@@ -16,7 +16,7 @@ test_hc = ids_1x_all[:2]
 test_hc_dict = read_tsv_as_dict(test_hc, "data/file_lsts/hc_fastq_split/", "_split.tsv")
 
 def merge_bam_input(wildcards):
-    return expand("data/chunk_bams/tmp/tmp/{id_ary}/{id_ary}.chr{chr}.bam", id_ary = test_hc_dict[wildcards.hc])
+    return expand("data/chunk_bams/tmp/tmp/{id_ary}/{id_ary}.chr{wildcards.chr}.bam", id_ary = test_hc_dict[wildcards.hc])
 # def merge_bam_output(wildcards):
 #     return expand("data/chunk_bams/tmp/{id}/{id}.chr{chr}.bam", id_ary = test_hc_dict[wildcards.id], chr = chromosome)
 
