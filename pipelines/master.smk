@@ -58,8 +58,8 @@ chunks = read_tsv_as_lst("data/bedgraph/bam_chunks.bed")
 rule chunk_all:
     input:
         dirs = expand("data/fastq/tmp/{id}/", id = test_hc),
-        fastq_lsts = expand("data/file_lsts/hc_fastq_split/{id}_split.tsv", id = test_hc)
-        # bam_chunk = expand("data/chunk_bams/{id}/{id}.chr{chr}.bam", id = samples_hc_split, chr = chromosome)
+        fastq_lsts = expand("data/file_lsts/hc_fastq_split/{id}_split.tsv", id = test_hc),
+        bam_chunk = expand("data/chunk_bams/{id}/{id}.chr{chr}.bam", id = samples_hc_split, chr = chromosome)
 
 samples_hc_split = []
 for i in test_hc:
@@ -97,8 +97,8 @@ rule alignment_all:
 
 rule merge_all:
     input:
-        bams = expand("data/merge_bams/{id}.bam", id = test_hc),
-        bais = expand("data/merge_bams/{id}.bam.bai", id = test_hc)
+        # bams = expand("data/merge_bams/{id}.bam", id = test_hc),
+        # bais = expand("data/merge_bams/{id}.bam.bai", id = test_hc)
 
 rule rmdup_all:
     input:
