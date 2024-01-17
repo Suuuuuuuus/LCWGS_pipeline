@@ -28,18 +28,17 @@ rule get_bqsr_report:
         bqsr_report = "results/call/BQSR/BQSR_reports/{hc}.chr{chr}.BQSR.report"
     params:
         bqsr_known_sites = config["bqsr_known_sites"]
-    shell: """
-        cmd="gatk --java-options "-Xmx8G" BaseRecalibrator \
-        -I {input.dedup_bam_chunk} \
-        -R {input.reference} \
-        -O {output.bqsr_report}"
-
-        for file in "{params.bqsr_known_sites}"; do
-            cmd+=" --known-sites $file"
-        done
-        
-        eval "$cmd"
-    """
+    run:
+        cmd = ""
+        for file in params.bqsr_known_sites:
+            cmd = cmd + "--known-sites " + file + " "
+        shell("""
+            cmd="gatk --java-options "-Xmx8G" BaseRecalibrator \
+            -I {dedup_bam_chunk} \
+            -R {ref} \
+            -O {report}" \
+            {cmd}
+        """.format(dedup_bam_chunk = input.dedup_bam_chunk, ref = input.reference, report = output.bqsr_report))
 
 rule apply_bqsr:
     input:
