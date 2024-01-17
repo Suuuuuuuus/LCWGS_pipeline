@@ -14,7 +14,7 @@ rule rmdup:
         bam = "data/bams/{id}.bam"
     output:
         dedup_bam = "data/dedup_bams/{id}.bam"
-    resources: mem = '100G'
+    resources: mem = '10G'
     shell: """
         samtools rmdup {input.bam} {output.dedup_bam}
     """
@@ -24,7 +24,20 @@ rule index_dedup:
         dedup_bam = rules.rmdup.output.dedup_bam
     output:
         dedup_bai = "data/dedup_bams/{id}.bam.bai"
-    resources: mem = '100G'
+    resources: mem = '10G'
     shell: """
         samtools index {input.dedup_bam}
+    """
+
+rule rmdup_split:
+    input:
+        bam_chunk = "data/chunk_bams/tmp/{id}/{id}.chr{chr}.bam"
+    output:
+        dedup_bam_chunk = "data/chunk_bams/{id}/{id}.chr{chr}.bam"
+        dedup_bai_chunk = "data/chunk_bams/{id}/{id}.chr{chr}.bam.bai"
+    threads: 8
+    resources: mem = '10G'
+    shell: """
+        samtools rmdup {input.bam_chunk} {output.dedup_bam_chunk}
+        samtools index {output.dedup_bam_chunk}
     """

@@ -46,7 +46,7 @@ rule make_fastq_tsv:
             n=$((n+1))
         done
         n=1
-        for i in $(ls {params.tmpdir}*_2.part*); do
+        for i in $(ls {params.tmpdir}*_2.part*);
             mv $i $(sed -n "${{n}}p" "{params.tmpdir}tmp2.txt")
             n=$((n+1))
         done
@@ -58,10 +58,11 @@ rule split_bams:
     input:
         bam = "data/merge_bams/{id}.bam"
     output:
-        bam_chunk = temp("data/chunk_bams/{id}/{id}.chr{chr}.bam")
+        bam_chunk = temp("data/chunk_bams/tmp/{id}/{id}.chr{chr}.bam")
     threads: 8
     resources: mem = '100G'
     shell: """
+        mkdir -p data/chunk_bams/tmp/
         samtools view -h {input.bam} {wildcards.chr} | \
         samtools sort -n | \
         samtools fixmate -m | \

@@ -129,7 +129,9 @@ rule dup_rate_all:
 rule rmdup_all:
     input:
         dedup_bams = expand("data/dedup_bams/{id}.bam", id = samples_hc),
-        dedup_bais = expand("data/dedup_bams/{id}.bam.bai", id = samples_hc)
+        dedup_bais = expand("data/dedup_bams/{id}.bam.bai", id = samples_hc),
+        dedup_bam_chunk = expand("data/chunk_bams/{id}/{id}.chr{chr}.bam", id = test_hc, chr = chromosome),
+        dedup_bai_chunk = expand("data/chunk_bams/{id}/{id}.chr{chr}.bam.bai", id = test_hc, chr = chromosome)
 
 rule kmer_all:
     input:
