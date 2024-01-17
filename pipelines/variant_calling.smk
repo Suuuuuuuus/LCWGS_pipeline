@@ -34,7 +34,7 @@ rule get_bqsr_report:
         -R {input.reference} \
         -O {output.bqsr_report}"
 
-        for file in "${params.bqsr_known_sites}[@]"; do
+        for file in "{params.bqsr_known_sites}"; do
             cmd+=" --known-sites $file"
         done
         
