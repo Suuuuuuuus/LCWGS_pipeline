@@ -53,7 +53,7 @@ PANEL_NAME=config["PANEL_NAME"]
 
 test_hc = ids_1x_all[:2]
 
-chunks = read_tsv_as_lst("data/bedgraph/bam_chunks.bed")
+# chunks = read_tsv_as_lst("data/bedgraph/bam_chunks.bed")
 
 rule chunk_all:
     input:

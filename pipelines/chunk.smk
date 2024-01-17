@@ -68,11 +68,11 @@ rule split_bams:
     input:
         bam = "data/bams/{id}.bam"
     output:
-        bam_chunk = temp("data/chunk_bams/tmp/{id}/{id}.chr{chr}.bam")
+        bam_chunk = temp("data/chunk_bams/tmp/tmp/{id}/{id}.chr{chr}.bam")
     threads: 1
     resources: mem = '10G'
     shell: """
-        mkdir -p data/chunk_bams/tmp/{wildcards.id}/
+        mkdir -p data/chunk_bams/tmp/tmp/{wildcards.id}/
         samtools view -h {input.bam} {wildcards.chr} | \
         samtools sort -n | \
         samtools fixmate -m | \
