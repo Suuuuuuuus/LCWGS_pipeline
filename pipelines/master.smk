@@ -100,6 +100,13 @@ rule merge_all:
         bams = expand("data/merge_bams/{id}.bam", id = test_hc),
         bais = expand("data/merge_bams/{id}.bam.bai", id = test_hc)
 
+rule rmdup_all:
+    input:
+        dedup_bams = expand("data/dedup_bams/{id}.bam", id = samples_hc),
+        dedup_bais = expand("data/dedup_bams/{id}.bam.bai", id = samples_hc),
+        dedup_bam_chunk = expand("data/chunk_bams/{id}/{id}.chr{chr}.bam", id = test_hc, chr = chromosome),
+        dedup_bai_chunk = expand("data/chunk_bams/{id}/{id}.chr{chr}.bam.bai", id = test_hc, chr = chromosome)
+
 rule subsample_all:
     input:
         ss_bams = expand("data/subsampled_bams/{id}_subsampled.bam", id = ids_1x_all),
@@ -125,13 +132,6 @@ rule dup_rate_all:
         proportion_ss_fragment_size = "results/fragment_size/proportion_ss_fragment_size.txt",
         proportion_fragment_size = "results/fragment_size/proportion_fragment_size.txt",
         fragment_overlap = "results/fragment_size/fragment_overlap.txt"
-
-rule rmdup_all:
-    input:
-        dedup_bams = expand("data/dedup_bams/{id}.bam", id = samples_hc),
-        dedup_bais = expand("data/dedup_bams/{id}.bam.bai", id = samples_hc),
-        dedup_bam_chunk = expand("data/chunk_bams/{id}/{id}.chr{chr}.bam", id = test_hc, chr = chromosome),
-        dedup_bai_chunk = expand("data/chunk_bams/{id}/{id}.chr{chr}.bam.bai", id = test_hc, chr = chromosome)
 
 rule kmer_all:
     input:

@@ -33,7 +33,7 @@ rule rmdup_split:
     input:
         bam_chunk = "data/chunk_bams/tmp/{id}/{id}.chr{chr}.bam"
     output:
-        dedup_bam_chunk = "data/chunk_bams/{id}/{id}.chr{chr}.bam"
+        dedup_bam_chunk = "data/chunk_bams/{id}/{id}.chr{chr}.bam",
         dedup_bai_chunk = "data/chunk_bams/{id}/{id}.chr{chr}.bam.bai"
     threads: 8
     resources: mem = '10G'
