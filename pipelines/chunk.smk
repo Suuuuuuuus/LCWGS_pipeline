@@ -1,5 +1,5 @@
 configfile: "pipelines/config.json"
-include: "auxiliary.smk"
+# include: "auxiliary.smk"
 
 from os.path import exists
 import json
@@ -10,7 +10,8 @@ import os
 sys.path.append("scripts")
 import lcwgSus
 
-chunks = read_tsv_as_lst("data/bedgraph/bam_chunks.bed")
+# chunks = read_tsv_as_lst("data/bedgraph/bam_chunks.bed")
+chromosome = [i for i in range(1,23)]
     
 # Spliting fastq files
 rule split_fastq:
@@ -54,15 +55,24 @@ rule make_fastq_tsv:
         rm "{params.tmpdir}tmp1.txt" "{params.tmpdir}tmp2.txt"
     """
 
+sample_linker = pd.read_table(config['sample_linker'], sep = ',')
+ids_1x_all = list(sample_linker['Seq_Name'].values) # to be deprecated
+test_hc = ids_1x_all[:2]
+test_hc_dict = read_tsv_as_dict(test_hc, "data/file_lsts/hc_fastq_split/", "_split.tsv")
+
+test_hc_all_chunks = []
+for value_list in test_hc_dict.values():
+    test_hc_all_chunks.extend(value_list)
+
 rule split_bams:
     input:
-        bam = "data/merge_bams/{id}.bam"
+        bam = "data/bams/{id}.bam"
     output:
         bam_chunk = temp("data/chunk_bams/tmp/{id}/{id}.chr{chr}.bam")
     threads: 8
-    resources: mem = '100G'
+    resources: mem = '10G'
     shell: """
-        mkdir -p data/chunk_bams/tmp/
+        mkdir -p data/chunk_bams/tmp/{wildcards.id}/
         samtools view -h {input.bam} {wildcards.chr} | \
         samtools sort -n | \
         samtools fixmate -m | \

@@ -1,5 +1,5 @@
 configfile: "pipelines/config.json"
-include: "auxiliary.smk"
+# include: "auxiliary.smk"
 
 from os.path import exists
 import json
@@ -15,29 +15,39 @@ ids_1x_all = list(sample_linker['Seq_Name'].values) # to be deprecated
 test_hc = ids_1x_all[:2]
 test_hc_dict = read_tsv_as_dict(test_hc, "data/file_lsts/hc_fastq_split/", "_split.tsv")
 
-def sample_hc_to_sample_hc_lst(wildcards):
-    return expand("data/bams/{id_ary}.bam", id_ary = test_hc_dict[wildcards.id])
+def merge_bam_input(wildcards):
+    return expand("data/chunk_bams/tmp/{id_ary}/{id_ary}.chr{chr}.bam", id_ary = test_hc_dict[wildcards.id])
+# def merge_bam_output(wildcards):
+#     return expand("data/chunk_bams/tmp/{id}/{id}.chr{chr}.bam", id_ary = test_hc_dict[wildcards.id], chr = chromosome)
 
 # Merging bams
 rule merge_bam:
     input:
-        bams = sample_hc_to_sample_hc_lst
+        bams = merge_bam_input
     output:
-        bam = "data/merge_bams/{id}.bam"
-    threads: 8
+        bam = temp("data/chunk_bams/tmp/{id}/{id}.chr{chr}.bam"),
+        bai = temp("data/chunk_bams/tmp/{id}/{id}.chr{chr}.bam.bai")
+    threads: 2
     resources:
         mem = '50G'
     shell: """
-        samtools merge -O BAM {output.bam} {input.bams}
+        mkdir -p data/chunk_bams/tmp/{wildcards.id}/
+        
+        samtools merge {input.bams} | \
+        samtools sort -n | \
+        samtools fixmate -m | \
+        samtools sort | \
+        samtools markdup -O BAM -o {output.bam}
+        samtools index {output.bam}
     """
-rule index_merge_bam:
-    input:
-        bam = rules.merge_bam.output.bam
-    output:
-        bai = "data/merge_bams/{id}.bam.bai"
-    threads: 8
-    resources:
-        mem = '50G'
-    shell: """
-        samtools index {input.bam}
-    """
+# rule index_merge_bam:
+#     input:
+#         bam = rules.merge_bam.output.bam
+#     output:
+#         bai = "data/merge_bams/{id}.bam.bai"
+#     threads: 8
+#     resources:
+#         mem = '50G'
+#     shell: """
+#         samtools index {input.bam}
+#     """

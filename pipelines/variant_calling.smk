@@ -18,6 +18,8 @@ sample_names = list(sample_linker['Sample_Name'].values)
 
 chromosomes = [i for i in range(1,23)]
 
+test_hc = ids_1x_all[:2]
+
 rule get_bqsr_report:
     input:
         bam = "data/dedup_bams/{id}.bam" if config["rmdup"] else "data/bams/{id}.bam",
