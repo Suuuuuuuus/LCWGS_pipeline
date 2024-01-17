@@ -38,7 +38,7 @@ rule get_bqsr_report:
             -R {ref} \
             -O {report} \
             {cmd}
-        """.format(dedup_bam_chunk = input.dedup_bam_chunk, ref = input.reference, report = output.bqsr_report))
+        """.format(cmd = cmd, dedup_bam_chunk = input.dedup_bam_chunk, ref = input.reference, report = output.bqsr_report))
 
 rule apply_bqsr:
     input:
