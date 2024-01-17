@@ -19,7 +19,7 @@ rule split_fastq:
         fastq1 = "data/fastq/{id}_1.fastq.gz",
         fastq2 = "data/fastq/{id}_2.fastq.gz"
     output:
-        dirs = directory("data/fastq/tmp/{id}/"),
+        # dirs = directory("data/fastq/tmp/{id}/"),
         flag = temp("data/fastq/tmp/{id}/flag.txt")
     threads: 1
     params:
