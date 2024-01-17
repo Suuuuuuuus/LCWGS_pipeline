@@ -59,7 +59,7 @@ rule apply_bqsr:
         samtools index {output.recal_bam}
     """
 
-"""
+'''
 rule haplotype_call:
     input:
         recal_bam = rules.apply_bqsr.output.recal_bam,
@@ -107,5 +107,4 @@ rule concat_hc_vcfs:
     shell: """
         bcftools concat --ligate -Oz -o {output.vcf} {input.vcfs}
     """
-
-"""
+'''
