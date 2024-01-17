@@ -44,12 +44,14 @@ rule merge_bam:
         mkdir -p data/chunk_bams/tmp/{wildcards.hc}/
         
         samtools merge {input.bams} | \
-        samtools sort -n | \
-        samtools fixmate -m | \
-        samtools sort | \
-        samtools markdup -O BAM -o {output.bam}
+        samtools sort -n - | \
+        samtools fixmate -m - - -u | \
+        samtools sort - -u | \
+        samtools markdup - {output.bam}
+
         samtools index {output.bam}
     """
+
 # rule index_merge_bam:
 #     input:
 #         bam = rules.merge_bam.output.bam

@@ -76,8 +76,8 @@ rule split_bams:
     shell: """
         mkdir -p data/chunk_bams/tmp/tmp/{wildcards.id}/
         samtools view -h {input.bam} {params.chr_str} | \
-        samtools sort -n | \
-        samtools fixmate -m | \
-        samtools sort | \
-        samtools markdup -O BAM -o {output.bam_chunk}
+        samtools sort -n - | \
+        samtools fixmate -m - - -u | \
+        samtools sort - -u | \
+        samtools markdup - {output.bam_chunk}
     """
