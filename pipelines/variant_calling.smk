@@ -59,6 +59,7 @@ rule apply_bqsr:
         samtools index {output.recal_bam}
     """
 
+"""
 rule haplotype_call:
     input:
         recal_bam = rules.apply_bqsr.output.recal_bam,
@@ -74,6 +75,7 @@ rule haplotype_call:
         -O {output.vcf} \
         -ERC GVCF
     """
+
 rule genomics_db_import:
     input:
         vcfs = expand("results/call/vcfs/regions/{hc}/{hc}.chr{chr}.vcf.gz", hc = test_hc),
@@ -95,9 +97,6 @@ rule genomics_db_import:
         --genomicsdb-workspace-path {output}
         """.format(gvcfs = gvcf_files, params_chunk_region = params.chunk_region, input_ref = input.reference, output = output, threads = threads))
 
-
-
-
 rule concat_hc_vcfs:
     input:
         vcfs = expand("results/call/vcfs/regions/{hc}/{hc}.chr{chr}.vcf.gz", chr = chromosomes)
@@ -108,3 +107,5 @@ rule concat_hc_vcfs:
     shell: """
         bcftools concat --ligate -Oz -o {output.vcf} {input.vcfs}
     """
+
+"""

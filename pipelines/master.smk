@@ -220,7 +220,9 @@ rule imputation_all:
 
 rule variant_calling_all:
     input:
-        bqsr_reports = expand("results/call/BQSR/BQSR_reports/{hc}.chr{chr}.BQSR.report", hc = test_hc, chr = chromosome)
+        bqsr_reports = expand("results/call/BQSR/BQSR_reports/{hc}.chr{chr}.BQSR.report", hc = test_hc, chr = chromosome),
+        recal_bams = expand("data/recal_bams/{hc}.chr{chr}.recal.bam", hc = test_hc, chr = chromosome),
+        recal_bais = expand("data/recal_bams/{hc}.chr{chr}.recal.bam.bai", hc = test_hc, chr = chromosome)
 
 rule test_all:
     input:
