@@ -57,7 +57,7 @@ rule trimmomatic:
         fastq1 = sample_hc_fastq1, # For chunked fastq files
         fastq2 = sample_hc_fastq2,
         # fastq_lsts = check_split, 
-        dirs = temp(directory(check_split)) # Need this flag to make sure the fastqs are properly splited, optimise later
+        dirs = directory(check_split) # Need this flag to make sure the fastqs are properly splited, optimise later
         # fastq1 = "data/fastq/{id}_1.fastq.gz", # For non-fastuniq fastq files
         # fastq2 = "data/fastq/{id}_2.fastq.gz"
         # fastq1 = rules.fastuniq.output.fastq1, # For fast-uniq'ed fastq files
