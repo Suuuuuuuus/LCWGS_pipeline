@@ -28,6 +28,7 @@ rule GATK_prepare_reference:
         fai = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta.fai" if concatenate else "data/references/GRCh38.fa.fai",
         dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict" if concatenate else "data/references/GRCh38.dict",
         bqsr_known_sites = [file + ".tbi" for file in config["bqsr_known_sites"]]
+    resources: mem = '10G'
     shell: """
         samtools faidx {input.reference}
         picard CreateSequenceDictionary \
