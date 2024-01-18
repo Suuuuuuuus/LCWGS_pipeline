@@ -78,8 +78,7 @@ rule reference_all:
         ann = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta.ann" if concatenate else "data/references/GRCh38.fa.ann",
         bwt = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta.bwt" if concatenate else "data/references/GRCh38.fa.bwt",
         pac = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta.pac" if concatenate else "data/references/GRCh38.fa.pac",
-        sa = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta.sa" if concatenate else "data/references/GRCh38.fa.sa",
-        fai = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta.fai" if concatenate else "data/references/GRCh38.fa.fai"
+        sa = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta.sa" if concatenate else "data/references/GRCh38.fa.sa"
 
 rule fastqc_all:
     input:
@@ -221,6 +220,9 @@ rule imputation_all:
 
 rule variant_calling_all:
     input:
+        fai = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta.fai" if concatenate else "data/references/GRCh38.fa.fai",
+        dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict" if concatenate else "data/references/GRCh38.dict",
+        
         bqsr_reports = expand("results/call/BQSR/BQSR_reports/{hc}.chr{chr}.BQSR.report", hc = test_hc, chr = chromosome),
         recal_bams = expand("data/recal_bams/{hc}.chr{chr}.recal.bam", hc = test_hc, chr = chromosome),
         recal_bais = expand("data/recal_bams/{hc}.chr{chr}.recal.bam.bai", hc = test_hc, chr = chromosome)

@@ -20,10 +20,25 @@ chromosomes = [i for i in range(1,23)]
 
 test_hc = ids_1x_all[:2]
 
+rule GATK_prepare_reference:
+    input:
+        reference = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta" if concatenate else config["ref38"]
+    output:
+        fai = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta.fai" if concatenate else "data/references/GRCh38.fa.fai",
+        dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict" if concatenate else "data/references/GRCh38.dict"
+    shell: """
+        samtools faidx {input.reference}
+        picard CreateSequenceDictionary \
+        R={input.reference} \
+        O={output.dict}
+    """
+
 rule get_bqsr_report:
     input:
         dedup_bam_chunk = "data/chunk_bams/{hc}/{hc}.chr{chr}.bam",
-        reference = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta" if concatenate else config["ref38"]
+        reference = rules.GATK_prepare_reference.input.reference,
+        fai = rules.GATK_prepare_reference.output.fai,
+        dict = rules.GATK_prepare_reference.output.dict
     output:
         bqsr_report = "results/call/BQSR/BQSR_reports/{hc}.chr{chr}.BQSR.report"
     params:
@@ -43,8 +58,10 @@ rule get_bqsr_report:
 rule apply_bqsr:
     input:
         dedup_bam_chunk = "data/chunk_bams/{hc}/{hc}.chr{chr}.bam",
-        reference = rules.get_bqsr_report.input.reference,
-        bqsr_report = rules.get_bqsr_report.output.bqsr_report
+        bqsr_report = rules.get_bqsr_report.output.bqsr_report,
+        reference = rules.GATK_prepare_reference.input.reference,
+        fai = rules.GATK_prepare_reference.output.fai,
+        dict = rules.GATK_prepare_reference.output.dict
     output:
         recal_bam = "data/recal_bams/{hc}.chr{chr}.recal.bam",
         recal_bai = "data/recal_bams/{hc}.chr{chr}.recal.bam.bai"
@@ -62,7 +79,9 @@ rule apply_bqsr:
 rule haplotype_call:
     input:
         recal_bam = rules.apply_bqsr.output.recal_bam,
-        reference = rules.get_bqsr_report.input.reference
+        reference = rules.GATK_prepare_reference.input.reference,
+        fai = rules.GATK_prepare_reference.output.fai,
+        dict = rules.GATK_prepare_reference.output.dict
     output:
         vcf = "results/call/vcfs/regions/{hc}/{hc}.chr{chr}.vcf.gz"
     resources: mem = '20G'
@@ -78,7 +97,9 @@ rule haplotype_call:
 rule genomics_db_import:
     input:
         vcfs = expand("results/call/vcfs/regions/{hc}/{hc}.chr{chr}.vcf.gz", hc = test_hc),
-        reference = rules.get_bqsr_report.input.reference
+        reference = rules.GATK_prepare_reference.input.reference,
+        fai = rules.GATK_prepare_reference.output.fai,
+        dict = rules.GATK_prepare_reference.output.dict
     output:
         temp(directory("results/call/tmp/{chr}.combined.db"))
     resources:
