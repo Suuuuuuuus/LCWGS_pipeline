@@ -1,4 +1,6 @@
 configfile: "pipelines/config.json"
+include: "auxiliary.smk"
+include: "chunk.smk"
 
 from os.path import exists
 import json
