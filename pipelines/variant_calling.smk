@@ -22,15 +22,21 @@ test_hc = ids_1x_all[:2]
 
 rule GATK_prepare_reference:
     input:
-        reference = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta" if concatenate else config["ref38"]
+        reference = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta" if concatenate else config["ref38"],
+        bqsr_known_sites = config["bqsr_known_sites"]
     output:
         fai = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta.fai" if concatenate else "data/references/GRCh38.fa.fai",
-        dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict" if concatenate else "data/references/GRCh38.dict"
+        dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict" if concatenate else "data/references/GRCh38.dict",
+        bqsr_known_sites = [file + ".tbi" for file in config["bqsr_known_sites"]]
     shell: """
         samtools faidx {input.reference}
         picard CreateSequenceDictionary \
         R={input.reference} \
         O={output.dict}
+
+        for i in {input.bqsr_known_sites}; do
+            gatk IndexFeatureFile -I $i
+        done
     """
 
 rule get_bqsr_report:

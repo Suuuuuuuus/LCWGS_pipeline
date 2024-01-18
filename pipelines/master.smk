@@ -222,7 +222,7 @@ rule variant_calling_all:
     input:
         fai = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta.fai" if concatenate else "data/references/GRCh38.fa.fai",
         dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict" if concatenate else "data/references/GRCh38.dict",
-        
+        bqsr_known_sites = [file + ".tbi" for file in config["bqsr_known_sites"]],
         bqsr_reports = expand("results/call/BQSR/BQSR_reports/{hc}.chr{chr}.BQSR.report", hc = test_hc, chr = chromosome),
         recal_bams = expand("data/recal_bams/{hc}.chr{chr}.recal.bam", hc = test_hc, chr = chromosome),
         recal_bais = expand("data/recal_bams/{hc}.chr{chr}.recal.bam.bai", hc = test_hc, chr = chromosome)
