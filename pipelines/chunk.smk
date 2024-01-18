@@ -16,28 +16,28 @@ chromosome = [i for i in range(1,23)]
 # Spliting fastq files
 rule split_fastq:
     input:
-        fastq1 = "data/fastq/{id}_1.fastq.gz",
-        fastq2 = "data/fastq/{id}_2.fastq.gz"
+        fastq1 = "data/fastq/{hc}_1.fastq.gz",
+        fastq2 = "data/fastq/{hc}_2.fastq.gz"
     output:
-        dirs = temp(directory("data/fastq/tmp/{id}/")),
-        flag = temp("data/fastq/tmp/{id}/flag.txt")
+        dirs = temp(directory("data/fastq/tmp/{hc}/")),
+        flag = temp("data/fastq/tmp/{hc}/flag.txt")
     threads: 1
     params:
         chunk_size = config["fastq_chunk_size"]
     shell: """
-        mkdir -p "data/fastq/tmp/{wildcards.id}/"
-        seqkit split2 -1 {input.fastq1} -2 {input.fastq2} -s {params.chunk_size} -O "data/fastq/tmp/{wildcards.id}" -f -e .gz
+        mkdir -p "data/fastq/tmp/{wildcards.hc}/"
+        seqkit split2 -1 {input.fastq1} -2 {input.fastq2} -s {params.chunk_size} -O "data/fastq/tmp/{wildcards.hc}" -f -e .gz
         echo "done!" > {output.flag}
     """
 
 rule make_fastq_tsv:
     input:
-        flag = "data/fastq/tmp/{id}/flag.txt"
+        flag = "data/fastq/tmp/{hc}/flag.txt"
     output:
-        fastq_lsts = "data/file_lsts/hc_fastq_split/{id}_split.tsv"
+        fastq_lsts = "data/file_lsts/hc_fastq_split/{hc}_split.tsv"
     threads: 1
     params:
-        tmpdir = "data/fastq/tmp/{id}/"
+        tmpdir = "data/fastq/tmp/{hc}/"
     shell: """
         ls {params.tmpdir}*_1.part* | sed 's/_1.part//g' | sed 's/.fastq.gz/_1.fastq.gz/g' > "{params.tmpdir}tmp1.txt"
         ls {params.tmpdir}*_2.part* | sed 's/_2.part//g' | sed 's/.fastq.gz/_2.fastq.gz/g' > "{params.tmpdir}tmp2.txt"

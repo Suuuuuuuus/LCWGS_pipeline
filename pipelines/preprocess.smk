@@ -50,17 +50,12 @@ def sample_hc_fastq1(wildcards):
 def sample_hc_fastq2(wildcards):
     sample = (wildcards.id).rsplit('_', 1)[0]
     return "data/fastq/tmp/" + sample + "/" + wildcards.id + "_2.fastq.gz"
-def check_split(wildcards):
-    sample = (wildcards.id).rsplit('_', 1)[0]
-    return "data/fastq/tmp/" + sample + "/flag.txt"
 
 # Adapter trimming
 rule trimmomatic:
     input:
         fastq1 = sample_hc_fastq1, # For chunked fastq files
-        fastq2 = sample_hc_fastq2,
-        # fastq_lsts = check_split, 
-        flag = check_split # Need this flag to make sure the fastqs are properly splited, optimise later
+        fastq2 = sample_hc_fastq2
         # fastq1 = "data/fastq/{id}_1.fastq.gz", # For non-fastuniq fastq files
         # fastq2 = "data/fastq/{id}_2.fastq.gz"
         # fastq1 = rules.fastuniq.output.fastq1, # For fast-uniq'ed fastq files

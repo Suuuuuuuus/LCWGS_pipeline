@@ -9,6 +9,8 @@ Sus' lcwgs pipeline to process low and high coverage paired Illumina short-read 
 * Preprocess and cleaness
 
 To Do:
+* Modify dependence of `pre-processing` and `split_fastq`
+* Prepare three different master files that deals with hc, lc and chip samples, respectively
 * Finish variant-calling
 * Restructure and optimisation
 
