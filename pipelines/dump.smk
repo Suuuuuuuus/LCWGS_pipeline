@@ -161,3 +161,60 @@ rule get_bam_bed_chunks: # Need to resolve the dependence with split_bams
         bedtools makewindows -b {input.bed} -w {params.bam_chunk_size} | awk '{{print $1":"$2"-"$3}}' > {output.bed_chunks_samtools}
         sed 's/:/-/g' {output.bed_chunks_samtools} > {output.bed_chunks_names}
     """
+
+rule split_bams:
+    input:
+        bam = "data/bams/{id}.bam"
+    output:
+        bam_chunk = temp("data/chunk_bams/tmp/tmp/{id}/{id}.chr{chr}.bam")
+    threads: 1
+    resources: mem = '10G'
+    params:
+        chr_str = "chr{chr}"
+    shell: """
+        mkdir -p data/chunk_bams/tmp/tmp/{wildcards.id}/
+        samtools view -h {input.bam} {params.chr_str} | \
+        samtools sort -n - | \
+        samtools fixmate -m - - -u | \
+        samtools sort - -u | \
+        samtools markdup - {output.bam_chunk}
+    """
+
+rule GATK_add_readgroup:
+    input:
+        dedup_bam_chunk = "data/chunk_bams/{hc}/{hc}.chr{chr}.bam",
+    output:
+    
+    params:
+        verbosity = "ERROR"
+    shell: """
+        picard AddOrReplaceReadGroups \
+        -VERBOSITY {params.verbosity} \
+        -I {output.bam_marked_dups} \
+        -O {output.bam_read_group} \
+        -RGLB OGC \
+        -RGPL ILLUMINA \
+        -RGPU unknown \
+        -RGSM {wildcards.hc}
+    """
+
+rule merge_bam:
+    input:
+        bams = lambda wildcards: nest[str(wildcards.hc)][str(wildcards.chr)]
+    output:
+        bam = temp("data/chunk_bams/tmp/{hc}/{hc}.chr{chr}.bam"), ### Now the wildcards are messed up to avoid intermediate files... Need to come back later
+        bai = temp("data/chunk_bams/tmp/{hc}/{hc}.chr{chr}.bam.bai")
+    threads: 2
+    resources:
+        mem = '50G'
+    shell: """
+        mkdir -p data/chunk_bams/tmp/{wildcards.hc}/
+        
+        samtools merge -u - {input.bams} | \
+        samtools sort -n - | \
+        samtools fixmate -m - - -u | \
+        samtools sort - -u | \
+        samtools markdup - {output.bam}
+
+        samtools index {output.bam}
+    """
