@@ -19,7 +19,7 @@ rule split_fastq:
         fastq1 = "data/fastq/{hc}_1.fastq.gz",
         fastq2 = "data/fastq/{hc}_2.fastq.gz"
     output:
-        dirs = temp(directory("data/fastq/tmp/{hc}/")),
+        # dirs = temp(directory("data/fastq/tmp/{hc}/")),
         flag = temp("data/fastq/tmp/{hc}/flag.txt")
     threads: 1
     params:
@@ -32,7 +32,7 @@ rule split_fastq:
 
 rule make_fastq_tsv:
     input:
-        flag = "data/fastq/tmp/{hc}/flag.txt"
+        flag = rules.split_fastq.output.flag
     output:
         fastq_lsts = "data/file_lsts/hc_fastq_split/{hc}_split.tsv"
     threads: 1
