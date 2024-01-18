@@ -53,7 +53,8 @@ def sample_hc_fastq2(wildcards):
 rule trimmomatic:
     input:
         fastq1 = sample_hc_fastq1, # For chunked fastq files
-        fastq2 = sample_hc_fastq2
+        fastq2 = sample_hc_fastq2,
+        flag = temp("data/fastq/tmp/{id}/flag.txt") # Need this flag to make sure the fastqs are properly splited, optimise later
         # fastq1 = "data/fastq/{id}_1.fastq.gz", # For non-fastuniq fastq files
         # fastq2 = "data/fastq/{id}_2.fastq.gz"
         # fastq1 = rules.fastuniq.output.fastq1, # For fast-uniq'ed fastq files
