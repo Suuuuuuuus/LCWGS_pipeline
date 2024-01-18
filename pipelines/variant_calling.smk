@@ -40,6 +40,26 @@ rule GATK_prepare_reference:
         done
     """
 
+rule GATK_add_readgroup:
+    input:
+        dedup_bam_chunk = "data/chunk_bams/{hc}/{hc}.chr{chr}.bam",
+    output:
+    
+    params:
+        verbosity = "ERROR",
+        name = {wildcards.hc}.split('_')[0]
+    shell: """
+        picard AddOrReplaceReadGroups \
+        -VERBOSITY {params.verbosity} \
+        -I {output.bam_marked_dups} \
+        -O {output.bam_read_group} \
+        -RGLB OGC \
+        -RGPL ILLUMINA \
+        -RGPU unknown \
+        -RGSM {params.name}
+
+    """
+
 rule get_bqsr_report:
     input:
         dedup_bam_chunk = "data/chunk_bams/{hc}/{hc}.chr{chr}.bam",
