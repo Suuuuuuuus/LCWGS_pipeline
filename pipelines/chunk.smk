@@ -1,5 +1,4 @@
 configfile: "pipelines/config.json"
-include: "auxiliary.smk"
 
 from os.path import exists
 import json
@@ -82,6 +81,7 @@ rule split_bams:
         mkdir -p data/chunk_bams/tmp/tmp/{wildcards.id}/
         samtools view -h {input.bam} {params.chr_str} | \
         samtools sort -n - | \
+        samtools view -h | \
         awk -f scripts/rm_unpaired_reads.awk - > {output.tmp1}
 
         samtools sort -o {output.tmp2} {output.tmp1}
