@@ -30,8 +30,8 @@ rule merge_splited_bam:
     output:
         # bam = temp("data/chunk_bams/tmp/{hc}/{hc}.chr{chr}.bam"), ### Now the wildcards are messed up to avoid intermediate files... Need to come back later
         # bai = temp("data/chunk_bams/tmp/{hc}/{hc}.chr{chr}.bam.bai")
-        bam = "data/chunk_bams/tmp/{hc}/{hc}.chr{chr}.bam", 
-        bai = "data/chunk_bams/tmp/{hc}/{hc}.chr{chr}.bam.bai"
+        bam = "data/chunk_bams/tmp/{hc}/{hc}.chr{chr}.bam"
+#        bai = "data/chunk_bams/tmp/{hc}/{hc}.chr{chr}.bam.bai"
     threads: 2
     resources:
         mem = '50G'
@@ -39,5 +39,5 @@ rule merge_splited_bam:
         mkdir -p data/chunk_bams/tmp/{wildcards.hc}/
         
         samtools cat -o {output.bam} {input.bams}
-        samtools index {output.bam}
+        # samtools index {output.bam}
     """
