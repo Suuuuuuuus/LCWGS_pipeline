@@ -37,7 +37,5 @@ rule merge_splited_bam:
         mem = '50G'
     shell: """
         mkdir -p data/chunk_bams/tmp/{wildcards.hc}/
-        
         samtools cat -o {output.bam} {input.bams}
-        # samtools index {output.bam}
     """

@@ -34,10 +34,16 @@ rule rmdup_split:
         bam_chunk = "data/chunk_bams/tmp/{hc}/{hc}.chr{chr}.bam"
     output:
         dedup_bam_chunk = "data/chunk_bams/{hc}/{hc}.chr{chr}.bam",
-        dedup_bai_chunk = "data/chunk_bams/{hc}/{hc}.chr{chr}.bam.bai"
+        dedup_bai_chunk = "data/chunk_bams/{hc}/{hc}.chr{chr}.bam.bai",
+        metric = temp("data/chunk_bams/tmp/{hc}/{hc}.chr{chr}.metrics.txt")
     threads: 2
-    resources: mem = '10G'
+    resources: mem = '50G'
     shell: """
-        samtools rmdup {input.bam_chunk} {output.dedup_bam_chunk}
+        picard MarkDuplicates \
+        -I {input.bam_chunk} \
+        -O {output.dedup_bam_chunk} \
+        -M {output.metric} \
+        --REMOVE_DUPLICATES
+
         samtools index {output.dedup_bam_chunk}
     """

@@ -70,9 +70,8 @@ rule split_bams:
         bam = "data/bams/{id}.bam"
     output:
         bam_chunk = temp("data/chunk_bams/tmp/tmp/{id}/{id}.chr{chr}.bam"),
-        tmp1 = temp("data/chunk_bams/tmp/tmp/{id}/{id}.chr{chr}.tmp1.bam"),
-        tmp2 = temp("data/chunk_bams/tmp/tmp/{id}/{id}.chr{chr}.tmp2.bam"),
-        metric = temp("data/chunk_bams/tmp/tmp/{id}/{id}.chr{chr}.metrics.txt")
+        tmp1 = temp("data/chunk_bams/tmp/tmp/{id}/{id}.chr{chr}.tmp1.sam"),
+        tmp2 = temp("data/chunk_bams/tmp/tmp/{id}/{id}.chr{chr}.tmp2.bam")
     threads: 1
     resources: mem = '10G'
     params:
@@ -82,12 +81,14 @@ rule split_bams:
     shell: """
         mkdir -p data/chunk_bams/tmp/tmp/{wildcards.id}/
         samtools view -h {input.bam} {params.chr_str} | \
-        samtools sort -o {output.tmp1} - 
+        samtools sort -n - | \
+        awk -f scripts/rm_unpaired_reads.awk - > {output.tmp1}
 
-        picard MarkDuplicates \
-        I={output.tmp1} \
-        O={output.tmp2} \
-        M={output.metric}
+        samtools sort -o {output.tmp2} {output.tmp1}
+        rm {output.tmp1}
+        samtools index {output.tmp2}
+
+        picard FixMateInformation -I {output.tmp2}
 
         picard AddOrReplaceReadGroups \
         -VERBOSITY {params.verbosity} \
