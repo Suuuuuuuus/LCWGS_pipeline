@@ -1,4 +1,5 @@
 configfile: "pipelines/config.json"
+include: "auxiliary.smk"
 
 from os.path import exists
 import json
