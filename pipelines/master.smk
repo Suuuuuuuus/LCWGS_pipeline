@@ -57,9 +57,8 @@ test_hc = ids_1x_all[:2]
 
 rule chunk_all:
     input:
-        # dirs = expand("data/fastq/tmp/{id}/", id = test_hc),
         fastq_lsts = expand("data/file_lsts/hc_fastq_split/{hc}_split.tsv", hc = test_hc)
-        # bam_chunk = expand("data/chunk_bams/{id}/{id}.chr{chr}.bam", id = samples_hc_split, chr = chromosome)
+        bam_chunk = expand("data/chunk_bams/{id}/{id}.chr{chr}.bam", id = samples_hc_split, chr = chromosome)
 
 samples_hc_split = []
 for i in test_hc:
