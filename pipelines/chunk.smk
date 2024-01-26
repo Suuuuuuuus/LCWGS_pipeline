@@ -1,4 +1,5 @@
 configfile: "pipelines/config.json"
+include: "reference.smk"
 include: "auxiliary.smk"
 
 from os.path import exists
@@ -69,8 +70,11 @@ rule split_bams:
         bam = "data/bams/{id}.bam"
     output:
         bam_chunk = temp("data/chunk_bams/tmp/tmp/{id}/{id}.chr{chr}.bam"),
-        tmp1 = temp("data/chunk_bams/tmp/tmp/{id}/{id}.chr{chr}.tmp1.bam")
-    threads: 1
+        tmp1 = temp("data/chunk_bams/tmp/tmp/{id}/{id}.chr{chr}.tmp1.bam"),
+        tmp2 = temp("data/chunk_bams/tmp/tmp/{id}/{id}.chr{chr}.tmp2.bam"),
+        reference = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta"
+#        reference = rules.index_reference.input.reference
+    threads: 4
     resources: mem = '10G'
     params:
         chr_str = "chr{chr}",
@@ -86,11 +90,15 @@ rule split_bams:
         picard AddOrReplaceReadGroups \
         -VERBOSITY {params.verbosity} \
         -I {output.tmp1} \
-        -O {output.bam_chunk} \
+        -O {output.tmp2} \
         -RGLB OGC \
         -RGPL ILLUMINA \
         -RGPU unknown \
         -RGSM {params.sample}
 
-        picard FixMateInformation -I {output.bam_chunk}
+        picard FixMateInformation -I {output.tmp2}
+
+        samtools collate -Oun128 {output.tmp2} | samtools fastq -OT RG,BC - | \
+        bwa mem -pt4 -CH <(samtools view -H {output.tmp2} | grep ^@RG) {input.reference} - | \
+        samtools sort -@4 -m4g -o {output.bam_chunk} -
     """
