@@ -67,12 +67,12 @@ for value_list in test_hc_dict.values():
 
 rule split_bams:
     input:
-        bam = "data/bams/{id}.bam"
+        bam = "data/bams/{id}.bam",
+        reference = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta"
     output:
         bam_chunk = temp("data/chunk_bams/tmp/tmp/{id}/{id}.chr{chr}.bam"),
         tmp1 = temp("data/chunk_bams/tmp/tmp/{id}/{id}.chr{chr}.tmp1.bam"),
-        tmp2 = temp("data/chunk_bams/tmp/tmp/{id}/{id}.chr{chr}.tmp2.bam"),
-        reference = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta"
+        tmp2 = temp("data/chunk_bams/tmp/tmp/{id}/{id}.chr{chr}.tmp2.bam")
 #        reference = rules.index_reference.input.reference
     threads: 4
     resources: mem = '10G'
