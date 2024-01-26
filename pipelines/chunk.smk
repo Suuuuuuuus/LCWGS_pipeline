@@ -64,14 +64,12 @@ test_hc_all_chunks = []
 for value_list in test_hc_dict.values():
     test_hc_all_chunks.extend(value_list)
 
-# probably remove markdup
 rule split_bams:
     input:
         bam = "data/bams/{id}.bam"
     output:
         bam_chunk = temp("data/chunk_bams/tmp/tmp/{id}/{id}.chr{chr}.bam"),
-        tmp1 = temp("data/chunk_bams/tmp/tmp/{id}/{id}.chr{chr}.tmp1.sam"),
-        tmp2 = temp("data/chunk_bams/tmp/tmp/{id}/{id}.chr{chr}.tmp2.bam")
+        tmp1 = temp("data/chunk_bams/tmp/tmp/{id}/{id}.chr{chr}.tmp1.bam")
     threads: 1
     resources: mem = '10G'
     params:
@@ -81,22 +79,18 @@ rule split_bams:
     shell: """
         mkdir -p data/chunk_bams/tmp/tmp/{wildcards.id}/
         samtools view -h {input.bam} {params.chr_str} | \
-        samtools sort -n - | \
-        samtools view -h | \
-        awk -f scripts/rm_unpaired_reads.awk - > {output.tmp1}
+        samtools sort -o {output.tmp1} -
 
-        samtools sort -o {output.tmp2} {output.tmp1}
-        rm {output.tmp1}
-        samtools index {output.tmp2}
-
-        picard FixMateInformation -I {output.tmp2}
+        samtools index {output.tmp1}
 
         picard AddOrReplaceReadGroups \
         -VERBOSITY {params.verbosity} \
-        -I {output.tmp2} \
+        -I {output.tmp1} \
         -O {output.bam_chunk} \
         -RGLB OGC \
         -RGPL ILLUMINA \
         -RGPU unknown \
         -RGSM {params.sample}
+
+        picard FixMateInformation -I {output.bam_chunk}
     """
