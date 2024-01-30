@@ -99,7 +99,7 @@ rule merge_all:
         # bams = expand("data/merge_bams/{id}.bam", id = test_hc),
         # bais = expand("data/merge_bams/{id}.bam.bai", id = test_hc)
         bam = expand("data/chunk_bams/tmp/{hc}/{hc}.chr{chr}.bam", hc = test_hc, chr = chromosome)
-#        bai = expand("data/chunk_bams/tmp/{hc}/{hc}.chr{chr}.bam.bai", hc = test_hc, chr = chromosome)
+    #    bai = expand("data/chunk_bams/tmp/{hc}/{hc}.chr{chr}.bam.bai", hc = test_hc, chr = chromosome)
 
 rule rmdup_all:
     input:
@@ -116,14 +116,14 @@ rule subsample_all:
 rule coverage_all:
     input:
         bedgraphs = expand("results/coverage/bedgraphs/{id}_bedgraph_nozero.bed", id = ids_1x_all),
-#        ss_bedgraphs = expand("results/coverage/subsampled_bedgraphs/{id}_subsampled_bedgraph.bed", id = ids_1x_all),
-#        cumsum_ary = expand("results/coverage/subsampled_bedgraphs/{id}_cumsum_ary.txt", id = ids_1x_all),
-#        per_bin_coverage_1x_coordinates = expand("results/coverage/per_bin_coverage/1x/{id}_chr{chr}_coordinate.txt", id = ids_1x_all, chr = chromosome),
-#        per_bin_coverage_1x_bases = expand("results/coverage/per_bin_coverage/1x/{id}_chr{chr}_base.txt", id = ids_1x_all, chr = chromosome),
-#        per_chromosome_coverage = expand("results/coverage/per_chromosome_coverage/{id}_per_chromosome_coverage.txt", id = ids_1x_all),
-#        ss_per_chromosome_coverage = expand("results/coverage/per_chromosome_ss_coverage/{id}_per_chromosome_ss_coverage.txt", id = ids_1x_all),
-#        uncoverage_rate = "results/coverage/per_chromosome_coverage/uncoverage_rate.txt",
-#        ss_uncoverage_rate = "results/coverage/per_chromosome_ss_coverage/ss_uncoverage_rate.txt"
+    #    ss_bedgraphs = expand("results/coverage/subsampled_bedgraphs/{id}_subsampled_bedgraph.bed", id = ids_1x_all),
+    #    cumsum_ary = expand("results/coverage/subsampled_bedgraphs/{id}_cumsum_ary.txt", id = ids_1x_all),
+    #    per_bin_coverage_1x_coordinates = expand("results/coverage/per_bin_coverage/1x/{id}_chr{chr}_coordinate.txt", id = ids_1x_all, chr = chromosome),
+    #    per_bin_coverage_1x_bases = expand("results/coverage/per_bin_coverage/1x/{id}_chr{chr}_base.txt", id = ids_1x_all, chr = chromosome),
+    #    per_chromosome_coverage = expand("results/coverage/per_chromosome_coverage/{id}_per_chromosome_coverage.txt", id = ids_1x_all),
+    #    ss_per_chromosome_coverage = expand("results/coverage/per_chromosome_ss_coverage/{id}_per_chromosome_ss_coverage.txt", id = ids_1x_all),
+    #    uncoverage_rate = "results/coverage/per_chromosome_coverage/uncoverage_rate.txt",
+    #    ss_uncoverage_rate = "results/coverage/per_chromosome_ss_coverage/ss_uncoverage_rate.txt"
         avg_coverage = "results/coverage/per_sample_coverage.txt"
 
 rule dup_rate_all:
