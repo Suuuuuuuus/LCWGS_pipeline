@@ -138,7 +138,7 @@ rule genotype_gvcf:
     shell: """
         gatk --java-options "-Xmx55g" GenotypeGVCFs  \
         -R {input.reference} \
-        -V gendb://{input.gVCFs} \
+        -V gendb://{input.gvcfs} \
         -O {output.called}
 
         bcftools index -t {output.called}
