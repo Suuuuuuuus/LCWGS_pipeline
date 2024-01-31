@@ -121,7 +121,7 @@ rule genomics_db_import:
         {gvcfs} \
         --tmp-dir=/well/band/users/rbx225/GAMCC/results/call/tmp/ \
         --genomicsdb-workspace-path {output}
-        """.format(gvcfs = gvcf_files, params_chunk_region = params.chunk_region, input_ref = input.reference, output = output, threads = threads))
+        """.format(gvcfs = gvcf_files, input_ref = input.reference, output = output))
 
 rule genotype_gvcf:
     input:
