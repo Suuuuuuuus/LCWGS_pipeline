@@ -102,7 +102,7 @@ rule haplotype_call:
 
 rule genomics_db_import:
     input:
-        gvcfs = expand("results/call/vcfs/regions/{hc}/{hc}.chr{chr}.gvcf.vcf.gz", hc = test_hc),
+        gvcfs = expand("results/call/vcfs/regions/{hc}/{hc}.chr{chr}.gvcf.vcf.gz", hc = test_hc, allow_missing = True),
         reference = rules.GATK_prepare_reference.input.reference,
         fai = rules.GATK_prepare_reference.output.fai,
         dict = rules.GATK_prepare_reference.output.dict
