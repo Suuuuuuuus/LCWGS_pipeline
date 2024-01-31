@@ -96,7 +96,7 @@ rule haplotype_call:
         gatk --java-options "-Xmx20G" HaplotypeCaller \
         -R {input.reference} \
         -I {input.recal_bam} \
-        -O {output.vcf} \
+        -O {output.gvcf} \
         -ERC GVCF
     """
 
