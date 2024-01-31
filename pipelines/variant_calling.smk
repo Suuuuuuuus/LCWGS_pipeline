@@ -82,7 +82,6 @@ rule apply_bqsr:
         samtools index {output.recal_bam}
     """
 
-'''
 rule haplotype_call:
     input:
         recal_bam = rules.apply_bqsr.output.recal_bam,
@@ -90,7 +89,7 @@ rule haplotype_call:
         fai = rules.GATK_prepare_reference.output.fai,
         dict = rules.GATK_prepare_reference.output.dict
     output:
-        vcf = "results/call/vcfs/regions/{hc}/{hc}.chr{chr}.vcf.gz"
+        gvcf = "results/call/vcfs/regions/{hc}/{hc}.chr{chr}.gvcf.vcf.gz"
     resources: mem = '20G'
     threads: 8
     shell: """
@@ -103,7 +102,7 @@ rule haplotype_call:
 
 rule genomics_db_import:
     input:
-        vcfs = expand("results/call/vcfs/regions/{hc}/{hc}.chr{chr}.vcf.gz", hc = test_hc),
+        gvcfs = expand("results/call/vcfs/regions/{hc}/{hc}.chr{chr}.gvcf.vcf.gz", hc = test_hc),
         reference = rules.GATK_prepare_reference.input.reference,
         fai = rules.GATK_prepare_reference.output.fai,
         dict = rules.GATK_prepare_reference.output.dict
@@ -120,13 +119,36 @@ rule genomics_db_import:
         gatk --java-options "-Xmx55g -Xms2g" GenomicsDBImport \
         -R {input_ref} \
         {gvcfs} \
-        --tmp-dir=/well/band/projects/pf-GAMCC/tmp \
+        --tmp-dir=/well/band/users/rbx225/GAMCC/results/call/tmp/ \
         --genomicsdb-workspace-path {output}
         """.format(gvcfs = gvcf_files, params_chunk_region = params.chunk_region, input_ref = input.reference, output = output, threads = threads))
 
+rule genotype_gvcf:
+    input:
+        gvcfs = rules.genomics_db_import.output,
+        reference = rules.GATK_prepare_reference.input.reference,
+        fai = rules.GATK_prepare_reference.output.fai,
+        dict = rules.GATK_prepare_reference.output.dict
+    output:
+        called = "results/call/vcfs/regions/chr{chr}.vcf.gz",
+        index = "results/call/vcfs/regions/chr{chr}.vcf.gz.tbi"
+    resources:
+        mem = '15G'
+    threads: 4
+    shell: """
+        gatk --java-options "-Xmx55g" GenotypeGVCFs  \
+        -R {input.reference} \
+        -V gendb://{input.gVCFs} \
+        -O {output.called}
+
+        bcftools index -t {output.called}
+    """
+
+'''
 rule concat_hc_vcfs:
     input:
-        vcfs = expand("results/call/vcfs/regions/{hc}/{hc}.chr{chr}.vcf.gz", chr = chromosomes)
+        vcfs = expand("results/call/vcfs/regions/chr{chr}.vcf.gz", chr = chromosomes),
+        tbis = expand("results/call/vcfs/regions/chr{chr}.vcf.gz.tbi", chr = chromosomes)
     output:
         vcf = "results/call/vcfs/{hc}.vcf.gz" # Need to expand this if we're calling at different sites
     threads: 4
