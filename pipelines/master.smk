@@ -228,6 +228,7 @@ rule variant_calling_all:
         recal_bams = expand("data/recal_bams/{hc}.chr{chr}.recal.bam", hc = test_hc, chr = chromosome),
         recal_bais = expand("data/recal_bams/{hc}.chr{chr}.recal.bam.bai", hc = test_hc, chr = chromosome),
         gvcfs = expand("results/call/vcfs/regions/{hc}/{hc}.chr{chr}.gvcf.vcf.gz", hc = test_hc, chr = chromosome),
+        dirs = expand(directory("results/call/tmp/chr{chr}.combined.db"), chr = chromosome),
         called = expand("results/call/vcfs/regions/chr{chr}.vcf.gz", chr = chromosome),
         index = expand("results/call/vcfs/regions/chr{chr}.vcf.gz.tbi", chr = chromosome)
 

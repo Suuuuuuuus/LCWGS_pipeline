@@ -107,7 +107,7 @@ rule genomics_db_import:
         fai = rules.GATK_prepare_reference.output.fai,
         dict = rules.GATK_prepare_reference.output.dict
     output:
-        temp(directory("results/call/tmp/{chr}.combined.db"))
+        genomics_db = directory("results/call/tmp/chr{chr}.combined.db")
     resources:
         mem = '15G'
     threads: 4
@@ -120,13 +120,13 @@ rule genomics_db_import:
         -R {input_ref} \
         -L {chromosome} \
         {gvcfs} \
-        --tmp-dir=/well/band/users/rbx225/GAMCC/results/call/tmp/ \
+        --tmp-dir "results/call/tmp/" \
         --genomicsdb-workspace-path {output}
-        """.format(gvcfs = gvcf_files, input_ref = input.reference, chromosome = "chr" + wildcards.chr, output = output))
+        """.format(gvcfs = gvcf_files, input_ref = input.reference, chromosome = "chr" + wildcards.chr, output = output.genomics_db))
 
 rule genotype_gvcf:
     input:
-        gvcfs = rules.genomics_db_import.output,
+        gvcfs = rules.genomics_db_import.output.genomics_db,
         reference = rules.GATK_prepare_reference.input.reference,
         fai = rules.GATK_prepare_reference.output.fai,
         dict = rules.GATK_prepare_reference.output.dict
