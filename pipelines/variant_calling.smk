@@ -118,10 +118,11 @@ rule genomics_db_import:
         shell("""
         gatk --java-options "-Xmx55g -Xms2g" GenomicsDBImport \
         -R {input_ref} \
+        -L {chromosome} \
         {gvcfs} \
         --tmp-dir=/well/band/users/rbx225/GAMCC/results/call/tmp/ \
         --genomicsdb-workspace-path {output}
-        """.format(gvcfs = gvcf_files, input_ref = input.reference, output = output))
+        """.format(gvcfs = gvcf_files, input_ref = input.reference, chromosome = "chr" + wildcards.chr, output = output))
 
 rule genotype_gvcf:
     input:
