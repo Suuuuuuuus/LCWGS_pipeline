@@ -15,7 +15,7 @@ include: "variant_calling.smk"
 #include: "imputation_prep.smk"
 #include: "imputation.smk"
 
-#include: "test.smk"
+include: "test.smk"
 include: "auxiliary.smk"
 configfile: "pipelines/config.json"
 
@@ -233,7 +233,8 @@ rule variant_calling_all:
 
 rule test_all:
     input:
-        vcf = "results/imputation/tmp/res.txt"
+        bam = expand("data/bams/tmp/{hc}.bam", hc = test_hc),
+        bai = expand("data/bams/tmp/{hc}.bam.bai", hc = test_hc)
 
 # rule all:
 #     input:
