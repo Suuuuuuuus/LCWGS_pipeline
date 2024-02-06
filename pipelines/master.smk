@@ -11,7 +11,7 @@ include: "rmdup.smk"
 #include: "dup_rate.smk"
 #include: "coverage.smk"
 
-include: "variant_calling.smk"
+#include: "variant_calling.smk"
 #include: "imputation_prep.smk"
 #include: "imputation.smk"
 
