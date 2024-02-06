@@ -2,7 +2,7 @@ include: "chunk.smk"
 include: "preprocess.smk"
 #include: "fastqc.smk"
 #include: "reference.smk"
-#include: "alignment.smk"
+include: "alignment.smk"
 
 include: "merge.smk"
 include: "rmdup.smk"
@@ -61,7 +61,7 @@ rule chunk_all:
 #        bam_chunk = expand("data/chunk_bams/{id}/{id}.chr{chr}.bam", id = samples_hc_split, chr = chromosome)
 
 samples_hc_split = []
-for i in test_hc:
+for i in samples_hc:
     samples_hc_split = samples_hc_split + read_tsv_as_lst("data/file_lsts/hc_fastq_split/" + i + "_split.tsv")
 
 rule preprocess_all:
