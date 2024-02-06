@@ -79,27 +79,7 @@ rule test_merge:
         samtools index {output.bam}
     """
 
-rule GATK_prepare_reference:
-    input:
-        reference = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta" if concatenate else config["ref38"],
-        bqsr_known_sites = config["bqsr_known_sites"]
-    output:
-        fai = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta.fai" if concatenate else "data/references/GRCh38.fa.fai",
-        dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict" if concatenate else "data/references/GRCh38.dict",
-        bqsr_known_sites = [file + ".tbi" for file in config["bqsr_known_sites"]]
-    resources: mem = '10G'
-    shell: """
-        samtools faidx {input.reference}
-        picard CreateSequenceDictionary \
-        R={input.reference} \
-        O={output.dict}
-
-        for i in {input.bqsr_known_sites}; do
-            gatk IndexFeatureFile -I $i
-        done
-    """
-
-rule get_bqsr_report:
+rule test_get_bqsr_report:
     input:
         dedup_bam_chunk = "data/bams/tmp/{hc}.bam",
         reference = rules.GATK_prepare_reference.input.reference,
@@ -121,7 +101,7 @@ rule get_bqsr_report:
             {cmd}
         """.format(cmd = cmd, dedup_bam_chunk = input.dedup_bam_chunk, ref = input.reference, report = output.bqsr_report))
 
-rule apply_bqsr:
+rule test_apply_bqsr:
     input:
         dedup_bam_chunk = "data/bams/tmp/{hc}.bam",
         bqsr_report = rules.get_bqsr_report.output.bqsr_report,
@@ -141,7 +121,7 @@ rule apply_bqsr:
         samtools index {output.recal_bam}
     """
 
-rule haplotype_call:
+rule test_haplotype_call:
     input:
         recal_bam = rules.apply_bqsr.output.recal_bam,
         reference = rules.GATK_prepare_reference.input.reference,
@@ -151,13 +131,20 @@ rule haplotype_call:
         gvcf = "results/call/vcfs/regions/{hc}/{hc}.chr{chr}.gvcf.vcf.gz"
     resources: mem = '20G'
     threads: 8
+    params:
+        ref_vcf = config
     shell: """
         gatk --java-options "-Xmx20G" HaplotypeCaller \
         -R {input.reference} \
         -I {input.recal_bam} \
         -O {output.gvcf} \
-        -ERC GVCF
+        -L {input.ref_vcf} \
+        --alleles {input.ref_vcf} \
+        --output-mode EMIT_VARIANTS_ONLY
     """
+
+# One needs to supply -L with the input.ref if wants to call other sites other than the supplied sites as well,
+# if only the supplied sites then remove -L
 
 rule genomics_db_import:
     input:
