@@ -97,8 +97,8 @@ rule alignment_all:
 
 rule merge_all:
     input:
-        bams = expand("data/merge_bams/tmp/{hc}.bam", id = test_hc),
-        bais = expand("data/merge_bams/tmp/{hc}.bam.bai", id = test_hc)
+        bams = expand("data/merge_bams/tmp/{hc}.bam", hc = test_hc),
+        bais = expand("data/merge_bams/tmp/{hc}.bam.bai", hc = test_hc)
 
 rule rmdup_all:
     input:
