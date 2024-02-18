@@ -121,7 +121,7 @@ rule haplotype_call:
 
         gatk --java-options "-Xmx20G" HaplotypeCaller \
         -R {input.reference} \
-        -I {input.bam_list} \
+        -I {input.bamlist} \
         -O {output.vcf} \
         -L {output.empty_vcf2} \
         --alleles {output.empty_vcf2} \
