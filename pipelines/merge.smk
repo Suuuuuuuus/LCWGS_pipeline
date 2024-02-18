@@ -82,15 +82,16 @@ rule merge:
     input:
         bams = lambda wildcards: nest[str(wildcards.hc)]
     output:
-        bam = temp("data/bams/tmp/{hc}.bam"),
-        bai = temp("data/bams/tmp/{hc}.bam.bai"),
-        tmp1 = temp("data/bams/tmp/{hc}.tmp1.bam"),
-        metric = temp("data/bams/tmp/{hc}.metrics.txt")
+        bam = "data/merge_bams/tmp/{hc}.bam",
+        bai = "data/merge_bams/tmp/{hc}.bam.bai",
+        tmp1 = temp("data/merge_bams/tmp/{hc}.tmp1.bam"),
+        metric = temp("data/merge_bams/tmp/{hc}.metrics.txt")
     threads: 2
     resources:
         mem = '50G'
     shell: """
         mkdir -p data/chunk_bams/tmp/{wildcards.hc}/
+        mkdir -p data/merge_bams/tmp/
         samtools cat -o {output.tmp1} {input.bams}
         samtools sort -o {output.bam} {output.tmp1}
 

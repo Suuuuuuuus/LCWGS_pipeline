@@ -44,7 +44,7 @@ rule GATK_prepare_reference:
 
 rule get_bqsr_report:
     input:
-        dedup_bam = "data/bams/tmp/{hc}.bam",
+        dedup_bam = "data/merge_bams/tmp/{hc}.bam",
         reference = rules.GATK_prepare_reference.input.reference,
         fai = rules.GATK_prepare_reference.output.fai,
         dict = rules.GATK_prepare_reference.output.dict

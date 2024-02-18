@@ -97,10 +97,8 @@ rule alignment_all:
 
 rule merge_all:
     input:
-        # bams = expand("data/merge_bams/{id}.bam", id = test_hc),
-        # bais = expand("data/merge_bams/{id}.bam.bai", id = test_hc)
-        # bam = expand("data/chunk_bams/tmp/{hc}/{hc}.chr{chr}.bam", hc = test_hc, chr = chromosome)
-    #    bai = expand("data/chunk_bams/tmp/{hc}/{hc}.chr{chr}.bam.bai", hc = test_hc, chr = chromosome)
+        bams = expand("data/merge_bams/tmp/{hc}.bam", id = test_hc),
+        bais = expand("data/merge_bams/tmp/{hc}.bam.bai", id = test_hc)
 
 rule rmdup_all:
     input:
