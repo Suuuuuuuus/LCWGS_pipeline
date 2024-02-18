@@ -11,11 +11,11 @@ include: "rmdup.smk"
 #include: "dup_rate.smk"
 #include: "coverage.smk"
 
-include: "variant_calling.smk"
+#include: "variant_calling.smk"
 #include: "imputation_prep.smk"
 #include: "imputation.smk"
 
-#include: "test.smk"
+include: "test.smk"
 include: "auxiliary.smk"
 configfile: "pipelines/config.json"
 
@@ -57,11 +57,11 @@ test_hc = ids_1x_all[:2]
 
 rule chunk_all:
     input:
-        fastq_lsts = expand("data/file_lsts/hc_fastq_split/{hc}_split.tsv", hc = test_hc)
+        fastq_lsts = expand("data/file_lsts/hc_fastq_split/{hc}_split.tsv", hc = samples_hc)
 #        bam_chunk = expand("data/chunk_bams/{id}/{id}.chr{chr}.bam", id = samples_hc_split, chr = chromosome)
 
 samples_hc_split = []
-for i in test_hc:
+for i in samples_hc:
     samples_hc_split = samples_hc_split + read_tsv_as_lst("data/file_lsts/hc_fastq_split/" + i + "_split.tsv")
 
 rule preprocess_all:
@@ -234,7 +234,8 @@ rule variant_calling_all:
 
 rule test_all:
     input:
-        vcf = "results/imputation/tmp/res.txt"
+        bam = expand("data/bams/tmp/{hc}.bam", hc = test_hc),
+        bai = expand("data/bams/tmp/{hc}.bam.bai", hc = test_hc)
 
 # rule all:
 #     input:

@@ -1,7 +1,6 @@
 configfile: "pipelines/config.json"
 include: "auxiliary.smk"
 
-from os.path import exists
 import json
 import pandas as pd
 import numpy as np
@@ -23,6 +22,8 @@ for i in test_hc:
     for j in chromosome:
         nest[str(i)][str(j)] = ["data/chunk_bams/tmp/tmp/" + k + "/" + k + ".chr" + str(j) + ".bam" for k in test_hc_dict[str(i)]]
 
+''' For testing not to split bams into chromosomes
+
 # Merging bams
 rule merge_splited_bam:
     input:
@@ -39,3 +40,5 @@ rule merge_splited_bam:
         mkdir -p data/chunk_bams/tmp/{wildcards.hc}/
         samtools cat -o {output.bam} {input.bams}
     """
+
+'''
