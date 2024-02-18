@@ -34,6 +34,7 @@ seq_names = list(sample_linker['Seq_Name'].values)
 chip_names = list(sample_linker['Chip_Name'].values)
 sample_names = list(sample_linker['Sample_Name'].values)
 panels = config['panels']
+hc_panel = config["hc_panel"]
 
 chromosome = [i for i in range(1,23)]
 
@@ -98,7 +99,7 @@ rule merge_all:
     input:
         # bams = expand("data/merge_bams/{id}.bam", id = test_hc),
         # bais = expand("data/merge_bams/{id}.bam.bai", id = test_hc)
-        bam = expand("data/chunk_bams/tmp/{hc}/{hc}.chr{chr}.bam", hc = test_hc, chr = chromosome)
+        # bam = expand("data/chunk_bams/tmp/{hc}/{hc}.chr{chr}.bam", hc = test_hc, chr = chromosome)
     #    bai = expand("data/chunk_bams/tmp/{hc}/{hc}.chr{chr}.bam.bai", hc = test_hc, chr = chromosome)
 
 rule rmdup_all:
@@ -227,15 +228,14 @@ rule variant_calling_all:
         bqsr_reports = expand("results/call/BQSR/BQSR_reports/{hc}.chr{chr}.BQSR.report", hc = test_hc, chr = chromosome),
         recal_bams = expand("data/recal_bams/{hc}.chr{chr}.recal.bam", hc = test_hc, chr = chromosome),
         recal_bais = expand("data/recal_bams/{hc}.chr{chr}.recal.bam.bai", hc = test_hc, chr = chromosome),
-        gvcfs = expand("results/call/vcfs/regions/{hc}/{hc}.chr{chr}.gvcf.vcf.gz", hc = test_hc, chr = chromosome),
-        dirs = expand(directory("results/call/tmp/chr{chr}.combined.db"), chr = chromosome),
-        called = expand("results/call/vcfs/regions/chr{chr}.vcf.gz", chr = chromosome),
-        index = expand("results/call/vcfs/regions/chr{chr}.vcf.gz.tbi", chr = chromosome)
+        bamlist = "results/call/bamlist.txt",
+        vcf = expand(f"results/call/vcfs/{hc_panel}/{hc_panel}.chr{{chr}}.vcf.gz", chr = chromosome)
 
 rule test_all:
     input:
-        bam = expand("data/bams/tmp/{hc}.bam", hc = test_hc),
-        bai = expand("data/bams/tmp/{hc}.bam.bai", hc = test_hc)
+        vcf = "results/tmp/{id}.{chr}.txt"
+        # bam = expand("data/bams/tmp/{hc}.bam", hc = test_hc),
+        # bai = expand("data/bams/tmp/{hc}.bam.bai", hc = test_hc)
 
 # rule all:
 #     input:

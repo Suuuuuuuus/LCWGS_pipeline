@@ -180,24 +180,6 @@ rule split_bams:
         samtools markdup - {output.bam_chunk}
     """
 
-rule GATK_add_readgroup:
-    input:
-        dedup_bam_chunk = "data/chunk_bams/{hc}/{hc}.chr{chr}.bam",
-    output:
-    
-    params:
-        verbosity = "ERROR"
-    shell: """
-        picard AddOrReplaceReadGroups \
-        -VERBOSITY {params.verbosity} \
-        -I {output.bam_marked_dups} \
-        -O {output.bam_read_group} \
-        -RGLB OGC \
-        -RGPL ILLUMINA \
-        -RGPU unknown \
-        -RGSM {wildcards.hc}
-    """
-
 rule merge_bam:
     input:
         bams = lambda wildcards: nest[str(wildcards.hc)][str(wildcards.chr)]
@@ -218,3 +200,142 @@ rule merge_bam:
 
         samtools index {output.bam}
     """
+
+### variant calling ###
+
+rule GATK_add_readgroup:
+    input:
+        dedup_bam_chunk = "data/chunk_bams/{hc}/{hc}.chr{chr}.bam",
+    output:
+    
+    params:
+        verbosity = "ERROR"
+    shell: """
+        picard AddOrReplaceReadGroups \
+        -VERBOSITY {params.verbosity} \
+        -I {output.bam_marked_dups} \
+        -O {output.bam_read_group} \
+        -RGLB OGC \
+        -RGPL ILLUMINA \
+        -RGPU unknown \
+        -RGSM {wildcards.hc}
+    """
+
+rule get_bqsr_report:
+    input:
+        dedup_bam_chunk = "data/chunk_bams/{hc}/{hc}.chr{chr}.bam",
+        reference = rules.GATK_prepare_reference.input.reference,
+        fai = rules.GATK_prepare_reference.output.fai,
+        dict = rules.GATK_prepare_reference.output.dict
+    output:
+        bqsr_report = "results/call/BQSR/BQSR_reports/{hc}.chr{chr}.BQSR.report"
+    params:
+        bqsr_known_sites = config["bqsr_known_sites"]
+    run:
+        cmd = ""
+        for file in params.bqsr_known_sites:
+            cmd = cmd + "--known-sites " + file + " "
+        shell("""
+            gatk --java-options "-Xmx8G" BaseRecalibrator \
+            -I {dedup_bam_chunk} \
+            -R {ref} \
+            -O {report} \
+            {cmd}
+        """.format(cmd = cmd, dedup_bam_chunk = input.dedup_bam_chunk, ref = input.reference, report = output.bqsr_report))
+
+rule apply_bqsr:
+    input:
+        dedup_bam_chunk = "data/chunk_bams/{hc}/{hc}.chr{chr}.bam",
+        bqsr_report = rules.get_bqsr_report.output.bqsr_report,
+        reference = rules.GATK_prepare_reference.input.reference,
+        fai = rules.GATK_prepare_reference.output.fai,
+        dict = rules.GATK_prepare_reference.output.dict
+    output:
+        recal_bam = "data/recal_bams/{hc}.chr{chr}.recal.bam",
+        recal_bai = "data/recal_bams/{hc}.chr{chr}.recal.bam.bai"
+    shell: """
+        gatk --java-options "-Xmx8G" ApplyBQSR \
+        -I {input.dedup_bam_chunk} \
+        -R {input.reference} \
+        --bqsr-recal-file {input.bqsr_report} \
+        -O {output.recal_bam}
+
+        samtools index {output.recal_bam}
+    """
+
+rule haplotype_call:
+    input:
+        recal_bam = rules.apply_bqsr.output.recal_bam,
+        reference = rules.GATK_prepare_reference.input.reference,
+        fai = rules.GATK_prepare_reference.output.fai,
+        dict = rules.GATK_prepare_reference.output.dict
+    output:
+        gvcf = "results/call/vcfs/regions/{hc}/{hc}.chr{chr}.gvcf.vcf.gz"
+    resources: mem = '20G'
+    threads: 8
+    shell: """
+        gatk --java-options "-Xmx20G" HaplotypeCaller \
+        -R {input.reference} \
+        -I {input.recal_bam} \
+        -O {output.gvcf} \
+        -ERC GVCF
+    """
+
+rule genomics_db_import:
+    input:
+        gvcfs = expand("results/call/vcfs/regions/{hc}/{hc}.chr{chr}.gvcf.vcf.gz", hc = test_hc, allow_missing = True),
+        reference = rules.GATK_prepare_reference.input.reference,
+        fai = rules.GATK_prepare_reference.output.fai,
+        dict = rules.GATK_prepare_reference.output.dict
+    output:
+        genomics_db = directory("results/call/tmp/chr{chr}.combined.db")
+    resources:
+        mem = '15G'
+    threads: 4
+    run:
+        gvcf_files = ""
+        for gvcf in input.gvcfs:
+            gvcf_files = gvcf_files + "--variant " + gvcf + " "
+        shell("""
+        gatk --java-options "-Xmx55g -Xms2g" GenomicsDBImport \
+        -R {input_ref} \
+        -L {chromosome} \
+        {gvcfs} \
+        --tmp-dir "results/call/tmp/" \
+        --genomicsdb-workspace-path {output}
+        """.format(gvcfs = gvcf_files, input_ref = input.reference, chromosome = "chr" + wildcards.chr, output = output.genomics_db))
+
+rule genotype_gvcf:
+    input:
+        gvcfs = rules.genomics_db_import.output.genomics_db,
+        reference = rules.GATK_prepare_reference.input.reference,
+        fai = rules.GATK_prepare_reference.output.fai,
+        dict = rules.GATK_prepare_reference.output.dict
+    output:
+        called = "results/call/vcfs/regions/chr{chr}.vcf.gz",
+        index = "results/call/vcfs/regions/chr{chr}.vcf.gz.tbi"
+    resources:
+        mem = '15G'
+    threads: 4
+    shell: """
+        gatk --java-options "-Xmx55g" GenotypeGVCFs  \
+        -R {input.reference} \
+        -V gendb://{input.gvcfs} \
+        -O {output.called}
+
+        bcftools index -t {output.called}
+    """
+
+rule concat_hc_vcfs:
+    input:
+        vcfs = expand("results/call/vcfs/regions/chr{chr}.vcf.gz", chr = chromosomes),
+        tbis = expand("results/call/vcfs/regions/chr{chr}.vcf.gz.tbi", chr = chromosomes)
+    output:
+        vcf = "results/call/vcfs/{hc}.vcf.gz" # Need to expand this if we're calling at different sites
+    threads: 4
+    resources: mem = '10G'
+    shell: """
+        bcftools concat --ligate -Oz -o {output.vcf} {input.vcfs}
+    """
+
+### variant calling END ###
