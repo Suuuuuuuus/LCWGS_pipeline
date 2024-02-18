@@ -86,7 +86,7 @@ rule apply_bqsr:
 
 rule prepare_hc_bamlist:
     input:
-        bams = expand("data/recal_bams/{hc}.recal.bam", hc = samples_hc)
+        bams = expand("data/recal_bams/{hc}.recal.bam", hc = test_hc)
     output:
         bamlist = "results/call/bamlist.txt"
     shell: """
@@ -96,7 +96,7 @@ rule prepare_hc_bamlist:
 
 rule haplotype_call:
     input:
-        recal_bam = rules.apply_bqsr.output.recal_bam,
+        # recal_bam = rules.apply_bqsr.output.recal_bam,
         reference = rules.GATK_prepare_reference.input.reference,
         fai = rules.GATK_prepare_reference.output.fai,
         dict = rules.GATK_prepare_reference.output.dict,
@@ -118,7 +118,7 @@ rule haplotype_call:
         --source-dictionary $file \
         --output {output.empty_vcf2} \
         --replace true
-        
+
         gatk --java-options "-Xmx20G" HaplotypeCaller \
         -R {input.reference} \
         -I {input.bam_list} \
