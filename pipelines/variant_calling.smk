@@ -66,7 +66,7 @@ rule get_bqsr_report:
 
 rule apply_bqsr:
     input:
-        dedup_bam = "data/bams/tmp/{hc}.bam",
+        dedup_bam = "data/merge_bams/tmp/{hc}.bam",
         bqsr_report = rules.get_bqsr_report.output.bqsr_report,
         reference = rules.GATK_prepare_reference.input.reference,
         fai = rules.GATK_prepare_reference.output.fai,

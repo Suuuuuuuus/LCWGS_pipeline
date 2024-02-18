@@ -97,8 +97,8 @@ rule alignment_all:
 
 rule merge_all:
     input:
-        bams = expand("data/merge_bams/tmp/{hc}.bam", hc = test_hc),
-        bais = expand("data/merge_bams/tmp/{hc}.bam.bai", hc = test_hc)
+        # bams = expand("data/merge_bams/tmp/{hc}.bam", hc = test_hc),
+        # bais = expand("data/merge_bams/tmp/{hc}.bam.bai", hc = test_hc)
 
 rule rmdup_all:
     input:
@@ -223,9 +223,9 @@ rule variant_calling_all:
         fai = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta.fai" if concatenate else "data/references/GRCh38.fa.fai",
         dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict" if concatenate else "data/references/GRCh38.dict",
         bqsr_known_sites = [file + ".tbi" for file in config["bqsr_known_sites"]],
-        bqsr_reports = expand("results/call/BQSR/BQSR_reports/{hc}.chr{chr}.BQSR.report", hc = test_hc, chr = chromosome),
-        recal_bams = expand("data/recal_bams/{hc}.chr{chr}.recal.bam", hc = test_hc, chr = chromosome),
-        recal_bais = expand("data/recal_bams/{hc}.chr{chr}.recal.bam.bai", hc = test_hc, chr = chromosome),
+        bqsr_reports = expand("results/call/BQSR/BQSR_reports/{hc}.BQSR.report", hc = test_hc),
+        recal_bams = expand("data/recal_bams/{hc}.recal.bam", hc = test_hc),
+        recal_bais = expand("data/recal_bams/{hc}.recal.bam.bai", hc = test_hc),
         bamlist = "results/call/bamlist.txt",
         vcf = expand(f"results/call/vcfs/{hc_panel}/{hc_panel}.chr{{chr}}.vcf.gz", chr = chromosome)
 
