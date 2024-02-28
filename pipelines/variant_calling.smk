@@ -138,6 +138,7 @@ rule haplotype_call:
 # One needs to supply -L with the input.ref if wants to call other sites other than the supplied sites as well,
 # if only the supplied sites then remove -L
 
+'''
 rule get_vqsr_report:
     input:
         dedup_bam = "data/merge_bams/tmp/{hc}.bam",
@@ -168,3 +169,4 @@ rule get_vqsr_report:
         -mode SNP -O merged_SNP1.recal --tranches-file output_SNP1.tranches \
         --rscript-file output_SNP1.plots.R
     """
+'''
