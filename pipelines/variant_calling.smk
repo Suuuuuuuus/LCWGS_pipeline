@@ -114,6 +114,7 @@ rule haplotype_call:
     threads: 8
     shell: """
         mkdir -p results/call/tmp/ref/
+        mkdir -p results/call/vcfs/{hc_panel}
         file=$(head -n 1 {input.bamlist})
 
         bcftools view -G -Oz -o {output.empty_vcf1} {input.ref_vcf}
@@ -141,23 +142,20 @@ rule haplotype_call:
 '''
 rule get_vqsr_report:
     input:
-        dedup_bam = "data/merge_bams/tmp/{hc}.bam",
         reference = rules.GATK_prepare_reference.input.reference,
         fai = rules.GATK_prepare_reference.output.fai,
-        dict = rules.GATK_prepare_reference.output.dict
+        dict = rules.GATK_prepare_reference.output.dict,
+        vcf = rules.haplotype_call.output.vcf
     output:
-        bqsr_report = "results/call/BQSR/BQSR_reports/{hc}.BQSR.report"
+        vqsr_report = "results/call/BQSR/BQSR_reports/{hc}.BQSR.report"
     params:
         bqsr_known_sites = config["bqsr_known_sites"]
     resources:
         mem = '10G'
     shell: """
         gatk --java-options "-Xms4G -Xmx4G" VariantRecalibrator \
-        -tranche 100.0 -tranche 99.95 -tranche 99.9 \
-        -tranche 99.5 -tranche 99.0 -tranche 97.0 -tranche 96.0 \
-        -tranche 95.0 -tranche 94.0 \
-        -tranche 93.5 -tranche 93.0 -tranche 92.0 -tranche 91.0 -tranche 90.0 \
-        -R /fdb/igenomes/Homo_sapiens/UCSC/hg38/Sequence/WholeGenomeFasta/genome.fa \
+        -tranche 99.0 \
+        -R {input.reference} \
         -V merged.vcf.gz \
         --resource:hapmap,known=false,training=true,truth=true,prior=15.0 \
         /fdb/GATK_resource_bundle/hg38/hapmap_3.3.hg38.vcf.gz  \
