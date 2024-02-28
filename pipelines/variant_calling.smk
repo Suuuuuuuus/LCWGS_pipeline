@@ -52,6 +52,8 @@ rule get_bqsr_report:
         bqsr_report = "results/call/BQSR/BQSR_reports/{hc}.BQSR.report"
     params:
         bqsr_known_sites = config["bqsr_known_sites"]
+    resources:
+        mem = '10G'
     run:
         cmd = ""
         for file in params.bqsr_known_sites:
@@ -74,6 +76,8 @@ rule apply_bqsr:
     output:
         recal_bam = "data/recal_bams/{hc}.recal.bam",
         recal_bai = "data/recal_bams/{hc}.recal.bam.bai"
+    resources:
+        mem = '10G'
     shell: """
         gatk --java-options "-Xmx8G" ApplyBQSR \
         -I {input.dedup_bam} \
