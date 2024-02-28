@@ -226,7 +226,7 @@ rule variant_calling_all:
         bqsr_reports = expand("results/call/BQSR/BQSR_reports/{hc}.BQSR.report", hc = test_hc),
         recal_bams = expand("data/recal_bams/{hc}.recal.bam", hc = test_hc),
         recal_bais = expand("data/recal_bams/{hc}.recal.bam.bai", hc = test_hc),
-        bamlist = "results/call/bamlist.txt",
+        bamlist = "results/call/bam.list",
         vcf = expand(f"results/call/vcfs/{hc_panel}/{hc_panel}.chr{{chr}}.vcf.gz", chr = chromosome)
 
 rule test_all:

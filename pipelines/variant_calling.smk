@@ -92,7 +92,7 @@ rule prepare_hc_bamlist:
     input:
         bams = expand("data/recal_bams/{hc}.recal.bam", hc = test_hc)
     output:
-        bamlist = "results/call/bamlist.txt"
+        bamlist = "results/call/bam.list"
     shell: """
         mkdir -p results/call
         ls data/recal_bams/*.recal.bam > {output.bamlist}
@@ -104,7 +104,7 @@ rule haplotype_call:
         reference = rules.GATK_prepare_reference.input.reference,
         fai = rules.GATK_prepare_reference.output.fai,
         dict = rules.GATK_prepare_reference.output.dict,
-        bamlist = "results/call/bamlist.txt",
+        bamlist = rules.prepare_hc_bamlist.output.bamlist,
         ref_vcf = f"data/ref_panel/{hc_panel}/{hc_panel}.chr{{chr}}.vcf.gz" # Move this to config so that we can test sites at different ref panels
     output:
         vcf = f"results/call/vcfs/{hc_panel}/{hc_panel}.chr{{chr}}.vcf.gz",
@@ -114,7 +114,7 @@ rule haplotype_call:
     threads: 8
     shell: """
         mkdir -p results/call/tmp/ref/
-        mkdir -p results/call/vcfs/{hc_panel}
+        mkdir -p results/call/vcfs/{hc_panel}/
         file=$(head -n 1 {input.bamlist})
 
         bcftools view -G -Oz -o {output.empty_vcf1} {input.ref_vcf}
