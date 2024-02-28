@@ -117,6 +117,8 @@ rule haplotype_call:
         file=$(head -n 1 {input.bamlist})
 
         bcftools view -G -Oz -o {output.empty_vcf1} {input.ref_vcf}
+        gatk IndexFeatureFile -I {output.empty_vcf1}
+
         gatk UpdateVCFSequenceDictionary \
         -V {output.empty_vcf1} \
         --source-dictionary $file \
@@ -135,3 +137,34 @@ rule haplotype_call:
 
 # One needs to supply -L with the input.ref if wants to call other sites other than the supplied sites as well,
 # if only the supplied sites then remove -L
+
+rule get_vqsr_report:
+    input:
+        dedup_bam = "data/merge_bams/tmp/{hc}.bam",
+        reference = rules.GATK_prepare_reference.input.reference,
+        fai = rules.GATK_prepare_reference.output.fai,
+        dict = rules.GATK_prepare_reference.output.dict
+    output:
+        bqsr_report = "results/call/BQSR/BQSR_reports/{hc}.BQSR.report"
+    params:
+        bqsr_known_sites = config["bqsr_known_sites"]
+    resources:
+        mem = '10G'
+    shell: """
+        gatk --java-options "-Xms4G -Xmx4G" VariantRecalibrator \
+        -tranche 100.0 -tranche 99.95 -tranche 99.9 \
+        -tranche 99.5 -tranche 99.0 -tranche 97.0 -tranche 96.0 \
+        -tranche 95.0 -tranche 94.0 \
+        -tranche 93.5 -tranche 93.0 -tranche 92.0 -tranche 91.0 -tranche 90.0 \
+        -R /fdb/igenomes/Homo_sapiens/UCSC/hg38/Sequence/WholeGenomeFasta/genome.fa \
+        -V merged.vcf.gz \
+        --resource:hapmap,known=false,training=true,truth=true,prior=15.0 \
+        /fdb/GATK_resource_bundle/hg38/hapmap_3.3.hg38.vcf.gz  \
+        --resource:omni,known=false,training=true,truth=false,prior=12.0 \
+        /fdb/GATK_resource_bundle/hg38/1000G_omni2.5.hg38.vcf.gz \
+        --resource:1000G,known=false,training=true,truth=false,prior=10.0 \
+        /fdb/GATK_resource_bundle/hg38/1000G_phase1.snps.high_confidence.hg38.vcf.gz \
+        -an QD -an MQ -an MQRankSum -an ReadPosRankSum -an FS -an SOR  \
+        -mode SNP -O merged_SNP1.recal --tranches-file output_SNP1.tranches \
+        --rscript-file output_SNP1.plots.R
+    """
