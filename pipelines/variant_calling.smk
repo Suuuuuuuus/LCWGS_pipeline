@@ -113,7 +113,7 @@ rule haplotype_call:
     resources: mem = '20G'
     threads: 8
     shell: """
-        mkdir results/call/tmp/ref/
+        mkdir -p results/call/tmp/ref/
         file=$(head -n 1 {input.bamlist})
 
         bcftools view -G -Oz -o {output.empty_vcf1} {input.ref_vcf}
