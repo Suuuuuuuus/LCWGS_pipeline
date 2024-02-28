@@ -133,7 +133,7 @@ rule haplotype_call:
         -L {output.empty_vcf2} \
         --alleles {output.empty_vcf2} \
         --output-mode EMIT_VARIANTS_ONLY \
-        --assembly-region-padding 150
+        --assembly-region-padding 200
     """
 
 # One needs to supply -L with the input.ref if wants to call other sites other than the supplied sites as well,
