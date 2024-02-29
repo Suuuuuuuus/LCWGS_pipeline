@@ -116,7 +116,7 @@ rule haplotype_call_snp:
         mkdir -p results/call/vcfs/{hc_panel}/
         file=$(head -n 1 {input.bamlist})
 
-        bcftools view -G {input.ref_vcf} ｜ bcftools view -v snps -Oz -o {output.empty_vcf1}
+        bcftools view -G {input.ref_vcf} | bcftools view -v snps -Oz -o {output.empty_vcf1}
         gatk IndexFeatureFile -I {output.empty_vcf1}
 
         gatk UpdateVCFSequenceDictionary \
@@ -154,7 +154,7 @@ rule haplotype_call_indel:
         mkdir -p results/call/vcfs/{hc_panel}/
         file=$(head -n 1 {input.bamlist})
 
-        bcftools view -G {input.ref_vcf} ｜ bcftools view -v indels -Oz -o {output.empty_vcf1}
+        bcftools view -G {input.ref_vcf} | bcftools view -v indels -Oz -o {output.empty_vcf1}
         gatk IndexFeatureFile -I {output.empty_vcf1}
 
         gatk UpdateVCFSequenceDictionary \
