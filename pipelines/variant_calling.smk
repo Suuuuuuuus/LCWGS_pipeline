@@ -98,18 +98,17 @@ rule prepare_hc_bamlist:
         ls data/recal_bams/*.recal.bam > {output.bamlist}
     """
 
-rule haplotype_call:
+rule haplotype_call_snp:
     input:
-        # recal_bam = rules.apply_bqsr.output.recal_bam,
         reference = rules.GATK_prepare_reference.input.reference,
         fai = rules.GATK_prepare_reference.output.fai,
         dict = rules.GATK_prepare_reference.output.dict,
         bamlist = rules.prepare_hc_bamlist.output.bamlist,
         ref_vcf = f"data/ref_panel/{hc_panel}/{hc_panel}.chr{{chr}}.vcf.gz" # Move this to config so that we can test sites at different ref panels
     output:
-        vcf = f"results/call/vcfs/{hc_panel}/{hc_panel}.chr{{chr}}.vcf.gz",
-        empty_vcf1 = temp("results/call/tmp/ref/empty1_ref_chr{chr}.vcf.gz"),
-        empty_vcf2 = temp("results/call/tmp/ref/empty2_ref_chr{chr}.vcf.gz")
+        snp_vcf = f"results/call/vcfs/{hc_panel}/{hc_panel}.snp.chr{{chr}}.vcf.gz",
+        empty_vcf1 = temp("results/call/tmp/ref/empty1_snp_chr{chr}.vcf.gz"),
+        empty_vcf2 = temp("results/call/tmp/ref/empty2_snp_chr{chr}.vcf.gz")
     resources: mem = '20G'
     threads: 8
     shell: """
@@ -117,7 +116,7 @@ rule haplotype_call:
         mkdir -p results/call/vcfs/{hc_panel}/
         file=$(head -n 1 {input.bamlist})
 
-        bcftools view -G -Oz -o {output.empty_vcf1} {input.ref_vcf}
+        bcftools view -G {input.ref_vcf} ｜ bcftools view -v snps -Oz -o {output.empty_vcf1}
         gatk IndexFeatureFile -I {output.empty_vcf1}
 
         gatk UpdateVCFSequenceDictionary \
@@ -129,15 +128,52 @@ rule haplotype_call:
         gatk --java-options "-Xmx20G" HaplotypeCaller \
         -R {input.reference} \
         -I {input.bamlist} \
-        -O {output.vcf} \
+        -O {output.snp_vcf} \
+        -L {output.empty_vcf2} \
+        --alleles {output.empty_vcf2} \
+        --output-mode EMIT_VARIANTS_ONLY
+
+        rm "{output.empty_vcf1}.tbi" "{output.empty_vcf2}.tbi"
+    """
+
+rule haplotype_call_indel:
+    input:
+        reference = rules.GATK_prepare_reference.input.reference,
+        fai = rules.GATK_prepare_reference.output.fai,
+        dict = rules.GATK_prepare_reference.output.dict,
+        bamlist = rules.prepare_hc_bamlist.output.bamlist,
+        ref_vcf = f"data/ref_panel/{hc_panel}/{hc_panel}.chr{{chr}}.vcf.gz" # Move this to config so that we can test sites at different ref panels
+    output:
+        indel_vcf = f"results/call/vcfs/{hc_panel}/{hc_panel}.indel.chr{{chr}}.vcf.gz",
+        empty_vcf1 = temp("results/call/tmp/ref/empty1_indel_chr{chr}.vcf.gz"),
+        empty_vcf2 = temp("results/call/tmp/ref/empty2_indel_chr{chr}.vcf.gz")
+    resources: mem = '20G'
+    threads: 8
+    shell: """
+        mkdir -p results/call/tmp/ref/
+        mkdir -p results/call/vcfs/{hc_panel}/
+        file=$(head -n 1 {input.bamlist})
+
+        bcftools view -G {input.ref_vcf} ｜ bcftools view -v indels -Oz -o {output.empty_vcf1}
+        gatk IndexFeatureFile -I {output.empty_vcf1}
+
+        gatk UpdateVCFSequenceDictionary \
+        -V {output.empty_vcf1} \
+        --source-dictionary $file \
+        --output {output.empty_vcf2} \
+        --replace true
+
+        gatk --java-options "-Xmx20G" HaplotypeCaller \
+        -R {input.reference} \
+        -I {input.bamlist} \
+        -O {output.indel_vcf} \
         -L {output.empty_vcf2} \
         --alleles {output.empty_vcf2} \
         --output-mode EMIT_VARIANTS_ONLY \
-        --assembly-region-padding 200
-    """
+        --assembly-region-padding 300
 
-# One needs to supply -L with the input.ref if wants to call other sites other than the supplied sites as well,
-# if only the supplied sites then remove -L
+        rm "{output.empty_vcf1}.tbi" "{output.empty_vcf2}.tbi"
+    """
 
 '''
 rule get_vqsr_report:
