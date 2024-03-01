@@ -2,10 +2,10 @@ include: "chunk.smk"
 include: "preprocess.smk"
 #include: "fastqc.smk"
 #include: "reference.smk"
-#include: "alignment.smk"
+include: "alignment.smk"
 
 include: "merge.smk"
-include: "rmdup.smk"
+#include: "rmdup.smk"
 #include: "subsample.smk"
 #include: "kmer.smk"
 #include: "dup_rate.smk"
@@ -15,7 +15,7 @@ include: "variant_calling.smk"
 #include: "imputation_prep.smk"
 #include: "imputation.smk"
 
-include: "test.smk"
+#include: "test.smk"
 include: "auxiliary.smk"
 configfile: "pipelines/config.json"
 
@@ -97,8 +97,8 @@ rule alignment_all:
 
 rule merge_all:
     input:
-        # bams = expand("data/merge_bams/tmp/{hc}.bam", hc = test_hc),
-        # bais = expand("data/merge_bams/tmp/{hc}.bam.bai", hc = test_hc)
+        bams = expand("data/merge_bams/tmp/{hc}.bam", hc = samples_hc),
+        bais = expand("data/merge_bams/tmp/{hc}.bam.bai", hc = samples_hc)
 
 rule rmdup_all:
     input:

@@ -82,8 +82,8 @@ rule merge:
     input:
         bams = lambda wildcards: nest[str(wildcards.hc)]
     output:
-        bam = temp("data/merge_bams/tmp/{hc}.bam"),
-        bai = temp("data/merge_bams/tmp/{hc}.bam.bai"),
+        bam = "data/merge_bams/tmp/{hc}.bam",
+        bai = "data/merge_bams/tmp/{hc}.bam.bai",
         tmp1 = temp("data/merge_bams/tmp/{hc}.tmp1.bam"),
         metric = temp("data/merge_bams/tmp/{hc}.metrics.txt")
     threads: 2
