@@ -11,6 +11,7 @@ import lcwgSus
 
 chromosome = [i for i in range(1,23)]
 
+samples_hc = list(pd.read_table(config['samples_hc'], header = None, names = ['Code'])['Code'].values)
 sample_linker = pd.read_table(config['sample_linker'], sep = ',')
 ids_1x_all = list(sample_linker['Seq_Name'].values) # to be deprecated
 test_hc = ids_1x_all[:2]
@@ -73,10 +74,10 @@ rule fix_bam:
         picard FixMateInformation -I {output.tmp2}
     """
 
-test_hc_dict = read_tsv_as_dict(test_hc, "data/file_lsts/hc_fastq_split/", "_split.tsv")
+test_hc_dict = read_tsv_as_dict(samples_hc, "data/file_lsts/hc_fastq_split/", "_split.tsv")
 
 nest = {}
-for i in test_hc:
+for i in samples_hc:
     nest[str(i)] = ["data/chunk_bams/tmp/tmp/" + k + "/" + k + ".tmp2.bam" for k in test_hc_dict[str(i)]]
 
 rule merge:
