@@ -232,7 +232,7 @@ rule chip_all:
         UDUT1 = expand("results/chip/qc/PCs/chip_UDUT_{thinning}.all.tsv.gz", thinning = chip_thinning),
         kinship2 = expand("results/chip/qc/PCs/chip_kinship_{thinning}.exclude-duplicates.tsv.gz", thinning = chip_thinning),
         UDUT2 = expand("results/chip/qc/PCs/chip_UDUT_{thinning}.exclude-duplicates.tsv.gz", thinning = chip_thinning)
-        
+
 rule variant_calling_all:
     input:
         fai = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta.fai" if concatenate else "data/references/GRCh38.fa.fai",

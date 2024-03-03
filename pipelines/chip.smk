@@ -34,20 +34,20 @@ rule genotype_chip:
 		samples = config["chip_samples"],
 		manifest = config["chip_annotation"]
     output:
-		tmp = temp("results/chip/vcf/chip_genotype.vcf"),
+        tmp = temp("results/chip/vcf/chip_genotype.vcf"),
         vcf = "results/chip/vcf/chip_genotype.vcf.gz",
-		samples = "results/chip/vcf/chip.sample",
+        samples = "results/chip/vcf/chip.sample",
         bgen = "results/chip/bgen/chip.bgen"
-	params:
-		script = "scripts/convert_chip.R"
-	shell: """
+    params:
+        script = "scripts/convert_chip.R"
+    shell: """
         mkdir -p results/chip/vcf/
-
-	    Rscript --vanilla {params.script} \
-	    --manifest {input.manifest} \
-	    --genotypes {input.genotypes} \
-	    --samples {input.samples} \
-	    --output {output.tmp}
+        
+        Rscript --vanilla {params.script} \
+        --manifest {input.manifest} \
+        --genotypes {input.genotypes} \
+        --samples {input.samples} \
+        --output {output.tmp}
 
         bgzip {output.tmp}
         
@@ -57,12 +57,12 @@ rule genotype_chip:
 
 # Compute SNP and sample stats across autosomes and sex chromosomes separately
 rule compute_chip_stats:
-	input:
-		bgen = rules.genotype_chip.output.bgen,
-		samples = rules.genotype_chip.output.samples
+    input:
+	    bgen = rules.genotype_chip.output.bgen,
+	    samples = rules.genotype_chip.output.samples
     output:
-		sqlite = "results/chip/qc/chip.qc.sqlite"
-	shell: """
+	    sqlite = "results/chip/qc/chip.qc.sqlite"
+    shell: """
         mkdir -p results/chip/qc/
 
 		qctool \
@@ -84,15 +84,15 @@ rule compute_chip_stats:
 		-osnp sqlite://{output.sqlite}:sex_chromosomes \
 	"""
 
-rule thin:
+rule thin_stats:
 	input:
-		db = rules.compute_chip_stats.output.sqlite
+	    db = rules.compute_chip_stats.output.sqlite
     output:
-		thinned_ok = touch( "results/chip/qc/PCs/thinned_ok.ok" ),
-		tsv = temp( "results/chip/qc/PCs/included_variants_included.tsv" )
+	    thinned_ok = touch( "results/chip/qc/PCs/thinned_ok.ok" ),
+	    tsv = temp( "results/chip/qc/PCs/included_variants_included.tsv" )
 	params:
-		MAC = 5,
-		missing = 10
+	    MAC = 5,
+	    missing = 10
 	shell: """
         mkdir -p results/chip/qc/PCs/
 
@@ -123,16 +123,16 @@ rule thin:
 
 rule calculate_chip_PC:
     input:
-		sqlite = rules.compute_chip_stats.output.sqlite,
-		thin = rules.thin.output.thinned_ok,
-		bgen = rules.genotype_chip.output.bgen,
-		samples = rules.genotype_chip.output.samples
+	    sqlite = rules.compute_chip_stats.output.sqlite,
+        thin = rules.thin.output.thinned_ok,
+        bgen = rules.genotype_chip.output.bgen,
+        samples = rules.genotype_chip.output.samples
 	output:
-		variants = "results/chip/qc/PCs/pc_variants_{thinning}.txt",
-		kinship1 = "results/chip/qc/PCs/chip_kinship_{thinning}.all.tsv.gz",
-		UDUT1 = "results/chip/qc/PCs/chip_UDUT_{thinning}.all.tsv.gz"
+        variants = "results/chip/qc/PCs/pc_variants_{thinning}.txt",
+        kinship1 = "results/chip/qc/PCs/chip_kinship_{thinning}.all.tsv.gz",
+        UDUT1 = "results/chip/qc/PCs/chip_UDUT_{thinning}.all.tsv.gz"
 	params:
-		PCs = 20
+        PCs = 20
 	shell: """
 		sqlite3 {input.sqlite} \
         "SELECT rsid FROM {wildcards.thinning}View WHERE result == 'picked'" > {output.variants}
