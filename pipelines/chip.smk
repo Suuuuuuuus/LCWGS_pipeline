@@ -147,15 +147,15 @@ rule calculate_chip_PC:
 # This rule has to be run after the previous and need some manual input from the qc metrics. This behavior should be adjusted later.
 rule exclude_chip_dup_samples:
     input:
-		sqlite = rules.compute_chip_stats.output.sqlite,
-		thin = rules.thin.output.thinned_ok,
-		bgen = rules.genotype_chip.output.bgen,
-		samples = rules.genotype_chip.output.samples,
+        sqlite = rules.compute_chip_stats.output.sqlite,
+        thin = rules.thin.output.thinned_ok,
+        bgen = rules.genotype_chip.output.bgen,
+        samples = rules.genotype_chip.output.samples,
         variants = rules.calculate_chip_PC.output.variants
-	output:
-		kinship2 = "results/chip/qc/PCs/chip_kinship_{thinning}.exclude-duplicates.tsv.gz",
-		UDUT2 = "results/chip/qc/PCs/chip_UDUT_{thinning}.exclude-duplicates.tsv.gz"
-	params:
+    output:
+        kinship2 = "results/chip/qc/PCs/chip_kinship_{thinning}.exclude-duplicates.tsv.gz",
+        UDUT2 = "results/chip/qc/PCs/chip_UDUT_{thinning}.exclude-duplicates.tsv.gz"
+    params:
         PCs = 20
     shell: """
         qctool \
