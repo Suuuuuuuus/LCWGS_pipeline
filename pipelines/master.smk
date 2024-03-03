@@ -223,9 +223,9 @@ chip_thinning = ['thin_1bp', 'thin_50kb', 'thin_100kb']
 
 rule chip_all:
     input:
-        chip_vcf = "results/chip/vcf/chip_genotype.vcf.gz",
-        chip_samples = "results/chip/vcf/chip_genotype.sample",
-        chip_bgen = "results/chip/bgen/chip.bgen",
+        # chip_vcf = "results/chip/vcf/chip_genotype.vcf.gz",
+        # chip_samples = "results/chip/vcf/chip_genotype.sample",
+        # chip_bgen = "results/chip/bgen/chip.bgen",
         chip_stats = "results/chip/qc/chip.qc.sqlite",
         variants = expand("results/chip/qc/PCs/pc_variants_{thinning}.txt", thinning = chip_thinning),
         kinship1 = expand("results/chip/qc/PCs/chip_kinship_{thinning}.all.tsv.gz", thinning = chip_thinning),
