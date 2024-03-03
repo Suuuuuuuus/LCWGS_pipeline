@@ -33,7 +33,7 @@ rule genotype_chip:
     output:
         tmp = temp("results/chip/vcf/chip_genotype.vcf"),
         vcf = "results/chip/vcf/chip_genotype.vcf.gz",
-        samples = "results/chip/vcf/chip.sample",
+        samples = "results/chip/vcf/chip_genotype.sample",
         bgen = "results/chip/bgen/chip.bgen"
     params:
         script = "scripts/convert_chip.R"
@@ -121,7 +121,7 @@ rule thin_stats:
 rule calculate_chip_PC:
     input:
         sqlite = rules.compute_chip_stats.output.sqlite,
-        thin = rules.thin.output.thinned_ok,
+        thin = rules.thin_stats.output.thinned_ok,
         bgen = rules.genotype_chip.output.bgen,
         samples = rules.genotype_chip.output.samples
     output:
@@ -148,7 +148,7 @@ rule calculate_chip_PC:
 rule exclude_chip_dup_samples:
     input:
         sqlite = rules.compute_chip_stats.output.sqlite,
-        thin = rules.thin.output.thinned_ok,
+        thin = rules.thin_stats.output.thinned_ok,
         bgen = rules.genotype_chip.output.bgen,
         samples = rules.genotype_chip.output.samples,
         variants = rules.calculate_chip_PC.output.variants
