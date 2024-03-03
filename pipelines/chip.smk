@@ -17,9 +17,6 @@ ids_1x_all = list(sample_linker['Seq_Name'].values) # to be deprecated
 test_hc = ids_1x_all[:2]
 
 # This script is borrowed from Dr Gavin Band. The original script is capable of coping with multiple builds (GRCh37/38) by providing alternative manifest files. In this pipeline, the behavior is temporarily disabled.
-manifests = {
-	'GRCh38': 'data/GAMCC/microarray/eurofins_pmra/manifest/GRCh38/Axiom_PMRA.na36.r1.a1.annot.db'
-}
 
 '''
 `.annot.db` file contains annotation information sent from the company.
@@ -30,9 +27,9 @@ manifests = {
 # Using annotation file to convert chip genotypes from raw format to vcf file
 rule genotype_chip:
 	input:
-		genotypes = config["chip_genotypes"],
-		samples = config["chip_samples"],
-		manifest = config["chip_annotation"]
+        genotypes = config["chip_genotypes"],
+        samples = config["chip_samples"],
+        manifest = config["chip_annotation"]
     output:
         tmp = temp("results/chip/vcf/chip_genotype.vcf"),
         vcf = "results/chip/vcf/chip_genotype.vcf.gz",
@@ -65,41 +62,41 @@ rule compute_chip_stats:
     shell: """
         mkdir -p results/chip/qc/
 
-		qctool \
-		-analysis-name "qc:autosomes" \
-		-g {input.bgen} \
-		-s {input.samples} \
-		-excl-range X:0- -excl-range Y:0- \
-		-snp-stats \
-		-osnp sqlite://{output.sqlite}:autosomes \
-		-sample-stats \
-		-osample sqlite://{output.sqlite}:sample_stats
+	    qctool \
+        -analysis-name "qc:autosomes" \
+        -g {input.bgen} \
+        -s {input.samples} \
+        -excl-range X:0- -excl-range Y:0- \
+        -snp-stats \
+        -osnp sqlite://{output.sqlite}:autosomes \
+        -sample-stats \
+        -osample sqlite://{output.sqlite}:sample_stats
 
-		qctool \
-		-analysis-name "qc:sex_chromosomes" \
-		-g {input.bgen} \
-		-s {input.samples} \
-		-incl-range X:0- -incl-range Y:0- \
-		-snp-stats \
-		-osnp sqlite://{output.sqlite}:sex_chromosomes \
-	"""
+        qctool \
+        -analysis-name "qc:sex_chromosomes" \
+        -g {input.bgen} \
+        -s {input.samples} \
+        -incl-range X:0- -incl-range Y:0- \
+        -snp-stats \
+        -osnp sqlite://{output.sqlite}:sex_chromosomes \
+    """
 
 rule thin_stats:
-	input:
+    input:
 	    db = rules.compute_chip_stats.output.sqlite
     output:
 	    thinned_ok = touch( "results/chip/qc/PCs/thinned_ok.ok" ),
 	    tsv = temp( "results/chip/qc/PCs/included_variants_included.tsv" )
-	params:
+    params:
 	    MAC = 5,
 	    missing = 10
 	shell: """
         mkdir -p results/chip/qc/PCs/
 
-		sqlite3 -header -separator $'\\t' {input.db} \
+        sqlite3 -header -separator $'\\t' {input.db} \
         "SELECT rsid AS SNPID, rsid, chromosome, position, alleleA, alleleB FROM autosomesView WHERE (alleleA_count >= {params.MAC}) AND (alleleB_count >= {params.MAC}) AND \`NULL\` < {params.missing}" > {output.tsv}
 
-		inthinnerator -analysis-name thin_100kb \
+	    inthinnerator -analysis-name thin_100kb \
         -g {output.tsv} \
         -suppress-excluded \
         -min-distance 100kb \
