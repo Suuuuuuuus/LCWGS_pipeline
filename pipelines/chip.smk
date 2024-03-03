@@ -49,7 +49,8 @@ rule genotype_chip:
         bgzip {output.tmp}
         
         mkdir -p results/chip/bgen/
-        qctool -g {output.vcf} -s {output.samples} -og {output.bgen} -bgen-bits 8 -bgen-compression zstd
+        /well/band/users/rbx225/software/QCTool/qctool/build/release/apps/qctool_v2.2.2 \
+        -g {output.vcf} -s {output.samples} -og {output.bgen} -bgen-bits 8 -bgen-compression zstd
     """	
 
 # Compute SNP and sample stats across autosomes and sex chromosomes separately
@@ -62,7 +63,7 @@ rule compute_chip_stats:
     shell: """
         mkdir -p results/chip/qc/
 
-        qctool \
+        /well/band/users/rbx225/software/QCTool/qctool/build/release/apps/qctool_v2.2.2 \
         -analysis-name "qc:autosomes" \
         -g {input.bgen} \
         -s {input.samples} \
@@ -72,7 +73,7 @@ rule compute_chip_stats:
         -sample-stats \
         -osample sqlite://{output.sqlite}:sample_stats
 
-        qctool \
+        /well/band/users/rbx225/software/QCTool/qctool/build/release/apps/qctool_v2.2.2 \
         -analysis-name "qc:sex_chromosomes" \
         -g {input.bgen} \
         -s {input.samples} \
@@ -134,7 +135,7 @@ rule calculate_chip_PC:
         sqlite3 {input.sqlite} \
         "SELECT rsid FROM {wildcards.thinning}View WHERE result == 'picked'" > {output.variants}
         
-        qctool \
+        /well/band/users/rbx225/software/QCTool/qctool/build/release/apps/qctool_v2.2.2 \
         -analysis-name "PCs:{wildcards.thinning}:all" \
         -g {input.bgen} -s {input.samples} \
         -incl-rsids {output.variants} \
@@ -158,7 +159,7 @@ rule exclude_chip_dup_samples:
     params:
         PCs = 20
     shell: """
-        qctool \
+        /well/band/users/rbx225/software/QCTool/qctool/build/release/apps/qctool_v2.2.2 \
         -analysis-name "PCs:{wildcards.thinning}:exclude-duplicates" \
         -g {input.bgen} -s {input.samples} \
         -incl-rsids {input.variants} \
