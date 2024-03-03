@@ -130,19 +130,19 @@ rule calculate_chip_PC:
         UDUT1 = "results/chip/qc/PCs/chip_UDUT_{thinning}.all.tsv.gz"
     params:
         PCs = 20
-	shell: """
-		sqlite3 {input.sqlite} \
+    shell: """
+        sqlite3 {input.sqlite} \
         "SELECT rsid FROM {wildcards.thinning}View WHERE result == 'picked'" > {output.variants}
-
-		qctool \
-		-analysis-name "PCs:{wildcards.thinning}:all" \
-		-g {input.bgen} -s {input.samples} \
-		-incl-rsids {output.variants} \
-		-kinship {output.kinship1} \
-		-UDUT {output.UDUT1} \
-		-PCs {params.PCs} \
-		-osample sqlite://{input.sqlite}:PCs
-	"""
+        
+        qctool \
+        -analysis-name "PCs:{wildcards.thinning}:all" \
+        -g {input.bgen} -s {input.samples} \
+        -incl-rsids {output.variants} \
+        -kinship {output.kinship1} \
+        -UDUT {output.UDUT1} \
+        -PCs {params.PCs} \
+        -osample sqlite://{input.sqlite}:PCs
+    """
 
 # This rule has to be run after the previous and need some manual input from the qc metrics. This behavior should be adjusted later.
 rule exclude_chip_dup_samples:
