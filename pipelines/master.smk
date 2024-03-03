@@ -224,15 +224,15 @@ chip_thinning = ['thin_1bp', 'thin_50kb', 'thin_100kb']
 rule chip_all:
     input:
         chip_vcf = "results/chip/vcf/chip_genotype.vcf.gz",
-		chip_samples = "results/chip/vcf/chip.sample",
+        chip_samples = "results/chip/vcf/chip.sample",
         chip_bgen = "results/chip/bgen/chip.bgen",
-		chip_stats = "results/chip/qc/chip.qc.sqlite",
-		variants = expand("results/chip/qc/PCs/pc_variants_{thinning}.txt", thinning = chip_thinning),
-		kinship1 = expand("results/chip/qc/PCs/chip_kinship_{thinning}.all.tsv.gz", thinning = chip_thinning),
-		UDUT1 = expand("results/chip/qc/PCs/chip_UDUT_{thinning}.all.tsv.gz", thinning = chip_thinning),
+        chip_stats = "results/chip/qc/chip.qc.sqlite",
+        variants = expand("results/chip/qc/PCs/pc_variants_{thinning}.txt", thinning = chip_thinning),
+        kinship1 = expand("results/chip/qc/PCs/chip_kinship_{thinning}.all.tsv.gz", thinning = chip_thinning),
+        UDUT1 = expand("results/chip/qc/PCs/chip_UDUT_{thinning}.all.tsv.gz", thinning = chip_thinning),
         kinship2 = expand("results/chip/qc/PCs/chip_kinship_{thinning}.exclude-duplicates.tsv.gz", thinning = chip_thinning),
-		UDUT2 = expand("results/chip/qc/PCs/chip_UDUT_{thinning}.exclude-duplicates.tsv.gz", thinning = chip_thinning)
-
+        UDUT2 = expand("results/chip/qc/PCs/chip_UDUT_{thinning}.exclude-duplicates.tsv.gz", thinning = chip_thinning)
+        
 rule variant_calling_all:
     input:
         fai = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta.fai" if concatenate else "data/references/GRCh38.fa.fai",
