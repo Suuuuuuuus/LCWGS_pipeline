@@ -222,7 +222,7 @@ rule imputation_all:
 chip_thinning = ['thin_1bp', 'thin_50kb', 'thin_100kb']
 
 rule chip_all:
-	input:
+    input:
         chip_vcf = "results/chip/vcf/chip_genotype.vcf.gz",
 		chip_samples = "results/chip/vcf/chip.sample",
         chip_bgen = "results/chip/bgen/chip.bgen",
