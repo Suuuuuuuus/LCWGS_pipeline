@@ -87,15 +87,16 @@ rule thin_stats:
         db = rules.compute_chip_stats.output.sqlite
     output:
         thinned_ok = touch( "results/chip/qc/PCs/thinned_ok.ok" ),
-        tsv = temp( "results/chip/qc/PCs/included_variants_included.tsv" ),
+        # tsv = temp( "results/chip/qc/PCs/included_variants_included.tsv" ),
+        tsv = "results/chip/qc/PCs/included_variants_included.tsv",
         tmp = temp( "results/chip/qc/PCs/tmp.tsv" )
     params:
         MAC = 5,
         missing = 10
-    shell: """
+    shell: r"""
         mkdir -p results/chip/qc/PCs/
 
-        sqlite3 -header -separator $'\t' {input.db} \
+        sqlite3 -header -separator $'\\t' {input.db} \
         "SELECT rsid AS SNPID, rsid, chromosome, position, alleleA, alleleB FROM autosomesView WHERE (alleleA_count >= {params.MAC}) AND (alleleB_count >= {params.MAC}) AND \`NULL\` < {params.missing}" > {output.tmp}
 
         tail -n +2 {output.tmp} > {output.tsv}
