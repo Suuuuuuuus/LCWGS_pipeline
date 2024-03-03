@@ -26,7 +26,7 @@ test_hc = ids_1x_all[:2]
 
 # Using annotation file to convert chip genotypes from raw format to vcf file
 rule genotype_chip:
-	input:
+    input:
         genotypes = config["chip_genotypes"],
         samples = config["chip_samples"],
         manifest = config["chip_annotation"]
@@ -58,11 +58,11 @@ rule compute_chip_stats:
 	    bgen = rules.genotype_chip.output.bgen,
 	    samples = rules.genotype_chip.output.samples
     output:
-	    sqlite = "results/chip/qc/chip.qc.sqlite"
+        sqlite = "results/chip/qc/chip.qc.sqlite"
     shell: """
         mkdir -p results/chip/qc/
 
-	    qctool \
+        qctool \
         -analysis-name "qc:autosomes" \
         -g {input.bgen} \
         -s {input.samples} \
@@ -83,52 +83,52 @@ rule compute_chip_stats:
 
 rule thin_stats:
     input:
-	    db = rules.compute_chip_stats.output.sqlite
+        db = rules.compute_chip_stats.output.sqlite
     output:
-	    thinned_ok = touch( "results/chip/qc/PCs/thinned_ok.ok" ),
-	    tsv = temp( "results/chip/qc/PCs/included_variants_included.tsv" )
+        thinned_ok = touch( "results/chip/qc/PCs/thinned_ok.ok" ),
+        tsv = temp( "results/chip/qc/PCs/included_variants_included.tsv" )
     params:
-	    MAC = 5,
-	    missing = 10
-	shell: """
+        MAC = 5,
+        missing = 10
+    shell: """
         mkdir -p results/chip/qc/PCs/
 
         sqlite3 -header -separator $'\\t' {input.db} \
         "SELECT rsid AS SNPID, rsid, chromosome, position, alleleA, alleleB FROM autosomesView WHERE (alleleA_count >= {params.MAC}) AND (alleleB_count >= {params.MAC}) AND \`NULL\` < {params.missing}" > {output.tsv}
 
-	    inthinnerator -analysis-name thin_100kb \
+        inthinnerator -analysis-name thin_100kb \
         -g {output.tsv} \
         -suppress-excluded \
         -min-distance 100kb \
         -excl-range 06:25000000-40000000 \
         -o sqlite://{input.db}:thin_100kb
 
-		inthinnerator -analysis-name thin_5kb \
+        inthinnerator -analysis-name thin_5kb \
         -g {output.tsv} \
         -suppress-excluded \
         -min-distance 50kb \
         -excl-range 06:25000000-40000000 \
         -o sqlite://{input.db}:thin_50kb
-
-		inthinnerator -analysis-name thin_1bp \
+  
+        inthinnerator -analysis-name thin_1bp \
         -g {output.tsv} \
         -suppress-excluded \
         -min-distance 1bp \
         -excl-range 06:25000000-40000000 \
         -o sqlite://{input.db}:thin_1bp
-	"""
+    """
 
 rule calculate_chip_PC:
     input:
-	    sqlite = rules.compute_chip_stats.output.sqlite,
+        sqlite = rules.compute_chip_stats.output.sqlite,
         thin = rules.thin.output.thinned_ok,
         bgen = rules.genotype_chip.output.bgen,
         samples = rules.genotype_chip.output.samples
-	output:
+    output:
         variants = "results/chip/qc/PCs/pc_variants_{thinning}.txt",
         kinship1 = "results/chip/qc/PCs/chip_kinship_{thinning}.all.tsv.gz",
         UDUT1 = "results/chip/qc/PCs/chip_UDUT_{thinning}.all.tsv.gz"
-	params:
+    params:
         PCs = 20
 	shell: """
 		sqlite3 {input.sqlite} \
@@ -156,15 +156,15 @@ rule exclude_chip_dup_samples:
 		kinship2 = "results/chip/qc/PCs/chip_kinship_{thinning}.exclude-duplicates.tsv.gz",
 		UDUT2 = "results/chip/qc/PCs/chip_UDUT_{thinning}.exclude-duplicates.tsv.gz"
 	params:
-		PCs = 20
-	shell: """
-		qctool \
-		-analysis-name "PCs:{wildcards.thinning}:exclude-duplicates" \
-		-g {input.bgen} -s {input.samples} \
-		-incl-rsids {input.variants} \
-		-kinship {output.kinship2} \
-		-UDUT {output.UDUT2} \
-		-PCs {params.PCs} \
-		-excl-samples-where "ID = 'GAM370894'" -excl-samples-where "ID = 'GAM916387'" \
-		-osample sqlite://{input.sqlite}:PCs
-	"""
+        PCs = 20
+    shell: """
+        qctool \
+        -analysis-name "PCs:{wildcards.thinning}:exclude-duplicates" \
+        -g {input.bgen} -s {input.samples} \
+        -incl-rsids {input.variants} \
+        -kinship {output.kinship2} \
+        -UDUT {output.UDUT2} \
+        -PCs {params.PCs} \
+        -excl-samples-where "ID = 'GAM370894'" -excl-samples-where "ID = 'GAM916387'" \
+        -osample sqlite://{input.sqlite}:PCs
+    """
