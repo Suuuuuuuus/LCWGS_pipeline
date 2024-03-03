@@ -97,21 +97,24 @@ rule thin_stats:
         sqlite3 -header -separator $'\\t' {input.db} \
         "SELECT rsid AS SNPID, rsid, chromosome, position, alleleA, alleleB FROM autosomesView WHERE (alleleA_count >= {params.MAC}) AND (alleleB_count >= {params.MAC}) AND \`NULL\` < {params.missing}" > {output.tsv}
 
-        inthinnerator -analysis-name thin_100kb \
+        /well/band/users/rbx225/software/QCTool/qctool/build/release/apps/inthinnerator_v2.2.2 \
+        -analysis-name thin_100kb \
         -g {output.tsv} \
         -suppress-excluded \
         -min-distance 100kb \
         -excl-range 06:25000000-40000000 \
         -o sqlite://{input.db}:thin_100kb
 
-        inthinnerator -analysis-name thin_5kb \
+        /well/band/users/rbx225/software/QCTool/qctool/build/release/apps/inthinnerator_v2.2.2 \
+        -analysis-name thin_5kb \
         -g {output.tsv} \
         -suppress-excluded \
         -min-distance 50kb \
         -excl-range 06:25000000-40000000 \
         -o sqlite://{input.db}:thin_50kb
   
-        inthinnerator -analysis-name thin_1bp \
+        /well/band/users/rbx225/software/QCTool/qctool/build/release/apps/inthinnerator_v2.2.2 \
+        -analysis-name thin_1bp \
         -g {output.tsv} \
         -suppress-excluded \
         -min-distance 1bp \
