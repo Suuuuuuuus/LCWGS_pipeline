@@ -11,6 +11,7 @@ include: "merge.smk"
 #include: "dup_rate.smk"
 #include: "coverage.smk"
 
+include: "chip.smk"
 include: "variant_calling.smk"
 #include: "imputation_prep.smk"
 #include: "imputation.smk"
@@ -217,6 +218,20 @@ rule imputation_all:
         vcfs = [final_vcfs],
         r2 = expand("results/imputation/imputation_accuracy/{id}/{panel}_imputation_accuracy.csv", id = seq_to_extract, panel = panels),
         graph = "graphs/imputation_vs_chip.png"
+
+chip_thinning = ['thin_1bp', 'thin_50kb', 'thin_100kb']
+
+rule chip_all:
+	input:
+        chip_vcf = "results/chip/vcf/chip_genotype.vcf.gz",
+		chip_samples = "results/chip/vcf/chip.sample",
+        chip_bgen = "results/chip/bgen/chip.bgen",
+		chip_stats = "results/chip/qc/chip.qc.sqlite",
+		variants = expand("results/chip/qc/PCs/pc_variants_{thinning}.txt", thinning = chip_thinning),
+		kinship1 = expand("results/chip/qc/PCs/chip_kinship_{thinning}.all.tsv.gz", thinning = chip_thinning),
+		UDUT1 = expand("results/chip/qc/PCs/chip_UDUT_{thinning}.all.tsv.gz", thinning = chip_thinning),
+        kinship2 = expand("results/chip/qc/PCs/chip_kinship_{thinning}.exclude-duplicates.tsv.gz", thinning = chip_thinning),
+		UDUT2 = expand("results/chip/qc/PCs/chip_UDUT_{thinning}.exclude-duplicates.tsv.gz", thinning = chip_thinning)
 
 rule variant_calling_all:
     input:

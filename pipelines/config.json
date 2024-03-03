@@ -22,6 +22,10 @@
     "panels": ["oneKG", "oneKG_ggvp"],
     "hc_panel": "oneKG",
 
+    "chip_genotypes": "data/chip/S1025_2023_01-02_Genotype.txt.gz",
+    "chip_samples": "data/chip/S1025_2023_01-02_Sample_Table.txt",
+    "chip_annotation": "data/chip/Axiom_PMRA.na36.r1.a1.annot.db",
+
     "bqsr_known_sites": ["data/GATK_BQSR/Homo_sapiens_assembly38.known_indels.vcf.gz","data/GATK_BQSR/dbsnp_146.hg38.vcf.gz", "data/GATK_BQSR/Mills_and_1000G_gold_standard.indels.hg38.vcf.gz"],
 
     "QUILT_HOME": "/well/band/users/rbx225/software/QUILT/",
