@@ -95,10 +95,12 @@ rule thin_stats:
     shell: """
         mkdir -p results/chip/qc/PCs/
 
-        sqlite3 -header -separator $'\\t' {input.db} \
+        sqlite3 -header -separator $'\t' {input.db} \
         "SELECT rsid AS SNPID, rsid, chromosome, position, alleleA, alleleB FROM autosomesView WHERE (alleleA_count >= {params.MAC}) AND (alleleB_count >= {params.MAC}) AND \`NULL\` < {params.missing}" > {output.tmp}
 
         tail -n +2 {output.tmp} > {output.tsv}
+        
+        head -n 2 {output.tsv}
 
         /well/band/users/rbx225/software/QCTool/qctool/build/release/apps/inthinnerator_v2.2.2 \
         -analysis-name thin_100kb \
