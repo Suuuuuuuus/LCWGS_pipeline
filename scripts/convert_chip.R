@@ -37,22 +37,22 @@ parse_args = function() {
 
 args = parse_args()
 
-echo( "++ Loading manifest annotation from %s...\n", args$manifest )
+#echo( "++ Loading manifest annotation from %s...\n", args$manifest )
 annot.db = dbConnect( dbDriver( "SQLite" ), args$manifest ) 
 annotation = as_tibble( dbGetQuery( annot.db, "SELECT * FROM Annotations" ))
 # It turns out all PMRA SNPs are annotated on the + strand, which is helpful:
 stopifnot( length( which( annotation$Strand != '+' )) == 0)
-echo( "++ Ok, loaded %d annotation records.\n", nrow(annotation))
-echo(
-	"++ %d records had Stop != Start, max length was %d...\n",
-	length( which( annotation$Start != annotation$Stop )),
-	max( annotation$Stop - annotation$Start, na.rm = T )
-)
+#echo( "++ Ok, loaded %d annotation records.\n", nrow(annotation))
+# echo(
+	# "++ %d records had Stop != Start, max length was %d...\n",
+	# length( which( annotation$Start != annotation$Stop )),
+	# max( annotation$Stop - annotation$Start, na.rm = T )
+# )
 
-echo( "++ Loading genotypes from %s...\n", args$genotypes )
+# echo( "++ Loading genotypes from %s...\n", args$genotypes )
 X = read_tsv( args$genotypes, comment = '#' )
 
-echo( "++ Loading samples from %s...\n", args$samples )
+# echo( "++ Loading samples from %s...\n", args$samples )
 metadata = X[,c(1,188:212)]
 G = as.matrix( X[,2:187])
 colnames(G) = gsub( ".CEL_call_code", "", colnames(G))
@@ -64,13 +64,13 @@ stopifnot( length( which( is.na( M ))) == 0 )
 stopifnot( length( M ) == ncol(G) )
 samples = samples[M,]
 
-echo( "++ Ok, loaded genotypes for %d samples and %d variants.\n", nrow(samples), nrow(G))
+# echo( "++ Ok, loaded genotypes for %d samples and %d variants.\n", nrow(samples), nrow(G))
 
 # Match up genotypes to annotation
-echo( "++ Matching genotypes to annotations...\n" )
+# echo( "++ Matching genotypes to annotations...\n" )
 M = match( metadata$probeset_id, annotation$ProbeSet_ID )
 stopifnot( length( which( is.na(M))) == 0 )
-echo( "++ Ok, all variants matched.\n" )
+# echo( "++ Ok, all variants matched.\n" )
 
 matched.annotation = annotation[M,]
 
@@ -78,7 +78,7 @@ matched.annotation = annotation[M,]
 # variants, but which have two records with the second expressed as two alt alleles.
 # => hard to process sensibly without further work.  (There are only 3)
 wNoRef = which( matched.annotation$Ref_Allele == '.' | is.na( matched.annotation$Ref_Allele ) )
-echo( "++ Excluding %d variants with . ref allele, (usually means multiple alleles).\n", length( wNoRef ))
+# echo( "++ Excluding %d variants with . ref allele, (usually means multiple alleles).\n", length( wNoRef ))
 
 if( length(wNoRef) > 0 ) {
 	G = G[-wNoRef,]
@@ -98,7 +98,7 @@ if( length(wNoRef) > 0 ) {
 }
 
 allele.sets = unique( annotation[, c( "Ref_Allele", "Alt_Allele")] )
-print( allele.sets )
+# print( allele.sets )
 
 echo( "++ Translating genotype calls to VCF format...\n" )
 translated = G
@@ -111,7 +111,7 @@ for( i in 1:nrow( allele.sets )) {
 	translation[sprintf( "%s/%s", set$Ref_Allele, set$Alt_Allele )] = '0/1'
 	translation[sprintf( "%s/%s", set$Alt_Allele, set$Ref_Allele )] = '0/1'
 	translation[sprintf( "%s/%s", set$Alt_Allele, set$Alt_Allele )] = '1/1'
-	translation[ "---"] = "./."
+	translation["---"] = "./."
 
 	w = which(
 		matched.annotation$Ref_Allele == set$Ref_Allele
@@ -206,5 +206,4 @@ write_tsv(
 	append = TRUE
 )
 echo( "++ Success.\n" )
-echo( "++ Thanks for using convert.R\n" )
 
