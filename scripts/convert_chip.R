@@ -104,7 +104,7 @@ echo( "++ Translating genotype calls to VCF format...\n" )
 translated = G
 for( i in 1:nrow( allele.sets )) {
 	set = allele.sets[i,]
-	echo( "  --: %s...\n", paste( set, collapse = " > " ))
+	# echo( "  --: %s...\n", paste( set, collapse = " > " ))
 
 	translation = c()
 	translation[sprintf( "%s/%s", set$Ref_Allele, set$Ref_Allele )] = '0/0'
@@ -126,6 +126,8 @@ for( i in 1:nrow( allele.sets )) {
 		)
 	}
 }
+
+print(translated)
 
 echo( "++ Ok, forming VCF output...\n" )
 vcf.data = tibble(
