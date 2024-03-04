@@ -140,6 +140,8 @@ rule calculate_chip_PC:
         UDUT1 = "results/chip/qc/PCs/chip_UDUT_{thinning}.all.tsv.gz"
     params:
         PCs = 20
+    resources:
+        mem = '10G'
     shell: """
         sqlite3 {input.sqlite} \
         "SELECT rsid FROM {wildcards.thinning}View WHERE result == 'picked'" > {output.variants}
@@ -167,6 +169,8 @@ rule exclude_chip_dup_samples:
         UDUT2 = "results/chip/qc/PCs/chip_UDUT_{thinning}.exclude-duplicates.tsv.gz"
     params:
         PCs = 20
+    resources:
+        mem = '10G'
     shell: """
         /well/band/users/rbx225/software/QCTool/qctool/build/release/apps/qctool_v2.2.2 \
         -analysis-name "PCs:{wildcards.thinning}:exclude-duplicates" \
