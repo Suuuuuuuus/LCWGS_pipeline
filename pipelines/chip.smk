@@ -93,6 +93,8 @@ rule thin_stats:
     params:
         MAC = 5,
         missing = 10
+    resources:
+        mem = '10G'
     shell: r"""
         mkdir -p results/chip/qc/PCs/
 
