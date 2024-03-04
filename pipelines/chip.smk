@@ -96,7 +96,7 @@ rule thin_stats:
     shell: r"""
         mkdir -p results/chip/qc/PCs/
 
-        sqlite3 -header -separator $'\\t' {input.db} \
+        sqlite3 -header -separator $'\t' {input.db} \
         "SELECT rsid AS SNPID, rsid, chromosome, position, alleleA, alleleB FROM autosomesView WHERE (alleleA_count >= {params.MAC}) AND (alleleB_count >= {params.MAC}) AND \`NULL\` < {params.missing}" > {output.tmp}
 
         tail -n +2 {output.tmp} > {output.tsv}
