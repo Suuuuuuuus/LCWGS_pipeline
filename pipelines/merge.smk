@@ -74,11 +74,11 @@ rule fix_bam:
         picard FixMateInformation -I {output.tmp2}
     """
 
-test_hc_dict = read_tsv_as_dict(samples_hc, "data/file_lsts/hc_fastq_split/", "_split.tsv")
+hc_dict = read_tsv_as_dict(samples_hc, "data/file_lsts/hc_fastq_split/", "_split.tsv")
 
 nest = {}
 for i in samples_hc:
-    nest[str(i)] = ["data/chunk_bams/tmp/tmp/" + k + "/" + k + ".tmp2.bam" for k in test_hc_dict[str(i)]]
+    nest[str(i)] = ["data/chunk_bams/tmp/tmp/" + k + "/" + k + ".tmp2.bam" for k in hc_dict[str(i)]]
 
 rule merge:
     input:

@@ -160,7 +160,6 @@ rule calculate_chip_PC:
 rule exclude_chip_dup_samples:
     input:
         sqlite = rules.compute_chip_stats.output.sqlite,
-        thin = rules.thin_stats.output.thinned_ok,
         bgen = rules.genotype_chip.output.bgen,
         samples = rules.genotype_chip.output.samples,
         variants = rules.calculate_chip_PC.output.variants
