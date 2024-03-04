@@ -143,7 +143,7 @@ rule calculate_chip_PC:
         mem = '10G'
     shell: """
         sqlite3 {input.sqlite} \
-        "SELECT rsid FROM {wildcards.thinning}View WHERE result == 'picked'" > {output.variants}
+        "SELECT chromosome FROM {wildcards.thinning}View WHERE result == 'picked'" > {output.variants}
         
         /well/band/users/rbx225/software/QCTool/qctool/build/release/apps/qctool_v2.2.2 \
         -analysis-name "PCs:{wildcards.thinning}:all" \
@@ -154,6 +154,7 @@ rule calculate_chip_PC:
         -PCs {params.PCs} \
         -osample sqlite://{input.sqlite}:PCs
     """
+# The previous rule should be `SELECT rsid` but somehow the order of columns are messed up...
 
 # This rule has to be run after the previous and need some manual input from the qc metrics. This behavior should be adjusted later.
 rule exclude_chip_dup_samples:
