@@ -330,10 +330,12 @@ def calculate_af(df, drop = True):
         return df[['chr', 'pos', 'ref', 'alt', 'prop']]
     else:
         return df
+    
+# Modify this!!!!
 def filter_afs(df1, df2, diff = 0.2, z_score = None):
     # df1 is the main vcf in which afs are to be filtered out
     # df2 is the ref panel afs
-    # Either filter by z-score (suggested 2 sds so 1.96 or diff=0.2)
+    # Either filter by z-score (suggested 3 sds or diff=0.2)
     res = pd.merge(df1, df2, on = ['chr', 'pos', 'ref', 'alt'])
     if z_score is not None:
         res = res[(res['prop_y'] != 0) & (res['prop_y'] != 1)]
@@ -397,6 +399,8 @@ def calculate_imputation_accuracy(df1, df2, af,
     r2_df = pd.DataFrame(r2.T, columns = ['Imputation Accuracy','Bin Count'], index = MAF_ary[1:])
     r2_df.index.name = 'MAF'
     return r2_df
+
+# !!!Modify plot_afs so that it can use other plot labels and return filtered dfs. It should support diagonal and delta adjustment.
 def plot_afs(df1, df2, save_fig = False, outdir = 'graphs/', save_name = 'af_vs_af.png'):
     # df1 is the chip df with cols chr, pos, ref, alt and prop
     # df2 is the other df with the same cols
