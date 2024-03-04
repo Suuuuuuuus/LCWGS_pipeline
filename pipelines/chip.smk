@@ -87,8 +87,7 @@ rule thin_stats:
         db = rules.compute_chip_stats.output.sqlite
     output:
         thinned_ok = touch( "results/chip/qc/PCs/thinned_ok.ok" ),
-        # tsv = temp( "results/chip/qc/PCs/included_variants_included.tsv" ),
-        tsv = "results/chip/qc/PCs/included_variants_included.gen",
+        tsv = temp( "results/chip/qc/PCs/included_variants_included.gen" ),
         tmp = temp( "results/chip/qc/PCs/tmp.gen" )
     params:
         MAC = 5,
