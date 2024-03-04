@@ -178,6 +178,9 @@ rule exclude_chip_dup_samples:
         -kinship {output.kinship2} \
         -UDUT {output.UDUT2} \
         -PCs {params.PCs} \
-        -excl-samples-where "ID = 'GAM370894'" -excl-samples-where "ID = 'GAM916387'" \
+        -excl-samples-where "ID = 'GAM370894'" \
+        -excl-samples-where "ID = 'GAM916387'" \
+        -excl-samples-where "ID = 'GAM654203'" \
         -osample sqlite://{input.sqlite}:PCs
     """
+    

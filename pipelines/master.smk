@@ -219,7 +219,8 @@ rule imputation_all:
         r2 = expand("results/imputation/imputation_accuracy/{id}/{panel}_imputation_accuracy.csv", id = seq_to_extract, panel = panels),
         graph = "graphs/imputation_vs_chip.png"
 
-chip_thinning = ['thin_1bp', 'thin_50kb', 'thin_100kb']
+# chip_thinning = ['thin_1bp', 'thin_50kb', 'thin_100kb']
+chip_thinning = ['thin_1bp']
 
 rule chip_all:
     input:
