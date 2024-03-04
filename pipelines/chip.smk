@@ -88,8 +88,8 @@ rule thin_stats:
     output:
         thinned_ok = touch( "results/chip/qc/PCs/thinned_ok.ok" ),
         # tsv = temp( "results/chip/qc/PCs/included_variants_included.tsv" ),
-        tsv = "results/chip/qc/PCs/included_variants_included.tsv",
-        tmp = temp( "results/chip/qc/PCs/tmp.tsv" )
+        tsv = "results/chip/qc/PCs/included_variants_included.gen",
+        tmp = temp( "results/chip/qc/PCs/tmp.gen" )
     params:
         MAC = 5,
         missing = 10
@@ -100,8 +100,6 @@ rule thin_stats:
         "SELECT rsid AS SNPID, rsid, chromosome, position, alleleA, alleleB FROM autosomesView WHERE (alleleA_count >= {params.MAC}) AND (alleleB_count >= {params.MAC}) AND \`NULL\` < {params.missing}" > {output.tmp}
 
         tail -n +2 {output.tmp} > {output.tsv}
-        
-        head -n 2 {output.tsv}
 
         /well/band/users/rbx225/software/QCTool/qctool/build/release/apps/inthinnerator_v2.2.2 \
         -analysis-name thin_100kb \

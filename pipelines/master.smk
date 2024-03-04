@@ -226,7 +226,7 @@ rule chip_all:
         # chip_vcf = "results/chip/vcf/chip_genotype.vcf.gz",
         # chip_samples = "results/chip/vcf/chip_genotype.sample",
         # chip_bgen = "results/chip/bgen/chip.bgen",
-        tsv = "results/chip/qc/PCs/included_variants_included.tsv",
+        tsv = "results/chip/qc/PCs/included_variants_included.gen",
         chip_stats = "results/chip/qc/chip.qc.sqlite",
         variants = expand("results/chip/qc/PCs/pc_variants_{thinning}.txt", thinning = chip_thinning),
         kinship1 = expand("results/chip/qc/PCs/chip_kinship_{thinning}.all.tsv.gz", thinning = chip_thinning),
