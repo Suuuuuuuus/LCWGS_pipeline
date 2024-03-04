@@ -103,6 +103,16 @@ rule thin_stats:
         tail -n +2 {output.tmp} > {output.tsv}
 
         /well/band/users/rbx225/software/QCTool/qctool/build/release/apps/inthinnerator_v2.2.2 \
+        -analysis-name thin_1bp \
+        -g {output.tsv} \
+        -suppress-excluded \
+        -min-distance 1bp \
+        -excl-range 06:25000000-40000000 \
+        -o sqlite://{input.db}:thin_1bp
+    """
+
+'''
+        /well/band/users/rbx225/software/QCTool/qctool/build/release/apps/inthinnerator_v2.2.2 \
         -analysis-name thin_100kb \
         -g {output.tsv} \
         -suppress-excluded \
@@ -118,14 +128,7 @@ rule thin_stats:
         -excl-range 06:25000000-40000000 \
         -o sqlite://{input.db}:thin_50kb
   
-        /well/band/users/rbx225/software/QCTool/qctool/build/release/apps/inthinnerator_v2.2.2 \
-        -analysis-name thin_1bp \
-        -g {output.tsv} \
-        -suppress-excluded \
-        -min-distance 1bp \
-        -excl-range 06:25000000-40000000 \
-        -o sqlite://{input.db}:thin_1bp
-    """
+'''
 
 rule calculate_chip_PC:
     input:
