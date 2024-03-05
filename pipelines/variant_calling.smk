@@ -10,6 +10,7 @@ sys.path.append("scripts")
 import lcwgSus
 
 hc_panel = config["hc_panel"]
+concatenate = config["concatenate"]
 
 samples_hc = read_tsv_as_lst(config['samples_hc'])
 samples_lc = read_tsv_as_lst(config['samples_lc'])

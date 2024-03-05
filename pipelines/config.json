@@ -1,7 +1,7 @@
 {
-    "samples_lc": "samples_lc.tsv",
-    "samples_hc": "samples_hc.tsv",
-    "samples_chip": "samples_chip.tsv",
+    "samples_lc": "data/sample_tsvs/samples_lc.tsv",
+    "samples_hc": "data/sample_tsvs/samples_hc.tsv",
+    "samples_chip": "data/sample_tsvs/samples_chip.tsv",
 
     "make_chunk": true,
     "fastq_chunk_size": 1000000,
