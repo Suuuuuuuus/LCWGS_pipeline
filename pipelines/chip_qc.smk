@@ -203,6 +203,7 @@ rule clean_chip_vcf:
         if [[ -d {params.drop_samples} && -d {params.retain_sites}]]
         then
             bcftools view -T {params.retain_sites} -S ^{params.drop_samples} -Oz -o {output.vcf_qced} {input.vcf}
+            tabix {output.vcf_qced}
         else
             touch {output.vcf_qced} # A place holder to avoid errors
         fi
