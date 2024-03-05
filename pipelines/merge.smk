@@ -56,14 +56,14 @@ rule merge:
         bai = "data/merge_bams/tmp/{hc}.bam.bai",
         tmp1 = temp("data/merge_bams/tmp/{hc}.tmp1.bam"),
         metric = temp("data/merge_bams/tmp/{hc}.metrics.txt")
-    threads: 2
+    threads: 8
     resources:
         mem = '50G'
     shell: """
         mkdir -p data/chunk_bams/tmp/{wildcards.hc}/
         mkdir -p data/merge_bams/tmp/
         samtools cat -o {output.tmp1} {input.bams}
-        samtools sort -o {output.bam} {output.tmp1}
+        samtools sort -@6 -m 1G -T temp -o {output.bam} {output.tmp1}
 
         picard MarkDuplicates \
         -I {output.bam} \
@@ -71,7 +71,6 @@ rule merge:
         -M {output.metric} \
         --REMOVE_DUPLICATES
 
-        samtools sort -o {output.bam} {output.tmp1}
-        
+        samtools sort -@6 -m 1G -T temp -o {output.bam} {output.tmp1}
         samtools index {output.bam}
     """
