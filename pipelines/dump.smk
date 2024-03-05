@@ -17,6 +17,68 @@ subsample_coverage = config['subsample_depth']
 rm_bed_regions = config['rm_bed_regions']
 bed_regions = config['bed_regions']
 
+rule multiqc_hc:
+    input:
+        html1 = expand("results/fastqc/{id}_1_fastqc.html",id = samples_hc),
+        html2 = expand("results/fastqc/{id}_2_fastqc.html",id = samples_hc),
+        zip = expand("results/fastqc/{id}_{read}_fastqc.zip",id = samples_hc, read = ['1', '2'])
+    output:
+        html = "results/fastqc/multiqc_hc/multiqc_report.html",
+        directory("results/fastqc/multiqc_hc")
+    threads: 1
+    resources:
+        mem = '10G'
+    params:
+        outdir = "results/fastqc/multiqc_hc"
+    shell:
+        "multiqc {input.zip} --interactive -o {params.outdir}"
+
+# The following rule was used to chunk-up bam files into chromosomes, but currently deprecated as GATK is very strict about bam files and cannot accept singleton reads
+sample_linker = pd.read_table(config['sample_linker'], sep = ',')
+ids_1x_all = list(sample_linker['Seq_Name'].values) # to be deprecated
+test_hc = ids_1x_all[:2]
+test_hc_dict = read_tsv_as_dict(test_hc, "data/file_lsts/hc_fastq_split/", "_split.tsv")
+test_hc_all_chunks = []
+for value_list in test_hc_dict.values():
+    test_hc_all_chunks.extend(value_list)
+rule split_bams:
+    input:
+        bam = "data/bams/{id}.bam",
+        reference = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta"
+    output:
+        bam_chunk = temp("data/chunk_bams/tmp/tmp/{id}/{id}.chr{chr}.bam"),
+        tmp1 = temp("data/chunk_bams/tmp/tmp/{id}/{id}.chr{chr}.tmp1.bam"),
+        tmp2 = temp("data/chunk_bams/tmp/tmp/{id}/{id}.chr{chr}.tmp2.bam")
+#        reference = rules.index_reference.input.reference
+    threads: 4
+    resources: mem = '10G'
+    params:
+        chr_str = "chr{chr}",
+        verbosity = "ERROR",
+        sample = "{id}".split("_")[0]
+    shell: """
+        mkdir -p data/chunk_bams/tmp/tmp/{wildcards.id}/
+        samtools view -h {input.bam} {params.chr_str} | \
+        samtools sort -o {output.tmp1} -
+
+        samtools index {output.tmp1}
+
+        picard AddOrReplaceReadGroups \
+        -VERBOSITY {params.verbosity} \
+        -I {output.tmp1} \
+        -O {output.tmp2} \
+        -RGLB OGC \
+        -RGPL ILLUMINA \
+        -RGPU unknown \
+        -RGSM {params.sample}
+
+        picard FixMateInformation -I {output.tmp2}
+
+        samtools collate -Oun128 {output.tmp2} | samtools fastq -OT RG,BC - | \
+        bwa mem -pt4 -CH <(samtools view -H {output.tmp2} | grep ^@RG) {input.reference} - | \
+        samtools sort -@4 -m4g -o {output.bam_chunk} -
+    """
+
 rule calculate_per_bin_coverage_1x:
     input:
         script = "scripts/calculate_per_bin_coverage.py",
@@ -199,6 +261,53 @@ rule merge_bam:
         samtools markdup - {output.bam}
 
         samtools index {output.bam}
+    """
+
+test_hc_dict = read_tsv_as_dict(test_hc, "data/file_lsts/hc_fastq_split/", "_split.tsv")
+nest = {}
+for i in test_hc:
+    nest[i] = {}
+    for j in chromosome:
+        nest[str(i)][str(j)] = ["data/chunk_bams/tmp/tmp/" + k + "/" + k + ".chr" + str(j) + ".bam" for k in test_hc_dict[str(i)]]
+rule merge_splited_bam:
+    input:
+        bams = lambda wildcards: nest[str(wildcards.hc)][str(wildcards.chr)]
+    output:
+        # bam = temp("data/chunk_bams/tmp/{hc}/{hc}.chr{chr}.bam"), ### Now the wildcards are messed up to avoid intermediate files... Need to come back later
+        # bai = temp("data/chunk_bams/tmp/{hc}/{hc}.chr{chr}.bam.bai")
+        bam = "data/chunk_bams/tmp/{hc}/{hc}.chr{chr}.bam"
+#        bai = "data/chunk_bams/tmp/{hc}/{hc}.chr{chr}.bam.bai"
+    threads: 2
+    resources:
+        mem = '50G'
+    shell: """
+        mkdir -p data/chunk_bams/tmp/{wildcards.hc}/
+        samtools cat -o {output.bam} {input.bams}
+    """
+
+rule rmdup_split:
+    input:
+        bam_chunk = "data/chunk_bams/tmp/{hc}/{hc}.chr{chr}.bam"
+    output:
+        tmp1 = temp("data/chunk_bams/{hc}/{hc}.chr{chr}.tmp1.bam"),
+        tmp2 = temp("data/chunk_bams/{hc}/{hc}.chr{chr}.tmp2.bam"),
+        dedup_bam_chunk = "data/chunk_bams/{hc}/{hc}.chr{chr}.bam",
+        dedup_bai_chunk = "data/chunk_bams/{hc}/{hc}.chr{chr}.bam.bai",
+        metric = temp("data/chunk_bams/tmp/{hc}/{hc}.chr{chr}.metrics.txt")
+    threads: 2
+    resources: mem = '50G'
+    shell: """
+        samtools sort -o {output.tmp1} {input.bam_chunk}
+
+        picard MarkDuplicates \
+        -I {output.tmp1} \
+        -O {output.tmp2} \
+        -M {output.metric} \
+        --REMOVE_DUPLICATES
+
+        samtools sort -o {output.dedup_bam_chunk} {output.tmp2}
+
+        samtools index {output.dedup_bam_chunk}
     """
 
 ### variant calling ###

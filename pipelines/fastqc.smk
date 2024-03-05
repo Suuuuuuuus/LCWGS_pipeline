@@ -1,7 +1,6 @@
 configfile: "pipelines/config.json"
 
-import pandas as pd
-ids_1x_all = list(pd.read_table(config["samples"], header = None, names = ['Code'])['Code'].values)
+samples_lc = read_tsv_as_lst(config['samples_lc'])
 
 if config['clean_fastq']:
     ruleorder: fastqc_alt > fastqc
@@ -46,9 +45,9 @@ rule fastqc_alt:
 
 rule multiqc_lc:
     input:
-        html1 = expand("results/fastqc/{id}_1_fastqc.html",id = ids_1x_all),
-        html2 = expand("results/fastqc/{id}_2_fastqc.html",id = ids_1x_all),
-        zip = expand("results/fastqc/{id}_{read}_fastqc.zip",id = ids_1x_all, read = ['1', '2'])
+        html1 = expand("results/fastqc/{id}_1_fastqc.html",id = samples_lc),
+        html2 = expand("results/fastqc/{id}_2_fastqc.html",id = samples_lc),
+        zip = expand("results/fastqc/{id}_{read}_fastqc.zip",id = samples_lc, read = ['1', '2'])
     output:
         html = "results/fastqc/multiqc_lc/multiqc_report.html",
         directory("results/fastqc/multiqc_lc")
@@ -57,21 +56,5 @@ rule multiqc_lc:
         mem = '10G'
     params:
         outdir = "results/fastqc/multiqc_lc"
-    shell:
-        "multiqc {input.zip} --interactive -o {params.outdir}"
-
-rule multiqc_lc:
-    input:
-        html1 = expand("results/fastqc/{id}_1_fastqc.html",id = samples_hc),
-        html2 = expand("results/fastqc/{id}_2_fastqc.html",id = samples_hc),
-        zip = expand("results/fastqc/{id}_{read}_fastqc.zip",id = samples_hc, read = ['1', '2'])
-    output:
-        html = "results/fastqc/multiqc_hc/multiqc_report.html",
-        directory("results/fastqc/multiqc_hc")
-    threads: 1
-    resources:
-        mem = '10G'
-    params:
-        outdir = "results/fastqc/multiqc_hc"
     shell:
         "multiqc {input.zip} --interactive -o {params.outdir}"

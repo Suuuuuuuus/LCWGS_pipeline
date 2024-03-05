@@ -1,8 +1,7 @@
 configfile: "pipelines/config.json"
 
 import pandas as pd
-config['samples'] = pd.read_table("samples.tsv", header = None, names = ['Code'])
-ids_1x_all = list(config['samples']['Code'].values)
+samples_lc = read_tsv_as_lst(config['samples_lc'])
 
 rule extract_samtools_dup_rate:
     input:
@@ -31,7 +30,7 @@ rule extract_samtools_dup_rate:
 
 rule aggregate_samtools_dup_rate:
     input:
-        files = expand("results/dup_rate/tmp/{id}.txt", id = ids_1x_all)
+        files = expand("results/dup_rate/tmp/{id}.txt", id = samples_lc)
     output:
         samtools_dup_rate = temp("results/dup_rate/duplication_rate_samtools_tmp.txt")
     params:
@@ -80,7 +79,7 @@ rule calculate_fragment_size:
 
 rule aggregate_fragment_size:
     input:
-        files = expand("results/fragment_size/{id}/{id}.txt", id = ids_1x_all)
+        files = expand("results/fragment_size/{id}/{id}.txt", id = samples_lc)
     output:
         fragment_size = "results/fragment_size/fragment_size.txt"
     shell: """
@@ -106,7 +105,7 @@ rule calculate_proportion_ss_fragment_size:
 
 rule aggregate_proportion_ss_fragment_size:
     input:
-        files = expand("results/fragment_size/{id}/{id}_proportion.txt", id = ids_1x_all)
+        files = expand("results/fragment_size/{id}/{id}_proportion.txt", id = samples_lc)
     output:
         proportion_ss_fragment_size = "results/fragment_size/proportion_ss_fragment_size.txt"
     shell: """
@@ -132,7 +131,7 @@ rule calculate_proportion_fragment_size:
 
 rule aggregate_proportion_fragment_size:
     input:
-        files = expand("results/fragment_size/{id}/{id}_proportion_whole.txt", id = ids_1x_all)
+        files = expand("results/fragment_size/{id}/{id}_proportion_whole.txt", id = samples_lc)
     output:
         proportion_fragment_size = "results/fragment_size/proportion_fragment_size.txt"
     shell: """
@@ -155,7 +154,7 @@ rule calculate_fragment_overlap:
 
 rule aggregate_fragment_overlap:
     input:
-        files = expand("results/fragment_size/{id}/fragment_overlap.txt", id = ids_1x_all)
+        files = expand("results/fragment_size/{id}/fragment_overlap.txt", id = samples_lc)
     output:
         fragment_overlap = "results/fragment_size/fragment_overlap.txt"
     shell: """

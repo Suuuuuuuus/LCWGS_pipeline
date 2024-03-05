@@ -1,9 +1,5 @@
 configfile: "pipelines/config.json"
 
-clean_fastq = config['clean_fastq']
-reheader = config['reheader']
-concatenate = config['concatenate']
-
 import json
 import pandas as pd
 import numpy as np

@@ -6,8 +6,7 @@ import sys
 sys.path.append("scripts")
 import lcwgSus
 
-config['samples'] = pd.read_table("samples.tsv", header = None, names = ['Code'])
-ids_1x_all = list(config['samples']['Code'].values)
+samples_lc = read_tsv_as_lst(config['samples_lc'])
 chromosome = [i for i in range(1,23)]
 
 subsample_coverage = config['subsample_depth']
@@ -69,7 +68,7 @@ rule calculate_ss_cumsum_coverage:
 
 rule plot_sequencing_skew:
     input:
-        cumsum_ary = expand("results/coverage/subsampled_bedgraphs/{id}_cumsum_ary.txt", id = ids_1x_all)
+        cumsum_ary = expand("results/coverage/subsampled_bedgraphs/{id}_cumsum_ary.txt", id = samples_lc)
     output:
         graph_seq_skew = "graphs/prop_genome_at_least_coverage.png"
     resources: mem_mb = 5000
@@ -100,7 +99,7 @@ rule calculate_uncoverage_rate:
 
 rule aggregate_uncoverage_rate:
     input:
-        files = expand("results/coverage/per_chromosome_coverage/{id}_uncoverage_rate.txt", id = ids_1x_all)
+        files = expand("results/coverage/per_chromosome_coverage/{id}_uncoverage_rate.txt", id = samples_lc)
     output:
         uncoverage_rate = "results/coverage/per_chromosome_coverage/uncoverage_rate.txt"
     shell: """
@@ -127,7 +126,7 @@ rule calculate_ss_uncoverage_rate:
 
 rule aggregate_ss_uncoverage_rate:
     input:
-        files = expand("results/coverage/per_chromosome_ss_coverage/{id}_ss_uncoverage_rate.txt", id = ids_1x_all)
+        files = expand("results/coverage/per_chromosome_ss_coverage/{id}_ss_uncoverage_rate.txt", id = samples_lc)
     output:
         ss_uncoverage_rate = "results/coverage/per_chromosome_ss_coverage/ss_uncoverage_rate.txt"
     shell: """
@@ -152,7 +151,7 @@ rule calculate_avg_coverage:
 
 rule aggregate_avg_coverage:
     input:
-        files = expand("results/coverage/tmp/{id}_avg_coverage.txt", id = ids_1x_all)
+        files = expand("results/coverage/tmp/{id}_avg_coverage.txt", id = samples_lc)
     output:
         avg_coverage = "results/coverage/per_sample_coverage.txt"
     shell: """

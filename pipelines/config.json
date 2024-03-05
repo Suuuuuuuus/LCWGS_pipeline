@@ -1,10 +1,13 @@
 {
+    "samples_lc": "samples_lc.tsv",
+    "samples_hc": "samples_hc.tsv",
+    "samples_chip": "samples_chip.tsv",
+
     "make_chunk": true,
     "fastq_chunk_size": 1000000,
     "bam_chunk_size": 200000, 
     "ref38": "data/references/GRCh38.fa",
-    "samples": "samples.tsv",
-    "samples_hc": "samples_hc.tsv",
+    
     "sample_linker": "data/metadata/sample_linker.csv",
     "concatenate": true,
     "clean_fastq": true,

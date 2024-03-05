@@ -11,6 +11,7 @@ include: "coverage.smk"
 
 include: "imputation_prep.smk"
 include: "imputation.smk"
+include: "imputation_calculation.smk"
 
 #include: "test.smk"
 include: "auxiliary.smk"
@@ -24,39 +25,21 @@ import os
 sys.path.append("scripts")
 import lcwgSus
 
-samples_hc = list(pd.read_table(config['samples_hc'], header = None, names = ['Code'])['Code'].values)
-sample_linker = pd.read_table(config['sample_linker'], sep = ',')
-ids_1x_all = list(sample_linker['Seq_Name'].values) # to be deprecated
-seq_names = list(sample_linker['Seq_Name'].values)
-chip_names = list(sample_linker['Chip_Name'].values)
-sample_names = list(sample_linker['Sample_Name'].values)
+samples_lc = read_tsv_as_lst(config['samples_lc'])
 panels = config['panels']
-hc_panel = config["hc_panel"]
 
 chromosome = [i for i in range(1,23)]
 
-# The followings are global parameters:
-clean_fastq = config['clean_fastq']
-reheader = config['reheader']
 concatenate = config['concatenate']
-
-# The followings are global parameters from `activate`:
-QUILT_HOME = config["QUILT_HOME"]
-ANALYSIS_DIR = config["ANALYSIS_DIR"]
-WINDOWSIZE=config["WINDOWSIZE"]
-BUFFER=config["BUFFER"]
-NGEN=config["NGEN"]
 RECOMB_POP=config["RECOMB_POP"]
 PANEL_NAME=config["PANEL_NAME"]
 
-test_hc = ids_1x_all[:2]
-
 rule preprocess_all:
     input:
-        fwd_pair = expand("data/fastq_cleaned/{id}_1.fastq.gz", id = samples_hc_split),
-        rev_pair = expand("data/fastq_cleaned/{id}_2.fastq.gz", id = samples_hc_split),
-        fwd_unpair = expand("data/fastq_cleaned/{id}_unpaired_1.fastq.gz", id = samples_hc_split),
-        rev_unpair = expand("data/fastq_cleaned/{id}_unpaired_2.fastq.gz", id = samples_hc_split)
+        fwd_pair = expand("data/fastq_cleaned/{id}_1.fastq.gz", id = samples_lc),
+        rev_pair = expand("data/fastq_cleaned/{id}_2.fastq.gz", id = samples_lc),
+        fwd_unpair = expand("data/fastq_cleaned/{id}_unpaired_1.fastq.gz", id = samples_lc),
+        rev_unpair = expand("data/fastq_cleaned/{id}_unpaired_2.fastq.gz", id = samples_lc)
 
 rule reference_all:
     input:
@@ -68,40 +51,38 @@ rule reference_all:
 
 rule fastqc_all:
     input:
-        html1 = expand("results/fastqc/{id}_1_fastqc.html", id = samples_hc_split),
-        html2 = expand("results/fastqc/{id}_2_fastqc.html", id = samples_hc_split),
-        zip1 = expand("results/fastqc/{id}_1_fastqc.zip", id = samples_hc_split),
-        zip2 = expand("results/fastqc/{id}_2_fastqc.zip", id = samples_hc_split),
+        html1 = expand("results/fastqc/{id}_1_fastqc.html", id = samples_lc),
+        html2 = expand("results/fastqc/{id}_2_fastqc.html", id = samples_lc),
+        zip1 = expand("results/fastqc/{id}_1_fastqc.zip", id = samples_lc),
+        zip2 = expand("results/fastqc/{id}_2_fastqc.zip", id = samples_lc),
         fastqc = "results/fastqc/duplication_rate_fastqc.txt",
         multiqc_lc = "results/fastqc/multiqc_lc/multiqc_report.html",
         multiqc_hc = "results/fastqc/multiqc_hc/multiqc_report.html"
 
 rule alignment_all:
     input:
-        bams = expand("data/bams/{id}.bam", id = samples_hc_split),
-        bais = expand("data/bams/{id}.bam.bai", id = samples_hc_split)
+        bams = expand("data/bams/{id}.bam", id = samples_lc),
+        bais = expand("data/bams/{id}.bam.bai", id = samples_lc)
 
 rule rmdup_all:
     input:
-        # dedup_bams = expand("data/dedup_bams/{id}.bam", id = samples_hc),
-        # dedup_bais = expand("data/dedup_bams/{id}.bam.bai", id = samples_hc),
-        dedup_bam_chunk = expand("data/chunk_bams/{hc}/{hc}.chr{chr}.bam", hc = test_hc, chr = chromosome),
-        dedup_bai_chunk = expand("data/chunk_bams/{hc}/{hc}.chr{chr}.bam.bai", hc = test_hc, chr = chromosome)
+        dedup_bams = expand("data/dedup_bams/{id}.bam", id = samples_lc),
+        dedup_bais = expand("data/dedup_bams/{id}.bam.bai", id = samples_lc)
 
 rule subsample_all:
     input:
-        ss_bams = expand("data/subsampled_bams/{id}_subsampled.bam", id = ids_1x_all),
-        ss_bais = expand("data/subsampled_bams/{id}_subsampled.bam.bai", id = ids_1x_all)
+        ss_bams = expand("data/subsampled_bams/{id}_subsampled.bam", id = samples_lc),
+        ss_bais = expand("data/subsampled_bams/{id}_subsampled.bam.bai", id = samples_lc)
 
 rule coverage_all:
     input:
-        bedgraphs = expand("results/coverage/bedgraphs/{id}_bedgraph_nozero.bed", id = ids_1x_all),
-    #    ss_bedgraphs = expand("results/coverage/subsampled_bedgraphs/{id}_subsampled_bedgraph.bed", id = ids_1x_all),
-    #    cumsum_ary = expand("results/coverage/subsampled_bedgraphs/{id}_cumsum_ary.txt", id = ids_1x_all),
-    #    per_bin_coverage_1x_coordinates = expand("results/coverage/per_bin_coverage/1x/{id}_chr{chr}_coordinate.txt", id = ids_1x_all, chr = chromosome),
-    #    per_bin_coverage_1x_bases = expand("results/coverage/per_bin_coverage/1x/{id}_chr{chr}_base.txt", id = ids_1x_all, chr = chromosome),
-    #    per_chromosome_coverage = expand("results/coverage/per_chromosome_coverage/{id}_per_chromosome_coverage.txt", id = ids_1x_all),
-    #    ss_per_chromosome_coverage = expand("results/coverage/per_chromosome_ss_coverage/{id}_per_chromosome_ss_coverage.txt", id = ids_1x_all),
+        bedgraphs = expand("results/coverage/bedgraphs/{id}_bedgraph_nozero.bed", id = samples_lc),
+    #    ss_bedgraphs = expand("results/coverage/subsampled_bedgraphs/{id}_subsampled_bedgraph.bed", id = samples_lc),
+    #    cumsum_ary = expand("results/coverage/subsampled_bedgraphs/{id}_cumsum_ary.txt", id = samples_lc),
+    #    per_bin_coverage_1x_coordinates = expand("results/coverage/per_bin_coverage/1x/{id}_chr{chr}_coordinate.txt", id = samples_lc, chr = chromosome),
+    #    per_bin_coverage_1x_bases = expand("results/coverage/per_bin_coverage/1x/{id}_chr{chr}_base.txt", id = samples_lc, chr = chromosome),
+    #    per_chromosome_coverage = expand("results/coverage/per_chromosome_coverage/{id}_per_chromosome_coverage.txt", id = samples_lc),
+    #    ss_per_chromosome_coverage = expand("results/coverage/per_chromosome_ss_coverage/{id}_per_chromosome_ss_coverage.txt", id = samples_lc),
     #    uncoverage_rate = "results/coverage/per_chromosome_coverage/uncoverage_rate.txt",
     #    ss_uncoverage_rate = "results/coverage/per_chromosome_ss_coverage/ss_uncoverage_rate.txt"
         avg_coverage = "results/coverage/per_sample_coverage.txt"
@@ -116,16 +97,16 @@ rule dup_rate_all:
 
 rule kmer_all:
     input:
-        jf_read = expand("results/kmer/{id}/read{read}/{id}_read{read}.tsv", id = ids_1x_all, read = ['1','2']),
-        jf_quality = expand("results/kmer/{id}/read{read}/{id}_quality{read}.tsv", id = ids_1x_all, read = ['1','2']),
-        jf_position = expand("results/kmer/{id}/read{read}/{id}_position{read}.tsv", id = ids_1x_all, read = ['1','2']),
+        jf_read = expand("results/kmer/{id}/read{read}/{id}_read{read}.tsv", id = samples_lc, read = ['1','2']),
+        jf_quality = expand("results/kmer/{id}/read{read}/{id}_quality{read}.tsv", id = samples_lc, read = ['1','2']),
+        jf_position = expand("results/kmer/{id}/read{read}/{id}_position{read}.tsv", id = samples_lc, read = ['1','2']),
         kmer_accuarcy1 = "results/kmer/kmer_accuracy_read1.txt",
         kmer_accuarcy2 = "results/kmer/kmer_accuracy_read2.txt",
         per_bin_kmer_accuracy1 = "results/kmer/per_bin_kmer_accuracy_read1.txt",
         per_bin_kmer_accuracy2 = "results/kmer/per_bin_kmer_accuracy_read2.txt",
-        fragment_length = expand("results/kmer/{id}/fragment_length.tsv", id = ids_1x_all),
-        per_bin_kmer_accuracy = expand("results/kmer/{id}/read{read}/per_bin_kmer_error_rate_read{read}.txt", id = ids_1x_all, read = ['1', '2']),
-        graph_kmer_position = expand("graphs/kmer_position/{id}_kmer_position.png", id = ids_1x_all)
+        fragment_length = expand("results/kmer/{id}/fragment_length.tsv", id = samples_lc),
+        per_bin_kmer_accuracy = expand("results/kmer/{id}/read{read}/per_bin_kmer_error_rate_read{read}.txt", id = samples_lc, read = ['1', '2']),
+        graph_kmer_position = expand("graphs/kmer_position/{id}_kmer_position.png", id = samples_lc)
 
 # Dumps
 REGIONS={}
@@ -182,26 +163,22 @@ def get_input_vcfs_as_list(wildcards):
 def get_input_vcfs_as_string(wildcards):
     return(" ".join(map(str, vcfs_to_concat[str(wildcards.chr)])))
 
-chip_to_extract = pd.read_table("chip.tsv", header = None).loc[:, 0].to_list()
-seq_to_extract = sample_linker[sample_linker['Chip_Name'].isin(chip_to_extract)].Seq_Name.to_list()
+samples_chip = read_tsv_as_lst(config['samples_chip'])
+seq_to_extract = [sample for sample in samples_lc if sample in samples_chip]
 
 rule imputation_all:
     input:
         RData = [regions_to_prep],
         vcf_regions = [vcfs_to_impute],
-        vcfs = [final_vcfs],
+        vcfs = [final_vcfs]
+
+# This bit needs to be modified. Probably create a new master file for all downstream comparison analysis
+rule imputation_calculation_all:
+    input:
         r2 = expand("results/imputation/imputation_accuracy/{id}/{panel}_imputation_accuracy.csv", id = seq_to_extract, panel = panels),
         graph = "graphs/imputation_vs_chip.png"
 
 rule test_all:
     input:
         vcf = "results/tmp/{id}.{chr}.txt"
-        # bam = expand("data/bams/tmp/{hc}.bam", hc = test_hc),
-        # bai = expand("data/bams/tmp/{hc}.bam.bai", hc = test_hc)
-
-# This bit should never get executed
-rule dump_all:
-    input:
-        bed_chunks_samtools = "data/bedgraph/bam_chunks.bed",
-        bed_chunks_names = "data/bedgraph/bam_chunks_names.bed"
 

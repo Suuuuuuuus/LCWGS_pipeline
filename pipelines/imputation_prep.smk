@@ -1,7 +1,6 @@
 configfile: "pipelines/config.json"
 
 import os
-from os.path import exists
 import json
 import pandas as pd
 import numpy as np
@@ -22,20 +21,13 @@ BUFFER=config["BUFFER"]
 PANEL_NAME=config["PANEL_NAME"]
 rmdup=config["rmdup"]
 
-sample_linker = pd.read_table(config['sample_linker'], sep = ',')
-ids_1x_all = list(sample_linker['Seq_Name'].values) # to be deprecated
-seq_names = list(sample_linker['Seq_Name'].values)
-chip_names = list(sample_linker['Chip_Name'].values)
-sample_names = list(sample_linker['Sample_Name'].values)
-panels = config["panels"]
+samples_lc = read_tsv_as_lst(config['samples_lc'])
 
 rule prepare_bamlist:
     input:
-        bams = expand("data/bams/{id}.bam", id = ids_1x_all)
+        bams = expand("data/bams/{id}.bam", id = samples_lc)
     output:
         bamlist = "results/imputation/bamlist.txt"
-    params:
-        threads=1
     shell: """
         mkdir -p {ANALYSIS_DIR}
         if [[ {rmdup} == "True" ]]

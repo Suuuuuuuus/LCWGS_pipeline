@@ -1,8 +1,7 @@
 configfile: "pipelines/config.json"
 
 import pandas as pd
-config['samples'] = pd.read_table("samples.tsv", header = None, names = ['Code'])
-ids_1x_all = list(config['samples']['Code'].values)
+samples_lc = read_tsv_as_lst(config['samples_lc'])
 
 rule classify_kmers:
     input:
@@ -36,7 +35,7 @@ rule calculate_kmer_error_rate:
 
 rule aggregate_kmer_error_rate_1:
     input:
-        files = expand("results/kmer/{id}/tmp/kmer_accuracy_1.txt", id = ids_1x_all)
+        files = expand("results/kmer/{id}/tmp/kmer_accuracy_1.txt", id = samples_lc)
     output:
         kmer_accuracy = "results/kmer/kmer_accuracy_read1.txt"
     shell: """
@@ -45,7 +44,7 @@ rule aggregate_kmer_error_rate_1:
 
 rule aggregate_kmer_error_rate_2:
     input:
-        files = expand("results/kmer/{id}/tmp/kmer_accuracy_2.txt", id = ids_1x_all)
+        files = expand("results/kmer/{id}/tmp/kmer_accuracy_2.txt", id = samples_lc)
     output:
         kmer_accuracy = "results/kmer/kmer_accuracy_read2.txt"
     shell: """
@@ -91,7 +90,7 @@ rule calculate_per_bin_kmer_error_rate:
 
 rule aggregate_per_bin_kmer_error_rate_1:
     input:
-        files = expand("results/kmer/{id}/read1/per_bin_kmer_error_rate_read1.txt", id = ids_1x_all)
+        files = expand("results/kmer/{id}/read1/per_bin_kmer_error_rate_read1.txt", id = samples_lc)
     output:
         per_bin_kmer_accuracy1 = "results/kmer/per_bin_kmer_accuracy_read1.txt"
     shell: """
@@ -100,7 +99,7 @@ rule aggregate_per_bin_kmer_error_rate_1:
 
 rule aggregate_per_bin_kmer_error_rate_2:
     input:
-        files = expand("results/kmer/{id}/read2/per_bin_kmer_error_rate_read2.txt", id = ids_1x_all)
+        files = expand("results/kmer/{id}/read2/per_bin_kmer_error_rate_read2.txt", id = samples_lc)
     output:
         per_bin_kmer_accuracy2 = "results/kmer/per_bin_kmer_accuracy_read2.txt"
     shell: """

@@ -186,4 +186,24 @@ rule exclude_chip_dup_samples:
         -excl-samples-where "ID = 'GAM654203'" \
         -osample sqlite://{input.sqlite}:PCs
     """
-    
+
+# Try if -T and -R make any difference (it shouldn't)
+# This rule has to be run separately with the previous, as it needs manual creation of the drop_samples and retain_sites file from the qc results. See the provided jupyter notebook.
+rule clean_chip_vcf:
+    input:
+        vcf = rules.genotype_chip.output.vcf
+    output:
+        vcf_qced = "results/chip/vcf/chip_qced.vcf.gz"
+    params:
+        drop_samples = "results/chip/vcf/drop_samples.tsv",
+        retain_sites = "results/chip/vcf/retain_sites.tsv"
+    resources:
+        mem = '20G'
+    shell: """
+        if [[ -d {params.drop_samples} && -d {params.retain_sites}]]
+        then
+            bcftools view -T {params.retain_sites} -S ^{params.drop_samples} -Oz -o {output.vcf_qced} {input.vcf}
+        else
+            touch {output.vcf_qced} # A place holder to avoid errors
+        fi
+    """

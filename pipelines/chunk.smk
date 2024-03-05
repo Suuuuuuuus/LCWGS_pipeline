@@ -20,15 +20,13 @@ rule split_fastq:
         fastq1 = "data/fastq/{hc}_1.fastq.gz",
         fastq2 = "data/fastq/{hc}_2.fastq.gz"
     output:
-        # dirs = temp(directory("data/fastq/tmp/{hc}/")),
-        flag = temp("data/fastq/tmp/{hc}/flag.txt")
+        flag = touch("data/fastq/tmp/{hc}/flag.txt")
     threads: 1
     params:
         chunk_size = config["fastq_chunk_size"]
     shell: """
         mkdir -p "data/fastq/tmp/{wildcards.hc}/"
         seqkit split2 -1 {input.fastq1} -2 {input.fastq2} -s {params.chunk_size} -O "data/fastq/tmp/{wildcards.hc}" -f -e .gz
-        echo "done!" > {output.flag}
     """
 
 rule make_fastq_tsv:
@@ -54,51 +52,4 @@ rule make_fastq_tsv:
         done
         cat "{params.tmpdir}tmp1.txt" | rev | cut -d '/' -f1 | rev | sed 's/_1.fastq.gz//g' > {output.fastq_lsts}
         rm "{params.tmpdir}tmp1.txt" "{params.tmpdir}tmp2.txt"
-    """
-
-sample_linker = pd.read_table(config['sample_linker'], sep = ',')
-ids_1x_all = list(sample_linker['Seq_Name'].values) # to be deprecated
-test_hc = ids_1x_all[:2]
-test_hc_dict = read_tsv_as_dict(test_hc, "data/file_lsts/hc_fastq_split/", "_split.tsv")
-
-test_hc_all_chunks = []
-for value_list in test_hc_dict.values():
-    test_hc_all_chunks.extend(value_list)
-
-rule split_bams:
-    input:
-        bam = "data/bams/{id}.bam",
-        reference = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta"
-    output:
-        bam_chunk = temp("data/chunk_bams/tmp/tmp/{id}/{id}.chr{chr}.bam"),
-        tmp1 = temp("data/chunk_bams/tmp/tmp/{id}/{id}.chr{chr}.tmp1.bam"),
-        tmp2 = temp("data/chunk_bams/tmp/tmp/{id}/{id}.chr{chr}.tmp2.bam")
-#        reference = rules.index_reference.input.reference
-    threads: 4
-    resources: mem = '10G'
-    params:
-        chr_str = "chr{chr}",
-        verbosity = "ERROR",
-        sample = "{id}".split("_")[0]
-    shell: """
-        mkdir -p data/chunk_bams/tmp/tmp/{wildcards.id}/
-        samtools view -h {input.bam} {params.chr_str} | \
-        samtools sort -o {output.tmp1} -
-
-        samtools index {output.tmp1}
-
-        picard AddOrReplaceReadGroups \
-        -VERBOSITY {params.verbosity} \
-        -I {output.tmp1} \
-        -O {output.tmp2} \
-        -RGLB OGC \
-        -RGPL ILLUMINA \
-        -RGPU unknown \
-        -RGSM {params.sample}
-
-        picard FixMateInformation -I {output.tmp2}
-
-        samtools collate -Oun128 {output.tmp2} | samtools fastq -OT RG,BC - | \
-        bwa mem -pt4 -CH <(samtools view -H {output.tmp2} | grep ^@RG) {input.reference} - | \
-        samtools sort -@4 -m4g -o {output.bam_chunk} -
     """

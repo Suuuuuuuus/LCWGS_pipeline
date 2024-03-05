@@ -35,12 +35,7 @@ rule fastuniq: # Currently deprecated as we are basically gonna remove in markdu
         gzip -c {output.fastq2_unzip} > {output.fastq2}
     """
 
-samples_hc = list(pd.read_table(config['samples_hc'], header = None, names = ['Code'])['Code'].values)
-samples_hc_split = {}
-for i in samples_hc:
-    path = "data/file_lsts/hc_fastq_split/" + i + "_split.tsv"
-    if os.path.exists(path):
-        samples_hc_split[i] = list(pd.read_table(path, header = None, names = ['Code'])['Code'].values)
+samples_hc = read_tsv_as_lst(config['samples_hc'])
 
 def sample_hc_fastq1(wildcards):
     sample = (wildcards.id).rsplit('_', 1)[0]
@@ -50,14 +45,32 @@ def sample_hc_fastq2(wildcards):
     return "data/fastq/tmp/" + sample + "/" + wildcards.id + "_2.fastq.gz"
 
 # Adapter trimming
-rule trimmomatic:
+rule trimmomatic_lc:
     input:
-        fastq1 = sample_hc_fastq1, # For chunked fastq files
+        fastq1 = rules.fastuniq.output.fastq1, 
+        fastq2 = rules.fastuniq.output.fastq2
+    output:
+        fwd_pair = "data/fastq_cleaned/{id}_1.fastq.gz",
+        rev_pair = "data/fastq_cleaned/{id}_2.fastq.gz",
+        fwd_unpair = "data/fastq_cleaned/{id}_unpaired_1.fastq.gz",
+        rev_unpair = "data/fastq_cleaned/{id}_unpaired_2.fastq.gz"
+    params:
+        adapters = config['adapter']
+    threads: 2
+    resources:
+        mem = '10G'
+    shell: """
+        trimmomatic PE \
+        {input.fastq1} {input.fastq2} \
+        {output.fwd_pair} {output.fwd_unpair} \
+        {output.rev_pair} {output.rev_unpair} \
+        ILLUMINACLIP:{params.adapters}:2:30:10:2:true MINLEN:50
+    """
+
+rule trimmomatic_hc:
+    input:
+        fastq1 = sample_hc_fastq1, 
         fastq2 = sample_hc_fastq2
-        # fastq1 = "data/fastq/{id}_1.fastq.gz", # For non-fastuniq fastq files
-        # fastq2 = "data/fastq/{id}_2.fastq.gz"
-        # fastq1 = rules.fastuniq.output.fastq1, # For fast-uniq'ed fastq files
-        # fastq2 = rules.fastuniq.output.fastq2
     output:
         fwd_pair = "data/fastq_cleaned/{id}_1.fastq.gz",
         rev_pair = "data/fastq_cleaned/{id}_2.fastq.gz",

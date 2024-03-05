@@ -11,16 +11,9 @@ import lcwgSus
 
 hc_panel = config["hc_panel"]
 
-samples_hc = list(pd.read_table(config['samples_hc'], header = None, names = ['Code'])['Code'].values)
-sample_linker = pd.read_table(config['sample_linker'], sep = ',')
-ids_1x_all = list(sample_linker['Seq_Name'].values) # to be deprecated
-seq_names = list(sample_linker['Seq_Name'].values)
-chip_names = list(sample_linker['Chip_Name'].values)
-sample_names = list(sample_linker['Sample_Name'].values)
-
-chromosomes = [i for i in range(1,23)]
-
-test_hc = ids_1x_all[:2]
+samples_hc = read_tsv_as_lst(config['samples_hc'])
+samples_lc = read_tsv_as_lst(config['samples_lc'])
+test_hc = samples_lc[:2]
 
 rule GATK_prepare_reference:
     input:

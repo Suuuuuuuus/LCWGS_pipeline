@@ -1,11 +1,9 @@
 #include: "chunk.smk"
 #include: "preprocess.smk"
-#include: "fastqc.smk"
 #include: "reference.smk"
 #include: "alignment.smk"
 
 include: "merge.smk"
-#include: "rmdup.smk"
 
 include: "variant_calling.smk"
 
@@ -21,13 +19,10 @@ import os
 sys.path.append("scripts")
 import lcwgSus
 
-samples_hc = list(pd.read_table(config['samples_hc'], header = None, names = ['Code'])['Code'].values)
-sample_linker = pd.read_table(config['sample_linker'], sep = ',')
-ids_1x_all = list(sample_linker['Seq_Name'].values) # to be deprecated
-seq_names = list(sample_linker['Seq_Name'].values)
-chip_names = list(sample_linker['Chip_Name'].values)
-sample_names = list(sample_linker['Sample_Name'].values)
-panels = config['panels']
+samples_hc = read_tsv_as_lst(config['samples_hc'])
+samples_lc = read_tsv_as_lst(config['samples_lc'])
+test_hc = samples_lc[:2]
+
 hc_panel = config["hc_panel"]
 
 chromosome = [i for i in range(1,23)]
@@ -37,14 +32,12 @@ clean_fastq = config['clean_fastq']
 reheader = config['reheader']
 concatenate = config['concatenate']
 
-test_hc = ids_1x_all[:2]
-
 # chunks = read_tsv_as_lst("data/bedgraph/bam_chunks.bed")
 
 rule chunk_all:
     input:
+        flag = expand("data/fastq/tmp/{hc}/flag.txt", hc = samples_hc),
         fastq_lsts = expand("data/file_lsts/hc_fastq_split/{hc}_split.tsv", hc = samples_hc)
-#        bam_chunk = expand("data/chunk_bams/{id}/{id}.chr{chr}.bam", id = samples_hc_split, chr = chromosome)
 
 samples_hc_split = []
 for i in samples_hc:
@@ -84,13 +77,6 @@ rule merge_all:
     input:
         bams = expand("data/merge_bams/tmp/{hc}.bam", hc = samples_hc),
         bais = expand("data/merge_bams/tmp/{hc}.bam.bai", hc = samples_hc)
-
-rule rmdup_all:
-    input:
-        # dedup_bams = expand("data/dedup_bams/{id}.bam", id = samples_hc),
-        # dedup_bais = expand("data/dedup_bams/{id}.bam.bai", id = samples_hc),
-        dedup_bam_chunk = expand("data/chunk_bams/{hc}/{hc}.chr{chr}.bam", hc = test_hc, chr = chromosome),
-        dedup_bai_chunk = expand("data/chunk_bams/{hc}/{hc}.chr{chr}.bam.bai", hc = test_hc, chr = chromosome)
 
 rule variant_calling_all:
     input:
