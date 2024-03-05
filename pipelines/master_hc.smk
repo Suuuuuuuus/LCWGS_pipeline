@@ -78,6 +78,8 @@ rule merge_all:
         bams = expand("data/merge_bams/tmp/{hc}.bam", hc = samples_hc),
         bais = expand("data/merge_bams/tmp/{hc}.bam.bai", hc = samples_hc)
 
+variant_types = ['snps', 'indels']
+
 rule variant_calling_all:
     input:
         fai = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta.fai" if concatenate else "data/references/GRCh38.fa.fai",
@@ -87,9 +89,11 @@ rule variant_calling_all:
         recal_bams = expand("data/recal_bams/{hc}.recal.bam", hc = test_hc),
         recal_bais = expand("data/recal_bams/{hc}.recal.bam.bai", hc = test_hc),
         bamlist = "results/call/bam.list",
-        snp_vcf = expand(f"results/call/vcfs/{hc_panel}/{hc_panel}.snp.chr{{chr}}.vcf.gz", chr = chromosome),
-        indel_vcf = expand(f"results/call/vcfs/{hc_panel}/{hc_panel}.indel.chr{{chr}}.vcf.gz", chr = chromosome)
-
+        vcf = expand(f"results/call/vcfs/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.vcf.gz", chr = chromosome, type = variant_types),
+        tranch = expand(f"results/call/VQSR/{hc_panel}/{{type}}.tranches", type = variant_types),
+        recal = expand(f"results/call/VQSR/{hc_panel}/{{type}}.recal", type = variant_types),
+        recal_vcf = expand(f"results/call/recal_vcf/{hc_panel}/{{type}}.vcf.gz", type = variant_types)
+        
 rule test_all:
     input:
         vcf = "results/tmp/{id}.{chr}.txt"

@@ -91,7 +91,7 @@ rule prepare_hc_bamlist:
         ls data/recal_bams/*.recal.bam > {output.bamlist}
     """
 
-rule haplotype_call_snp:
+rule haplotype_call:
     input:
         reference = rules.GATK_prepare_reference.input.reference,
         fai = rules.GATK_prepare_reference.output.fai,
@@ -99,9 +99,9 @@ rule haplotype_call_snp:
         bamlist = rules.prepare_hc_bamlist.output.bamlist,
         ref_vcf = f"data/ref_panel/{hc_panel}/{hc_panel}.chr{{chr}}.vcf.gz" # Move this to config so that we can test sites at different ref panels
     output:
-        snp_vcf = f"results/call/vcfs/{hc_panel}/{hc_panel}.snp.chr{{chr}}.vcf.gz",
-        empty_vcf1 = temp("results/call/tmp/ref/empty1_snp_chr{chr}.vcf.gz"),
-        empty_vcf2 = temp("results/call/tmp/ref/empty2_snp_chr{chr}.vcf.gz")
+        vcf = f"results/call/vcfs/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.vcf.gz",
+        empty_vcf1 = temp("results/call/tmp/ref/empty1_{type}_chr{chr}.vcf.gz"),
+        empty_vcf2 = temp("results/call/tmp/ref/empty2_{type}_chr{chr}.vcf.gz")
     resources: mem = '20G'
     threads: 8
     shell: """
@@ -109,7 +109,7 @@ rule haplotype_call_snp:
         mkdir -p results/call/vcfs/{hc_panel}/
         file=$(head -n 1 {input.bamlist})
 
-        bcftools view -G {input.ref_vcf} | bcftools view -v snps -Oz -o {output.empty_vcf1}
+        bcftools view -G {input.ref_vcf} | bcftools view -v {wildcards.type} -Oz -o {output.empty_vcf1}
         gatk IndexFeatureFile -I {output.empty_vcf1}
 
         gatk UpdateVCFSequenceDictionary \
@@ -121,7 +121,7 @@ rule haplotype_call_snp:
         gatk --java-options "-Xmx20G" HaplotypeCaller \
         -R {input.reference} \
         -I {input.bamlist} \
-        -O {output.snp_vcf} \
+        -O {output.vcf} \
         -L {output.empty_vcf2} \
         --alleles {output.empty_vcf2} \
         --output-mode EMIT_VARIANTS_ONLY
@@ -129,46 +129,6 @@ rule haplotype_call_snp:
         rm "{output.empty_vcf1}.tbi" "{output.empty_vcf2}.tbi"
     """
 
-rule haplotype_call_indel:
-    input:
-        reference = rules.GATK_prepare_reference.input.reference,
-        fai = rules.GATK_prepare_reference.output.fai,
-        dict = rules.GATK_prepare_reference.output.dict,
-        bamlist = rules.prepare_hc_bamlist.output.bamlist,
-        ref_vcf = f"data/ref_panel/{hc_panel}/{hc_panel}.chr{{chr}}.vcf.gz" # Move this to config so that we can test sites at different ref panels
-    output:
-        indel_vcf = f"results/call/vcfs/{hc_panel}/{hc_panel}.indel.chr{{chr}}.vcf.gz",
-        empty_vcf1 = temp("results/call/tmp/ref/empty1_indel_chr{chr}.vcf.gz"),
-        empty_vcf2 = temp("results/call/tmp/ref/empty2_indel_chr{chr}.vcf.gz")
-    resources: mem = '20G'
-    threads: 8
-    shell: """
-        mkdir -p results/call/tmp/ref/
-        mkdir -p results/call/vcfs/{hc_panel}/
-        file=$(head -n 1 {input.bamlist})
-
-        bcftools view -G {input.ref_vcf} | bcftools view -v indels -Oz -o {output.empty_vcf1}
-        gatk IndexFeatureFile -I {output.empty_vcf1}
-
-        gatk UpdateVCFSequenceDictionary \
-        -V {output.empty_vcf1} \
-        --source-dictionary $file \
-        --output {output.empty_vcf2} \
-        --replace true
-
-        gatk --java-options "-Xmx20G" HaplotypeCaller \
-        -R {input.reference} \
-        -I {input.bamlist} \
-        -O {output.indel_vcf} \
-        -L {output.empty_vcf2} \
-        --alleles {output.empty_vcf2} \
-        --output-mode EMIT_VARIANTS_ONLY \
-        --assembly-region-padding 300
-
-        rm "{output.empty_vcf1}.tbi" "{output.empty_vcf2}.tbi"
-    """
-
-'''
 rule get_vqsr_report:
     input:
         reference = rules.GATK_prepare_reference.input.reference,
@@ -176,24 +136,67 @@ rule get_vqsr_report:
         dict = rules.GATK_prepare_reference.output.dict,
         vcf = rules.haplotype_call.output.vcf
     output:
-        vqsr_report = "results/call/BQSR/BQSR_reports/{hc}.BQSR.report"
+        tranch = f"results/call/VQSR/{hc_panel}/{{type}}.tranches",
+        recal = f"results/call/VQSR/{hc_panel}/{{type}}.recal"
     params:
-        bqsr_known_sites = config["bqsr_known_sites"]
+        hapmap = "data/GATK_resource_bundle/hapmap_3.3.hg38.vcf.gz",
+        omni = "data/GATK_resource_bundle/1000G_omni2.5.hg38.vcf.gz",
+        oneKG_snps = "data/GATK_resource_bundle/1000G_phase1.snps.high_confidence.hg38.vcf.gz",
+        GRCh38_indels = "data/GATK_resource_bundle/Homo_sapiens_assembly38.known_indels.vcf.gz",
+        oneKG_indels = "data/GATK_resource_bundle/Mills_and_1000G_gold_standard.indels.hg38.vcf.gz",
+        dbsnp = "data/GATK_resource_bundle/dbsnp_146.hg38.vcf.gz"
+    resources:
+        mem = '30G'
+    shell: """
+        mkdir -p results/call/VQSR/{hc_panel}/
+
+        if [[ {wildcards.type} == "snps" ]]
+        then
+            gatk --java-options "-Xms4G -Xmx4G" VariantRecalibrator \
+            -tranche 99.0 \
+            -R {input.reference} \
+            -V {input.vcf} \
+            --resource:hapmap,known=false,training=true,truth=true,prior=15.0 {params.hapmap} \
+            --resource:omni,known=false,training=true,truth=true,prior=12.0 {params.omni} \
+            --resource:1000G,known=false,training=true,truth=false,prior=10.0 {params.oneKG_snps} \
+            --resource:dbsnp,known=true,training=false,truth=false,prior=7 {params.dbsnp} \
+            -an QD -an MQ -an MQRankSum -an ReadPosRankSum -an FS -an SOR \
+            -mode SNP -O {output.recal} --tranches-file {output.tranches}
+        else
+            gatk --java-options "-Xms4G -Xmx4G" VariantRecalibrator \
+            -tranche 99.0 \
+            -R {input.reference} \
+            -V {input.vcf} \
+            --resource:mills,known=false,training=true,truth=true,prior=12.0 {params.oneKG_indels} \
+            --resource:dbsnp,known=true,training=false,truth=false,prior=2 {params.dbsnp} \
+            -an QD -an MQ -an MQRankSum -an ReadPosRankSum -an FS -an SOR \
+            -mode INDEL -O {output.recal} --tranches-file {output.tranches}
+        fi
+    """
+
+rule apply_vqsr:
+    input:
+        reference = rules.GATK_prepare_reference.input.reference,
+        fai = rules.GATK_prepare_reference.output.fai,
+        dict = rules.GATK_prepare_reference.output.dict,
+        vcf = rules.haplotype_call.output.vcf,
+        tranch = rules.get_vqsr_report.output.tranch,
+        recal = rules.get_vqsr_report.output.recal
+    output:
+        recal_vcf = f"results/call/recal_vcf/{hc_panel}/{{type}}.vcf.gz"
+    params:
+        mode = "SNP" if "{type}" == "snps" else "INDEL"
     resources:
         mem = '10G'
     shell: """
-        gatk --java-options "-Xms4G -Xmx4G" VariantRecalibrator \
-        -tranche 99.0 \
-        -R {input.reference} \
-        -V merged.vcf.gz \
-        --resource:hapmap,known=false,training=true,truth=true,prior=15.0 \
-        /fdb/GATK_resource_bundle/hg38/hapmap_3.3.hg38.vcf.gz  \
-        --resource:omni,known=false,training=true,truth=false,prior=12.0 \
-        /fdb/GATK_resource_bundle/hg38/1000G_omni2.5.hg38.vcf.gz \
-        --resource:1000G,known=false,training=true,truth=false,prior=10.0 \
-        /fdb/GATK_resource_bundle/hg38/1000G_phase1.snps.high_confidence.hg38.vcf.gz \
-        -an QD -an MQ -an MQRankSum -an ReadPosRankSum -an FS -an SOR  \
-        -mode SNP -O merged_SNP1.recal --tranches-file output_SNP1.tranches \
-        --rscript-file output_SNP1.plots.R
+        mkdir -p results/call/recal_vcf/{hc_panel}/
+
+        gatk --java-options "-Xmx5g -Xms5g" ApplyVQSR \
+        -V {input.vcf} \
+        --recal-file {input.recal} \
+        --tranches-file {input.tranch} \
+        --truth-sensitivity-filter-level 99.0 \
+        --create-output-variant-index true \
+        -mode {params.mode} \
+        -O {output.recal_vcf}
     """
-'''
