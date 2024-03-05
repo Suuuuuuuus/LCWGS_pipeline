@@ -1,5 +1,7 @@
-LCWGS_pipeline: A low-coverage whole-genome sequencing (lcWGS) pipeline to process low, high coverage paired Illumina short-read sequencing data and DNA microarray data. 
+LCWGS_pipeline
 =======================================
+
+LCWGS_pipelien is a low-coverage whole-genome sequencing (lcWGS) pipeline to process low, high coverage paired Illumina short-read sequencing data and DNA microarray data. 
 
 Current analysis
 -------------
