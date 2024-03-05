@@ -1,14 +1,16 @@
-if [ "$#" -eq 1 ]; then
+if [ "$#" -eq 0 ]; then
     snakemake --forceall --rulegraph | dot -Tpdf > dag.pdf
-elif [ "$#" -eq 2 ]; then
-    cores="$1"
-    rule="$2"
-    snakemake -s pipelines/master.smk -c "$cores" --profile slurm/ "$rule"
 elif [ "$#" -eq 3 ]; then
-    cores="$1"
-    rule="$2"
-    option="$3"
-    snakemake -s pipelines/master.smk -c "$cores" "$option" --profile slurm/ "$rule"
+    master="$1"
+    cores="$2"
+    rule="$3"
+    snakemake -s pipelines/master_"$master".smk -c "$cores" --profile slurm/ "$rule"
+elif [ "$#" -eq 4 ]; then
+    master="$1"
+    cores="$2"
+    rule="$3"
+    option="$4"
+    snakemake -s pipelines/master_"$master".smk -c "$cores" "$option" --profile slurm/ "$rule"
 else
     echo "Invalid inputs."
     exit 1  # Exit with an error status

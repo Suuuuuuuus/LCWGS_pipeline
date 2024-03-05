@@ -1,20 +1,16 @@
-#include: "chunk.smk"
-#include: "preprocess.smk"
-#include: "fastqc.smk"
-#include: "reference.smk"
-#include: "alignment.smk"
+include: "preprocess.smk"
+include: "fastqc.smk"
+include: "reference.smk"
+include: "alignment.smk"
 
-include: "merge.smk"
-#include: "rmdup.smk"
-#include: "subsample.smk"
-#include: "kmer.smk"
-#include: "dup_rate.smk"
-#include: "coverage.smk"
+include: "rmdup.smk"
+include: "subsample.smk"
+include: "kmer.smk"
+include: "dup_rate.smk"
+include: "coverage.smk"
 
-include: "chip.smk"
-include: "variant_calling.smk"
-#include: "imputation_prep.smk"
-#include: "imputation.smk"
+include: "imputation_prep.smk"
+include: "imputation.smk"
 
 #include: "test.smk"
 include: "auxiliary.smk"
@@ -55,17 +51,6 @@ PANEL_NAME=config["PANEL_NAME"]
 
 test_hc = ids_1x_all[:2]
 
-# chunks = read_tsv_as_lst("data/bedgraph/bam_chunks.bed")
-
-rule chunk_all:
-    input:
-        fastq_lsts = expand("data/file_lsts/hc_fastq_split/{hc}_split.tsv", hc = samples_hc)
-#        bam_chunk = expand("data/chunk_bams/{id}/{id}.chr{chr}.bam", id = samples_hc_split, chr = chromosome)
-
-samples_hc_split = []
-for i in samples_hc:
-    samples_hc_split = samples_hc_split + read_tsv_as_lst("data/file_lsts/hc_fastq_split/" + i + "_split.tsv")
-
 rule preprocess_all:
     input:
         fwd_pair = expand("data/fastq_cleaned/{id}_1.fastq.gz", id = samples_hc_split),
@@ -95,11 +80,6 @@ rule alignment_all:
     input:
         bams = expand("data/bams/{id}.bam", id = samples_hc_split),
         bais = expand("data/bams/{id}.bam.bai", id = samples_hc_split)
-
-rule merge_all:
-    input:
-        bams = expand("data/merge_bams/tmp/{hc}.bam", hc = samples_hc),
-        bais = expand("data/merge_bams/tmp/{hc}.bam.bai", hc = samples_hc)
 
 rule rmdup_all:
     input:
@@ -146,12 +126,6 @@ rule kmer_all:
         fragment_length = expand("results/kmer/{id}/fragment_length.tsv", id = ids_1x_all),
         per_bin_kmer_accuracy = expand("results/kmer/{id}/read{read}/per_bin_kmer_error_rate_read{read}.txt", id = ids_1x_all, read = ['1', '2']),
         graph_kmer_position = expand("graphs/kmer_position/{id}_kmer_position.png", id = ids_1x_all)
-
-# This bit should never get executed
-rule dump_all:
-    input:
-        bed_chunks_samtools = "data/bedgraph/bam_chunks.bed",
-        bed_chunks_names = "data/bedgraph/bam_chunks_names.bed"
 
 # Dumps
 REGIONS={}
@@ -219,40 +193,15 @@ rule imputation_all:
         r2 = expand("results/imputation/imputation_accuracy/{id}/{panel}_imputation_accuracy.csv", id = seq_to_extract, panel = panels),
         graph = "graphs/imputation_vs_chip.png"
 
-# chip_thinning = ['thin_1bp', 'thin_50kb', 'thin_100kb']
-chip_thinning = ['thin_1bp']
-
-rule chip_all:
-    input:
-        # chip_vcf = "results/chip/vcf/chip_genotype.vcf.gz",
-        # chip_samples = "results/chip/vcf/chip_genotype.sample",
-        # chip_bgen = "results/chip/bgen/chip.bgen",
-        chip_stats = "results/chip/qc/chip.qc.sqlite",
-        variants = expand("results/chip/qc/PCs/pc_variants_{thinning}.txt", thinning = chip_thinning),
-        kinship1 = expand("results/chip/qc/PCs/chip_kinship_{thinning}.all.tsv.gz", thinning = chip_thinning),
-        UDUT1 = expand("results/chip/qc/PCs/chip_UDUT_{thinning}.all.tsv.gz", thinning = chip_thinning),
-        kinship2 = expand("results/chip/qc/PCs/chip_kinship_{thinning}.exclude-duplicates.tsv.gz", thinning = chip_thinning),
-        UDUT2 = expand("results/chip/qc/PCs/chip_UDUT_{thinning}.exclude-duplicates.tsv.gz", thinning = chip_thinning)
-
-rule variant_calling_all:
-    input:
-        fai = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta.fai" if concatenate else "data/references/GRCh38.fa.fai",
-        dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict" if concatenate else "data/references/GRCh38.dict",
-        bqsr_known_sites = [file + ".tbi" for file in config["bqsr_known_sites"]],
-        bqsr_reports = expand("results/call/BQSR/BQSR_reports/{hc}.BQSR.report", hc = test_hc),
-        recal_bams = expand("data/recal_bams/{hc}.recal.bam", hc = test_hc),
-        recal_bais = expand("data/recal_bams/{hc}.recal.bam.bai", hc = test_hc),
-        bamlist = "results/call/bam.list",
-        snp_vcf = expand(f"results/call/vcfs/{hc_panel}/{hc_panel}.snp.chr{{chr}}.vcf.gz", chr = chromosome),
-        indel_vcf = expand(f"results/call/vcfs/{hc_panel}/{hc_panel}.indel.chr{{chr}}.vcf.gz", chr = chromosome)
-
 rule test_all:
     input:
         vcf = "results/tmp/{id}.{chr}.txt"
         # bam = expand("data/bams/tmp/{hc}.bam", hc = test_hc),
         # bai = expand("data/bams/tmp/{hc}.bam.bai", hc = test_hc)
 
-# rule all:
-#     input:
-#         lcwgs_wrap_up = "results/lcwgs_results.csv"
+# This bit should never get executed
+rule dump_all:
+    input:
+        bed_chunks_samtools = "data/bedgraph/bam_chunks.bed",
+        bed_chunks_names = "data/bedgraph/bam_chunks_names.bed"
 
