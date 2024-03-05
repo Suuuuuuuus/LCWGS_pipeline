@@ -36,7 +36,7 @@ concatenate = config['concatenate']
 
 rule chunk_all:
     input:
-        flag = expand("data/fastq/tmp/{hc}/flag.txt", hc = samples_hc),
+        # flag = expand("data/fastq/tmp/{hc}/flag.txt", hc = samples_hc),
         fastq_lsts = expand("data/file_lsts/hc_fastq_split/{hc}_split.tsv", hc = samples_hc)
 
 samples_hc_split = []
