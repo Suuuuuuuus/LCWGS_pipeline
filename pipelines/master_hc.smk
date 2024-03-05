@@ -75,8 +75,8 @@ rule alignment_all:
 
 rule merge_all:
     input:
-        bams = expand("data/merge_bams/tmp/{hc}.bam", hc = samples_hc),
-        bais = expand("data/merge_bams/tmp/{hc}.bam.bai", hc = samples_hc)
+        bams = expand("data/merge_bams/tmp/{hc}.bam", hc = samples_hc[:2]),
+        bais = expand("data/merge_bams/tmp/{hc}.bam.bai", hc = samples_hc[:2])
 
 variant_types = ['snps', 'indels']
 
