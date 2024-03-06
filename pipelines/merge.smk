@@ -71,6 +71,6 @@ rule merge:
         -M {output.metric} \
         --REMOVE_DUPLICATES
 
-        samtools sort -@6 -m 1G -T temp -o {output.bam} {output.tmp1}
+        samtools sort -@6 -m 1G -T temp{wildcards.hc} -o {output.bam} {output.tmp1}
         samtools index {output.bam}
     """
