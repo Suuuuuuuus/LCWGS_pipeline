@@ -55,9 +55,7 @@ rule fastqc_all:
         html2 = expand("results/fastqc/{id}_2_fastqc.html", id = samples_lc),
         zip1 = expand("results/fastqc/{id}_1_fastqc.zip", id = samples_lc),
         zip2 = expand("results/fastqc/{id}_2_fastqc.zip", id = samples_lc),
-        fastqc = "results/fastqc/duplication_rate_fastqc.txt",
-        multiqc_lc = "results/fastqc/multiqc_lc/multiqc_report.html",
-        multiqc_hc = "results/fastqc/multiqc_hc/multiqc_report.html"
+        multiqc_lc = "results/fastqc/multiqc_lc/multiqc_report.html"
 
 rule alignment_all:
     input:

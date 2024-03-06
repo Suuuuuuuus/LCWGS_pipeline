@@ -63,7 +63,7 @@ rule merge:
         mkdir -p data/chunk_bams/tmp/{wildcards.hc}/
         mkdir -p data/merge_bams/tmp/
         samtools cat -o {output.tmp1} {input.bams}
-        samtools sort -@6 -m 1G -T temp -o {output.bam} {output.tmp1}
+        samtools sort -@6 -m 1G -T temp{wildcards.hc} -o {output.bam} {output.tmp1}
 
         picard MarkDuplicates \
         -I {output.bam} \
