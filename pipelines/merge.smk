@@ -61,9 +61,10 @@ rule merge:
         mem = '50G'
     shell: """
         mkdir -p data/chunk_bams/tmp/{wildcards.hc}/
-        mkdir -p data/merge_bams/tmp/
+        mkdir -p data/merge_bams/tmp/tmp/
+
         samtools cat -o {output.tmp1} {input.bams}
-        samtools sort -@6 -m 1G -T temp{wildcards.hc} -o {output.bam} {output.tmp1}
+        samtools sort -@6 -m 1G -T data/merge_bams/tmp/tmp/temp{wildcards.hc} -o {output.bam} {output.tmp1}
 
         picard MarkDuplicates \
         -I {output.bam} \
@@ -71,6 +72,6 @@ rule merge:
         -M {output.metric} \
         --REMOVE_DUPLICATES
 
-        samtools sort -@6 -m 1G -T temp{wildcards.hc} -o {output.bam} {output.tmp1}
+        samtools sort -@6 -m 1G -T data/merge_bams/tmp/tmp/temp{wildcards.hc} -o {output.bam} {output.tmp1}
         samtools index {output.bam}
     """
