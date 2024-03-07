@@ -7,8 +7,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import sys
-sys.path.append("scripts")
-import lcwgSus
+sys.path.append("/well/band/users/rbx225/software/lcwgsus/")
+import lcwgsus
 
 samples_lc = read_tsv_as_lst(config['samples_lc'])
 panels = config["panels"]

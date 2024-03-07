@@ -6,8 +6,8 @@ import pandas as pd
 import numpy as np
 import sys
 import os
-sys.path.append("scripts")
-import lcwgSus
+sys.path.append("/well/band/users/rbx225/software/lcwgsus/")
+import lcwgsus
 
 config['samples'] = pd.read_table("samples.tsv", header = None, names = ['Code'])
 ids_1x_all = list(config['samples']['Code'].values)

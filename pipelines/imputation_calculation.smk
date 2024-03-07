@@ -6,8 +6,8 @@ import pandas as pd
 import numpy as np
 import sys
 import os
-sys.path.append("scripts")
-import lcwgSus
+sys.path.append("/well/band/users/rbx225/software/lcwgsus/")
+import lcwgsus
 
 samples_hc = read_tsv_as_lst(config['samples_hc'])
 samples_lc = read_tsv_as_lst(config['samples_lc'])
@@ -93,11 +93,11 @@ rule calculate_imputation_accuracy:
                 r2.to_csv(output.r2, sep=',', mode='a')
                 sys.exit(0)
 
-        vcf = lcwgSus.multi_parse_vcf(chromosomes, vcfs)
-        af = lcwgSus.multi_read_af(chromosomes, mafs)
-        chip = lcwgSus.read_vcf(chip)
-        chip = lcwgSus.drop_cols(chip, drop_lst = ['id', 'qual', 'filter','info','format'])
-        r2 = lcwgSus.calculate_imputation_accuracy(vcf, chip, af)
+        vcf = lcwgsus.multi_parse_vcf(chromosomes, vcfs)
+        af = lcwgsus.multi_read_af(chromosomes, mafs)
+        chip = lcwgsus.read_vcf(chip)
+        chip = lcwgsus.drop_cols(chip, drop_lst = ['id', 'qual', 'filter','info','format'])
+        r2 = lcwgsus.calculate_imputation_accuracy(vcf, chip, af)
         r2.to_csv(output.r2, sep=',', mode='a')
 
 rule plot_imputation_accuracy:
@@ -119,10 +119,10 @@ rule plot_imputation_accuracy:
         mini = linker[(linker['Seq_Name'].isin(samples)) & (linker['Sample_Name'].str.contains('mini'))]
         samples_fv = fv['Seq_Name'].to_list()
         samples_mini = mini['Seq_Name'].to_list()
-        r2_fv, _ = lcwgSus.read_r2(panels, samples_fv)
-        r2_fv = lcwgSus.aggregate_r2(r2_fv)
-        r2_mini, _ = lcwgSus.read_r2(panels, samples_mini)
-        r2_mini = lcwgSus.aggregate_r2(r2_mini)
+        r2_fv, _ = lcwgsus.read_r2(panels, samples_fv)
+        r2_fv = lcwgsus.aggregate_r2(r2_fv)
+        r2_mini, _ = lcwgsus.read_r2(panels, samples_mini)
+        r2_mini = lcwgsus.aggregate_r2(r2_mini)
 
         plt.figure(figsize = (10,6))
         for df in r2_fv:

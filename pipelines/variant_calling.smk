@@ -6,8 +6,8 @@ import pandas as pd
 import os
 import numpy as np
 import sys
-sys.path.append("scripts")
-import lcwgSus
+sys.path.append("/well/band/users/rbx225/software/lcwgsus/")
+import lcwgsus
 
 hc_panel = config["hc_panel"]
 concatenate = config["concatenate"]

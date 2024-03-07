@@ -5,8 +5,8 @@ import json
 import pandas as pd
 import numpy as np
 import sys
-sys.path.append("scripts")
-import lcwgSus
+sys.path.append("/well/band/users/rbx225/software/lcwgsus/")
+import lcwgsus
 
 # samples = pd.read_table(config['samples'], header = None, names = ['Code'])
 sample_linker = pd.read_table(config['sample_linker'], sep = ',')

@@ -6,15 +6,14 @@ import pandas as pd
 import numpy as np
 import sys
 import os
-sys.path.append("scripts")
-import lcwgSus
+sys.path.append("/well/band/users/rbx225/software/lcwgsus/")
+import lcwgsus
 
 chromosome = [i for i in range(1,23)]
 
-samples_hc = list(pd.read_table(config['samples_hc'], header = None, names = ['Code'])['Code'].values)
-sample_linker = pd.read_table(config['sample_linker'], sep = ',')
-ids_1x_all = list(sample_linker['Seq_Name'].values) # to be deprecated
-test_hc = ids_1x_all[:2]
+samples_hc = read_tsv_as_lst(config['samples_hc'])
+samples_lc = read_tsv_as_lst(config['samples_lc'])
+test_hc = samples_lc[:2]
 
 # This script is borrowed from Dr Gavin Band. The original script is capable of coping with multiple builds (GRCh37/38) by providing alternative manifest files. In this pipeline, the behavior is temporarily disabled.
 

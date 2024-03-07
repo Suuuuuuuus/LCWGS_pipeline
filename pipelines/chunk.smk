@@ -8,8 +8,8 @@ import pandas as pd
 import numpy as np
 import sys
 import os
-sys.path.append("scripts")
-import lcwgSus
+sys.path.append("/well/band/users/rbx225/software/lcwgsus/")
+import lcwgsus
 
 # chunks = read_tsv_as_lst("data/bedgraph/bam_chunks.bed")
 chromosome = [i for i in range(1,23)]

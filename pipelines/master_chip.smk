@@ -11,8 +11,8 @@ import pandas as pd
 import numpy as np
 import sys
 import os
-sys.path.append("scripts")
-import lcwgSus
+sys.path.append("/well/band/users/rbx225/software/lcwgsus/")
+import lcwgsus
 
 samples_chip = read_tsv_as_lst(config['samples_chip'])
 chromosome = [i for i in range(1,23)]

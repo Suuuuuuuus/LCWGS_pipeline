@@ -3,8 +3,8 @@ configfile: "pipelines/config.json"
 import pandas as pd
 import numpy as np
 import sys
-sys.path.append("scripts")
-import lcwgSus
+sys.path.append("/well/band/users/rbx225/software/lcwgsus/")
+import lcwgsus
 
 samples_lc = read_tsv_as_lst(config['samples_lc'])
 chromosome = [i for i in range(1,23)]
@@ -60,10 +60,10 @@ rule calculate_ss_cumsum_coverage:
             region = region[region['chr'].isin(['chr' + str(i) for i in range(1,23)])]
             region['chr'] = region['chr'].str.extract(r'(\d+)').astype(int)
             region = region.sort_values(by = ['chr', 'start'])
-            bed = lcwgSus.multi_subtract_bed(chromosomes, lcwgSus.file_to_list(cov), lcwgSus.file_to_list(region))
+            bed = lcwgsus.multi_subtract_bed(chromosomes, lcwgsus.file_to_list(cov), lcwgsus.file_to_list(region))
         else:
             bed = cov
-        cumsum_ary = lcwgSus.calculate_ss_cumsum_coverage(bed, num_coverage = params.num_coverage)
+        cumsum_ary = lcwgsus.calculate_ss_cumsum_coverage(bed, num_coverage = params.num_coverage)
         np.savetxt(output.cumsum_ary, cumsum_ary, newline = ' ', fmt = '%1.7f')
 
 rule plot_sequencing_skew:
@@ -79,7 +79,7 @@ rule plot_sequencing_skew:
         ary_lst = []
         for i in input.cumsum_ary:
             ary_lst.append(np.loadtxt(i))
-        lcwgSus.plot_sequencing_skew(ary_lst, params.avg_coverage, num_coverage = params.num_coverage, save_fig = True)
+        lcwgsus.plot_sequencing_skew(ary_lst, params.avg_coverage, num_coverage = params.num_coverage, save_fig = True)
 
 
 rule calculate_uncoverage_rate:
