@@ -163,7 +163,7 @@ rule get_vqsr_report:
             --resource:1000G,known=false,training=true,truth=false,prior=10.0 {params.oneKG_snps} \
             --resource:dbsnp,known=true,training=false,truth=false,prior=7 {params.dbsnp} \
             -an QD -an MQ -an MQRankSum -an ReadPosRankSum -an FS -an SOR \
-            -mode SNP -O {output.recal} --tranches-file {output.tranches}
+            -mode SNP -O {output.recal} --tranches-file {output.tranch}
         else
             gatk --java-options "-Xms4G -Xmx4G" VariantRecalibrator \
             -tranche 99.0 \
