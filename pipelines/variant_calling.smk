@@ -136,10 +136,10 @@ rule get_vqsr_report:
         reference = rules.GATK_prepare_reference.input.reference,
         fai = rules.GATK_prepare_reference.output.fai,
         dict = rules.GATK_prepare_reference.output.dict,
-        vcf = expand(f"results/call/vcfs/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.vcf.gz", chr = chromosome, allow_missing = True)
+        vcf = rules.haplotype_call.output.vcf
     output:
-        tranch = f"results/call/VQSR/{hc_panel}/{{type}}.tranches",
-        recal = f"results/call/VQSR/{hc_panel}/{{type}}.recal"
+        tranch = f"results/call/VQSR/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.tranches",
+        recal = f"results/call/VQSR/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.recal"
     params:
         hapmap = "data/GATK_resource_bundle/hapmap_3.3.hg38.vcf.gz",
         omni = "data/GATK_resource_bundle/1000G_omni2.5.hg38.vcf.gz",
@@ -185,7 +185,7 @@ rule apply_vqsr:
         tranch = rules.get_vqsr_report.output.tranch,
         recal = rules.get_vqsr_report.output.recal
     output:
-        recal_vcf = f"results/call/recal_vcf/{hc_panel}/{{type}}.vcf.gz"
+        recal_vcf = f"results/call/recal_vcf/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.vcf.gz"
     params:
         mode = "SNP" if "{type}" == "snps" else "INDEL"
     resources:
