@@ -172,7 +172,7 @@ rule get_vqsr_report:
             --resource:mills,known=false,training=true,truth=true,prior=12.0 {params.oneKG_indels} \
             --resource:dbsnp,known=true,training=false,truth=false,prior=2 {params.dbsnp} \
             -an QD -an MQ -an MQRankSum -an ReadPosRankSum -an FS -an SOR \
-            -mode INDEL -O {output.recal} --tranches-file {output.tranches}
+            -mode INDEL -O {output.recal} --tranches-file {output.tranch}
         fi
     """
 
