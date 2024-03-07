@@ -135,7 +135,7 @@ rule get_vqsr_report:
         reference = rules.GATK_prepare_reference.input.reference,
         fai = rules.GATK_prepare_reference.output.fai,
         dict = rules.GATK_prepare_reference.output.dict,
-        vcf = rules.haplotype_call.output.vcf
+        vcf = expand(f"results/call/vcfs/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.vcf.gz", chr = chromosome, allow_missing = True)
     output:
         tranch = f"results/call/VQSR/{hc_panel}/{{type}}.tranches",
         recal = f"results/call/VQSR/{hc_panel}/{{type}}.recal"
