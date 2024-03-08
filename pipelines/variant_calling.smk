@@ -20,11 +20,13 @@ chromosome = [i for i in range(1,23)]
 rule GATK_prepare_reference:
     input:
         reference = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta" if concatenate else config["ref38"],
-        bqsr_known_sites = config["bqsr_known_sites"]
+        bqsr_known_sites = config["bqsr_known_sites"],
+        gatk_to_index = config["gatk_to_index"]
     output:
         fai = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta.fai" if concatenate else "data/references/GRCh38.fa.fai",
         dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict" if concatenate else "data/references/GRCh38.dict",
-        bqsr_known_sites = [file + ".tbi" for file in config["bqsr_known_sites"]]
+        bqsr_known_sites = [file + ".tbi" for file in config["bqsr_known_sites"]],
+        gatk_to_index = [file + ".tbi" for file in config["gatk_to_index"]]
     resources: mem = '10G'
     shell: """
         samtools faidx {input.reference}
@@ -33,6 +35,10 @@ rule GATK_prepare_reference:
         O={output.dict}
 
         for i in {input.bqsr_known_sites}; do
+            gatk IndexFeatureFile -I $i
+        done
+
+        for i in {input.gatk_to_index}; do
             gatk IndexFeatureFile -I $i
         done
     """
@@ -105,6 +111,8 @@ rule haplotype_call:
         empty_vcf1 = temp("results/call/tmp/ref/empty1_{type}_chr{chr}.vcf.gz"),
         empty_vcf2 = temp("results/call/tmp/ref/empty2_{type}_chr{chr}.vcf.gz")
     resources: mem = '20G'
+    params:
+        padding = 300
     threads: 8
     shell: """
         mkdir -p results/call/tmp/ref/
@@ -119,14 +127,24 @@ rule haplotype_call:
         --source-dictionary $file \
         --output {output.empty_vcf2} \
         --replace true
-
-        gatk --java-options "-Xmx20G" HaplotypeCaller \
-        -R {input.reference} \
-        -I {input.bamlist} \
-        -O {output.vcf} \
-        -L {output.empty_vcf2} \
-        --alleles {output.empty_vcf2} \
-        --output-mode EMIT_VARIANTS_ONLY
+        
+        if [[ {wildcards.type} == "indels" ]]
+            gatk --java-options "-Xmx20G" HaplotypeCaller \
+            -R {input.reference} \
+            -I {input.bamlist} \
+            -O {output.vcf} \
+            -L {output.empty_vcf2} \
+            --alleles {output.empty_vcf2} \
+            --assembly-region-padding {params.padding} \
+            --output-mode EMIT_VARIANTS_ONLY 
+        else
+            gatk --java-options "-Xmx20G" HaplotypeCaller \
+            -R {input.reference} \
+            -I {input.bamlist} \
+            -O {output.vcf} \
+            -L {output.empty_vcf2} \
+            --alleles {output.empty_vcf2} \
+            --output-mode EMIT_VARIANTS_ONLY 
 
         rm "{output.empty_vcf1}.tbi" "{output.empty_vcf2}.tbi"
     """

@@ -83,11 +83,12 @@ rule variant_calling_all:
         # fai = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta.fai" if concatenate else "data/references/GRCh38.fa.fai",
         # dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict" if concatenate else "data/references/GRCh38.dict",
         # bqsr_known_sites = [file + ".tbi" for file in config["bqsr_known_sites"]],
+        # gatk_to_index = [file + ".tbi" for file in config["gatk_to_index"]],
         # bqsr_reports = expand("results/call/BQSR/BQSR_reports/{hc}.BQSR.report", hc = test_hc),
         # recal_bams = expand("data/recal_bams/{hc}.recal.bam", hc = test_hc),
         # recal_bais = expand("data/recal_bams/{hc}.recal.bam.bai", hc = test_hc),
         # bamlist = "results/call/bam.list",
-        # vcf = expand(f"results/call/vcfs/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.vcf.gz", chr = chromosome, type = variant_types),
+        vcf = expand(f"results/call/vcfs/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.vcf.gz", chr = chromosome, type = variant_types),
         tranch = expand(f"results/call/VQSR/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.tranches", type = variant_types, chr = chromosome),
         recal = expand(f"results/call/VQSR/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.recal", type = variant_types, chr = chromosome),
         recal_vcf = expand(f"results/call/recal_vcf/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.vcf.gz", type = variant_types, chr = chromosome)
