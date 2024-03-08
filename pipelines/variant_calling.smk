@@ -129,6 +129,7 @@ rule haplotype_call:
         --replace true
         
         if [[ {wildcards.type} == "indels" ]]
+        then
             gatk --java-options "-Xmx20G" HaplotypeCaller \
             -R {input.reference} \
             -I {input.bamlist} \
