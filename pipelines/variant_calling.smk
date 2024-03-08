@@ -145,7 +145,8 @@ rule haplotype_call:
             -L {output.empty_vcf2} \
             --alleles {output.empty_vcf2} \
             --output-mode EMIT_VARIANTS_ONLY 
-
+        fi
+        
         rm "{output.empty_vcf1}.tbi" "{output.empty_vcf2}.tbi"
     """
 
