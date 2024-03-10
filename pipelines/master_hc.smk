@@ -73,8 +73,8 @@ rule alignment_all:
 
 rule merge_all:
     input:
-        bams = expand("data/merge_bams/tmp/{hc}.bam", hc = samples_hc[:4]),
-        bais = expand("data/merge_bams/tmp/{hc}.bam.bai", hc = samples_hc[:4])
+        bams = expand("data/merge_bams/tmp/{hc}.bam", hc = samples_hc[4:]),
+        bais = expand("data/merge_bams/tmp/{hc}.bam.bai", hc = samples_hc[4:])
 
 variant_types = ['snps', 'indels']
 
@@ -84,17 +84,11 @@ rule variant_calling_all:
         # dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict" if concatenate else "data/references/GRCh38.dict",
         # bqsr_known_sites = [file + ".tbi" for file in config["bqsr_known_sites"]],
         # gatk_to_index = [file + ".tbi" for file in config["gatk_to_index"]],
-        # bqsr_reports = expand("results/call/BQSR/BQSR_reports/{hc}.BQSR.report", hc = test_hc),
-        # recal_bams = expand("data/recal_bams/{hc}.recal.bam", hc = test_hc),
-        # recal_bais = expand("data/recal_bams/{hc}.recal.bam.bai", hc = test_hc),
-        # bamlist = "results/call/bam.list",
+        bqsr_reports = expand("results/call/BQSR/BQSR_reports/{hc}.BQSR.report", hc = samples_hc),
+        recal_bams = expand("data/recal_bams/{hc}.recal.bam", hc = samples_hc),
+        recal_bais = expand("data/recal_bams/{hc}.recal.bam.bai", hc = samples_hc),
+        bamlist = "results/call/bam.list",
         vcf = expand(f"results/call/vcfs/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.vcf.gz", chr = chromosome, type = variant_types),
         tranch = expand(f"results/call/VQSR/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.tranches", type = variant_types, chr = chromosome),
         recal = expand(f"results/call/VQSR/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.recal", type = variant_types, chr = chromosome),
         recal_vcf = expand(f"results/call/recal_vcf/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.vcf.gz", type = variant_types, chr = chromosome)
-        
-rule test_all:
-    input:
-        vcf = "results/tmp/{id}.{chr}.txt"
-        # bam = expand("data/bams/tmp/{hc}.bam", hc = test_hc),
-        # bai = expand("data/bams/tmp/{hc}.bam.bai", hc = test_hc)

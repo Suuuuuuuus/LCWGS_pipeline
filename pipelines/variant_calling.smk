@@ -13,8 +13,8 @@ hc_panel = config["hc_panel"]
 concatenate = config["concatenate"]
 
 samples_hc = read_tsv_as_lst(config['samples_hc'])
-samples_lc = read_tsv_as_lst(config['samples_lc'])
-test_hc = samples_lc[:2]
+# samples_lc = read_tsv_as_lst(config['samples_lc'])
+# test_hc = samples_lc[:2]
 chromosome = [i for i in range(1,23)]
 
 rule GATK_prepare_reference:
@@ -91,7 +91,7 @@ rule apply_bqsr:
 
 rule prepare_hc_bamlist:
     input:
-        bams = expand("data/recal_bams/{hc}.recal.bam", hc = test_hc)
+        bams = expand("data/recal_bams/{hc}.recal.bam", hc = samples_hc)
     output:
         bamlist = "results/call/bam.list"
     shell: """
