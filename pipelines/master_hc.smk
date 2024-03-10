@@ -4,7 +4,7 @@ configfile: "pipelines/config.json"
 #include: "reference.smk"
 #include: "alignment.smk"
 
-#include: "merge.smk"
+include: "merge.smk"
 
 include: "variant_calling.smk"
 
