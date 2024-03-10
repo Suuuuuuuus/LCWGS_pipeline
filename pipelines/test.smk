@@ -17,9 +17,20 @@ sample_names = list(sample_linker['Sample_Name'].values)
 
 chromosome = [str(i) for i in range(1,23)]
 
+ls = ['snps', 'indels']
+
+rule all:
+    input:
+        expand("tmp/{k}.txt", k = ls)
+
 rule test:
     output:
-        vcf = "results/tmp/{id}.{chr}.txt"
+        vcf = "tmp/{k}.txt"
+    params:
+    #    mode = "{k}"
+        mode = "SNP" if (str("{k}") == "snps") else "INDEL"
     shell: """
-        echo {wildcards.id}
-    """
+        mkdir -p tmp/
+        echo {wildcards.k} >> {output.vcf}
+        echo {params.mode} >> {output.vcf}
+"""

@@ -206,19 +206,29 @@ rule apply_vqsr:
         recal = rules.get_vqsr_report.output.recal
     output:
         recal_vcf = f"results/call/recal_vcf/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.vcf.gz"
-    params:
-        mode = "SNP" if "{type}" == "snps" else "INDEL"
     resources:
         mem = '10G'
     shell: """
         mkdir -p results/call/recal_vcf/{hc_panel}/
 
-        gatk --java-options "-Xmx5g -Xms5g" ApplyVQSR \
-        -V {input.vcf} \
-        --recal-file {input.recal} \
-        --tranches-file {input.tranch} \
-        --truth-sensitivity-filter-level 99.0 \
-        --create-output-variant-index true \
-        -mode {params.mode} \
-        -O {output.recal_vcf}
+        if [[ {wildcards.type} == "snps" ]]
+        then
+            gatk --java-options "-Xmx5g -Xms5g" ApplyVQSR \
+            -V {input.vcf} \
+            --recal-file {input.recal} \
+            --tranches-file {input.tranch} \
+            --truth-sensitivity-filter-level 99.0 \
+            --create-output-variant-index true \
+            -mode SNP \
+            -O {output.recal_vcf}
+        else
+            gatk --java-options "-Xmx5g -Xms5g" ApplyVQSR \
+            -V {input.vcf} \
+            --recal-file {input.recal} \
+            --tranches-file {input.tranch} \
+            --truth-sensitivity-filter-level 99.0 \
+            --create-output-variant-index true \
+            -mode INDEL \
+            -O {output.recal_vcf}
+        fi
     """
