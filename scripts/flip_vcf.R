@@ -4,7 +4,7 @@ args <- commandArgs(trailingOnly = TRUE)
 in_vcf <- args[1] # grep -v '^##'
 out_vcf <- args[2] # Need to concat back with all meta lines and col headers
 
-vcf = read.table(in_vcf, header=TRUE, comment = "")[1:10,]
+vcf = read.table(in_vcf, header=TRUE, comment = "")
 
 temp_col <- vcf$REF
 vcf$REF <- vcf$ALT
