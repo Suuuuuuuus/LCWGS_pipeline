@@ -110,10 +110,10 @@ rule haplotype_call:
         vcf = f"results/call/vcfs/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.vcf.gz",
         empty_vcf1 = temp("results/call/tmp/ref/empty1_{type}_chr{chr}.vcf.gz"),
         empty_vcf2 = temp("results/call/tmp/ref/empty2_{type}_chr{chr}.vcf.gz")
-    resources: mem = '20G'
+    resources: mem = '50G'
     params:
         padding = 300
-    threads: 8
+    threads: 16
     shell: """
         mkdir -p results/call/tmp/ref/
         mkdir -p results/call/vcfs/{hc_panel}/

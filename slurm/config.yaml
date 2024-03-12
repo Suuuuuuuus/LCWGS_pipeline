@@ -9,7 +9,7 @@ cluster:
     --job-name=smk-{rule}-{wildcards}
     --output=logs/{rule}/{rule}-{wildcards}-%j.out
 default-resources:
-  - partition=short
+  - partition=long
   - mem_mb=1000
 restart-times: 1
 max-jobs-per-second: 0.01
