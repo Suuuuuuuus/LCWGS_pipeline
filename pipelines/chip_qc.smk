@@ -1,5 +1,6 @@
 configfile: "pipelines/config.json"
 include: "auxiliary.smk"
+include: "software.smk"
 
 import json
 import pandas as pd
@@ -35,7 +36,8 @@ rule genotype_chip:
         samples = "results/chip/vcf/chip_genotype.sample",
         bgen = "results/chip/bgen/chip.bgen"
     params:
-        script = "scripts/convert_chip.R"
+        script = "scripts/convert_chip.R",
+        qctool = tools['qctool']
     shell: """
         mkdir -p results/chip/vcf/
         
@@ -48,7 +50,7 @@ rule genotype_chip:
         bgzip {output.tmp}
         
         mkdir -p results/chip/bgen/
-        /well/band/users/rbx225/software/QCTool/qctool/build/release/apps/qctool_v2.2.2 \
+        {params.qctool} \
         -g {output.vcf} -s {output.samples} -og {output.bgen} -bgen-bits 8 -bgen-compression zstd
     """	
 
@@ -59,10 +61,12 @@ rule compute_chip_stats:
 	    samples = rules.genotype_chip.output.samples
     output:
         sqlite = "results/chip/qc/chip.qc.sqlite"
+    params:
+        qctool = tools['qctool']
     shell: """
         mkdir -p results/chip/qc/
 
-        /well/band/users/rbx225/software/QCTool/qctool/build/release/apps/qctool_v2.2.2 \
+        {params.qctool} \
         -analysis-name "qc:autosomes" \
         -g {input.bgen} \
         -s {input.samples} \
@@ -72,7 +76,7 @@ rule compute_chip_stats:
         -sample-stats \
         -osample sqlite://{output.sqlite}:sample_stats
 
-        /well/band/users/rbx225/software/QCTool/qctool/build/release/apps/qctool_v2.2.2 \
+        {params.qctool} \
         -analysis-name "qc:sex_chromosomes" \
         -g {input.bgen} \
         -s {input.samples} \
@@ -90,7 +94,8 @@ rule thin_stats:
         tmp = temp( "results/chip/qc/PCs/tmp.gen" )
     params:
         MAC = 5,
-        missing = 10
+        missing = 10,
+        inthinnerator = tools['inthinnerator']
     resources:
         mem = '10G'
     shell: r"""
@@ -101,7 +106,7 @@ rule thin_stats:
 
         tail -n +2 {output.tmp} > {output.tsv}
 
-        /well/band/users/rbx225/software/QCTool/qctool/build/release/apps/inthinnerator_v2.2.2 \
+        {params.inthinnerator} \
         -analysis-name thin_1bp \
         -g {output.tsv} \
         -suppress-excluded \
@@ -111,7 +116,7 @@ rule thin_stats:
     """
 
 '''
-        /well/band/users/rbx225/software/QCTool/qctool/build/release/apps/inthinnerator_v2.2.2 \
+        {params.inthinnerator} \
         -analysis-name thin_100kb \
         -g {output.tsv} \
         -suppress-excluded \
@@ -119,7 +124,7 @@ rule thin_stats:
         -excl-range 06:25000000-40000000 \
         -o sqlite://{input.db}:thin_100kb
 
-        /well/band/users/rbx225/software/QCTool/qctool/build/release/apps/inthinnerator_v2.2.2 \
+        {params.inthinnerator} \
         -analysis-name thin_5kb \
         -g {output.tsv} \
         -suppress-excluded \
@@ -140,14 +145,15 @@ rule calculate_chip_PC:
         kinship1 = "results/chip/qc/PCs/chip_kinship_{thinning}.all.tsv.gz",
         UDUT1 = "results/chip/qc/PCs/chip_UDUT_{thinning}.all.tsv.gz"
     params:
-        PCs = 20
+        PCs = 20,
+        qctool = tools['qctool']
     resources:
         mem = '10G'
     shell: """
         sqlite3 {input.sqlite} \
         "SELECT chromosome FROM {wildcards.thinning}View WHERE result == 'picked'" > {output.variants}
         
-        /well/band/users/rbx225/software/QCTool/qctool/build/release/apps/qctool_v2.2.2 \
+        {params.qctool} \
         -analysis-name "PCs:{wildcards.thinning}:all" \
         -g {input.bgen} -s {input.samples} \
         -incl-rsids {output.variants} \
@@ -173,7 +179,7 @@ rule exclude_chip_dup_samples:
     resources:
         mem = '10G'
     shell: """
-        /well/band/users/rbx225/software/QCTool/qctool/build/release/apps/qctool_v2.2.2 \
+        {params.qctool} \
         -analysis-name "PCs:{wildcards.thinning}:exclude-duplicates" \
         -g {input.bgen} -s {input.samples} \
         -incl-rsids {input.variants} \

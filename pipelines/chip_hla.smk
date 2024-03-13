@@ -1,5 +1,6 @@
 configfile: "pipelines/config.json"
 include: "auxiliary.smk"
+include: "software.smk"
 
 import json
 import pandas as pd
@@ -36,3 +37,19 @@ rule extract_hla_alleles:
         gzip {output.hla_all}
         gzip {output.two_field}
     """
+
+rule convert_to_manifest:
+    input:
+        bpm = "data/manifest/GDA-8v1-0_A1.bpm",
+        egt = "data/manifest/GDA-8v1-0_A1_ClusterFile.egt"
+    output:
+        manifest = "data/manifest/manifest.csv"
+    resources: mem = '10G'
+    params:
+        picard = tools['picard']
+    shell: """
+        {params.picard} BpmToNormalizationManifestCsv -I {input.bpm} -CF {input.egt} -O {output.manifest}
+    """
+
+
+ 
