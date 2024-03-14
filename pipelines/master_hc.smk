@@ -25,7 +25,8 @@ test_hc = samples_lc[:2]
 
 hc_panel = config["hc_panel"]
 
-chromosome = [i for i in range(1,23)]
+#chromosome = [i for i in range(1,23)]
+chromosome = [i for i in range(1,9)]
 
 # The followings are global parameters:
 clean_fastq = config['clean_fastq']

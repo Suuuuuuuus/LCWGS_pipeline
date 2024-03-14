@@ -15,7 +15,8 @@ concatenate = config["concatenate"]
 samples_hc = read_tsv_as_lst(config['samples_hc'])
 # samples_lc = read_tsv_as_lst(config['samples_lc'])
 # test_hc = samples_lc[:2]
-chromosome = [i for i in range(1,23)]
+#chromosome = [i for i in range(1,23)]
+chromosome = [i for i in range(1,9)]
 
 rule GATK_prepare_reference:
     input:
