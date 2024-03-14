@@ -110,7 +110,7 @@ rule haplotype_call:
         vcf = f"results/call/vcfs/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.vcf.gz",
         empty_vcf1 = temp("results/call/tmp/ref/empty1_{type}_chr{chr}.vcf.gz"),
         empty_vcf2 = temp("results/call/tmp/ref/empty2_{type}_chr{chr}.vcf.gz")
-    resources: mem = '50G'
+    resources: mem = '100G'
     params:
         padding = 300
     threads: 16
@@ -136,8 +136,9 @@ rule haplotype_call:
             -O {output.vcf} \
             -L {output.empty_vcf2} \
             --alleles {output.empty_vcf2} \
+            --native-pair-hmm-threads 16 \
             --assembly-region-padding {params.padding} \
-            --output-mode EMIT_VARIANTS_ONLY 
+            --output-mode EMIT_VARIANTS_ONLY
         else
             gatk --java-options "-Xmx20G" HaplotypeCaller \
             -R {input.reference} \
@@ -145,9 +146,10 @@ rule haplotype_call:
             -O {output.vcf} \
             -L {output.empty_vcf2} \
             --alleles {output.empty_vcf2} \
-            --output-mode EMIT_VARIANTS_ONLY 
+            --native-pair-hmm-threads 16 \
+            --output-mode EMIT_VARIANTS_ONLY
         fi
-        
+
         rm "{output.empty_vcf1}.tbi" "{output.empty_vcf2}.tbi"
     """
 
