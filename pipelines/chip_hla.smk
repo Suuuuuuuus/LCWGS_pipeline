@@ -34,8 +34,8 @@ rule extract_hla_alleles:
         zgrep -v '^#' {input.vcf} | awk '$3 ~ /HLA/' >> {output.hla_all} 
         zgrep -v '^#' {input.vcf} | awk '$3 ~ /HLA/ && split($3, a, ":") == 2' >> {output.two_field}
 
-        gzip {output.hla_all}
-        gzip {output.two_field}
+        bgzip {output.hla_all}
+        bgzip {output.two_field}
     """
 
 rule convert_to_manifest:
