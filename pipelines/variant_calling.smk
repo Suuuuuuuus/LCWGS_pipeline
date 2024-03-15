@@ -93,7 +93,7 @@ rule apply_bqsr:
 
 rule prepare_hc_bamlist:
     input:
-        bams = expand("data/recal_bams/{hc}.recal.bam", hc = samples_hc)
+       # bams = expand("data/recal_bams/{hc}.recal.bam", hc = samples_hc)
     output:
         bamlist = "results/call/bam.list"
     shell: """
@@ -125,8 +125,6 @@ rule GATK_chunk_reference:
         --source-dictionary $file \
         --output {output.empty_vcf2} \
         --replace true
-
-        rm "{output.empty_vcf1}.tbi" "{output.empty_vcf2}.tbi"
     """
 
 rule haplotype_call:
