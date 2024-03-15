@@ -15,8 +15,8 @@ concatenate = config["concatenate"]
 samples_hc = read_tsv_as_lst(config['samples_hc'])
 # samples_lc = read_tsv_as_lst(config['samples_lc'])
 # test_hc = samples_lc[:2]
-#chromosome = [i for i in range(1,23)]
-chromosome = [i for i in range(1,9)]
+chromosome = [i for i in range(1,23)]
+variant_types = ['snps', 'indels']
 
 rule GATK_prepare_reference:
     input:
@@ -101,7 +101,7 @@ rule prepare_hc_bamlist:
         ls data/recal_bams/*.recal.bam > {output.bamlist}
     """
 
-rule haplotype_call:
+rule GATK_chunk_reference:
     input:
         reference = rules.GATK_prepare_reference.input.reference,
         fai = rules.GATK_prepare_reference.output.fai,
@@ -109,19 +109,15 @@ rule haplotype_call:
         bamlist = rules.prepare_hc_bamlist.output.bamlist,
         ref_vcf = f"data/ref_panel/{hc_panel}/{hc_panel}.chr{{chr}}.vcf.gz" # Move this to config so that we can test sites at different ref panels
     output:
-        vcf = f"results/call/vcfs/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.vcf.gz",
-        empty_vcf1 = temp("results/call/tmp/ref/empty1_{type}_chr{chr}.vcf.gz"),
-        empty_vcf2 = temp("results/call/tmp/ref/empty2_{type}_chr{chr}.vcf.gz")
-    resources: mem = '100G'
-    params:
-        padding = 300
-    threads: 16
+        empty_vcf1 = temp("results/call/tmp/ref/empty1_{type}_{regionStart}.{regionEnd}_chr{chr}.vcf.gz"),
+        empty_vcf2 = temp("results/call/tmp/ref/empty2_{type}_{regionStart}.{regionEnd}_chr{chr}.vcf.gz")
+    resources: mem = '10G'
     shell: """
         mkdir -p results/call/tmp/ref/
         mkdir -p results/call/vcfs/{hc_panel}/
         file=$(head -n 1 {input.bamlist})
 
-        bcftools view -G {input.ref_vcf} | bcftools view -v {wildcards.type} -Oz -o {output.empty_vcf1}
+        bcftools view -G {input.ref_vcf} | bcftools view -v {wildcards.type} -r chr{wildcards.chr}:{regionStart}-{regionEnd} -Oz -o {output.empty_vcf1}
         gatk IndexFeatureFile -I {output.empty_vcf1}
 
         gatk UpdateVCFSequenceDictionary \
@@ -129,26 +125,41 @@ rule haplotype_call:
         --source-dictionary $file \
         --output {output.empty_vcf2} \
         --replace true
-        
+
+        rm "{output.empty_vcf1}.tbi" "{output.empty_vcf2}.tbi"
+    """
+
+rule haplotype_call:
+    input:
+        reference = rules.GATK_prepare_reference.input.reference,
+        bamlist = rules.prepare_hc_bamlist.output.bamlist,
+        empty_vcf2 = rules.GATK_chunk_reference.output.empty_vcf2
+    output:
+        vcf = f"results/call/vcfs/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.{{regionStart}}.{{regionEnd}}.vcf.gz"
+    resources: mem = '20G'
+    params:
+        padding = 300
+    threads: 4
+    shell: """
         if [[ {wildcards.type} == "indels" ]]
         then
-            gatk --java-options "-Xmx20G" HaplotypeCaller \
+            gatk --java-options "-Xmx20G -Xms20G" HaplotypeCaller \
             -R {input.reference} \
             -I {input.bamlist} \
             -O {output.vcf} \
             -L {output.empty_vcf2} \
             --alleles {output.empty_vcf2} \
-            --native-pair-hmm-threads 16 \
+            --native-pair-hmm-threads 4 \
             --assembly-region-padding {params.padding} \
             --output-mode EMIT_VARIANTS_ONLY
         else
-            gatk --java-options "-Xmx20G" HaplotypeCaller \
+            gatk --java-options "-Xmx20G -Xms20G" HaplotypeCaller \
             -R {input.reference} \
             -I {input.bamlist} \
             -O {output.vcf} \
             -L {output.empty_vcf2} \
             --alleles {output.empty_vcf2} \
-            --native-pair-hmm-threads 16 \
+            --native-pair-hmm-threads 4 \
             --output-mode EMIT_VARIANTS_ONLY
         fi
 
@@ -162,8 +173,8 @@ rule get_vqsr_report:
         dict = rules.GATK_prepare_reference.output.dict,
         vcf = rules.haplotype_call.output.vcf
     output:
-        tranch = f"results/call/VQSR/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.tranches",
-        recal = f"results/call/VQSR/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.recal"
+        tranch = f"results/call/VQSR/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.{{regionStart}}.{{regionEnd}}.tranch",
+        recal = f"results/call/VQSR/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.{{regionStart}}.{{regionEnd}}.recal"
     params:
         hapmap = "data/GATK_resource_bundle/hapmap_3.3.hg38.vcf.gz",
         omni = "data/GATK_resource_bundle/1000G_omni2.5.hg38.vcf.gz",
@@ -209,11 +220,11 @@ rule apply_vqsr:
         tranch = rules.get_vqsr_report.output.tranch,
         recal = rules.get_vqsr_report.output.recal
     output:
-        recal_vcf = f"results/call/recal_vcf/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.vcf.gz"
+        recal_vcf = f"results/call/recal_vcf/{hc_panel}/regions/{hc_panel}.{{type}}.chr{{chr}}.{{regionStart}}.{{regionEnd}}.vcf.gz"
     resources:
         mem = '10G'
     shell: """
-        mkdir -p results/call/recal_vcf/{hc_panel}/
+        mkdir -p results/call/recal_vcf/{hc_panel}/regions/
 
         if [[ {wildcards.type} == "snps" ]]
         then
@@ -235,4 +246,40 @@ rule apply_vqsr:
             -mode INDEL \
             -O {output.recal_vcf}
         fi
+    """
+
+REGIONS={}
+for chr in chromosome:
+    start=[10000001, 15000001]
+    end=[  15000000, 20000000]
+    REGIONS[str(chr)]={"start":start, "end":end}
+
+file="results/imputation/regions.json"
+if os.exists(file):
+    with open(file) as json_file:
+        REGIONS = json.load(json_file)
+
+vcfs_to_concat={}
+for chr in chromosome:
+    start=REGIONS[str(chr)]["start"]
+    end=REGIONS[str(chr)]["end"]
+    vcfs_to_concat[str(chr)] = {}
+    for t in variant_types:
+        file_ary = []
+        for i in range(0, start.__len__()):
+            regionStart=start[i]
+            regionEnd=end[i]
+            file="results/call/recal_vcf/" + hc_panel + "/regions/" + hc_panel + "." + t +  ".chr" + str(chr) + "." + str(regionStart) + "." + str(regionEnd) + ".vcf.gz"
+            file_ary.append(file)
+        vcfs_to_concat[str(chr)][t] = file_ary
+
+rule concat_hc_vcfs:
+    input:
+        vcfs = lambda wildcards: vcfs_to_concat[str(wildcards.chr)][str(wildcards.type)]
+    output:
+        vcf = f"results/call/recal_vcf/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.vcf.gz"
+    threads: 4
+    resources: mem = '10G'
+    shell: """
+        bcftools concat --ligate -Oz -o {output.vcf} {input.vcfs}
     """
