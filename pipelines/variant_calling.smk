@@ -117,7 +117,8 @@ rule GATK_chunk_reference:
         mkdir -p results/call/vcfs/{hc_panel}/
         file=$(head -n 1 {input.bamlist})
 
-        bcftools view -G {input.ref_vcf} | bcftools view -v {wildcards.type} -r chr{wildcards.chr}:{wildcards.regionStart}-{wildcards.regionEnd} -Oz -o {output.empty_vcf1}
+        bcftools view -G -v {wildcards.type} -r chr{wildcards.chr}:{wildcards.regionStart}-{wildcards.regionEnd} -Oz -o {output.empty_vcf1} {input.ref_vcf}
+        
         gatk IndexFeatureFile -I {output.empty_vcf1}
 
         gatk UpdateVCFSequenceDictionary \
