@@ -114,9 +114,6 @@ for chr in chromosome:
             final_tranches.append(tranch)
 
         vcfs_to_concat[str(chr)][t] = file_ary
-        
-
-"results/call/vcfs/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.{{regionStart}}.{{regionEnd}}.vcf.gz"
 
 rule variant_calling_all:
     input:
@@ -127,7 +124,7 @@ rule variant_calling_all:
         #bqsr_reports = expand("results/call/BQSR/BQSR_reports/{hc}.BQSR.report", hc = samples_hc),
         #recal_bams = expand("data/recal_bams/{hc}.recal.bam", hc = samples_hc),
         #recal_bais = expand("data/recal_bams/{hc}.recal.bam.bai", hc = samples_hc),
-        bamlist = "results/call/bam.list",
+        #bamlist = "results/call/bam.list",
         regions = [region_vcfs],
         tranches = [final_tranches],
         recals = [final_recals],
