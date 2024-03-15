@@ -85,6 +85,7 @@ rule apply_bqsr:
         -I {input.dedup_bam} \
         -R {input.reference} \
         --bqsr-recal-file {input.bqsr_report} \
+        -OBI false \
         -O {output.recal_bam}
 
         samtools index {output.recal_bam}
