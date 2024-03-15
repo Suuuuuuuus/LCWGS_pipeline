@@ -25,8 +25,8 @@ test_hc = samples_lc[:2]
 
 hc_panel = config["hc_panel"]
 
-#chromosome = [i for i in range(1,23)]
-chromosome = [i for i in range(1,9)]
+chromosome = [i for i in range(1,23)]
+# chromosome = [i for i in range(1,9)]
 
 # The followings are global parameters:
 clean_fastq = config['clean_fastq']
@@ -105,8 +105,8 @@ for chr in chromosome:
             regionEnd=end[i]
 
             file = "results/call/recal_vcf/" + hc_panel + "/regions/" + hc_panel + "." + t +  ".chr" + str(chr) + "." + str(regionStart) + "." + str(regionEnd) + ".vcf.gz"
-            tranch = "results/call/VQSR/" + hc_panel + "/" + hc_panel + "." t + "." + str(chr) + "." + str(regionStart) + "." + str(regionEnd) + ".tranch"
-            recal = "results/call/VQSR/" + hc_panel + "/" + hc_panel + "." t + "." + str(chr) + "." + str(regionStart) + "." + str(regionEnd) + ".recal"
+            tranch = "results/call/VQSR/" + hc_panel + "/" + hc_panel + "." +  t + "." + str(chr) + "." + str(regionStart) + "." + str(regionEnd) + ".tranch"
+            recal = "results/call/VQSR/" + hc_panel + "/" + hc_panel + "." + t + "." + str(chr) + "." + str(regionStart) + "." + str(regionEnd) + ".recal"
 
             file_ary.append(file)
             region_vcfs.append(file)
