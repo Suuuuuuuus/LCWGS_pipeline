@@ -147,8 +147,8 @@ rule haplotype_call:
             -R {input.reference} \
             -I {input.bamlist} \
             -O {output.vcf} \
-            -L {output.empty_vcf2} \
-            --alleles {output.empty_vcf2} \
+            -L {input.empty_vcf2} \
+            --alleles {input.empty_vcf2} \
             --native-pair-hmm-threads 4 \
             --assembly-region-padding {params.padding} \
             --output-mode EMIT_VARIANTS_ONLY
@@ -157,8 +157,8 @@ rule haplotype_call:
             -R {input.reference} \
             -I {input.bamlist} \
             -O {output.vcf} \
-            -L {output.empty_vcf2} \
-            --alleles {output.empty_vcf2} \
+            -L {input.empty_vcf2} \
+            --alleles {input.empty_vcf2} \
             --native-pair-hmm-threads 4 \
             --output-mode EMIT_VARIANTS_ONLY
         fi
