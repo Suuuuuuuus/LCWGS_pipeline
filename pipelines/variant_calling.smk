@@ -163,7 +163,7 @@ rule haplotype_call:
             --output-mode EMIT_VARIANTS_ONLY
         fi
 
-        rm "{output.empty_vcf1}.tbi" "{output.empty_vcf2}.tbi"
+        rm "{output.empty_vcf2}.tbi"
     """
 
 rule get_vqsr_report:
