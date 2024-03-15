@@ -33,7 +33,7 @@ for chr in chromosome:
     REGIONS[str(chr)]={"start":start, "end":end}
 
 file="results/imputation/regions.json"
-if os.exists(file):
+if os.path.exists(file):
     with open(file) as json_file:
         REGIONS = json.load(json_file)
 
