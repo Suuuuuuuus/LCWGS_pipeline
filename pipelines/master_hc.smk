@@ -4,11 +4,11 @@ configfile: "pipelines/config.json"
 #include: "reference.smk"
 #include: "alignment.smk"
 
-include: "merge.smk"
+#include: "merge.smk"
 
 include: "variant_calling.smk"
 
-#include: "test.smk"
+include: "test.smk"
 include: "auxiliary.smk"
 
 import json
@@ -26,7 +26,6 @@ test_hc = samples_lc[:2]
 hc_panel = config["hc_panel"]
 
 chromosome = [i for i in range(1,23)]
-# chromosome = [i for i in range(1,9)]
 
 # The followings are global parameters:
 clean_fastq = config['clean_fastq']
@@ -126,9 +125,19 @@ rule variant_calling_all:
         #recal_bais = expand("data/recal_bams/{hc}.recal.bam.bai", hc = samples_hc),
         #bamlist = "results/call/bam.list",
         regions = [region_vcfs],
-        tranches = [final_tranches],
-        recals = [final_recals],
+        # tranches = [final_tranches],
+        # recals = [final_recals],
         #vcf = expand(f"results/call/vcfs/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.vcf.gz", chr = chromosome, type = variant_types),
         # tranch = expand(f"results/call/VQSR/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.tranches", type = variant_types, chr = chromosome),
         # recal = expand(f"results/call/VQSR/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.recal", type = variant_types, chr = chromosome),
         #recal_vcf = expand(f"results/call/recal_vcf/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.vcf.gz", type = variant_types, chr = chromosome)
+
+rule test_all:
+    input:
+        merge_vcf = expand(f"results/call/merge_vcf/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.vcf.gz", type = variant_types, chr = chromosome),
+        tranches = expand(f"results/call/VQSR/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.tranch", type = variant_types, chr = chromosome),
+        recals = expand(f"results/call/VQSR/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.recal", type = variant_types, chr = chromosome),
+        recal_vcf = expand(f"results/call/recal_vcf/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.vcf.gz", type = variant_types, chr = chromosome)
+
+
+        
