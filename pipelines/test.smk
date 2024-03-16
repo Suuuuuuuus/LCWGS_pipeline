@@ -57,7 +57,7 @@ rule get_vqsr_report:
         dict = rules.GATK_prepare_reference.output.dict,
         vcf = rules.haplotype_call.output.vcf
     output:
-        tranch = f"results/call/VQSR/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.tranch"
+        tranch = f"results/call/VQSR/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.tranch",
         recal = f"results/call/VQSR/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.recal"
     params:
         hapmap = "data/GATK_resource_bundle/hapmap_3.3.hg38.vcf.gz",
