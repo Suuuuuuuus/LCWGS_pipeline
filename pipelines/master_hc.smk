@@ -131,4 +131,4 @@ rule variant_calling_all:
         #vcf = expand(f"results/call/vcfs/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.vcf.gz", chr = chromosome, type = variant_types),
         # tranch = expand(f"results/call/VQSR/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.tranches", type = variant_types, chr = chromosome),
         # recal = expand(f"results/call/VQSR/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.recal", type = variant_types, chr = chromosome),
-        recal_vcf = expand(f"results/call/recal_vcf/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.vcf.gz", type = variant_types, chr = chromosome)
+        #recal_vcf = expand(f"results/call/recal_vcf/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.vcf.gz", type = variant_types, chr = chromosome)

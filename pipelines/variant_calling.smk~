@@ -280,5 +280,5 @@ rule concat_hc_vcfs:
     threads: 4
     resources: mem = '20G'
     shell: """
-        bcftools concat -Oz -o {output.vcf} -a -d {wildcards.type} {input.vcfs}
+        bcftools concat --ligate -Oz -o {output.vcf} {input.vcfs}
     """
