@@ -12,6 +12,7 @@ samples_hc = read_tsv_as_lst(config['samples_hc'])
 hc_panel = config["hc_panel"]
 chromosome = [i for i in range(1,23)]
 variant_types = ['snps', 'indels']
+concatenate = config["concatenate"]
 
 REGIONS={}
 for chr in chromosome:
