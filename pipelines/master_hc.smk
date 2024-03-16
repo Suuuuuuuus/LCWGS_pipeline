@@ -78,41 +78,41 @@ rule merge_all:
 
 variant_types = ['snps', 'indels']
 
-REGIONS={}
-for chr in chromosome:
-    start=[10000001, 15000001]
-    end=[  15000000, 20000000]
-    REGIONS[str(chr)]={"start":start, "end":end}
+# REGIONS={}
+# for chr in chromosome:
+#     start=[10000001, 15000001]
+#     end=[  15000000, 20000000]
+#     REGIONS[str(chr)]={"start":start, "end":end}
 
-file="results/imputation/regions.json"
-if os.path.exists(file):
-    with open(file) as json_file:
-        REGIONS = json.load(json_file)
+# file="results/imputation/regions.json"
+# if os.path.exists(file):
+#     with open(file) as json_file:
+#         REGIONS = json.load(json_file)
 
-vcfs_to_concat={}
-region_vcfs = []
-final_tranches = []
-final_recals = []
-for chr in chromosome:
-    start=REGIONS[str(chr)]["start"]
-    end=REGIONS[str(chr)]["end"]
-    vcfs_to_concat[str(chr)] = {}
-    for t in variant_types:
-        file_ary = []
-        for i in range(0, start.__len__()):
-            regionStart=start[i]
-            regionEnd=end[i]
+# vcfs_to_concat={}
+# region_vcfs = []
+# final_tranches = []
+# final_recals = []
+# for chr in chromosome:
+#     start=REGIONS[str(chr)]["start"]
+#     end=REGIONS[str(chr)]["end"]
+#     vcfs_to_concat[str(chr)] = {}
+#     for t in variant_types:
+#         file_ary = []
+#         for i in range(0, start.__len__()):
+#             regionStart=start[i]
+#             regionEnd=end[i]
 
-            file = "results/call/recal_vcf/" + hc_panel + "/regions/" + hc_panel + "." + t +  ".chr" + str(chr) + "." + str(regionStart) + "." + str(regionEnd) + ".vcf.gz"
-            tranch = "results/call/VQSR/" + hc_panel + "/" + hc_panel + "." +  t + ".chr" + str(chr) + "." + str(regionStart) + "." + str(regionEnd) + ".tranch"
-            recal = "results/call/VQSR/" + hc_panel + "/" + hc_panel + "." + t + ".chr" + str(chr) + "." + str(regionStart) + "." + str(regionEnd) + ".recal"
+#             file = "results/call/recal_vcf/" + hc_panel + "/regions/" + hc_panel + "." + t +  ".chr" + str(chr) + "." + str(regionStart) + "." + str(regionEnd) + ".vcf.gz"
+#             tranch = "results/call/VQSR/" + hc_panel + "/" + hc_panel + "." +  t + ".chr" + str(chr) + "." + str(regionStart) + "." + str(regionEnd) + ".tranch"
+#             recal = "results/call/VQSR/" + hc_panel + "/" + hc_panel + "." + t + ".chr" + str(chr) + "." + str(regionStart) + "." + str(regionEnd) + ".recal"
 
-            file_ary.append(file)
-            region_vcfs.append(file)
-            final_recals.append(recal)
-            final_tranches.append(tranch)
+#             file_ary.append(file)
+#             region_vcfs.append(file)
+#             final_recals.append(recal)
+#             final_tranches.append(tranch)
 
-        vcfs_to_concat[str(chr)][t] = file_ary
+#         vcfs_to_concat[str(chr)][t] = file_ary
 
 rule variant_calling_all:
     input:
