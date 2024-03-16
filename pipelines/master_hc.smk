@@ -124,7 +124,7 @@ rule variant_calling_all:
         #recal_bams = expand("data/recal_bams/{hc}.recal.bam", hc = samples_hc),
         #recal_bais = expand("data/recal_bams/{hc}.recal.bam.bai", hc = samples_hc),
         #bamlist = "results/call/bam.list",
-        regions = [region_vcfs],
+        # regions = [region_vcfs],
         # tranches = [final_tranches],
         # recals = [final_recals],
         #vcf = expand(f"results/call/vcfs/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.vcf.gz", chr = chromosome, type = variant_types),
