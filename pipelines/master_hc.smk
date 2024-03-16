@@ -6,7 +6,7 @@ configfile: "pipelines/config.json"
 
 #include: "merge.smk"
 
-include: "variant_calling.smk"
+#include: "variant_calling.smk"
 
 include: "test.smk"
 include: "auxiliary.smk"
