@@ -165,15 +165,54 @@ rule haplotype_call:
         rm "{input.empty_vcf2}.tbi"
     """
 
+REGIONS = {}
+for chr in chromosome:
+    start = [10000001, 15000001]
+    end = [  15000000, 20000000]
+    REGIONS[str(chr)]={"start":start, "end":end}
+
+chunk_regions = "results/imputation/regions.json"
+if os.path.exists(chunk_regions):
+    with open(chunk_regions) as json_file:
+        REGIONS = json.load(json_file)
+
+vcfs_to_concat = {}
+for chr in chromosome:
+    start = REGIONS[str(chr)]["start"]
+    end = REGIONS[str(chr)]["end"]
+    vcfs_to_concat[str(chr)] = {}
+    for t in variant_types:
+        file_ary = []
+        for i in range(0, start.__len__()):
+            regionStart = start[i]
+            regionEnd = end[i]
+            file = "results/call/vcfs/" + hc_panel + "/" + hc_panel + "." + t +  ".chr" + str(chr) + "." + str(regionStart) + "." + str(regionEnd) + ".vcf.gz"
+            file_ary.append(file)
+        vcfs_to_concat[str(chr)][t] = file_ary
+
+rule concat_hc_vcfs:
+    input:
+        vcfs = lambda wildcards: vcfs_to_concat[str(wildcards.chr)][str(wildcards.type)]
+    output:
+        vcf = f"results/call/merge_vcf/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.vcf.gz"
+    threads: 4
+    resources: mem = '20G'
+    shell: """
+        mkdir -p results/call/merge_vcf/{hc_panel}/
+
+        bcftools concat -Oz -o {output.vcf} -a -d {wildcards.type} {input.vcfs}
+        tabix {output.vcf}
+    """
+
 rule get_vqsr_report:
     input:
         reference = rules.GATK_prepare_reference.input.reference,
         fai = rules.GATK_prepare_reference.output.fai,
         dict = rules.GATK_prepare_reference.output.dict,
-        vcf = rules.haplotype_call.output.vcf
+        vcf = rules.concat_hc_vcfs.output.vcf
     output:
-        tranch = f"results/call/VQSR/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.{{regionStart}}.{{regionEnd}}.tranch",
-        recal = f"results/call/VQSR/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.{{regionStart}}.{{regionEnd}}.recal"
+        tranch = f"results/call/VQSR/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.tranch",
+        recal = f"results/call/VQSR/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.recal"
     params:
         hapmap = "data/GATK_resource_bundle/hapmap_3.3.hg38.vcf.gz",
         omni = "data/GATK_resource_bundle/1000G_omni2.5.hg38.vcf.gz",
@@ -182,13 +221,13 @@ rule get_vqsr_report:
         oneKG_indels = "data/GATK_resource_bundle/Mills_and_1000G_gold_standard.indels.hg38.vcf.gz",
         dbsnp = "data/GATK_resource_bundle/dbsnp_146.hg38.vcf.gz"
     resources:
-        mem = '5G'
+        mem = '20G'
     shell: """
         mkdir -p results/call/VQSR/{hc_panel}/
 
         if [[ {wildcards.type} == "snps" ]]
         then
-            gatk --java-options "-Xms4G -Xmx4G" VariantRecalibrator \
+            gatk --java-options "-Xms20g -Xmx20g" VariantRecalibrator \
             -tranche 99.0 \
             -R {input.reference} \
             -V {input.vcf} \
@@ -199,7 +238,7 @@ rule get_vqsr_report:
             -an QD -an MQ -an MQRankSum -an ReadPosRankSum -an FS -an SOR \
             -mode SNP -O {output.recal} --tranches-file {output.tranch}
         else
-            gatk --java-options "-Xms4G -Xmx4G" VariantRecalibrator \
+            gatk --java-options "-Xms20g -Xmx20g" VariantRecalibrator \
             -tranche 99.0 \
             -R {input.reference} \
             -V {input.vcf} \
@@ -215,19 +254,19 @@ rule apply_vqsr:
         reference = rules.GATK_prepare_reference.input.reference,
         fai = rules.GATK_prepare_reference.output.fai,
         dict = rules.GATK_prepare_reference.output.dict,
-        vcf = rules.haplotype_call.output.vcf,
+        vcf = rules.concat_hc_vcfs.output.vcf,
         tranch = rules.get_vqsr_report.output.tranch,
         recal = rules.get_vqsr_report.output.recal
     output:
-        recal_vcf = f"results/call/recal_vcf/{hc_panel}/regions/{hc_panel}.{{type}}.chr{{chr}}.{{regionStart}}.{{regionEnd}}.vcf.gz"
+        recal_vcf = f"results/call/recal_vcf/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.vcf.gz"
     resources:
-        mem = '5G'
+        mem = '20G'
     shell: """
-        mkdir -p results/call/recal_vcf/{hc_panel}/regions/
+        mkdir -p results/call/recal_vcf/{hc_panel}/
 
         if [[ {wildcards.type} == "snps" ]]
         then
-            gatk --java-options "-Xmx5g -Xms5g" ApplyVQSR \
+            gatk --java-options "-Xmx20g -Xms20g" ApplyVQSR \
             -V {input.vcf} \
             --recal-file {input.recal} \
             --tranches-file {input.tranch} \
@@ -236,7 +275,7 @@ rule apply_vqsr:
             -mode SNP \
             -O {output.recal_vcf}
         else
-            gatk --java-options "-Xmx5g -Xms5g" ApplyVQSR \
+            gatk --java-options "-Xmx20g -Xms20g" ApplyVQSR \
             -V {input.vcf} \
             --recal-file {input.recal} \
             --tranches-file {input.tranch} \
@@ -245,40 +284,4 @@ rule apply_vqsr:
             -mode INDEL \
             -O {output.recal_vcf}
         fi
-    """
-
-REGIONS={}
-for chr in chromosome:
-    start=[10000001, 15000001]
-    end=[  15000000, 20000000]
-    REGIONS[str(chr)]={"start":start, "end":end}
-
-file="results/imputation/regions.json"
-if os.path.exists(file):
-    with open(file) as json_file:
-        REGIONS = json.load(json_file)
-
-vcfs_to_concat={}
-for chr in chromosome:
-    start=REGIONS[str(chr)]["start"]
-    end=REGIONS[str(chr)]["end"]
-    vcfs_to_concat[str(chr)] = {}
-    for t in variant_types:
-        file_ary = []
-        for i in range(0, start.__len__()):
-            regionStart=start[i]
-            regionEnd=end[i]
-            file="results/call/recal_vcf/" + hc_panel + "/regions/" + hc_panel + "." + t +  ".chr" + str(chr) + "." + str(regionStart) + "." + str(regionEnd) + ".vcf.gz"
-            file_ary.append(file)
-        vcfs_to_concat[str(chr)][t] = file_ary
-
-rule concat_hc_vcfs:
-    input:
-        vcfs = lambda wildcards: vcfs_to_concat[str(wildcards.chr)][str(wildcards.type)]
-    output:
-        vcf = f"results/call/recal_vcf/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.vcf.gz"
-    threads: 4
-    resources: mem = '20G'
-    shell: """
-        bcftools concat -Oz -o {output.vcf} -a -d {wildcards.type} {input.vcfs}
     """
