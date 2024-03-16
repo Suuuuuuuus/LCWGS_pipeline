@@ -50,6 +50,7 @@ rule concat_hc_vcfs:
         mkdir -p results/call/merge_vcf/{hc_panel}/
 
         bcftools concat -Oz -o {output.vcf} -a -d {wildcards.type} {input.vcfs}
+        tabix {output.vcf}
     """
 
 rule GATK_prepare_reference:
