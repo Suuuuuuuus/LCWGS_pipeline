@@ -51,12 +51,38 @@ rule concat_hc_vcfs:
         bcftools concat -Oz -o {output.vcf} -a -d {wildcards.type} {input.vcfs}
     """
 
+rule GATK_prepare_reference:
+    input:
+        reference = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta" if concatenate else config["ref38"],
+        bqsr_known_sites = config["bqsr_known_sites"],
+        gatk_to_index = config["gatk_to_index"]
+    output:
+        fai = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta.fai" if concatenate else "data/references/GRCh38.fa.fai",
+        dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict" if concatenate else "data/references/GRCh38.dict",
+        bqsr_known_sites = [file + ".tbi" for file in config["bqsr_known_sites"]],
+        gatk_to_index = [file + ".tbi" for file in config["gatk_to_index"]]
+    resources: mem = '10G'
+    shell: """
+        samtools faidx {input.reference}
+        picard CreateSequenceDictionary \
+        R={input.reference} \
+        O={output.dict}
+
+        for i in {input.bqsr_known_sites}; do
+            gatk IndexFeatureFile -I $i
+        done
+
+        for i in {input.gatk_to_index}; do
+            gatk IndexFeatureFile -I $i
+        done
+    """
+
 rule get_vqsr_report:
     input:
         reference = rules.GATK_prepare_reference.input.reference,
         fai = rules.GATK_prepare_reference.output.fai,
         dict = rules.GATK_prepare_reference.output.dict,
-        vcf = rules.haplotype_call.output.vcf
+        vcf = rules.concat_hc_vcfs.output.vcf
     output:
         tranch = f"results/call/VQSR/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.tranch",
         recal = f"results/call/VQSR/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.recal"
@@ -101,7 +127,7 @@ rule apply_vqsr:
         reference = rules.GATK_prepare_reference.input.reference,
         fai = rules.GATK_prepare_reference.output.fai,
         dict = rules.GATK_prepare_reference.output.dict,
-        vcf = rules.haplotype_call.output.vcf,
+        vcf = rules.concat_hc_vcfs.output.vcf,
         tranch = rules.get_vqsr_report.output.tranch,
         recal = rules.get_vqsr_report.output.recal
     output:
