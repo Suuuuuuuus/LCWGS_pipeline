@@ -13,8 +13,6 @@ import lcwgsus
 chromosome = [i for i in range(1,23)]
 
 samples_hc = read_tsv_as_lst(config['samples_hc'])
-samples_lc = read_tsv_as_lst(config['samples_lc'])
-test_hc = samples_lc[:2]
 
 # This script is borrowed from Dr Gavin Band. The original script is capable of coping with multiple builds (GRCh37/38) by providing alternative manifest files. In this pipeline, the behavior is temporarily disabled.
 
@@ -200,14 +198,15 @@ rule clean_chip_vcf:
     output:
         vcf_qced = "results/chip/vcf/chip_qced.vcf.gz"
     params:
-        drop_samples = "results/chip/vcf/drop_samples.tsv",
         retain_sites = "results/chip/vcf/retain_sites.tsv"
     resources:
         mem = '20G'
     shell: """
-        if [[ -d {params.drop_samples} && -d {params.retain_sites}]]
+        tabix {input.vcf}
+
+        if [[ -d {params.retain_sites}]]
         then
-            bcftools view -T {params.retain_sites} -S ^{params.drop_samples} -Oz -o {output.vcf_qced} {input.vcf}
+            bcftools view -T {params.retain_sites} -Oz -o {output.vcf_qced} {input.vcf}
             tabix {output.vcf_qced}
         else
             touch {output.vcf_qced} # A place holder to avoid errors
