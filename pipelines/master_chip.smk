@@ -1,6 +1,6 @@
 include: "reference.smk"
 include: "chip_qc.smk"
-include: "chip_imputation.smk"
+#include: "chip_imputation.smk"
 
 #include: "test.smk"
 include: "auxiliary.smk"

@@ -1,12 +1,12 @@
 configfile: "pipelines/config.json"
-#include: "chunk.smk"
-#include: "preprocess.smk"
-#include: "reference.smk"
-#include: "alignment.smk"
+include: "chunk.smk"
+include: "preprocess.smk"
+include: "reference.smk"
+include: "alignment.smk"
 
-#include: "merge.smk"
+include: "merge.smk"
 
-#include: "variant_calling.smk"
+include: "variant_calling.smk"
 
 include: "test.smk"
 include: "auxiliary.smk"
