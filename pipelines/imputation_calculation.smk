@@ -24,89 +24,105 @@ WINDOWSIZE=config["WINDOWSIZE"]
 BUFFER=config["BUFFER"]
 PANEL_NAME=config["PANEL_NAME"]
 
-rule get_chip_vcf:
-    input:
-        chip_qced = "results/chip/vcf/chip_qced.vcf.gz"
-    output:
-        chip_vcf = temp("results/chip/tmp/{id}/{id}.vcf.gz")
-    params:
-        seq_name = lambda wildcards: wildcards.id,
-        chip_name = lambda wildcards: sample_linker[sample_linker['Seq_Name'] == wildcards.id]['Chip_Name'].values[0]
-    resources:
-        mem_mb = 30000
-    shell: """
-        mkdir -p results/chip/tmp/{wildcards.id}/
-
-        if (bcftools query -l {input.chip_qced} | grep -q {params.chip_name}); then
-            bcftools view -s {params.chip_name} -Oz -o {output.chip_vcf} {input.chip_qced}
-        else
-            touch {output.chip_vcf}
-        fi
-    """
-
-rule get_imputation_vcf:
-    input:
-        imputation_result = "results/imputation/vcfs/{panel}/quilt.chr{chr}.vcf.gz"
-    output:
-        imputation_vcf = temp("results/imputation/tmp/{id}/{panel}_chr{chr}.vcf.gz")
-    params:
-        seq_name = lambda wildcards: wildcards.id,
-        sample_name = lambda wildcards: sample_linker[sample_linker['Seq_Name'] == wildcards.id]['Sample_Name'].values[0]
-    resources:
-        mem_mb = 30000
-    shell: """
-        if (bcftools query -l {input.imputation_result} | grep -q {params.sample_name}); then
-            bcftools view -s {params.sample_name} -Oz -o {output.imputation_vcf} {input.imputation_result}
-        else
-            touch {output.imputation_vcf}
-        fi
-    """
-
-#vcf_dict = {}
-#for panel in panels:
-#    for id in seq_names:
-#        vcf_dict[panel + id] = ["results/imputation/tmp/"+id+"/"+panel+"_chr"+str(chr)+".vcf.gz" for chr in chromosomes]
-
 rule calculate_imputation_accuracy:
     input:
-        imputation_vcf = expand("results/imputation/tmp/{id}/{panel}_chr{chr}.vcf.gz", chr = chromosome, allow_missing=True),
-        chip_vcf = "results/chip/tmp/{id}/{id}.vcf.gz",
-        afs = expand("data/gnomAD_MAFs/afr/gnomAD_MAF_afr_chr{chr}.txt", chr = chromosome)
+        quilt_vcf = "results/imputation/vcfs/oneKG/quilt.chr{chr}.vcf.gz",
+        chip_vcf = "results/chip/vcf/chip_by_chr/chip.chr{chr}.vcf.gz",
+        af = "data/gnomAD_MAFs/afr/gnomAD_MAF_afr_chr{chr}.txt"
     output:
-        r2 = "results/imputation/imputation_accuracy/{id}/{panel}_imputation_accuracy.csv"
+        h_report = "results/imputation_metrics/lc_chip/by_variant/lc.chip.typed.chr{chr}.h.tsv",
+        h_impacc = "results/imputation_metrics/lc_chip/by_variant/lc.chip.typed.chr{chr}.h.impacc.tsv",
+        v_report = "results/imputation_metrics/lc_chip/by_sample/lc.chip.typed.chr{chr}.v.tsv",
+        v_impacc = "results/imputation_metrics/lc_chip/by_sample/lc.chip.typed.chr{chr}.v.impacc.tsv"
     resources:
-        mem_mb = 300000
-    threads: 4
+        mem = '60G'
+    threads: 8
+    params:
+        linker = config['sample_linker']
     run:
-        chromosomes = chromosome
-        vcfs = input.imputation_vcf
-        mafs = input.afs
-        chip = input.chip_vcf
+        mini = False
+        lc_sample_prefix = 'GM'
+        chip_sample_prefix = 'GAM'
+        seq_sample_prefix = 'IDT'
+        quilt_vcf = input.quilt_vcf
+        chip_vcf = input.chip_vcf
+        af = input.af
+        sample_linker = pd.read_table(params.linker, sep = ',')
+        # by_variant = True # True if average each row, False if average each column (sample)
+        
+        af = lcwgsus.read_af(af)
+
         MAF_ary = np.array([0, 0.0001, 0.0002, 0.0005, 0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 0.95, 1])
+        
+        chromosome = wildcards.chr
+        common_cols = ['chr', 'pos', 'ref', 'alt']
 
-        check_lst = vcfs + [chip]
-        for i in check_lst: # If there is an empty file, report all imputation accuracy to be -1
-            if os.path.getsize(i) == 0:
-                r2 = -1*np.ones((2, np.size(MAF_ary) - 1))
-                r2 = pd.DataFrame(r2.T, columns = ['Imputation Accuracy','Bin Count'], index = MAF_ary[1:])
-                r2.index.name = 'MAF'
-                r2.to_csv(output.r2, sep=',', mode='a')
-                sys.exit(0)
+        if not mini:
+            sample_linker = sample_linker[~sample_linker['Sample_Name'].str.contains('mini')]
+        else:
+            sample_linker = sample_linker[sample_linker['Sample_Name'].str.contains('mini')]
+        rename_map = dict(zip(sample_linker['Sample_Name'], sample_linker['Chip_Name']))
 
-        vcf = lcwgsus.multi_parse_vcf(chromosomes, vcfs)
-        af = lcwgsus.multi_read_af(chromosomes, mafs)
-        chip = lcwgsus.read_vcf(chip)
-        chip = lcwgsus.drop_cols(chip, drop_lst = ['id', 'qual', 'filter','info','format'])
-        r2 = lcwgsus.calculate_imputation_accuracy(vcf, chip, af)
-        r2.to_csv(output.r2, sep=',', mode='a')
+        lc = lcwgsus.read_vcf(quilt_vcf).sort_values(by = ['chr', 'pos'])
+        chip = lcwgsus.read_vcf(chip_vcf).sort_values(by = ['chr', 'pos'])
 
+        if not mini:
+            lc = lc.drop(columns = lc.columns[lc.columns.str.contains('mini')])
+        else:
+            lc = lc.drop(columns = lc.columns[~lc.columns.str.contains('mini')])
+
+        lc = lc.drop(columns = ['ID', 'QUAL', 'FILTER', 'INFO', 'FORMAT'])
+        chip = chip.drop(columns = ['ID', 'QUAL', 'FILTER', 'INFO', 'FORMAT'])
+
+        res = lcwgsus.intersect_dfs([chip, lc, af])
+        chip = res[0]
+        lc = res[1]
+        af = res[2]
+
+        lc_samples = lc.columns[lc.columns.str.contains(lc_sample_prefix)]
+        chip_samples = chip.columns[chip.columns.str.contains(chip_sample_prefix)]
+        lc_to_retain = lcwgsus.find_matching_samples(lc_samples, chip_samples, rename_map)
+        quilt_columns = list(lc.columns[~lc.columns.str.contains(lc_sample_prefix)]) + lc_to_retain
+        lc = lc[quilt_columns]
+
+        lc = lc.apply(lcwgsus.extract_DS, axis = 1)
+        chip = chip.apply(lcwgsus.encode_genotype, axis = 1)
+
+        chip_order = []
+        for i in lc_to_retain:
+            chip_order.append(rename_map[i])
+        chip = chip[common_cols + chip_order]
+        
+        h_report = lcwgsus.calculate_h_imputation_accuracy(chip, lc, af, 
+                                                   save_file = True, 
+                                                   outdir = 'results/imputation_metrics/lc_chip/by_variant/', 
+                                                   save_name = 'lc.chip.typed.chr' + str(chromosome) +'.h.tsv')
+        h_report = h_report.drop(columns = common_cols)
+
+        h_impacc = lcwgsus.generate_h_impacc(h_report, 
+                                           save_impacc = True, 
+                                           outdir = 'results/imputation_metrics/lc_chip/by_variant/', 
+                                           save_name = 'lc.chip.typed.chr' + str(chromosome) +'.h.impacc.tsv')
+                                           
+        v_report = lcwgsus.calculate_v_imputation_accuracy(chip, lc, af, 
+                                           save_file = True, 
+                                           outdir = 'results/imputation_metrics/lc_chip/by_sample/', 
+                                           save_name = 'lc.chip.typed.chr' + str(chromosome) +'.v.tsv')
+
+        v_impacc = lcwgsus.generate_v_impacc(v_report, 
+                                           save_impacc = True, 
+                                           outdir = 'results/imputation_metrics/lc_chip/by_sample/', 
+                                           save_name = 'lc.chip.typed.chr' + str(chromosome) +'.v.impacc.tsv')
+        # Ignore the _BC fields in vertical reports as they are not reliable
+
+'''
 rule plot_imputation_accuracy:
     input:
         r2 = expand("results/imputation/imputation_accuracy/{id}/{panel}_imputation_accuracy.csv", id = seq_to_extract, panel = panels)
     output:
         graph = "graphs/imputation_vs_chip.png"
     resources:
-        mem_mb = 30000
+        mem = '10G'
     params:
         samples = seq_to_extract,
         panels = panels,
@@ -137,4 +153,4 @@ rule plot_imputation_accuracy:
         plt.text(x = -1.5, y = 1.04, s = 'Aggregated imputation accuracy ($r^2$)')
         plt.grid(alpha = 0.5)
         plt.savefig(output.graph, bbox_inches = "tight", dpi=300)
-
+'''

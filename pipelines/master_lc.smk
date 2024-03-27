@@ -1,16 +1,16 @@
-include: "preprocess.smk"
+#include: "preprocess.smk"
 #include: "fastqc.smk"
-include: "reference.smk"
-include: "alignment.smk"
+#include: "reference.smk"
+#include: "alignment.smk"
 
-include: "rmdup.smk"
-include: "subsample.smk"
-include: "kmer.smk"
-include: "dup_rate.smk"
-include: "coverage.smk"
+#include: "rmdup.smk"
+#include: "subsample.smk"
+#include: "kmer.smk"
+#include: "dup_rate.smk"
+#include: "coverage.smk"
 
-include: "imputation_prep.smk"
-include: "imputation.smk"
+#include: "imputation_prep.smk"
+#include: "imputation.smk"
 include: "imputation_calculation.smk"
 
 #include: "test.smk"
@@ -173,8 +173,11 @@ rule imputation_all:
 # This bit needs to be modified. Probably create a new master file for all downstream comparison analysis
 rule imputation_calculation_all:
     input:
-        r2 = expand("results/imputation/imputation_accuracy/{id}/{panel}_imputation_accuracy.csv", id = seq_to_extract, panel = panels),
-        graph = "graphs/imputation_vs_chip.png"
+        h_report = expand("results/imputation_metrics/lc_chip/by_variant/lc.chip.typed.chr{chr}.h.tsv", chr = chromosome),
+        h_impacc = expand("results/imputation_metrics/lc_chip/by_variant/lc.chip.typed.chr{chr}.h.impacc.tsv", chr = chromosome),
+        v_report = expand("results/imputation_metrics/lc_chip/by_sample/lc.chip.typed.chr{chr}.v.tsv", chr = chromosome),
+        v_impacc = expand("results/imputation_metrics/lc_chip/by_sample/lc.chip.typed.chr{chr}.v.impacc.tsv", chr = chromosome)
+        #graph = "graphs/imputation_vs_chip.png"
 
 rule test_all:
     input:
