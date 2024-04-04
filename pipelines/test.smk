@@ -14,3 +14,15 @@ chromosome = [i for i in range(1,23)]
 variant_types = ['snps', 'indels']
 concatenate = config["concatenate"]
 
+rule all:
+    input:
+        "test.txt"
+
+rule test:
+    input:
+        "results/imputation/vcfs/oneKG/"
+    output:
+        "test.txt"
+    shell: """
+        echo $(ls {input}) > {output}
+    """

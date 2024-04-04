@@ -39,5 +39,9 @@
     "WINDOWSIZE": 5000000,
     "BUFFER": 0,
     "BAMLIST": "/well/band/users/rbx225/GAMCC/results/imputation/bamlist.txt",
-    "PANEL_NAME": "oneKG_ggvp"
+    "PANEL_NAME": "oneKG_ggvp",
+
+    "imputation_dir": "results/imputation_comparison/oneKG/lc_chip/",
+    "lc_vcf_dir": "results/imputation/vcfs/oneKG/",
+    "hc_vcf_dir": "results/chip/vcf/chip_by_chr/"
 }
