@@ -47,7 +47,12 @@ rule preprocess_vcf_in_working_dir:
             cp $"{input.lc_vcf_dir}*chr$i*.gz" {imp_dir}vcf/all_samples/lc_vcf/lc.chr"$i".vcf.gz
             cp $"{input.hc_vcf_dir}*chr$i*.gz" {imp_dir}vcf/all_samples/hc_vcf/hc.chr$i.vcf.gz
             
-            for e in "${{eth[@]}}"
+            
+
+        done
+    """
+"""
+for e in "${{eth[@]}}"
             do
                 for p in "${{pair[@]}}"
                 do
@@ -62,9 +67,7 @@ rule preprocess_vcf_in_working_dir:
                     bcftools view -S data/file_lsts/samples_subset/by_case_control/"$c"_samples_"$p".tsv -Oz -o {imp_dir}vcf/by_cc/"$p"_vcf/"$c"."$p".chr"$i".vcf.gz {imp_dir}vcf/all_samples/"$p"_vcf/"$p".chr"$i".vcf.gz
                 done
             done
-
-        done
-    """
+"""
 
 rule calculate_imputation_accuracy_all:
     input:
