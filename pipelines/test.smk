@@ -14,9 +14,10 @@ rule all:
 
 rule test:
     input:
-        directory("results/imputation/vcfs/oneKG/")
+        "results/imputation/vcfs/oneKG/"
     output:
         "test.txt"
     shell: """
-        ls {input} > {output}
+
+        for i in {{1..10}}; do echo $i >> {output}; done
     """
