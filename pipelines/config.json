@@ -41,7 +41,22 @@
     "BAMLIST": "/well/band/users/rbx225/GAMCC/results/imputation/bamlist.txt",
     "PANEL_NAME": "oneKG_ggvp",
 
-    "imputation_dir": "results/imputation_comparison/oneKG/lc_chip/",
+    "imputation_dir": "results/imputation_comparison/oneKG/lc_chip_typed/",
     "lc_vcf_dir": "results/imputation/vcfs/oneKG/",
-    "hc_vcf_dir": "results/chip/vcf/chip_by_chr/"
+    "hc_vcf_dir": "results/chip/vcf/chip_by_chr/",
+
+    "mild_malaria_lc": "file_lsts/samples_subset/by_case_control/mild_malaria_samples_lc.tsv",
+    "non_malaria_control_lc": "file_lsts/samples_subset/by_case_control/non-malaria_control_samples_lc.tsv",
+    "severe_malaria_lc": "file_lsts/samples_subset/by_case_control/severe_malaria_samples_lc.tsv",
+    "mild_malaria_chip": "file_lsts/samples_subset/by_case_control/mild_malaria_samples_chip.tsv",
+    "non_malaria_control_chip": "file_lsts/samples_subset/by_case_control/non-malaria_control_samples_chip.tsv",
+    "severe_malaria_chip": "file_lsts/samples_subset/by_case_control/severe_malaria_samples_chip.tsv",
+    "jola_lc": "data/file_lsts/samples_subset/by_ethnicity/jola_samples_lc.tsv",
+    "mandinka_lc": "data/file_lsts/samples_subset/by_ethnicity/mandinka_samples_lc.tsv",
+    "wollof_lc": "data/file_lsts/samples_subset/by_ethnicity/wollof_samples_lc.tsv",
+    "fula_lc": "data/file_lsts/samples_subset/by_ethnicity/fula_samples_lc.tsv",
+    "jola_chip": "data/file_lsts/samples_subset/by_ethnicity/jola_samples_chip.tsv",
+    "mandinka_chip": "data/file_lsts/samples_subset/by_ethnicity/mandinka_samples_chip.tsv",
+    "wollof_chip": "data/file_lsts/samples_subset/by_ethnicity/wollof_samples_chip.tsv",
+    "fula_chip": "data/file_lsts/samples_subset/by_ethnicity/fula_samples_chip.tsv"
 }

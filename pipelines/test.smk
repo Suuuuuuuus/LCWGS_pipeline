@@ -18,5 +18,5 @@ rule test:
     output:
         "test.txt"
     shell: """
-        echo $(ls {input}) > {output}
+        ls {input} > {output}
     """

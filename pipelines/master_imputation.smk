@@ -17,16 +17,43 @@ panels = config['panels']
 
 chromosome = [i for i in range(1,23)]
 
-rule lc_chip_all:
+imp_dir = config['imputation_dir']
+case_controls = ['non-maleria_control', 'mild_malaria', 'severe_malaria']
+ethnicities = ['fula', 'jola', 'mandinka', 'wollof']
+pair = ['lc', 'hc']
+axis = ['h', 'v']
+
+rule imputation_calculation_all:
     input:
-        h_report = expand("results/imputation_metrics/lc_chip/all_samples/by_variant/lc.chip.typed.chr{chr}.h.tsv", chr = chromosome),
-        h_impacc = expand("results/imputation_metrics/lc_chip/all_samples/by_variant/lc.chip.typed.chr{chr}.h.impacc.tsv", chr = chromosome),
-        v_report = expand("results/imputation_metrics/lc_chip/all_samples/by_sample/lc.chip.typed.chr{chr}.v.tsv", chr = chromosome),
-        v_impacc = expand("results/imputation_metrics/lc_chip/all_samples/by_sample/lc.chip.typed.chr{chr}.v.impacc.tsv", chr = chromosome),
-        r2NRC_h = "graphs/imputation/lc_chip/all_samples/by_variant/r2_NRC.png",
-        ccd_h = "graphs/imputation/lc_chip/all_samples/by_variant/ccd_by_genotype.png",
-        r2NRC_v = "graphs/imputation/lc_chip/all_samples/by_sample/r2_NRC.png",
-        ccd_v = "graphs/imputation/lc_chip/all_samples/by_sample/ccd_by_genotype.png"
+        vcfs = expand(imp_dir + 'vcf/all_samples/{pair}_vcf/{pair}.chr{chr}.vcf.gz', chr = chromosome, pair = pair),
+        h_report = expand(imp_dir + "impacc/all_samples/by_variant/chr{chr}.h.tsv", chr = chromosome),
+        h_impacc = expand(imp_dir + "impacc/all_samples/by_variant/chr{chr}.h.impacc.tsv", chr = chromosome),
+        v_report = expand(imp_dir + "impacc/all_samples/by_sample/chr{chr}.v.tsv", chr = chromosome),
+        v_impacc = expand(imp_dir + "impacc/all_samples/by_sample/chr{chr}.v.impacc.tsv", chr = chromosome),
+        r2NRC_h = imp_dir + "graphs/all_samples/by_variant/r2_NRC.png",
+        ccd_h = imp_dir + "graphs/all_samples/by_variant/ccd_by_genotype.png",
+        r2NRC_v = imp_dir + "graphs/all_samples/by_sample/r2_NRC.png",
+        ccd_v = imp_dir + "graphs/all_samples/by_sample/ccd_by_genotype.png",
+
+        eth_vcfs = expand(imp_dir + 'vcf/by_eth/{pair}_vcf/{eth}.{pair}.chr{chr}.vcf.gz', chr = chromosome, pair = pair, eth = ethnicities)
+        h_report = expand(imp_dir + "impacc/by_eth/by_variant/{eth}.chr{chr}.h.tsv", eth = ethnicities, chr = chromosome),
+        h_impacc = expand(imp_dir + "impacc/by_eth/by_variant/{eth}.chr{chr}.h.impacc.tsv", eth = ethnicities, chr = chromosome),
+        v_report = expand(imp_dir + "impacc/by_eth/by_sample/{eth}.chr{chr}.v.tsv", eth = ethnicities, chr = chromosome),
+        v_impacc = expand(imp_dir + "impacc/by_eth/by_sample/{eth}.chr{chr}.v.impacc.tsv", eth = ethnicities, chr = chromosome),
+        r2NRC_h = expand(imp_dir + "graphs/by_eth/by_variant/{eth}.r2_NRC.png", eth = ethnicities),
+        ccd_h = expand(imp_dir + "graphs/by_eth/by_variant/{eth}.ccd_by_genotype.png", eth = ethnicities),
+        r2NRC_v = expand(imp_dir + "graphs/by_eth/by_sample/{eth}.r2_NRC.png", eth = ethnicities),
+        ccd_v = expand(imp_dir + "graphs/by_eth/by_sample/{eth}.ccd_by_genotype.png", eth = ethnicities),
+
+        cc_vcfs = expand(imp_dir + 'vcf/by_cc/{pair}_vcf/{cc}.{pair}.chr{chr}.vcf.gz', chr = chromosome, pair = pair, cc = case_controls),
+        h_report = expand(imp_dir + "impacc/by_cc/by_variant/{cc}.chr{chr}.h.tsv", cc = case_controls, chr = chromosome),
+        h_impacc = expand(imp_dir + "impacc/by_cc/by_variant/{cc}.chr{chr}.h.impacc.tsv", cc = case_controls, chr = chromosome),
+        v_report = expand(imp_dir + "impacc/by_cc/by_sample/{cc}.chr{chr}.v.tsv", cc = case_controls, chr = chromosome),
+        v_impacc = expand(imp_dir + "impacc/by_cc/by_sample/{cc}.chr{chr}.v.impacc.tsv", cc = case_controls, chr = chromosome),
+        r2NRC_h = expand(imp_dir + "graphs/by_cc/by_variant/{cc}.r2_NRC.png", cc = case_controls),
+        ccd_h = expand(imp_dir + "graphs/by_cc/by_variant/{cc}.ccd_by_genotype.png", cc = case_controls),
+        r2NRC_v = expand(imp_dir + "graphs/by_cc/by_sample/{cc}.r2_NRC.png", cc = case_controls),
+        ccd_v = expand(imp_dir + "graphs/by_cc/by_sample/{cc}.ccd_by_genotype.png", cc = case_controls),
 
 rule manipulate_vcf:
     input:

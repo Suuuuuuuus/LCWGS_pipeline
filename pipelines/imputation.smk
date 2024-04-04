@@ -18,8 +18,6 @@ seq_to_extract = [sample for sample in samples_lc if sample in samples_chip]
 
 chromosome = [i for i in range(1,23)]
 
-QUILT_HOME = config["QUILT_HOME"]
-ANALYSIS_DIR = config["ANALYSIS_DIR"]
 RECOMB_POP=config["RECOMB_POP"]
 NGEN=config["NGEN"]
 WINDOWSIZE=config["WINDOWSIZE"]
