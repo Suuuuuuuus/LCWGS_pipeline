@@ -18,6 +18,7 @@ rule test:
     output:
         "test.txt"
     shell: """
-
-        for i in {{1..10}}; do echo $i >> {output}; done
+        declare -a eth=("jola" "fula" "mandinka" "wollof")
+        
+        for e in "${{eth[@]}}"; do echo $e >> {output}; done
     """
