@@ -35,7 +35,7 @@ rule imputation_calculation_all:
         r2NRC_v = imp_dir + "graphs/all_samples/by_sample/r2_NRC.png",
         ccd_v = imp_dir + "graphs/all_samples/by_sample/ccd_by_genotype.png",
 
-        eth_vcfs = expand(imp_dir + 'vcf/by_eth/{pair}_vcf/{eth}.{pair}.chr{chr}.vcf.gz', chr = chromosome, pair = pair, eth = ethnicities)
+        eth_vcfs = expand(imp_dir + 'vcf/by_eth/{pair}_vcf/{eth}.{pair}.chr{chr}.vcf.gz', chr = chromosome, pair = pair, eth = ethnicities),
         h_report = expand(imp_dir + "impacc/by_eth/by_variant/{eth}.chr{chr}.h.tsv", eth = ethnicities, chr = chromosome),
         h_impacc = expand(imp_dir + "impacc/by_eth/by_variant/{eth}.chr{chr}.h.impacc.tsv", eth = ethnicities, chr = chromosome),
         v_report = expand(imp_dir + "impacc/by_eth/by_sample/{eth}.chr{chr}.v.tsv", eth = ethnicities, chr = chromosome),
@@ -53,7 +53,7 @@ rule imputation_calculation_all:
         r2NRC_h = expand(imp_dir + "graphs/by_cc/by_variant/{cc}.r2_NRC.png", cc = case_controls),
         ccd_h = expand(imp_dir + "graphs/by_cc/by_variant/{cc}.ccd_by_genotype.png", cc = case_controls),
         r2NRC_v = expand(imp_dir + "graphs/by_cc/by_sample/{cc}.r2_NRC.png", cc = case_controls),
-        ccd_v = expand(imp_dir + "graphs/by_cc/by_sample/{cc}.ccd_by_genotype.png", cc = case_controls),
+        ccd_v = expand(imp_dir + "graphs/by_cc/by_sample/{cc}.ccd_by_genotype.png", cc = case_controls)
 
 # rule manipulate_vcf:
 #     input:
