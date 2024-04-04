@@ -29,27 +29,14 @@ rule preprocess_vcf_in_working_dir:
         vcfs = expand(imp_dir + 'vcf/all_samples/{pair}_vcf/{pair}.chr{chr}.vcf.gz', chr = chromosome, pair = pair),
         cc_vcfs = expand(imp_dir + 'vcf/by_cc/{pair}_vcf/{cc}.{pair}.chr{chr}.vcf.gz', chr = chromosome, pair = pair, cc = case_controls),
         eth_vcfs = expand(imp_dir + 'vcf/by_eth/{pair}_vcf/{eth}.{pair}.chr{chr}.vcf.gz', chr = chromosome, pair = pair, eth = ethnicities)
-    # params:
-        # mild_malaria_lc = config['mild_malaria_lc']
-        # non_malaria_control_lc = config['non_malaria_control_lc']
-        # severe_malaria_lc = config['severe_malaria_lc']
-        # mild_malaria_chip = config['mild_malaria_chip']
-        # non_malaria_control_chip = config['non_malaria_control_chip']
-        # severe_malaria_chip = config['severe_malaria_chip']
-
-        # fula_lc = config['fula_lc']
-        # jola_lc = config['jola_lc']
-        # mandinka_lc = config['mandinka_lc']
-        # wollof_lc = config['wollof_lc']
-        # fula_chip = config['fula_chip']
-        # jola_chip = config['jola_chip']
-        # mandinka_chip = config['mandinka_chip']
-        # wollof_chip = config['wollof_chip']
+    resources:
+        mem = '30G'
+    threads: 4
     shell: """
-        mkdir -p "{imp_dir}vcf/" "{imp_dir}impacc/" "{imp_dir}graphs/"
-        mkdir -p "{imp_dir}vcf/all_samples/lc_vcf/" "{imp_dir}vcf/all_samples/hc_vcf/"
-        mkdir -p "{imp_dir}vcf/by_cc/lc_vcf/" "{imp_dir}vcf/by_cc/hc_vcf/"
-        mkdir -p "{imp_dir}vcf/by_eth/lc_vcf/" "{imp_dir}vcf/by_eth/hc_vcf/"
+        mkdir -p {imp_dir}vcf/ {imp_dir}impacc/ {imp_dir}graphs/
+        mkdir -p {imp_dir}vcf/all_samples/lc_vcf/ {imp_dir}vcf/all_samples/hc_vcf/
+        mkdir -p {imp_dir}vcf/by_cc/lc_vcf/ {imp_dir}vcf/by_cc/hc_vcf/
+        mkdir -p {imp_dir}vcf/by_eth/lc_vcf/ {imp_dir}vcf/by_eth/hc_vcf/
 
         declare -a eth=("jola" "fula" "mandinka" "wollof")
         declare -a cc=("mild_malaria" "non-malaria_control" "severe_malaria")
@@ -57,14 +44,14 @@ rule preprocess_vcf_in_working_dir:
         
         for i in {1..22}
         do 
-            cp $"{input.lc_vcf_dir}*chr$i*.gz" "{imp_dir}vcf/all_samples/lc_vcf/lc.chr$i.vcf.gz"
-            cp $"{input.hc_vcf_dir}*chr$i*.gz" "{imp_dir}vcf/all_samples/hc_vcf/hc.chr$i.vcf.gz"
+            cp $"{input.lc_vcf_dir}*chr$i*.gz" {imp_dir}vcf/all_samples/lc_vcf/lc.chr"$i".vcf.gz
+            cp $"{input.hc_vcf_dir}*chr$i*.gz" {imp_dir}vcf/all_samples/hc_vcf/hc.chr$i.vcf.gz
             
             for e in "${{eth[@]}}"
             do
                 for p in "${{pair[@]}}"
                 do
-                    bcftools view -S "file_lsts/samples_subset/by_ethnicity/"$e"_samples_"$p".tsv" -Oz -o "{imp_dir}vcf/by_eth/"$p"_vcf/"$e"."$p".chr"$i".vcf.gz" "{imp_dir}vcf/all_samples/"$p"_vcf/"$p".chr"$i".vcf.gz"
+                    bcftools view -S data/file_lsts/samples_subset/by_ethnicity/"$e"_samples_"$p".tsv -Oz -o {imp_dir}vcf/by_eth/"$p"_vcf/"$e"."$p".chr"$i".vcf.gz {imp_dir}vcf/all_samples/"$p"_vcf/"$p".chr"$i".vcf.gz
                 done
             done
             
@@ -72,7 +59,7 @@ rule preprocess_vcf_in_working_dir:
             do
                 for p in "${{pair[@]}}"
                 do
-                    bcftools view -S "file_lsts/samples_subset/by_case_control/"$c"_samples_"$p".tsv" -Oz -o "{imp_dir}vcf/by_cc/"$p"_vcf/"$c"."$p".chr"$i".vcf.gz" "{imp_dir}vcf/all_samples/"$p"_vcf/"$p".chr"$i".vcf.gz"
+                    bcftools view -S data/file_lsts/samples_subset/by_case_control/"$c"_samples_"$p".tsv -Oz -o {imp_dir}vcf/by_cc/"$p"_vcf/"$c"."$p".chr"$i".vcf.gz {imp_dir}vcf/all_samples/"$p"_vcf/"$p".chr"$i".vcf.gz
                 done
             done
 
