@@ -23,8 +23,8 @@ axis = ['h', 'v']
 
 rule preprocess_vcf_in_working_dir:
     input:
-        lc_vcf_dir = directory(config['lc_vcf_dir']),
-        hc_vcf_dir = directory(config['hc_vcf_dir'])
+        lc_vcf_dir = config['lc_vcf_dir'],
+        hc_vcf_dir = config['hc_vcf_dir']
     output:
         vcfs = expand(imp_dir + 'vcf/all_samples/{pair}_vcf/{pair}.chr{chr}.vcf.gz', chr = chromosome, pair = pair),
         cc_vcfs = expand(imp_dir + 'vcf/by_cc/{pair}_vcf/{cc}.{pair}.chr{chr}.vcf.gz', chr = chromosome, pair = pair, cc = case_controls),
@@ -72,7 +72,7 @@ rule preprocess_vcf_in_working_dir:
             do
                 for p in "${{pair[@]}}"
                 do
-                    bcftools view -S "file_lsts/samples_subset/by_case_control/"$c"_samples_"$p".tsv" -Oz -o "{imp_dir}vcf/by_cc/"$p"_vcf/"$e"."$p".chr"$i".vcf.gz" "{imp_dir}vcf/all_samples/"$p"_vcf/"$p".chr"$i".vcf.gz"
+                    bcftools view -S "file_lsts/samples_subset/by_case_control/"$c"_samples_"$p".tsv" -Oz -o "{imp_dir}vcf/by_cc/"$p"_vcf/"$c"."$p".chr"$i".vcf.gz" "{imp_dir}vcf/all_samples/"$p"_vcf/"$p".chr"$i".vcf.gz"
                 done
             done
 
