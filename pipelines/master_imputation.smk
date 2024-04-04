@@ -55,6 +55,6 @@ rule imputation_calculation_all:
         r2NRC_v = expand(imp_dir + "graphs/by_cc/by_sample/{cc}.r2_NRC.png", cc = case_controls),
         ccd_v = expand(imp_dir + "graphs/by_cc/by_sample/{cc}.ccd_by_genotype.png", cc = case_controls),
 
-rule manipulate_vcf:
-    input:
-        info
+# rule manipulate_vcf:
+#     input:
+#         info
