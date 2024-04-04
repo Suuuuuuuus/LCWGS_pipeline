@@ -42,7 +42,7 @@ rule preprocess_vcf_in_working_dir:
         declare -a cc=("mild_malaria" "non-malaria_control" "severe_malaria")
         declare -a pair=("lc" "hc")
         
-        for i in {1..22}
+        for i in {{1..22}}
         do 
             cp $"{input.lc_vcf_dir}*chr$i*.gz" {imp_dir}vcf/all_samples/lc_vcf/lc.chr"$i".vcf.gz
             cp $"{input.hc_vcf_dir}*chr$i*.gz" {imp_dir}vcf/all_samples/hc_vcf/hc.chr$i.vcf.gz
