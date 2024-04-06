@@ -41,12 +41,12 @@ rule preprocess_vcf_in_working_dir:
         declare -a eth=("jola" "fula" "mandinka" "wollof")
         declare -a cc=("mild_malaria" "non-malaria_control" "severe_malaria")
         declare -a pair=("lc" "hc")
-        
+
         for i in {{1..22}}
-        do 
-            cp $"{input.lc_vcf_dir}*chr$i*.gz" {imp_dir}vcf/all_samples/lc_vcf/lc.chr"$i".vcf.gz
-            cp $"{input.hc_vcf_dir}*chr$i*.gz" {imp_dir}vcf/all_samples/hc_vcf/hc.chr$i.vcf.gz
-            
+        do
+            cp {input.lc_vcf_dir}/*chr$i.*.gz {imp_dir}vcf/all_samples/lc_vcf/lc.chr"$i".vcf.gz
+            cp {input.hc_vcf_dir}/*chr$i.*.gz {imp_dir}vcf/all_samples/hc_vcf/hc.chr"$i".vcf.gz
+
             for e in "${{eth[@]}}"
             do
                 for p in "${{pair[@]}}"
@@ -54,7 +54,7 @@ rule preprocess_vcf_in_working_dir:
                     bcftools view -S data/file_lsts/samples_subset/by_ethnicity/"$e"_samples_"$p".tsv -Oz -o {imp_dir}vcf/by_eth/"$p"_vcf/"$e"."$p".chr"$i".vcf.gz {imp_dir}vcf/all_samples/"$p"_vcf/"$p".chr"$i".vcf.gz
                 done
             done
-            
+
             for c in "${{cc[@]}}"
             do
                 for p in "${{pair[@]}}"
