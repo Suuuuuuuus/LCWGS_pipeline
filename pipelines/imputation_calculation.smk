@@ -60,8 +60,7 @@ rule split_vcf_by_cc:
     output:
         cc_vcf = imp_dir + 'vcf/by_cc/{pair}_vcf/{cc}.{pair}.chr{chr}.vcf.gz'
     resources:
-        mem = '30G'
-    threads: 4
+        mem = '10G'
     shell: """
         bcftools view -S data/file_lsts/samples_subset/by_case_control/{wildcards.cc}_samples_{wildcards.pair}.tsv -Oz -o {output.cc_vcf} {input.vcf}
     """
