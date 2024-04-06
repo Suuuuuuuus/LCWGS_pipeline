@@ -16,7 +16,7 @@ sample_linker = pd.read_table(config['sample_linker'], sep = ',')
 chromosome = [i for i in range(1,23)]
 
 imp_dir = config['imputation_dir']
-case_controls = ['non-maleria_control', 'mild_malaria', 'severe_malaria']
+case_controls = ['non-malaria_control', 'mild_malaria', 'severe_malaria']
 ethnicities = ['fula', 'jola', 'mandinka', 'wollof']
 pair = ['lc', 'hc']
 axis = ['h', 'v']
