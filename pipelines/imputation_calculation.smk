@@ -21,14 +21,12 @@ ethnicities = ['fula', 'jola', 'mandinka', 'wollof']
 pair = ['lc', 'hc']
 axis = ['h', 'v']
 
-rule preprocess_vcf_in_working_dir:
+rule copy_vcf_in_working_dir:
     input:
         lc_vcf_dir = config['lc_vcf_dir'],
         hc_vcf_dir = config['hc_vcf_dir']
     output:
-        vcfs = expand(imp_dir + 'vcf/all_samples/{pair}_vcf/{pair}.chr{chr}.vcf.gz', chr = chromosome, pair = pair),
-        cc_vcfs = expand(imp_dir + 'vcf/by_cc/{pair}_vcf/{cc}.{pair}.chr{chr}.vcf.gz', chr = chromosome, pair = pair, cc = case_controls),
-        eth_vcfs = expand(imp_dir + 'vcf/by_eth/{pair}_vcf/{eth}.{pair}.chr{chr}.vcf.gz', chr = chromosome, pair = pair, eth = ethnicities)
+        vcfs = expand(imp_dir + 'vcf/all_samples/{pair}_vcf/{pair}.chr{chr}.vcf.gz', chr = chromosome, pair = pair)
     resources:
         mem = '30G'
     threads: 4
@@ -38,32 +36,34 @@ rule preprocess_vcf_in_working_dir:
         mkdir -p {imp_dir}vcf/by_cc/lc_vcf/ {imp_dir}vcf/by_cc/hc_vcf/
         mkdir -p {imp_dir}vcf/by_eth/lc_vcf/ {imp_dir}vcf/by_eth/hc_vcf/
 
-        declare -a eth=("jola" "fula" "mandinka" "wollof")
-        declare -a cc=("mild_malaria" "non-malaria_control" "severe_malaria")
-        declare -a pair=("lc" "hc")
-
         for i in {{1..22}}
         do
             cp {input.lc_vcf_dir}/*chr$i.*.gz {imp_dir}vcf/all_samples/lc_vcf/lc.chr"$i".vcf.gz
             cp {input.hc_vcf_dir}/*chr$i.*.gz {imp_dir}vcf/all_samples/hc_vcf/hc.chr"$i".vcf.gz
-
-            for e in "${{eth[@]}}"
-            do
-                for p in "${{pair[@]}}"
-                do
-                    bcftools view -S data/file_lsts/samples_subset/by_ethnicity/"$e"_samples_"$p".tsv -Oz -o {imp_dir}vcf/by_eth/"$p"_vcf/"$e"."$p".chr"$i".vcf.gz {imp_dir}vcf/all_samples/"$p"_vcf/"$p".chr"$i".vcf.gz
-                done
-            done
-
-            for c in "${{cc[@]}}"
-            do
-                for p in "${{pair[@]}}"
-                do
-                    bcftools view -S data/file_lsts/samples_subset/by_case_control/"$c"_samples_"$p".tsv -Oz -o {imp_dir}vcf/by_cc/"$p"_vcf/"$c"."$p".chr"$i".vcf.gz {imp_dir}vcf/all_samples/"$p"_vcf/"$p".chr"$i".vcf.gz
-                done
-            done
-
         done
+    """
+
+rule split_vcf_by_eth:
+    input:
+        vcf = imp_dir + 'vcf/all_samples/{pair}_vcf/{pair}.chr{chr}.vcf.gz'
+    output:
+        eth_vcf = imp_dir + 'vcf/by_eth/{pair}_vcf/{eth}.{pair}.chr{chr}.vcf.gz'
+    resources:
+        mem = '10G'
+    shell: """
+        bcftools view -S data/file_lsts/samples_subset/by_ethnicity/{wildcards.eth}_samples_{wildcards.pair}.tsv -Oz -o {output.eth_vcf} {input.vcf}
+    """
+
+rule split_vcf_by_cc:
+    input:
+        vcf = imp_dir + 'vcf/all_samples/{pair}_vcf/{pair}.chr{chr}.vcf.gz'
+    output:
+        cc_vcf = imp_dir + 'vcf/by_cc/{pair}_vcf/{cc}.{pair}.chr{chr}.vcf.gz'
+    resources:
+        mem = '30G'
+    threads: 4
+    shell: """
+        bcftools view -S data/file_lsts/samples_subset/by_case_control/{wildcards.cc}_samples_{wildcards.pair}.tsv -Oz -o {output.cc_vcf} {input.vcf}
     """
 
 rule calculate_imputation_accuracy_all:
