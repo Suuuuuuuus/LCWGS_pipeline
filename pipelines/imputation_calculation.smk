@@ -90,7 +90,7 @@ rule calculate_imputation_accuracy_all:
 
         quilt_vcf = input.quilt_vcf
         chip_vcf = input.chip_vcf
-        af = input.af
+        af_txt = input.af
 
         chip, lc, af = lcwgsus.imputation_calculation_preprocess(chip_vcf, quilt_vcf, af_txt)
         
@@ -175,7 +175,7 @@ rule calculate_imputation_accuracy_by_eth:
 
         quilt_vcf = input.quilt_vcf
         chip_vcf = input.chip_vcf
-        af = input.af
+        af_txt = input.af
 
         chip, lc, af = lcwgsus.imputation_calculation_preprocess(chip_vcf, quilt_vcf, af_txt)
         
@@ -260,7 +260,7 @@ rule calculate_imputation_accuracy_by_cc:
 
         quilt_vcf = input.quilt_vcf
         chip_vcf = input.chip_vcf
-        af = input.af
+        af_txt = input.af
 
         chip, lc, af = lcwgsus.imputation_calculation_preprocess(chip_vcf, quilt_vcf, af_txt)
         
