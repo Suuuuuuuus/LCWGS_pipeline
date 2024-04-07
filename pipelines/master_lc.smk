@@ -1,9 +1,9 @@
-#include: "preprocess.smk"
+include: "preprocess.smk"
 #include: "fastqc.smk"
 #include: "reference.smk"
-#include: "alignment.smk"
+include: "alignment.smk"
 
-#include: "rmdup.smk"
+include: "rmdup.smk"
 #include: "subsample.smk"
 #include: "kmer.smk"
 #include: "dup_rate.smk"
@@ -11,9 +11,7 @@
 
 #include: "imputation_prep.smk"
 #include: "imputation.smk"
-include: "imputation_calculation.smk"
 
-#include: "test.smk"
 include: "auxiliary.smk"
 configfile: "pipelines/config.json"
 
@@ -169,8 +167,3 @@ rule imputation_all:
         RData = [regions_to_prep],
         vcf_regions = [vcfs_to_impute],
         vcfs = [final_vcfs]
-
-rule test_all:
-    input:
-        vcf = "results/tmp/{id}.{chr}.txt"
-
