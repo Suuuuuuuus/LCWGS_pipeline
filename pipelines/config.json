@@ -39,7 +39,7 @@
     "WINDOWSIZE": 5000000,
     "BUFFER": 0,
     "BAMLIST": "/well/band/users/rbx225/GAMCC/results/imputation/bamlist.txt",
-    "PANEL_NAME": "oneKG_ggvp",
+    "PANEL_NAME": "oneKG",
 
     "info_filter": 0.9,
 
