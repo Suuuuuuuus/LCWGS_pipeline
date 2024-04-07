@@ -11,7 +11,6 @@ sys.path.append("/well/band/users/rbx225/software/lcwgsus/")
 import lcwgsus
 chromosome = [i for i in range(1,23)]
 
-# The followings are global parameters from `activate`:
 QUILT_HOME = config["QUILT_HOME"]
 ANALYSIS_DIR = config["ANALYSIS_DIR"]
 RECOMB_POP=config["RECOMB_POP"]
