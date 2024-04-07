@@ -1,6 +1,6 @@
 include: "imputation_calculation.smk"
+include: "filter_vcf.smk"
 
-#include: "test.smk"
 include: "auxiliary.smk"
 configfile: "pipelines/config.json"
 
@@ -12,15 +12,18 @@ import os
 sys.path.append("/well/band/users/rbx225/software/lcwgsus/")
 import lcwgsus
 
-samples_lc = read_tsv_as_lst(config['samples_lc'])
-
 chromosome = [i for i in range(1,23)]
 
+PANEL_NAME = config['PANEL_NAME']
 imp_dir = config['imputation_dir']
 case_controls = ['non-malaria_control', 'mild_malaria', 'severe_malaria']
 ethnicities = ['fula', 'jola', 'mandinka', 'wollof']
 pair = ['lc', 'hc']
 axis = ['h', 'v']
+
+rule filter_vcf_all:
+    input:
+        filtered_vcf = expand(f"results/wip_vcfs/{PANEL_NAME}/high_info/lc.chr{{chr}}.vcf.gz", chr = chromosome)
 
 rule imputation_calculation_all:
     input:
@@ -53,7 +56,3 @@ rule imputation_calculation_all:
         ccd_h_cc = expand(imp_dir + "graphs/by_cc/by_variant/{cc}.ccd_by_genotype.png", cc = case_controls),
         r2NRC_v_cc = expand(imp_dir + "graphs/by_cc/by_sample/{cc}.r2_NRC.png", cc = case_controls),
         ccd_v_cc = expand(imp_dir + "graphs/by_cc/by_sample/{cc}.ccd_by_genotype.png", cc = case_controls)
-
-# rule manipulate_vcf:
-#     input:
-#         info

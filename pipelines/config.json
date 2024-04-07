@@ -41,6 +41,8 @@
     "BAMLIST": "/well/band/users/rbx225/GAMCC/results/imputation/bamlist.txt",
     "PANEL_NAME": "oneKG_ggvp",
 
+    "info_filter": 0.9,
+
     "imputation_dir": "/well/band/users/rbx225/GAMCC/results/imputation_comparison/oneKG/lc_chip_typed/",
     "lc_vcf_dir": "/well/band/users/rbx225/GAMCC/results/imputation/vcfs/oneKG/",
     "hc_vcf_dir": "/well/band/users/rbx225/GAMCC/results/chip/vcf/chip_by_chr/"
