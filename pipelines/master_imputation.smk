@@ -55,4 +55,8 @@ rule imputation_calculation_all:
         r2NRC_h_cc = expand(imp_dir + "graphs/by_cc/by_variant/{cc}.r2_NRC.png", cc = case_controls),
         ccd_h_cc = expand(imp_dir + "graphs/by_cc/by_variant/{cc}.ccd_by_genotype.png", cc = case_controls),
         r2NRC_v_cc = expand(imp_dir + "graphs/by_cc/by_sample/{cc}.r2_NRC.png", cc = case_controls),
-        ccd_v_cc = expand(imp_dir + "graphs/by_cc/by_sample/{cc}.ccd_by_genotype.png", cc = case_controls)
+        ccd_v_cc = expand(imp_dir + "graphs/by_cc/by_sample/{cc}.ccd_by_genotype.png", cc = case_controls),
+
+        lc_vcfs = expand(imp_dir + "vcf/all_samples/filtered_vcfs/lc.chr{chr}.vcf.gz", chr = chromosome),
+        hc_vcfs = expand(imp_dir + "vcf/all_samples/filtered_vcfs/hc.chr{chr}.vcf.gz", chr = chromosome),
+        afs = expand(imp_dir + "vcf/all_samples/af/af.chr{chr}.tsv", chr = chromosome)

@@ -74,13 +74,17 @@ rule calculate_imputation_accuracy_all:
         h_report = imp_dir + "impacc/all_samples/by_variant/chr{chr}.h.tsv",
         h_impacc = imp_dir + "impacc/all_samples/by_variant/chr{chr}.h.impacc.tsv",
         v_report = imp_dir + "impacc/all_samples/by_sample/chr{chr}.v.tsv",
-        v_impacc = imp_dir + "impacc/all_samples/by_sample/chr{chr}.v.impacc.tsv"
+        v_impacc = imp_dir + "impacc/all_samples/by_sample/chr{chr}.v.impacc.tsv",
+        lc_vcf = imp_dir + "vcf/all_samples/filtered_vcfs/lc.chr{chr}.vcf.gz",
+        hc_vcf = imp_dir + "vcf/all_samples/filtered_vcfs/hc.chr{chr}.vcf.gz",
+        af = imp_dir + "vcf/all_samples/af/af.chr{chr}.tsv"
     resources:
         mem = '60G'
     threads: 8
     params:
         linker = config['sample_linker'],
-        common_outdir = imp_dir + "impacc/all_samples/"
+        common_outdir = imp_dir + "impacc/all_samples/",
+        common_savedir = imp_dir + "vcf/all_samples/"
     run:
         mini = False
         common_cols = ['chr', 'pos', 'ref', 'alt']
@@ -92,7 +96,7 @@ rule calculate_imputation_accuracy_all:
         chip_vcf = input.chip_vcf
         af_txt = input.af
 
-        chip, lc, af = lcwgsus.imputation_calculation_preprocess(chip_vcf, quilt_vcf, af_txt)
+        chip, lc, af = lcwgsus.imputation_calculation_preprocess(chip_vcf, quilt_vcf, af_txt, save_vcfs = True, lc_vcf_outdir = params.common_savedir + "filtered_vcfs/", hc_vcf_outdir = params.common_savedir + "filtered_vcfs/", lc_vcf_name = "lc.chr" + wildcards.chr + ".vcf.gz", hc_vcf_name = "hc.chr" + wildcards.chr + ".vcf.gz", af_name = params.common_savedir + "af/af.chr" + wildcards.chr + ".tsv")
         
         h_report = lcwgsus.calculate_h_imputation_accuracy(chip, lc, af, 
                                                    save_file = True, 
