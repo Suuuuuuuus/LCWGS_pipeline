@@ -69,7 +69,7 @@ rule hla_imputation:
         --outputdir="results/hla/imputation/genes/{wildcards.hla_gene}/" \
         --bamlist={input.bamlist} \
         --region={wildcards.hla_gene} \
-        --prepared_hla_reference_dir={input.RData} \
+        --prepared_hla_reference_dir={input.ref_dir} \
         --quilt_hla_haplotype_panelfile={input.ref_dir}/quilt.hrc.hla.{wildcards.hla_gene}.haplotypes.RData \
         --dict_file={QUILT_HOME}hla_ancillary_files/GRCh38_full_analysis_set_plus_decoy_hla.dict
     """
