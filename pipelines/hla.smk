@@ -37,6 +37,8 @@ rule hla_imputation_preprocess:
         -RGPU unknown \
         -RGSM {params.sample}
 
+        samtools index {output.tmp}
+
         samtools view -o {output.chr} {output.tmp} chr6:25000000-35000000
     """
 
