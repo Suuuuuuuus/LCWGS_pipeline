@@ -22,9 +22,9 @@ rule fastuniq: # Currently deprecated as we are basically gonna remove in markdu
         fastq2_uncompress = temp("data/tmp/input_{id}_fast_uniq_2.fastq.gz"),
         fastq1_unzip = temp("data/tmp/{id}_fast_uniq_1.fastq"),
         fastq2_unzip = temp("data/tmp/{id}_fast_uniq_2.fastq")
-    threads: 2
+    threads: 4
     resources:
-        mem = '10G'
+        mem = '30G'
     shell: """
         pigz -p {threads} -dc {input.fastq1} > {output.fastq1_uncompress}
         pigz -p {threads} -dc {input.fastq2} > {output.fastq2_uncompress}
@@ -56,9 +56,9 @@ rule trimmomatic_lc:
         rev_unpair = "data/fastq_cleaned/{id}_unpaired_2.fastq.gz"
     params:
         adapters = config['adapter']
-    threads: 2
+    threads: 4
     resources:
-        mem = '10G'
+        mem = '30G'
     shell: """
         trimmomatic PE \
         {input.fastq1} {input.fastq2} \
@@ -78,9 +78,9 @@ rule trimmomatic_hc:
         rev_unpair = "data/fastq_cleaned/{id}_unpaired_2.fastq.gz"
     params:
         adapters = config['adapter']
-    threads: 2
+    threads: 4
     resources:
-        mem = '10G'
+        mem = '30G'
     shell: """
         trimmomatic PE \
         {input.fastq1} {input.fastq2} \
