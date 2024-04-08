@@ -18,13 +18,26 @@ QUILT_HOME = config["QUILT_HOME"]
 
 rule hla_imputation_preprocess:
     input:
-        bams = "data/dedup_bams/{id}.bam"
+        bam = "data/dedup_bams/{id}.bam"
     output:
-        chrs = "results/hla/bams/{id}.chr6.bam"
+        tmp = temp("results/hla/bams/{id}.tmp.bam"),
+        chr = "results/hla/bams/{id}.chr6.bam"
+    params:
+        verbosity = "ERROR",
+        sample = "{id}"
     shell: """
         mkdir -p results/hla/bams/
-        
-        samtools view -o {output.chrs} {input.bam} chr6:25000000-35000000
+
+        picard AddOrReplaceReadGroups \
+        -VERBOSITY {params.verbosity} \
+        -I {input.bam} \
+        -O {output.tmp} \
+        -RGLB OGC \
+        -RGPL ILLUMINA \
+        -RGPU unknown \
+        -RGSM {params.sample}
+
+        samtools view -o {output.chr} {output.tmp} chr6:25000000-35000000
     """
 
 rule prepare_hla_bamlist:
@@ -34,8 +47,8 @@ rule prepare_hla_bamlist:
         bamlist = "results/hla/imputation/bamlist.txt"
     shell: """
         mkdir -p results/hla/imputation/
-        
-        ls results/hla/bams/*.bam > {output.bamlist} 
+
+        ls results/hla/bams/*.bam > {output.bamlist}
     """
 
 rule hla_imputation:
