@@ -75,8 +75,8 @@ rule calculate_imputation_accuracy_all:
         h_impacc = imp_dir + "impacc/all_samples/by_variant/chr{chr}.h.impacc.tsv",
         v_report = imp_dir + "impacc/all_samples/by_sample/chr{chr}.v.tsv",
         v_impacc = imp_dir + "impacc/all_samples/by_sample/chr{chr}.v.impacc.tsv",
-        lc_vcf = imp_dir + "vcf/all_samples/filtered_vcfs/lc.chr{chr}.vcf.gz",
-        hc_vcf = imp_dir + "vcf/all_samples/filtered_vcfs/hc.chr{chr}.vcf.gz",
+        lc_vcf = temp(imp_dir + "vcf/all_samples/filtered_vcfs/tmp.lc.chr{chr}.vcf.gz"),
+        hc_vcf = temp(imp_dir + "vcf/all_samples/filtered_vcfs/tmp.hc.chr{chr}.vcf.gz"),
         af = imp_dir + "vcf/all_samples/af/af.chr{chr}.tsv"
     resources:
         mem = '60G'
@@ -96,7 +96,7 @@ rule calculate_imputation_accuracy_all:
         chip_vcf = input.chip_vcf
         af_txt = input.af
 
-        chip, lc, af = lcwgsus.imputation_calculation_preprocess(chip_vcf, quilt_vcf, af_txt, save_vcfs = True, lc_vcf_outdir = params.common_savedir + "filtered_vcfs/", hc_vcf_outdir = params.common_savedir + "filtered_vcfs/", lc_vcf_name = "lc.chr" + wildcards.chr + ".vcf.gz", hc_vcf_name = "hc.chr" + wildcards.chr + ".vcf.gz", af_name = params.common_savedir + "af/af.chr" + wildcards.chr + ".tsv")
+        chip, lc, af = lcwgsus.imputation_calculation_preprocess(chip_vcf, quilt_vcf, af_txt, save_vcfs = True, lc_vcf_outdir = params.common_savedir + "filtered_vcfs/", hc_vcf_outdir = params.common_savedir + "filtered_vcfs/", lc_vcf_name = "tmp.lc.chr" + wildcards.chr + ".vcf.gz", hc_vcf_name = "tmp.hc.chr" + wildcards.chr + ".vcf.gz", af_name = params.common_savedir + "af/af.chr" + wildcards.chr + ".tsv")
         
         h_report = lcwgsus.calculate_h_imputation_accuracy(chip, lc, af, 
                                                    save_file = True, 
@@ -119,6 +119,26 @@ rule calculate_imputation_accuracy_all:
                                            outdir = params.common_outdir + "by_sample/", 
                                            save_name = 'chr' + wildcards.chr +'.v.impacc.tsv')
         # Ignore the _BC fields in vertical reports as they are not reliable
+
+rule rezip_vcf:
+    input:
+        lc_vcf = rules.calculate_imputation_accuracy_all.output.lc_vcf,
+        hc_vcf = rules.calculate_imputation_accuracy_all.output.hc_vcf
+    output:
+        lc_rezipped = imp_dir + "vcf/all_samples/filtered_vcfs/lc.chr{chr}.vcf.gz",
+        hc_rezipped = imp_dir + "vcf/all_samples/filtered_vcfs/hc.chr{chr}.vcf.gz"
+    resources:
+        mem = '20G'
+    shell: """
+        gunzip {input.lc_vcf}
+        gunzip {input.hc_vcf}
+
+        bgzip {imp_dir}vcf/all_samples/filtered_vcfs/lc.chr{wildcards.chr}.vcf
+        bgzip {imp_dir}vcf/all_samples/filtered_vcfs/hc.chr{wildcards.chr}.vcf
+
+        tabix {output.lc_rezipped}
+        tabix {output.hc_rezipped}
+    """
 
 rule plot_imputation_accuracy_all:
     input:
