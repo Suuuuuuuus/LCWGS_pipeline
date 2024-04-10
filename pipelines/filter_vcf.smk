@@ -63,6 +63,7 @@ rule filter_lc_maf:
 
         lc_af = pd.merge(lc, af, on = common_cols)
         lc_af = lc_af[lc_af['MAF'] > float(params.maf)]
+        lc_af = lc_af.apply(lcwgsus.convert_to_chip_format)
 
         lcwgsus.save_vcf(lc_af,
              metadata,
