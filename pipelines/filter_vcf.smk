@@ -36,7 +36,7 @@ rule filter_lc_info:
 
 rule filter_lc_maf:
     input:
-        lc_vcf = f"results/wip_vcfs/{PANEL_NAME}/high_info/lc.chr{{chr}}.vcf.gz",
+        lc_vcf = imp_dir + "vcf/all_samples/filtered_vcfs/lc.chr{chr}.vcf.gz",
         af = imp_dir + "vcf/all_samples/af/af.chr{chr}.tsv"
     output:
         filtered_vcf = f"results/wip_vcfs/{PANEL_NAME}/high_info_high_af/lc.chr{{chr}}.vcf.gz"
