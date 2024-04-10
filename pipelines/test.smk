@@ -24,7 +24,7 @@ rule test:
 
         shell("""
             gunzip {vcf}
-        """.format(vcf = "/well/band/users/rbx225/test_files/GAM013489_oneKG/chr1.vcf.gz"))
+        """.format(vcf = "/well/band/users/rbx225/test_files/GAM013489_oneKG/chr2.vcf.gz"))
 
         shell("touch test.txt")
         
