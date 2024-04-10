@@ -71,6 +71,5 @@ rule filter_lc_maf:
              )
         
         shell("""
-        gunzip {output.filtered_vcf}
-        bgzip results/wip_vcfs/{PANEL_NAME}/high_info_high_af/lc.chr{wildcards.chr}.vcf
+        gunzip {output.filtered_vcf}; bgzip results/wip_vcfs/{PANEL_NAME}/high_info_high_af/lc.chr{wildcards.chr}.vcf
         """)
