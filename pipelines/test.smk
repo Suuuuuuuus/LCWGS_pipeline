@@ -22,4 +22,4 @@ rule test:
         
         shell("""
             gunzip {vcf}; bgzip /well/band/users/rbx225/{panel}/GAM013489_oneKG/chr{c}.vcf
-        """.format(vcf = input.v, panel = "test_files", c = "1"))
+        """.format(vcf = output.v, panel = "test_files", c = "1"))
