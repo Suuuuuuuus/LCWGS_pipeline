@@ -25,6 +25,23 @@ rule filter_vcf_all:
     input:
         filtered_vcf = expand(f"results/wip_vcfs/{PANEL_NAME}/high_info/lc.chr{{chr}}.vcf.gz", chr = chromosome)
 
+rule imputation_calculation_hc_all:
+    input:
+        vcfs_all = expand(imp_dir + 'vcf/all_samples/{pair}_vcf/{pair}.chr{chr}.vcf.gz', chr = chromosome, pair = pair),
+        h_report_all = expand(imp_dir + "impacc/all_samples/by_variant/chr{chr}.h.tsv", chr = chromosome),
+        h_impacc_all = expand(imp_dir + "impacc/all_samples/by_variant/chr{chr}.h.impacc.tsv", chr = chromosome),
+        v_report_all = expand(imp_dir + "impacc/all_samples/by_sample/chr{chr}.v.tsv", chr = chromosome),
+        v_impacc_all = expand(imp_dir + "impacc/all_samples/by_sample/chr{chr}.v.impacc.tsv", chr = chromosome),
+        r2NRC_h_all = imp_dir + "graphs/all_samples/by_variant/r2_NRC.png",
+        ccd_h_all = imp_dir + "graphs/all_samples/by_variant/ccd_by_genotype.png",
+        r2NRC_v_all = imp_dir + "graphs/all_samples/by_sample/r2_NRC.png",
+        ccd_v_all = imp_dir + "graphs/all_samples/by_sample/ccd_by_genotype.png",
+
+        lc_vcfs = expand(imp_dir + "vcf/all_samples/filtered_vcfs/lc.chr{chr}.vcf.gz", chr = chromosome),
+        hc_vcfs = expand(imp_dir + "vcf/all_samples/filtered_vcfs/hc.chr{chr}.vcf.gz", chr = chromosome),
+        afs = expand(imp_dir + "vcf/all_samples/af/af.chr{chr}.tsv", chr = chromosome)
+
+
 rule imputation_calculation_all:
     input:
         vcfs_all = expand(imp_dir + 'vcf/all_samples/{pair}_vcf/{pair}.chr{chr}.vcf.gz', chr = chromosome, pair = pair),
