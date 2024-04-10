@@ -8,7 +8,7 @@ import sys
 sys.path.append("/well/band/users/rbx225/software/lcwgsus/")
 import lcwgsus
 
-imp_dir = config['imp_dir']
+imp_dir = config['imputation_dir']
 
 rule all:
     input:
