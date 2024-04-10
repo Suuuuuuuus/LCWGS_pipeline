@@ -44,7 +44,7 @@
     "info_filter": 0.9,
     "maf_filter": 0.1,
 
-    "imputation_dir": "/well/band/users/rbx225/GAMCC/results/imputation_comparison/oneKG/lc_chip_typed_high_info/",
+    "imputation_dir": "/well/band/users/rbx225/GAMCC/results/imputation_comparison/oneKG/lc_hc_snps_gw/",
     "lc_vcf_dir": "/well/band/users/rbx225/GAMCC/results/two-stage-imputation/oneKG_oneKG/vcf/",
     "hc_vcf_dir": "/well/band/users/rbx225/GAMCC/results/call/recal_vcf/oneKG/snps/"
 }
