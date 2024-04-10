@@ -8,17 +8,27 @@ import sys
 sys.path.append("/well/band/users/rbx225/software/lcwgsus/")
 import lcwgsus
 
+imp_dir = config['imp_dir']
+
 rule all:
     input:
-        "test.txt"
+        f"{imp_dir}vcf/all_samples/lc_vcf/test.txt"
 
 rule test:
     input:
-        "results/imputation/vcfs/oneKG/"
+        f"{imp_dir}vcf/all_samples/lc_vcf/test.txt"
     output:
         "test.txt"
     shell: """
-        declare -a eth=("jola" "fula" "mandinka" "wollof")
-        
-        for e in "${{eth[@]}}"; do echo $e >> {output}; done
+        mkdir -p {imp_dir}vcf/
+        mkdir -p {imp_dir}impacc/
+        mkdir -p {imp_dir}graphs/
+        mkdir -p {imp_dir}vcf/all_samples/lc_vcf/
+        mkdir -p {imp_dir}vcf/all_samples/hc_vcf/
+        mkdir -p {imp_dir}vcf/by_cc/lc_vcf/
+        mkdir -p {imp_dir}vcf/by_cc/hc_vcf/
+        mkdir -p {imp_dir}vcf/by_eth/lc_vcf/
+        mkdir -p {imp_dir}vcf/by_eth/hc_vcf/
+
+        touch {imp_dir}vcf/all_samples/lc_vcf/test.txt
     """
