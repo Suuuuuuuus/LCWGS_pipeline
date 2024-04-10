@@ -72,4 +72,4 @@ rule filter_lc_maf:
         
         shell("""
         gunzip {filtered_vcf}; bgzip results/wip_vcfs/{panel}/high_info_high_af/lc.chr{c}.vcf
-        """.format(filtered_vcf = output.filtered_vcf, panel = PANEL_NAME, c = wildcards.chr))
+        """.format(filtered_vcf = output.filtered_vcf, panel = params.panel, c = wildcards.chr))
