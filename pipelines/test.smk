@@ -12,16 +12,22 @@ imp_dir = config['imputation_dir']
 
 rule all:
     input:
-        v = "/well/band/users/rbx225/test_files/GAM013489_oneKG/chr1.vcf.gz",
+        # v = "/well/band/users/rbx225/test_files/GAM013489_oneKG/chr1.vcf.gz",
         t = "test.txt"
 
 rule test:
     output:
-        v = "/well/band/users/rbx225/test_files/GAM013489_oneKG/chr1.vcf.gz",
+        # v = "/well/band/users/rbx225/test_files/GAM013489_oneKG/chr1.vcf.gz",
         t = "test.txt"
     run:
         print('hi')
-        
+
         shell("""
-            gunzip {vcf}; bgzip /well/band/users/rbx225/{panel}/GAM013489_oneKG/chr{c}.vcf; touch test.txt
-        """.format(vcf = output.v, panel = "test_files", c = "1"))
+            gunzip {vcf}
+        """.format(vcf = output.v))
+
+        shell("touch test.txt")
+        
+        # shell("""
+        #     gunzip {vcf}; bgzip /well/band/users/rbx225/{panel}/GAM013489_oneKG/chr{c}.vcf; touch test.txt
+        # """.format(vcf = output.v, panel = "test_files", c = "1"))
