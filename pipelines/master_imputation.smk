@@ -1,4 +1,4 @@
-include: "imputation_calculation.smk"
+#include: "imputation_calculation.smk"
 include: "filter_vcf.smk"
 
 include: "auxiliary.smk"
