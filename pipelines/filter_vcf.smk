@@ -36,8 +36,8 @@ rule filter_lc_info:
 
 rule filter_lc_maf:
     input:
-        lc_vcf = imp_dir + "vcf/all_samples/filtered_vcfs/lc.chr{chr}.vcf.gz",
-        af = imp_dir + "vcf/all_samples/af/af.chr{chr}.tsv"
+        lc_vcf = f"results/wip_vcfs/{PANEL_NAME}/high_info/lc.chr{{chr}}.vcf.gz",
+        af = "data/gnomAD_MAFs/afr/gnomAD_MAF_afr_chr{chr}.txt"
     output:
         filtered_vcf = f"results/wip_vcfs/{PANEL_NAME}/high_info_high_af/lc.chr{{chr}}.vcf.gz"
     resources:
@@ -63,6 +63,7 @@ rule filter_lc_maf:
 
         lc_af = pd.merge(lc, af, on = common_cols)
         lc_af = lc_af[lc_af['MAF'] > float(params.maf)]
+        lc_af = lc_af.drop(columns = 'MAF')
         lc_af = lc_af.apply(lcwgsus.convert_to_chip_format)
 
         lcwgsus.save_vcf(lc_af,
