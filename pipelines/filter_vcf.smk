@@ -46,7 +46,8 @@ rule filter_lc_maf:
     params:
         info = config['info_filter'],
         maf = config['maf_filter'],
-        panel = PANEL_NAME
+        panel = PANEL_NAME,
+        chrom = "{chr}"
     run:
         common_cols = ['chr', 'pos', 'ref', 'alt']
         lc_sample_prefix = 'GM'
@@ -71,5 +72,5 @@ rule filter_lc_maf:
              )
         
         shell("""
-            gunzip results/wip_vcfs/{panel}/high_info_high_af/lc.chr{chrom}.vcf.gz; bgzip results/wip_vcfs/{panel}/high_info_high_af/lc.chr{chrom}.vcf
-        """.format(panel = params.panel, chrom = wildcards.chr))
+            gunzip results/wip_vcfs/{panel}/high_info_high_af/lc.chr{c}.vcf.gz; bgzip results/wip_vcfs/{panel}/high_info_high_af/lc.chr{c}.vcf
+        """.format(panel = params.panel, c = params.chrom))
