@@ -15,10 +15,8 @@ rule all:
         f"{imp_dir}vcf/all_samples/lc_vcf/test.txt"
 
 rule test:
-    input:
-        f"{imp_dir}vcf/all_samples/lc_vcf/test.txt"
     output:
-        "test.txt"
+        f"{imp_dir}vcf/all_samples/lc_vcf/test.txt"
     shell: """
         mkdir -p {imp_dir}vcf/
         mkdir -p {imp_dir}impacc/
