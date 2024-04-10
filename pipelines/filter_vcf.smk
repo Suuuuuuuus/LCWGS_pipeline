@@ -70,5 +70,7 @@ rule filter_lc_maf:
              save_name="lc.chr" + str(wildcards.chr) + ".vcf.gz"
              )
         
-        shell("gunzip {output.filtered_vcf}")
-        shell("bgzip results/wip_vcfs/{PANEL_NAME}/high_info_high_af/lc.chr{wildcards.chr}.vcf")
+        shell("""
+        gunzip {output.filtered_vcf}
+        bgzip results/wip_vcfs/{PANEL_NAME}/high_info_high_af/lc.chr{wildcards.chr}.vcf
+        """)
