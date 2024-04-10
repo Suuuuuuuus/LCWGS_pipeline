@@ -31,10 +31,15 @@ rule copy_vcf_in_working_dir:
         mem = '30G'
     threads: 4
     shell: """
-        mkdir -p {imp_dir}vcf/ {imp_dir}impacc/ {imp_dir}graphs/
-        mkdir -p {imp_dir}vcf/all_samples/lc_vcf/ {imp_dir}vcf/all_samples/hc_vcf/
-        mkdir -p {imp_dir}vcf/by_cc/lc_vcf/ {imp_dir}vcf/by_cc/hc_vcf/
-        mkdir -p {imp_dir}vcf/by_eth/lc_vcf/ {imp_dir}vcf/by_eth/hc_vcf/
+        mkdir -p {imp_dir}vcf/
+        mkdir -p {imp_dir}impacc/
+        mkdir -p {imp_dir}graphs/
+        mkdir -p {imp_dir}vcf/all_samples/lc_vcf/
+        mkdir -p {imp_dir}vcf/all_samples/hc_vcf/
+        mkdir -p {imp_dir}vcf/by_cc/lc_vcf/
+        mkdir -p {imp_dir}vcf/by_cc/hc_vcf/
+        mkdir -p {imp_dir}vcf/by_eth/lc_vcf/
+        mkdir -p {imp_dir}vcf/by_eth/hc_vcf/
 
         for i in {{1..22}}
         do
@@ -97,7 +102,7 @@ rule calculate_imputation_accuracy_all:
         af_txt = input.af
 
         chip, lc, af = lcwgsus.imputation_calculation_preprocess(chip_vcf, quilt_vcf, af_txt, save_vcfs = True, lc_vcf_outdir = params.common_savedir + "filtered_vcfs/", hc_vcf_outdir = params.common_savedir + "filtered_vcfs/", lc_vcf_name = "tmp.lc.chr" + wildcards.chr + ".vcf.gz", hc_vcf_name = "tmp.hc.chr" + wildcards.chr + ".vcf.gz", af_name = params.common_savedir + "af/af.chr" + wildcards.chr + ".tsv")
-        
+
         h_report = lcwgsus.calculate_h_imputation_accuracy(chip, lc, af, 
                                                    save_file = True, 
                                                    outdir = params.common_outdir + "by_variant/", 
@@ -108,7 +113,7 @@ rule calculate_imputation_accuracy_all:
                                            save_impacc = True, 
                                            outdir = params.common_outdir + "by_variant/", 
                                            save_name = 'chr' + wildcards.chr +'.h.impacc.tsv')
-                                           
+
         v_report = lcwgsus.calculate_v_imputation_accuracy(chip, lc, af, 
                                            save_file = True, 
                                            outdir = params.common_outdir + "by_sample/", 
