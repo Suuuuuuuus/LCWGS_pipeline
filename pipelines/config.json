@@ -42,7 +42,7 @@
     "BAMLIST": "/well/band/users/rbx225/GAMCC/results/imputation/bamlist.txt",
     "PANEL_NAME": "oneKG",
 
-    "info_filter": 0.9,
+    "info_filter": 0.98,
     "maf_filter": 0.1,
 
     "imputation_dir": "/well/band/users/rbx225/GAMCC/results/imputation_comparison/oneKG/high_info_high_af/",

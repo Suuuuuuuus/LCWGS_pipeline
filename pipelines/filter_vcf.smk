@@ -37,7 +37,7 @@ rule filter_lc_info:
 rule filter_lc_maf:
     input:
         lc_vcf = f"results/wip_vcfs/{PANEL_NAME}/high_info/lc.chr{{chr}}.vcf.gz",
-        af = "data/gnomAD_MAFs/afr/gnomAD_MAF_afr_chr{chr}.txt"
+        af = "data/oneKG_MAFs/oneKG_AF_AFR_chr{chr}.txt"
     output:
         filtered_vcf = f"results/wip_vcfs/{PANEL_NAME}/high_info_high_af/lc.chr{{chr}}.vcf.gz"
     resources:
