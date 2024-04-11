@@ -114,11 +114,7 @@ rule variant_calling_all:
         merge_vcf = expand(f"results/call/merge_vcf/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.vcf.gz", type = variant_types, chr = chromosome),
         tranches = expand(f"results/call/VQSR/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.tranch", type = variant_types, chr = chromosome),
         recals = expand(f"results/call/VQSR/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.recal", type = variant_types, chr = chromosome),
-        recal_vcf = expand(f"results/call/recal_vcf/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.vcf.gz", type = variant_types, chr = chromosome)
-
-rule test_all:
-    input:
-        
+        recal_vcf = expand(f"results/call/recal_vcf/{hc_panel}/{{type}}/{hc_panel}.{{type}}.chr{{chr}}.vcf.gz", type = variant_types, chr = chromosome)
 
 
         

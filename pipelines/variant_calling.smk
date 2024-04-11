@@ -258,8 +258,8 @@ rule apply_vqsr:
         tranch = rules.get_vqsr_report.output.tranch,
         recal = rules.get_vqsr_report.output.recal
     output:
-        recal_vcf = f"results/call/recal_vcf/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.vcf.gz",
-        tmp_vcf = temp(f"results/call/recal_vcf/{hc_panel}/tmp.{hc_panel}.{{type}}.chr{{chr}}.vcf.gz")
+        recal_vcf = f"results/call/recal_vcf/{hc_panel}/{{type}}/{hc_panel}.{{type}}.chr{{chr}}.vcf.gz",
+        tmp_vcf = temp(f"results/call/recal_vcf/{hc_panel}/{{type}}/tmp.{hc_panel}.{{type}}.chr{{chr}}.vcf.gz")
     resources:
         mem = '20G'
     params:
@@ -287,11 +287,12 @@ rule apply_vqsr:
             -mode INDEL \
             -O {output.recal_vcf}
         fi
+        
+        bcftools norm -m-any -Oz -o {output.tmp_vcf} {output.recal_vcf}
+        rm {output.recal_vcf}
 
         if ! [ -f {params.rename_samples} ]; then
-            bcftools reheader -s {params.rename_samples} -o {output.tmp_vcf} {output.recal_vcf}
-            rm {output.recal_vcf}
-            mv {output.tmp_vcf} {output.recal_vcf}
+            bcftools reheader -s {params.rename_samples} -o {output.recal_vcf} {output.tmp_vcf}
         fi
 
     """

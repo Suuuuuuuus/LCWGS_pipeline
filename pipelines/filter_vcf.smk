@@ -41,8 +41,8 @@ rule filter_lc_maf:
     output:
         filtered_vcf = f"results/wip_vcfs/{PANEL_NAME}/high_info_high_af/lc.chr{{chr}}.vcf.gz"
     resources:
-        mem = '30G'
-    threads: 4
+        mem = '60G'
+    threads: 8
     params:
         info = config['info_filter'],
         maf = config['maf_filter'],
@@ -64,7 +64,7 @@ rule filter_lc_maf:
         lc_af = pd.merge(lc, af, on = common_cols)
         lc_af = lc_af[lc_af['MAF'] > float(params.maf)]
         lc_af = lc_af.drop(columns = 'MAF')
-        lc_af = lc_af.apply(lcwgsus.convert_to_chip_format)
+        lc_af = lc_af.apply(lcwgsus.convert_to_chip_format, axis = 1)
 
         lcwgsus.save_vcf(lc_af,
              metadata,
