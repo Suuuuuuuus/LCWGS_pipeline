@@ -84,7 +84,7 @@ rule calculate_imputation_accuracy_all:
         hc_vcf = temp(imp_dir + "vcf/all_samples/filtered_vcfs/tmp.hc.chr{chr}.vcf.gz"),
         af = imp_dir + "vcf/all_samples/af/af.chr{chr}.tsv"
     resources:
-        mem = '60G'
+        mem = '80G'
     threads: 8
     params:
         linker = config['sample_linker'],
@@ -178,6 +178,21 @@ rule plot_imputation_accuracy_all:
         lcwgsus.plot_imputation_accuracy(dfs, title = 'r2 and NRC by sample', save_fig = True, outdir = outdir_v, save_name = "r2_NRC.png")
         dfs = [v[['AF', 'ccd_homref', 'ccd_homref_AC']], v[['AF', 'ccd_het', 'ccd_het_AC']], v[['AF', 'ccd_homalt', 'ccd_homalt_AC']]]
         lcwgsus.plot_imputation_accuracy(dfs, title = 'Comparing different genotypes', save_fig = True, outdir = outdir_v, save_name = "ccd_by_genotype.png")
+
+rule calculate_imputation_sumstat:
+    input:
+        h_impaccs = expand(imp_dir + "impacc/all_samples/by_variant/chr{chr}.h.impacc.tsv", chr = chromosome),
+        v_impaccs = expand(imp_dir + "impacc/all_samples/by_sample/chr{chr}.v.impacc.tsv", chr = chromosome)
+    output:
+        sumstats = imp_dir + "summary_metrics.tsv"
+    resources:
+        mem = '30G'
+    params:
+        imputation_dir = imp_dir,
+        axis = "v"
+    run:
+        imp_dir = params.imputation_dir
+        lcwgsus.calculate_imputation_sumstats(imp_dir, subset = False, axis = params.axis, save_file = True)
 
 rule calculate_imputation_accuracy_by_eth:
     input:
@@ -348,3 +363,22 @@ rule plot_imputation_accuracy_by_cc:
         lcwgsus.plot_imputation_accuracy(dfs, title = 'r2 and NRC by sample', save_fig = True, outdir = outdir_v, save_name = wildcards.cc + ".r2_NRC.png")
         dfs = [v[['AF', 'ccd_homref', 'ccd_homref_AC']], v[['AF', 'ccd_het', 'ccd_het_AC']], v[['AF', 'ccd_homalt', 'ccd_homalt_AC']]]
         lcwgsus.plot_imputation_accuracy(dfs, title = 'Comparing different genotypes', save_fig = True, outdir = outdir_v, save_name = wildcards.cc + ".ccd_by_genotype.png")
+
+rule calculate_imputation_sumstat_all:
+    input:
+        h_impaccs = expand(imp_dir + "impacc/all_samples/by_variant/chr{chr}.h.impacc.tsv", chr = chromosome),
+        v_impaccs = expand(imp_dir + "impacc/all_samples/by_sample/chr{chr}.v.impacc.tsv", chr = chromosome),
+        cc_h_impaccs = expand(imp_dir + "impacc/by_cc/by_variant/{cc}.chr{chr}.h.impacc.tsv", chr = chromosome, cc = case_controls),
+        cc_v_impaccs = expand(imp_dir + "impacc/by_cc/by_sample/{cc}.chr{chr}.v.impacc.tsv", chr = chromosome, cc = case_controls),
+        eth_h_impaccs = expand(imp_dir + "impacc/by_eth/by_variant/{eth}.chr{chr}.h.impacc.tsv", chr = chromosome, eth = ethnicities),
+        eth_impaccs = expand(imp_dir + "impacc/by_eth/by_sample/{eth}.chr{chr}.v.impacc.tsv", chr = chromosome, eth = ethnicities)
+    output:
+        sumstats = imp_dir + "summary_metrics_all.tsv"
+    resources:
+        mem = '30G'
+    params:
+        imputation_dir = imp_dir,
+        axis = "v"
+    run:
+        imp_dir = params.imputation_dir
+        lcwgsus.calculate_imputation_sumstats(imp_dir, subset = True, axis = params.axis, save_file = True, save_name = "summary_metrics_all.tsv")

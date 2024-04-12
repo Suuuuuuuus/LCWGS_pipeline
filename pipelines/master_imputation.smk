@@ -40,7 +40,9 @@ rule imputation_calculation_hc_all:
 
         lc_vcfs = expand(imp_dir + "vcf/all_samples/filtered_vcfs/lc.chr{chr}.vcf.gz", chr = chromosome),
         hc_vcfs = expand(imp_dir + "vcf/all_samples/filtered_vcfs/hc.chr{chr}.vcf.gz", chr = chromosome),
-        afs = expand(imp_dir + "vcf/all_samples/af/af.chr{chr}.tsv", chr = chromosome)
+        afs = expand(imp_dir + "vcf/all_samples/af/af.chr{chr}.tsv", chr = chromosome),
+        
+        sumstats = imp_dir + "summary_metrics.tsv"
 
 
 rule imputation_calculation_all:
@@ -77,4 +79,6 @@ rule imputation_calculation_all:
 
         lc_vcfs = expand(imp_dir + "vcf/all_samples/filtered_vcfs/lc.chr{chr}.vcf.gz", chr = chromosome),
         hc_vcfs = expand(imp_dir + "vcf/all_samples/filtered_vcfs/hc.chr{chr}.vcf.gz", chr = chromosome),
-        afs = expand(imp_dir + "vcf/all_samples/af/af.chr{chr}.tsv", chr = chromosome)
+        afs = expand(imp_dir + "vcf/all_samples/af/af.chr{chr}.tsv", chr = chromosome),
+        
+        sumstats = imp_dir + "summary_metrics_all.tsv"
