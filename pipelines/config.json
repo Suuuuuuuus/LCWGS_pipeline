@@ -46,6 +46,6 @@
     "maf_filter": 0.01,
 
     "imputation_dir": "/well/band/users/rbx225/GAMCC/results/imputation_comparison/oneKG/lc_hc_snps_gw/",
-    "lc_vcf_dir": "/well/band/users/rbx225/GAMCC/results/imputation/vcfs/oneKG",
-    "hc_vcf_dir": "/well/band/users/rbx225/GAMCC/results/call/recal_vcf/oneKG/snps"
+    "lc_vcf_dir": "/well/band/users/rbx225/GAMCC/results/imputation/vcfs/oneKG/",
+    "hc_vcf_dir": "/well/band/users/rbx225/GAMCC/results/call/recal_vcf/oneKG/snps/"
 }
