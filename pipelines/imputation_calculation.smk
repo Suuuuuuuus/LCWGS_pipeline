@@ -129,12 +129,12 @@ rule calculate_imputation_accuracy_all:
         # Ignore the _BC fields in vertical reports as they are not reliable
         
         shell("""
-            gunzip {imp_dir}vcf/all_samples/filtered_vcfs/lc.chr{c}.vcf.gz"; bgzip {imp_dir}vcf/all_samples/filtered_vcfs/lc.chr{c}.vcf; tabix {imp_dir}vcf/all_samples/filtered_vcfs/lc.chr{c}.vcf.gz
+            gunzip {imp_dir}vcf/all_samples/filtered_vcfs/lc.chr{c}.vcf.gz; bgzip {imp_dir}vcf/all_samples/filtered_vcfs/lc.chr{c}.vcf; tabix {imp_dir}vcf/all_samples/filtered_vcfs/lc.chr{c}.vcf.gz
         """.format(imp_dir = params.imputation_dir, c = params.chrom))
         shell("""
-            gunzip {imp_dir}vcf/all_samples/filtered_vcfs/hc.chr{c}.vcf.gz"; bgzip {imp_dir}vcf/all_samples/filtered_vcfs/hc.chr{c}.vcf; tabix {imp_dir}vcf/all_samples/filtered_vcfs/hc.chr{c}.vcf.gz
+            gunzip {imp_dir}vcf/all_samples/filtered_vcfs/hc.chr{c}.vcf.gz; bgzip {imp_dir}vcf/all_samples/filtered_vcfs/hc.chr{c}.vcf; tabix {imp_dir}vcf/all_samples/filtered_vcfs/hc.chr{c}.vcf.gz
         """.format(imp_dir = params.imputation_dir, c = params.chrom))
-        
+
 # rule rezip_vcf:
 #     input:
 #         lc_vcf = rules.calculate_imputation_accuracy_all.output.lc_vcf,
