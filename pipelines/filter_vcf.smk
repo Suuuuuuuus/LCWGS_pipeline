@@ -74,9 +74,9 @@ rule filter_lc_maf:
              save_name="lc.chr" + str(wildcards.chr) + ".vcf.gz"
              )
         
-        shell("""
-            gunzip results/wip_vcfs/{panel}/high_info_high_af/lc.chr{c}.vcf.gz; bgzip results/wip_vcfs/{panel}/high_info_high_af/lc.chr{c}.vcf
-        """.format(panel = params.panel, c = params.chrom))
+        # shell("""
+        #     gunzip results/wip_vcfs/{panel}/high_info_high_af/lc.chr{c}.vcf.gz; bgzip results/wip_vcfs/{panel}/high_info_high_af/lc.chr{c}.vcf
+        # """.format(panel = params.panel, c = params.chrom))
 
 # The omni5m manifest has col3,4 to be chr and pos
 rule prepare_chip_manifest:
@@ -140,6 +140,6 @@ rule filter_lc_sites:
              save_name="lc.chr" + str(wildcards.chr) + ".vcf.gz"
              )
         
-        shell("""
-            gunzip results/wip_vcfs/{panel}/high_info_high_af_chip_sites/lc.chr{c}.vcf.gz; bgzip results/wip_vcfs/{panel}/high_info_high_af_chip_sites/lc.chr{c}.vcf
-        """.format(panel = params.panel, c = params.chrom))
+        # shell("""
+        #     gunzip results/wip_vcfs/{panel}/high_info_high_af_chip_sites/lc.chr{c}.vcf.gz; bgzip results/wip_vcfs/{panel}/high_info_high_af_chip_sites/lc.chr{c}.vcf
+        # """.format(panel = params.panel, c = params.chrom))
