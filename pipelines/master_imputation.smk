@@ -12,7 +12,7 @@ import os
 sys.path.append("/well/band/users/rbx225/software/lcwgsus/")
 import lcwgsus
 
-chromosome = [i for i in range(1,23)]
+chromosome = [i for i in range(21,23)]
 
 PANEL_NAME = config['PANEL_NAME']
 imp_dir = config['imputation_dir']

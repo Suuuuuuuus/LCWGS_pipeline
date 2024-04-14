@@ -103,12 +103,6 @@ rule calculate_imputation_accuracy_all:
 
         chip, lc, af = lcwgsus.imputation_calculation_preprocess(chip_vcf, quilt_vcf, af_txt, save_vcfs = True, lc_vcf_outdir = params.common_savedir + "filtered_vcfs/", hc_vcf_outdir = params.common_savedir + "filtered_vcfs/", lc_vcf_name = "tmp.lc.chr" + wildcards.chr + ".vcf.gz", hc_vcf_name = "tmp.hc.chr" + wildcards.chr + ".vcf.gz", af_outdir = params.common_savedir + "af/", af_name = "af.chr" + wildcards.chr + ".tsv")
 
-        print(chip.head(5))
-        print()
-        print(lc.head(5))
-        print()
-        print(af.head(5))
-
         h_report = lcwgsus.calculate_h_imputation_accuracy(chip, lc, af, 
                                                    save_file = True, 
                                                    outdir = params.common_outdir + "by_variant/", 
