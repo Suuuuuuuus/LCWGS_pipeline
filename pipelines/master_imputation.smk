@@ -1,5 +1,5 @@
 include: "imputation_calculation.smk"
-#include: "filter_vcf.smk"
+include: "filter_vcf.smk"
 
 include: "auxiliary.smk"
 configfile: "pipelines/config.json"
