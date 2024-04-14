@@ -93,7 +93,7 @@ rule prepare_chip_manifest:
     shell: """
         mkdir -p results/data/chip/omni5m/
 
-        picard BpmToNormalizationManifestCsv \
+        {params.picard} BpmToNormalizationManifestCsv \
         -I {input.bpm} \
         -CF {input.egt} \
         -O {output.csv}
