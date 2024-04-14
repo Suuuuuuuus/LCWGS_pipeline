@@ -76,3 +76,69 @@ rule filter_lc_maf:
         shell("""
             gunzip results/wip_vcfs/{panel}/high_info_high_af/lc.chr{c}.vcf.gz; bgzip results/wip_vcfs/{panel}/high_info_high_af/lc.chr{c}.vcf
         """.format(panel = params.panel, c = params.chrom))
+
+# The omni5m manifest has col3,4 to be chr and pos
+rule prepare_chip_manifest:
+    input:
+        bpm = config['dense_bpm'],
+        egt = config['dense_egt']
+    output:
+        csv = "data/chip/omni5m/omni5m.csv",
+        pos = "data/chip/omni5m/omni5m_sites.tsv"
+    resources:
+        mem = '30G'
+    params:
+        picard = tools['picard']
+    shell: """
+        mkdir -p results/data/chip/omni5m/
+
+        picard BpmToNormalizationManifestCsv \
+        -I {input.bpm} \
+        -CF {input.egt} \
+        -O {output.csv}
+
+        cut -d ',' -f3,4 {output.csv} | \
+        sed 's/,/\t/g' | \
+        tail -n +2 > {output.pos}
+    """
+
+rule filter_lc_sites:
+    input:
+        vcf = f"results/wip_vcfs/{PANEL_NAME}/high_info_high_af/lc.chr{{chr}}.vcf.gz",
+        sites = rules.prepare_chip_manifest.output.pos
+    output:
+        filtered_vcf = f"results/wip_vcfs/{PANEL_NAME}/high_info_high_af_chip_sites/lc.chr{{chr}}.vcf.gz"
+    resources:
+        mem = '60G'
+    threads: 8
+    params:
+        panel = PANEL_NAME,
+        chrom = "{chr}"
+    run:
+        common_cols = ['chr', 'pos']
+        lc_sample_prefix = 'GM'
+        chip_sample_prefix = 'GAM'
+        seq_sample_prefix = 'IDT'
+
+        imp_vcf = input.lc_vcf
+        chip_sites = input.sites
+
+        lc = lcwgsus.read_vcf(imp_vcf).sort_values(by=['chr', 'pos'])
+        metadata = lcwgsus.read_metadata(imp_vcf)
+        
+        sites = pd.read_table(chip_sites, sep = '\t', names = common_cols, dtype = {'chr': str, 'pos': int}).drop_duplicates(ignore_index = True)
+        sites = sites[sites['chr'] == str(wildcards.chr)]
+        sites['chr'] = sites['chr'].astype(int)
+
+        lc_sites = pd.merge(lc, sites, on = common_cols)
+
+        lcwgsus.save_vcf(lc_sites,
+             metadata,
+             prefix='chr',
+             outdir="results/wip_vcfs/" + params.panel + "/high_info_high_af_chip_sites/",
+             save_name="lc.chr" + str(wildcards.chr) + ".vcf.gz"
+             )
+        
+        shell("""
+            gunzip results/wip_vcfs/{panel}/high_info_high_af_chip_sites/lc.chr{c}.vcf.gz; bgzip results/wip_vcfs/{panel}/high_info_high_af_chip_sites/lc.chr{c}.vcf
+        """.format(panel = params.panel, c = params.chrom))

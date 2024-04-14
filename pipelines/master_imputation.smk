@@ -24,7 +24,8 @@ axis = ['h', 'v']
 rule filter_vcf_all:
     input:
         high_info_vcf = expand(f"results/wip_vcfs/{PANEL_NAME}/high_info/lc.chr{{chr}}.vcf.gz", chr = chromosome),
-        high_info_high_maf_vcf = expand(f"results/wip_vcfs/{PANEL_NAME}/high_info_high_af/lc.chr{{chr}}.vcf.gz", chr = chromosome)
+        high_info_high_maf_vcf = expand(f"results/wip_vcfs/{PANEL_NAME}/high_info_high_af/lc.chr{{chr}}.vcf.gz", chr = chromosome),
+        high_info_high_maf_chip_sites_vcf = expand(f"results/wip_vcfs/{PANEL_NAME}/high_info_high_af_chip_sites/lc.chr{{chr}}.vcf.gz", chr = chromosome)
 
 rule imputation_calculation_hc_all:
     input:
