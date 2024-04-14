@@ -1,4 +1,5 @@
 include: "auxiliary.smk"
+include: "software.smk"
 configfile: "pipelines/config.json"
 
 import json

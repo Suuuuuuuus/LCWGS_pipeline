@@ -2,6 +2,7 @@ include: "imputation_calculation.smk"
 include: "filter_vcf.smk"
 
 include: "auxiliary.smk"
+include: "software.smk"
 configfile: "pipelines/config.json"
 
 import json
