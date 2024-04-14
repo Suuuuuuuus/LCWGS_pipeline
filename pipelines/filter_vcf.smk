@@ -121,7 +121,7 @@ rule filter_lc_sites:
         chip_sample_prefix = 'GAM'
         seq_sample_prefix = 'IDT'
 
-        imp_vcf = input.lc_vcf
+        imp_vcf = input.vcf
         chip_sites = input.sites
 
         lc = lcwgsus.read_vcf(imp_vcf).sort_values(by=['chr', 'pos'])
