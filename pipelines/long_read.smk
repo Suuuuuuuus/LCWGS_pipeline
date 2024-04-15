@@ -34,17 +34,19 @@ rule simulate_reads:
     params:
         model = "data/lr_models/model_qc_" + method.lower(),
         mean_length = get_num_mean_length,
-        outdir = "data/lr_simulations/{rl}/"
+        outdir = "data/lr_simulations/{rl}/",
+        prefix = "data/lr_simulations/{rl}/tmp.{hap}.{rl}"
     shell: """
         mkdir -p {params.outdir}
 
-        pbsim --data-type {method} --depth {coverage} --model_qc {params.model} {input.fasta} --length-mean {params.mean_length} --prefix {params.outdir}tmp.{wildcards.hap}.{wildcards.rl}
+        pbsim --data-type {method} --depth {coverage} --model_qc {params.model} --length-mean {params.mean_length} --prefix {params.prefix} {input.fasta}
 
-        cat {params.outdir}tmp.{wildcards.hap}.{wildcards.rl}*.fastq > {output.tmp}
+        cat {params.prefix}*.fastq > {output.tmp}
 
-        rm {params.outdir}tmp.{wildcards.hap}.{wildcards.rl}*.fastq
-        rm {params.outdir}tmp.{wildcards.hap}.{wildcards.rl}*.maf
-        rm {params.outdir}tmp.{wildcards.hap}.{wildcards.rl}*.ref
+        rm {params.prefix}*.fastq
+        rm {params.prefix}*.maf
+        rm {params.prefix}*.ref
 
         gzip {output.tmp}
+        touch {output.tmp}
     """
