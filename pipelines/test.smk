@@ -18,7 +18,7 @@ analysis = [i for i in range(len(x))]
 
 rule all:
     input:
-        res = expand(z[{n}], n = analysis)
+        res = expand(z[int("{n}")], n = analysis)
 
 rule test:
     input:
