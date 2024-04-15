@@ -19,6 +19,9 @@ method = 'CCS'
 # coverage = '0.5'
 coverage = '0.001'
 
+def get_num_mean_length(wildcards):
+    return int(wildcards.rl[:-2])*1000
+
 rule simulate_reads:
     input:
         fasta = "data/lr_fasta/HG02886.{hap}.fa"
@@ -30,7 +33,7 @@ rule simulate_reads:
     threads: 4
     params:
         model = "data/lr_models/model_qc_" + method.lower(),
-        mean_length = int("{rl}"[:-2])*1000,
+        mean_length = get_num_mean_length,
         outdir = "data/lr_simulations/{rl}/"
     shell: """
         mkdir -p {params.outdir}
