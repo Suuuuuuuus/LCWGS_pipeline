@@ -10,19 +10,21 @@ import lcwgsus
 
 imp_dir = config['imputation_dir']
 
+x = ['a.txt', 'b.txt']
+y = ['1.txt', '2.txt']
+z = ['s.txt', 't.txt']
+
+analysis = [i for i in range(len(x))]
+
 rule all:
     input:
-        # v = "/well/band/users/rbx225/test_files/GAM013489_oneKG/chr3.vcf.gz",
-        t = "test.txt"
+        res = expand(z[{n}], n = analysis)
 
 rule test:
+    input:
+        a = x[{n}],
+        b = y[{n}]
     output:
-        # v = "/well/band/users/rbx225/test_files/GAM013489_oneKG/chr3.vcf.gz",
-        t = "test.txt"
-    params:
-        imputation_dir = config['imputation_dir']
+        t = z[{n}]
     run:
-        x = params.imputation_dir.split('/')[-2]
-        print(x)
-
-        shell("echo test.txt")
+        print(output.t)
