@@ -73,10 +73,6 @@ rule filter_lc_maf:
              outdir="results/wip_vcfs/" + params.panel + "/high_info_high_af/",
              save_name="lc.chr" + str(wildcards.chr) + ".vcf.gz"
              )
-        
-        # shell("""
-        #     gunzip results/wip_vcfs/{panel}/high_info_high_af/lc.chr{c}.vcf.gz; bgzip results/wip_vcfs/{panel}/high_info_high_af/lc.chr{c}.vcf
-        # """.format(panel = params.panel, c = params.chrom))
 
 # The omni5m manifest has col3,4 to be chr and pos
 rule prepare_chip_manifest:
@@ -139,7 +135,3 @@ rule filter_lc_sites:
              outdir="results/wip_vcfs/" + params.panel + "/high_info_high_af_chip_sites/",
              save_name="lc.chr" + str(wildcards.chr) + ".vcf.gz"
              )
-        
-        # shell("""
-        #     gunzip results/wip_vcfs/{panel}/high_info_high_af_chip_sites/lc.chr{c}.vcf.gz; bgzip results/wip_vcfs/{panel}/high_info_high_af_chip_sites/lc.chr{c}.vcf
-        # """.format(panel = params.panel, c = params.chrom))
