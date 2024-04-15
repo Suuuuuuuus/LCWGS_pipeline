@@ -26,4 +26,6 @@ coverage = '0.001'
 
 rule long_read_all:
     input:
-        fastqs = expand("data/lr_simulations/{rl}/{hap}.{rl}.fastq.gz", rl = read_lengths, hap = haplotypes)
+        fastqs = expand("data/lr_simulations/{rl}/{hap}.{rl}.fastq.gz", rl = read_lengths, hap = haplotypes),
+        bams = expand("data/lr_bams/{hap}.{rl}.bam", rl = read_lengths, hap = haplotypes),
+        bais = expand("data/lr_bams/{hap}.{rl}.bam.bai", rl = read_lengths, hap = haplotypes)
