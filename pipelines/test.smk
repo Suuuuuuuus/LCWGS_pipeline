@@ -19,9 +19,10 @@ rule test:
     output:
         # v = "/well/band/users/rbx225/test_files/GAM013489_oneKG/chr3.vcf.gz",
         t = "test.txt"
+    params:
+        imputation_dir = config['imputation_dir']
     run:
-        print('hi')
-        
-        shell("""
-            gunzip {vcf}; bgzip /well/band/users/rbx225/{panel}/GAM013489_oneKG/chr{c}.vcf; touch test.txt
-        """.format(vcf = "/well/band/users/rbx225/test_files/GAM013489_oneKG/chr3.vcf.gz", panel = "test_files", c = "3"))
+        x = params.imputation_dir.split('/')[-2]
+        print(x)
+
+        shell("echo test.txt")
