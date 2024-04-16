@@ -92,9 +92,6 @@ def get_input_vcfs_as_list(wildcards):
 def get_input_vcfs_as_string(wildcards):
     return(" ".join(map(str, vcfs_to_concat[str(wildcards.chr)])))
 
-samples_chip = read_tsv_as_lst(config['samples_chip'])
-seq_to_extract = [sample for sample in samples_lc if sample in samples_chip]
-
 rule lr_imputation_all:
     input:
         RData = [regions_to_prep],
