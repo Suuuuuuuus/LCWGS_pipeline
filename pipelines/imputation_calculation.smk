@@ -71,9 +71,30 @@ rule split_vcf_by_cc:
         bcftools view -S data/file_lsts/samples_subset/by_case_control/{wildcards.cc}_samples_{wildcards.pair}.tsv -Oz -o {output.cc_vcf} {input.vcf}
     """
 
-rule calculate_imputation_accuracy_all:
+rule subset_lc_samples:
     input:
         quilt_vcf = imp_dir + 'vcf/all_samples/lc_vcf/lc.chr{chr}.vcf.gz',
+        chip_vcf = imp_dir + 'vcf/all_samples/hc_vcf/hc.chr{chr}.vcf.gz'
+    output:
+        ss_vcf = temp(imp_dir + 'vcf/all_samples/lc_vcf/lc.subset.chr{chr}.vcf.gz'),
+        tmp_names = temp(imp_dir + 'vcf/all_samples/samples.chr{chr}.tsv')
+    resources:
+        mem = '10G'
+    params:
+        imputation_dir = imp_dir
+    run: 
+        hc_names = lcwgsus.bcftools_get_samples(input.chip_vcf)
+        rename_map = lcwgsus.generate_rename_map() # Accommodate miniaturised later
+        lc = params.imputation_dir.split('/')[-2].split('_')[0]
+        samples = lcwgsus.find_matching_samples(hc_names, rename_map, lc = lc)
+        lcwgsus.save_lst(output.tmp_names, samples)
+
+        shell("bcftools view -S {output.tmp_names} -Oz -o {output.ss_vcf} {input.quilt_vcf}")
+
+rule calculate_imputation_accuracy_all:
+    input:
+        quilt_vcf = rules.subset_lc_samples.output.ss_vcf,
+        # quilt_vcf = imp_dir + 'vcf/all_samples/lc_vcf/lc.chr{chr}.vcf.gz',
         chip_vcf = imp_dir + 'vcf/all_samples/hc_vcf/hc.chr{chr}.vcf.gz',
         af = "data/gnomAD_MAFs/afr/gnomAD_MAF_afr_chr{chr}.txt"
     output:
@@ -85,7 +106,7 @@ rule calculate_imputation_accuracy_all:
         hc_vcf = imp_dir + "vcf/all_samples/filtered_vcfs/hc.chr{chr}.vcf.gz",
         af = imp_dir + "vcf/all_samples/af/af.chr{chr}.tsv"
     resources:
-        mem = '120G'
+        mem = '100G'
     threads: 16
     params:
         linker = config['sample_linker'],
@@ -141,26 +162,6 @@ rule calculate_imputation_accuracy_all:
         shell("""
             gunzip {imp_dir}vcf/all_samples/filtered_vcfs/hc.chr{c}.vcf.gz; bgzip {imp_dir}vcf/all_samples/filtered_vcfs/hc.chr{c}.vcf; tabix {imp_dir}vcf/all_samples/filtered_vcfs/hc.chr{c}.vcf.gz
         """.format(imp_dir = params.imputation_dir, c = params.chrom))
-
-# rule rezip_vcf:
-#     input:
-#         lc_vcf = rules.calculate_imputation_accuracy_all.output.lc_vcf,
-#         hc_vcf = rules.calculate_imputation_accuracy_all.output.hc_vcf
-#     output:
-#         lc_rezipped = imp_dir + "vcf/all_samples/filtered_vcfs/lc.chr{chr}.vcf.gz",
-#         hc_rezipped = imp_dir + "vcf/all_samples/filtered_vcfs/hc.chr{chr}.vcf.gz"
-#     resources:
-#         mem = '20G'
-#     shell: """
-#         gunzip {input.lc_vcf}
-#         gunzip {input.hc_vcf}
-
-#         bgzip {imp_dir}vcf/all_samples/filtered_vcfs/lc.chr{wildcards.chr}.vcf
-#         bgzip {imp_dir}vcf/all_samples/filtered_vcfs/hc.chr{wildcards.chr}.vcf
-
-#         tabix {output.lc_rezipped}
-#         tabix {output.hc_rezipped}
-#     """
 
 rule plot_imputation_accuracy_all:
     input:
