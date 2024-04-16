@@ -155,8 +155,10 @@ rule convert_ref:
         threads=1
     shell: """
         mkdir -p results/lr_imputation/refs/
-        bcftools view --output-file {output.tmp_vcf} --output-type z --min-alleles 2 --max-alleles 2 --types snps {input.vcf}
+        bcftools view -Oz -o {output.tmp_vcf} -m2 -M2 -v snps {input.vcf}
+
         tabix {output.tmp_vcf}
+        
         bcftools convert --haplegendsample results/lr_imputation/refs/{params.panel}.chr{wildcards.chr} {output.tmp_vcf}
     """
 
