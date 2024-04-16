@@ -66,9 +66,12 @@ rule lr_alignment:
         mkdir -p data/lr_bams/tmp/
 
         pbmm2 align {input.reference} {input.fastq} {output.bam} \
-        --rg '@RG\tID:HG02886\tSM:HG02886' \
         --sort -j 4 -J 2
     """
+
+# pbmm2 align {input.reference} {input.fastq} {output.bam} \
+#         --rg '@RG\tID:HG02886\tSM:HG02886' \
+#         --sort -j 4 -J 2
 
 rule lr_clean_bam:
     input:
