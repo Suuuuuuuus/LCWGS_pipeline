@@ -136,8 +136,8 @@ rule convert_recomb:
 
 rule convert_ref:
     input:
-        vcf = f"data/imputation_refs/{PANEL_NAME}.chr{{chr}}.vcf.gz",
-        tbi = f"data/imputation_refs/{PANEL_NAME}.chr{{chr}}.vcf.gz.tbi"
+        vcf = f"data/ref_panel/{PANEL_NAME}/{PANEL_NAME}.chr{{chr}}.vcf.gz",
+        tbi = f"data/ref_panel/{PANEL_NAME}/{PANEL_NAME}.chr{{chr}}.vcf.gz.tbi"
     output:
         tmp_vcf = temp(f"results/lr_imputation/refs/tmp.{PANEL_NAME}.chr{{chr}}.vcf.gz"),
         hap = f"results/lr_imputation/refs/{PANEL_NAME}.chr{{chr}}.hap.gz",
