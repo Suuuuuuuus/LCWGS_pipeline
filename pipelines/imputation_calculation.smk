@@ -85,7 +85,7 @@ rule calculate_imputation_accuracy_all:
         hc_vcf = imp_dir + "vcf/all_samples/filtered_vcfs/hc.chr{chr}.vcf.gz",
         af = imp_dir + "vcf/all_samples/af/af.chr{chr}.tsv"
     resources:
-        mem = '100G'
+        mem = '120G'
     threads: 16
     params:
         linker = config['sample_linker'],
