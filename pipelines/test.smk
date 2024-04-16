@@ -10,15 +10,15 @@ import lcwgsus
 
 imp_dir = config['imputation_dir']
 
-x = ['a.txt', 'b.txt']
-y = ['1.txt', '2.txt']
-z = ['s.txt', 't.txt']
+dirs = [
+    'x/', 'y/', 'z/'
+]
 
 analysis = [i for i in range(len(x))]
 
 rule all:
     input:
-        res = expand(z[int("{n}")], n = analysis)
+        
 
 rule test:
     input:
