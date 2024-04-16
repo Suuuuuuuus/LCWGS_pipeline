@@ -44,7 +44,7 @@
     "BAMLIST": "/well/band/users/rbx225/GAMCC/results/imputation/bamlist.txt",
     "PANEL_NAME": "oneKG",
 
-    "lr_analysis_dir": "results/lr_mputation/",
+    "lr_analysis_dir": "results/lr_imputation/",
     "lr_bamlist": "results/lr_imputation/bamlist.txt",
 
     "info_filter": 0.9,
