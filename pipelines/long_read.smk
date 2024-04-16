@@ -113,7 +113,7 @@ rule prepare_bamlist:
     input:
         bams = expand("data/lr_bams/{hap}.{rl}.bam", rl = read_lengths, hap = haplotypes)
     output:
-        bamlist = "results/lr_mputation/bamlist.txt"
+        bamlist = "results/lr_imputation/bamlist.txt"
     shell: """
         mkdir -p {lr_analysis_dir}
         
