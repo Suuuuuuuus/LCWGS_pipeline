@@ -100,6 +100,8 @@ rule lr_clean_bam:
         -M {output.metric} \
         --REMOVE_DUPLICATES
 
+        rm {output.bam}
+
         samtools sort -@6 -m 1G -T {params.tmpdir} -o {output.bam} {output.tmp1}
         samtools index {output.bam}
     """
