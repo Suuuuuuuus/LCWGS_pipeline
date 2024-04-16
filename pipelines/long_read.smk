@@ -122,7 +122,7 @@ rule prepare_bamlist:
     shell: """
         mkdir -p {lr_analysis_dir}
         
-        data/lr_bams/*.bam > {output.bamlist}
+        ls data/lr_bams/*.bam > {output.bamlist}
     """
 
 rule convert_recomb:
@@ -158,7 +158,7 @@ rule convert_ref:
         bcftools view -Oz -o {output.tmp_vcf} -m2 -M2 -v snps {input.vcf}
 
         tabix {output.tmp_vcf}
-        
+
         bcftools convert --haplegendsample results/lr_imputation/refs/{params.panel}.chr{wildcards.chr} {output.tmp_vcf}
     """
 
