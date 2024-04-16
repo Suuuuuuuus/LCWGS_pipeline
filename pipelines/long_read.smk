@@ -171,17 +171,6 @@ rule determine_chunks:
         Rscript {input.code} {lr_analysis_dir:q} {WINDOWSIZE} {BUFFER} {PANEL_NAME:q}
     """
 
-REGIONS={}
-for chr in chromosome:
-    start=[10000001, 15000001]
-    end=[  15000000, 20000000]
-    REGIONS[str(chr)]={"start":start, "end":end}
-
-file="results/lr_imputation/regions.json"
-if os.path.exists(file):
-    with open(file) as json_file:
-        REGIONS = json.load(json_file)
-
 rule prepare_ref:
     input:
         json = "results/lr_imputation/regions.json",
@@ -240,7 +229,18 @@ rule quilt_imputation:
         output_filename="{output.vcf}", \
         seed='${{SEED}}')'
     """
-    
+
+REGIONS={}
+for chr in chromosome:
+    start=[10000001, 15000001]
+    end=[  15000000, 20000000]
+    REGIONS[str(chr)]={"start":start, "end":end}
+
+file="results/lr_imputation/regions.json"
+if os.path.exists(file):
+    with open(file) as json_file:
+        REGIONS = json.load(json_file)
+
 vcfs_to_concat={}
 final_vcfs=[]
 for chr in chromosome:
