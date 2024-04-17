@@ -22,7 +22,7 @@ ethnicities = ['fula', 'jola', 'mandinka', 'wollof']
 pair = ['lc', 'hc']
 axis = ['h', 'v']
 
-imputation_dir = config['imputation_dir'][-3]
+imputation_dir = config['imputation_dir'][-3:]
 
 rule filter_vcf_all:
     input:
