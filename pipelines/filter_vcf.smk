@@ -65,7 +65,6 @@ rule filter_lc_maf:
         lc_af = pd.merge(lc, af, on = common_cols)
         lc_af = lc_af[lc_af['MAF'] > float(params.maf)]
         lc_af = lc_af.drop(columns = 'MAF')
-        lc_af = lc_af.apply(lcwgsus.convert_to_chip_format, axis = 1)
 
         lcwgsus.save_vcf(lc_af,
              metadata,
@@ -122,6 +121,8 @@ rule filter_lc_sites:
 
         lc = lcwgsus.read_vcf(imp_vcf).sort_values(by=['chr', 'pos'])
         metadata = lcwgsus.read_metadata(imp_vcf)
+
+        lc = lc.apply(lcwgsus.convert_to_chip_format, axis = 1)
         
         sites = pd.read_table(chip_sites, sep = '\t', names = common_cols, dtype = {'chr': str, 'pos': int}).drop_duplicates(ignore_index = True)
         sites = sites[sites['chr'] == str(wildcards.chr)]
