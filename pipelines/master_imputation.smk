@@ -22,7 +22,7 @@ ethnicities = ['fula', 'jola', 'mandinka', 'wollof']
 pair = ['lc', 'hc']
 axis = ['h', 'v']
 
-imputation_dir = config['imputation_dir']
+imputation_dir = config['imputation_dir'][-3]
 
 rule filter_vcf_all:
     input:
@@ -32,21 +32,21 @@ rule filter_vcf_all:
 
 rule imputation_calculation_hc_all:
     input:
-        vcfs_all = expand('{imp_dir}vcf/all_samples/{pair}_vcf/{pair}.chr{chr}.vcf.gz', imp_dir = imputation_dir[-1], chr = chromosome, pair = pair),
-        h_report_all = expand("{imp_dir}impacc/all_samples/by_variant/chr{chr}.h.tsv", imp_dir = imputation_dir[-1], chr = chromosome),
-        h_impacc_all = expand("{imp_dir}impacc/all_samples/by_variant/chr{chr}.h.impacc.tsv", imp_dir = imputation_dir[-1], chr = chromosome),
-        v_report_all = expand("{imp_dir}impacc/all_samples/by_sample/chr{chr}.v.tsv", imp_dir = imputation_dir[-1], chr = chromosome),
-        v_impacc_all = expand("{imp_dir}impacc/all_samples/by_sample/chr{chr}.v.impacc.tsv", imp_dir = imputation_dir[-1], chr = chromosome),
-        r2NRC_h_all = expand("{imp_dir}graphs/all_samples/by_variant/r2_NRC.png", imp_dir = imputation_dir[-1]),
-        ccd_h_all = expand("{imp_dir}graphs/all_samples/by_variant/ccd_by_genotype.png", imp_dir = imputation_dir[-1]),
-        r2NRC_v_all = expand("{imp_dir}graphs/all_samples/by_sample/r2_NRC.png", imp_dir = imputation_dir[-1]),
-        ccd_v_all = expand("{imp_dir}graphs/all_samples/by_sample/ccd_by_genotype.png", imp_dir = imputation_dir[-1]),
+        vcfs_all = expand('{imp_dir}vcf/all_samples/{pair}_vcf/{pair}.chr{chr}.vcf.gz', imp_dir = imputation_dir, chr = chromosome, pair = pair),
+        h_report_all = expand("{imp_dir}impacc/all_samples/by_variant/chr{chr}.h.tsv", imp_dir = imputation_dir, chr = chromosome),
+        h_impacc_all = expand("{imp_dir}impacc/all_samples/by_variant/chr{chr}.h.impacc.tsv", imp_dir = imputation_dir, chr = chromosome),
+        v_report_all = expand("{imp_dir}impacc/all_samples/by_sample/chr{chr}.v.tsv", imp_dir = imputation_dir, chr = chromosome),
+        v_impacc_all = expand("{imp_dir}impacc/all_samples/by_sample/chr{chr}.v.impacc.tsv", imp_dir = imputation_dir, chr = chromosome),
+        r2NRC_h_all = expand("{imp_dir}graphs/all_samples/by_variant/r2_NRC.png", imp_dir = imputation_dir),
+        ccd_h_all = expand("{imp_dir}graphs/all_samples/by_variant/ccd_by_genotype.png", imp_dir = imputation_dir),
+        r2NRC_v_all = expand("{imp_dir}graphs/all_samples/by_sample/r2_NRC.png", imp_dir = imputation_dir),
+        ccd_v_all = expand("{imp_dir}graphs/all_samples/by_sample/ccd_by_genotype.png", imp_dir = imputation_dir),
 
-        lc_vcfs = expand("{imp_dir}vcf/all_samples/filtered_vcfs/lc.chr{chr}.vcf.gz", imp_dir = imputation_dir[-1], chr = chromosome),
-        hc_vcfs = expand("{imp_dir}vcf/all_samples/filtered_vcfs/hc.chr{chr}.vcf.gz", imp_dir = imputation_dir[-1], chr = chromosome),
-        afs = expand("{imp_dir}vcf/all_samples/af/af.chr{chr}.tsv", imp_dir = imputation_dir[-1], chr = chromosome),
+        lc_vcfs = expand("{imp_dir}vcf/all_samples/filtered_vcfs/lc.chr{chr}.vcf.gz", imp_dir = imputation_dir, chr = chromosome),
+        hc_vcfs = expand("{imp_dir}vcf/all_samples/filtered_vcfs/hc.chr{chr}.vcf.gz", imp_dir = imputation_dir, chr = chromosome),
+        afs = expand("{imp_dir}vcf/all_samples/af/af.chr{chr}.tsv", imp_dir = imputation_dir, chr = chromosome),
         
-        sumstats = expand("{imp_dir}summary_metrics.tsv", imp_dir = imputation_dir[-1])
+        sumstats = expand("{imp_dir}summary_metrics.tsv", imp_dir = imputation_dir)
 
 """
 rule imputation_calculation_all:
