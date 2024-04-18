@@ -121,7 +121,7 @@ rule prepare_bamlist:
         bamlist = "results/lr_imputation/bamlist.txt"
     shell: """
         mkdir -p {lr_analysis_dir}
-        
+
         ls data/lr_bams/*.bam > {output.bamlist}
     """
 
@@ -159,7 +159,8 @@ rule convert_ref:
 
         tabix {output.tmp_vcf}
 
-        bcftools convert --haplegendsample results/lr_imputation/refs/{params.panel}.chr{wildcards.chr} {output.tmp_vcf}
+        bcftools convert --haplegendsample \
+        results/lr_imputation/refs/{params.panel}.chr{wildcards.chr} {output.tmp_vcf}
     """
 
 rule determine_chunks:
