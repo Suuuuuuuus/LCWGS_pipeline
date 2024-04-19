@@ -20,6 +20,8 @@ WINDOWSIZE=config["WINDOWSIZE"]
 BUFFER=config["BUFFER"]
 PANEL_NAME=config["PANEL_NAME"]
 
+samples_lc = read_tsv_as_lst(config['samples_lc'])
+
 rule prepare_bamlist:
     input:
         bams = expand("data/subsampled_bams/{id}_subsampled.bam", id = samples_lc)
