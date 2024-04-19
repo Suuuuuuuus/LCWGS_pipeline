@@ -1,4 +1,4 @@
-include: "long_read.smk"
+include: "mini.smk"
 include: "subsample.smk"
 
 #include: "test.smk"
