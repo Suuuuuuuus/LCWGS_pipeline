@@ -12,14 +12,13 @@ import lcwgsus
 
 chromosome = [i for i in range(1,23)]
 
-# read_lengths = ['1kb', '2kb', '5kb', '10kb', '20kb']
-read_lengths = ['1kb', '2kb']
-# haplotypes = ['mat', 'pat']
-haplotypes = ['mat']
-# method = ['clr', 'ccs']
+read_lengths = ['1kb', '2kb', '5kb', '10kb', '20kb']
+# read_lengths = ['1kb', '2kb']
+haplotypes = ['mat', 'pat']
+# haplotypes = ['mat']
 method = 'CCS'
-# coverage = '0.5'
-coverage = '0.001'
+coverage = '0.5'
+# coverage = '0.001'
 
 def get_num_mean_length(wildcards):
     return int(wildcards.rl[:-2])*1000
@@ -75,32 +74,45 @@ rule lr_alignment:
 
 rule lr_clean_bam:
     input:
-        bam = rules.lr_alignment.output.bam
+        bams = expand("data/lr_bams/tmp/{hap}.{rl}.bam", hap = haplotypes, allow_missing = True)
     output:
-        bam = "data/lr_bams/{hap}.{rl}.bam",
-        bai = "data/lr_bams/{hap}.{rl}.bam.bai",
-        tmp1 = temp("data/lr_bams/{hap}.{rl}.tmp1.bam"),
-        metric = temp("data/lr_bams/{hap}.{rl}.metrics.txt")
+        bam = "data/lr_bams/{rl}.bam",
+        bai = "data/lr_bams/{rl}.bam.bai",
+        tmp1 = temp("data/lr_bams/{rl}.tmp1.bam"),
+        metric = temp("data/lr_bams/{rl}.metrics.txt")
     threads: 8
     resources:
         mem = '50G'
     params:
-        tmpdir = "data/lr_bams/tmp/{hap}.{rl}/"
+        tmpdir = "data/lr_bams/tmp/{rl}/",
+        sample = "{rl}"
     shell: """
         mkdir -p {params.tmpdir}
 
-        samtools index {input.bam}
-        picard FixMateInformation -I {input.bam}
+        samtools cat -o {output.tmp1} {input.bams}
+        samtools index {output.tmp1}
 
-        samtools sort -@6 -m 1G -T {params.tmpdir} -o {output.bam} {input.bam}
+        picard AddOrReplaceReadGroups \
+        -VERBOSITY ERROR \
+        -I {output.tmp1} \
+        -O {output.bam} \
+        -RGLB OGC \
+        -RGPL PacBio \
+        -RGPU unknown \
+        -RGSM {params.sample}
+
+        picard FixMateInformation -I {output.bam}
+
+        samtools sort -@6 -m 1G -T {params.tmpdir} -o {output.tmp1} {output.bam}
 
         picard MarkDuplicates \
-        -I {output.bam} \
-        -O {output.tmp1} \
+        -I {output.tmp1} \
+        -O {output.bam} \
         -M {output.metric} \
         --REMOVE_DUPLICATES
 
-        rm {output.bam}
+        rm {output.tmp1}
+        mv {output.bam} {output.tmp1}
 
         samtools sort -@6 -m 1G -T {params.tmpdir} -o {output.bam} {output.tmp1}
         samtools index {output.bam}
@@ -116,7 +128,7 @@ PANEL_NAME=config["PANEL_NAME"]
 
 rule prepare_bamlist:
     input:
-        bams = expand("data/lr_bams/{hap}.{rl}.bam", rl = read_lengths, hap = haplotypes)
+        bams = expand("data/lr_bams/{rl}.bam", rl = read_lengths)
     output:
         bamlist = "results/lr_imputation/bamlist.txt"
     shell: """
@@ -274,8 +286,6 @@ rule concat_quilt_vcf:
     params:
         threads = 1,
         input_string=get_input_vcfs_as_string
-        # rename_samples = config["rename_samples"],
-        # rename_samples_file = config["rename_samples_file"]
     wildcard_constraints:
         chr='\w{1,2}',
         regionStart='\d{1,9}',

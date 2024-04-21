@@ -32,7 +32,10 @@ PANEL_NAME=config["PANEL_NAME"]
 rule mini_all:
     input:
         ss_bams = expand("data/subsampled_bams/{id}_subsampled.bam", id = samples_lc),
-        ss_bais = expand("data/subsampled_bams/{id}_subsampled.bam.bai", id = samples_lc)
+        ss_bais = expand("data/subsampled_bams/{id}_subsampled.bam.bai", id = samples_lc),
+        bams = expand("data/mini_bams/{id}.bam", id = samples_lc),
+        bais = expand("data/mini_bams/{id}.bam.bai", id = samples_lc)
+        
 
 REGIONS={}
 for chr in chromosome:

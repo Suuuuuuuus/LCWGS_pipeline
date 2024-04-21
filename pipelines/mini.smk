@@ -22,9 +22,51 @@ PANEL_NAME=config["PANEL_NAME"]
 
 samples_lc = read_tsv_as_lst(config['samples_lc'])
 
+rule mini_clean_bam:
+    input:
+        bam = "data/subsampled_bams/{id}_subsampled.bam"
+    output:
+        bam = "data/mini_bams/{id}.bam",
+        bai = "data/mini_bams/{id}.bam.bai",
+        tmp1 = temp("data/mini_bams/{id}.tmp1.bam"),
+        metric = temp("data/mini_bams/{id}.metrics.txt")
+    threads: 8
+    resources:
+        mem = '50G'
+    params:
+        tmpdir = "data/mini_bams/tmp/{id}/",
+        sample = "{id}"
+    shell: """
+        mkdir -p {params.tmpdir}
+
+        samtools index {input.bam}
+
+        picard AddOrReplaceReadGroups \
+        -VERBOSITY ERROR \
+        -I {input.bam} \
+        -O {output.tmp1} \
+        -RGLB OGC \
+        -RGPL ILLUMINA \
+        -RGPU unknown \
+        -RGSM {params.sample}
+
+        picard FixMateInformation -I {output.tmp1}
+
+        samtools sort -@6 -m 1G -T {params.tmpdir} -o {output.bam} {output.tmp1}
+
+        picard MarkDuplicates \
+        -I {output.bam} \
+        -O {output.tmp1} \
+        -M {output.metric} \
+        --REMOVE_DUPLICATES
+
+        samtools sort -@6 -m 1G -T {params.tmpdir} -o {output.bam} {output.tmp1}
+        samtools index {output.bam}
+    """
+
 rule prepare_bamlist:
     input:
-        bams = expand("data/subsampled_bams/{id}_subsampled.bam", id = samples_lc)
+        bams = expand("data/mini_bams/{id}.bam", id = samples_lc)
     output:
         bamlist = "results/mini_imputation/bamlist.txt"
     shell: """

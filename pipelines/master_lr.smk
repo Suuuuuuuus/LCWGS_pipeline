@@ -15,14 +15,13 @@ import lcwgsus
 
 chromosome = [i for i in range(1,23)]
 
-# read_lengths = ['1kb', '2kb', '5kb', '10kb', '20kb']
-read_lengths = ['1kb', '2kb']
-# haplotypes = ['mat', 'pat']
-haplotypes = ['mat']
-# method = ['clr', 'ccs']
+read_lengths = ['1kb', '2kb', '5kb', '10kb', '20kb']
+# read_lengths = ['1kb', '2kb']
+haplotypes = ['mat', 'pat']
+# haplotypes = ['mat']
 method = 'CCS'
-# coverage = '0.5'
-coverage = '0.001'
+coverage = '0.5'
+# coverage = '0.001'
 
 QUILT_HOME = config["QUILT_HOME"]
 lr_analysis_dir = config["lr_analysis_dir"]
@@ -35,8 +34,8 @@ PANEL_NAME=config["PANEL_NAME"]
 rule long_read_all:
     input:
         fastqs = expand("data/lr_simulations/{rl}/{hap}.{rl}.fastq.gz", rl = read_lengths, hap = haplotypes),
-        bams = expand("data/lr_bams/{hap}.{rl}.bam", rl = read_lengths, hap = haplotypes),
-        bais = expand("data/lr_bams/{hap}.{rl}.bam.bai", rl = read_lengths, hap = haplotypes)
+        bams = expand("data/lr_bams/{rl}.bam", rl = read_lengths),
+        bais = expand("data/lr_bams/{rl}.bam.bai", rl = read_lengths)
 
 REGIONS={}
 for chr in chromosome:
