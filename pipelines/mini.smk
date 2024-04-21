@@ -63,7 +63,7 @@ rule convert_ref:
         threads=1
     shell: """
         mkdir -p results/mini_imputation/refs/
-        bcftools view -Oz -o {output.tmp_vcf} -m2 -M2 -v snps {input.vcf}
+        bcftools norm -m+ {input.vcf} | bcftools view -Oz -o {output.tmp_vcf} -m2 -M2 -v snps
 
         tabix {output.tmp_vcf}
 
