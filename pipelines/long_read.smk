@@ -35,12 +35,18 @@ rule simulate_reads:
     params:
         model = "data/lr_models/model_qc_" + method.lower(),
         mean_length = get_num_mean_length,
+        max_length = 50000,
         outdir = "data/lr_simulations/{rl}/",
         prefix = "data/lr_simulations/{rl}/tmp.{hap}.{rl}"
     shell: """
         mkdir -p {params.outdir}
 
-        pbsim --data-type {method} --depth {coverage} --model_qc {params.model} --length-mean {params.mean_length} --prefix {params.prefix} {input.fasta}
+        pbsim --data-type {method} \
+        --depth {coverage} \
+        --model_qc {params.model} \
+        --length-mean {params.mean_length} \
+        --length-max {params.max_length} \
+        --prefix {params.prefix} {input.fasta}
 
         cat {params.prefix}*.fastq > {output.tmp}
 
@@ -90,29 +96,28 @@ rule lr_clean_bam:
         mkdir -p {params.tmpdir}
 
         samtools cat -o {output.tmp1} {input.bams}
-        samtools index {output.tmp1}
+        samtools sort -@6 -m 1G -T {params.tmpdir} -o {output.bam} {output.tmp1}
+
+        samtools index {output.bam}
 
         picard AddOrReplaceReadGroups \
         -VERBOSITY ERROR \
-        -I {output.tmp1} \
-        -O {output.bam} \
+        -I {output.bam} \
+        -O {output.tmp1} \
         -RGLB OGC \
         -RGPL PacBio \
         -RGPU unknown \
         -RGSM {params.sample}
 
-        picard FixMateInformation -I {output.bam}
+        picard FixMateInformation -I {output.tmp1}
 
-        samtools sort -@6 -m 1G -T {params.tmpdir} -o {output.tmp1} {output.bam}
+        samtools sort -@6 -m 1G -T {params.tmpdir} -o {output.bam} {output.tmp1}
 
         picard MarkDuplicates \
-        -I {output.tmp1} \
-        -O {output.bam} \
+        -I {output.bam} \
+        -O {output.tmp1} \
         -M {output.metric} \
         --REMOVE_DUPLICATES
-
-        rm {output.tmp1}
-        mv {output.bam} {output.tmp1}
 
         samtools sort -@6 -m 1G -T {params.tmpdir} -o {output.bam} {output.tmp1}
         samtools index {output.bam}
