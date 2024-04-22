@@ -72,7 +72,7 @@ rule prepare_bamlist:
     shell: """
         mkdir -p {mini_analysis_dir}
         
-        ls data/subsampled_bams/*.bam > {output.bamlist}
+        ls data/mini_bams/*.bam > {output.bamlist}
     """
 
 rule convert_recomb:
