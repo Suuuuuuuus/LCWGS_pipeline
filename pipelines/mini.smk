@@ -382,7 +382,7 @@ rule copy_vcf_in_working_dir:
         lc_vcf_dir = get_lc_vcf_dir,
         hc_vcf_dir = get_hc_vcf_dir
     output:
-        vcfs = expand('{imp_dir}vcf/all_samples/{pair}_vcf/{pair}.chr{chr}.vcf.gz', chr = chromosome, pair = pair, allow_missing = True)
+        vcfs = temp(expand('{imp_dir}vcf/all_samples/{pair}_vcf/{pair}.chr{chr}.vcf.gz', chr = chromosome, pair = pair, allow_missing = True))
     resources:
         mem = '30G'
     threads: 4
@@ -415,7 +415,7 @@ rule subset_lc_samples:
         mem = '10G'
     run: 
         hc_names = lcwgsus.bcftools_get_samples(input.chip_vcf)
-        lcwgsus.save_lst(output.tmp_names, samples)
+        lcwgsus.save_lst(output.tmp_names, hc_names)
 
         shell("bcftools view -S {output.tmp_names} -Oz -o {output.ss_vcf} {input.quilt_vcf}")
 
