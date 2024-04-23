@@ -271,7 +271,7 @@ rule split_mini_vcf:
 
 rule filter_lc_info:
     input:
-        lc_vcf = fv = f"results/mini_imputation/splited_vcfs/{PANEL_NAME}/{{prep}}/quilt.chr{{chr}}.vcf.gz"
+        lc_vcf = f"results/mini_imputation/splited_vcfs/{PANEL_NAME}/{{prep}}/quilt.chr{{chr}}.vcf.gz"
     output:
         filtered_vcf = f"results/wip_vcfs/{PANEL_NAME}/{{prep}}/high_info/lc.chr{{chr}}.vcf.gz"
     resources:
