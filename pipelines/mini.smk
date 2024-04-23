@@ -409,20 +409,27 @@ rule subset_lc_samples:
         quilt_vcf = '{imp_dir}vcf/all_samples/lc_vcf/lc.chr{chr}.vcf.gz',
         chip_vcf = '{imp_dir}vcf/all_samples/hc_vcf/hc.chr{chr}.vcf.gz'
     output:
-        ss_vcf = temp('{imp_dir}vcf/all_samples/lc_vcf/lc.subset.chr{chr}.vcf.gz'),
+        ss_lc_vcf = temp('{imp_dir}vcf/all_samples/lc_vcf/lc.subset.chr{chr}.vcf.gz'),
+        ss_hc_vcf = temp('{imp_dir}vcf/all_samples/hc_vcf/hc.subset.chr{chr}.vcf.gz'),
         tmp_names = temp('{imp_dir}vcf/all_samples/samples.chr{chr}.tsv')
     resources:
         mem = '10G'
     run: 
-        hc_names = lcwgsus.bcftools_get_samples(input.chip_vcf)
-        lcwgsus.save_lst(output.tmp_names, hc_names)
-
-        shell("bcftools view -S {output.tmp_names} -Oz -o {output.ss_vcf} {input.quilt_vcf}")
+        if (wildcards.imp_dir.split('/')[-3] == 'mini') and ('lc_chip' in wildcards.imp_dir.split('/')[-2]):
+            lc_names = lcwgsus.bcftools_get_samples(input.quilt_vcf)
+            lcwgsus.save_lst(output.tmp_names, lc_names)
+            shell("bcftools view -S {output.tmp_names} -Oz -o {output.ss_hc_vcf} {input.chip_vcf}")
+            shell("cp {input.quilt_vcf} {output.ss_lc_vcf}")
+        else:
+            hc_names = lcwgsus.bcftools_get_samples(input.chip_vcf)
+            lcwgsus.save_lst(output.tmp_names, hc_names)
+            shell("bcftools view -S {output.tmp_names} -Oz -o {output.ss_lc_vcf} {input.quilt_vcf}")
+            shell("cp {input.chip_vcf} {output.ss_hc_vcf}")
 
 rule calculate_imputation_accuracy_all:
     input:
-        quilt_vcf = rules.subset_lc_samples.output.ss_vcf,
-        chip_vcf = '{imp_dir}vcf/all_samples/hc_vcf/hc.chr{chr}.vcf.gz',
+        quilt_vcf = rules.subset_lc_samples.output.ss_lc_vcf,
+        chip_vcf = rules.subset_lc_samples.output.ss_hc_vcf,
         af = "data/gnomAD_MAFs/afr/gnomAD_MAF_afr_chr{chr}.txt"
     output:
         h_report = "{imp_dir}impacc/all_samples/by_variant/chr{chr}.h.tsv",
