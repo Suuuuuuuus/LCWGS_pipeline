@@ -1,4 +1,5 @@
 include: "mini.smk"
+include: "imputation_calculation.smk"
 include: "subsample.smk"
 
 #include: "test.smk"
@@ -91,8 +92,39 @@ def get_input_vcfs_as_list(wildcards):
 def get_input_vcfs_as_string(wildcards):
     return(" ".join(map(str, vcfs_to_concat[str(wildcards.chr)])))
 
+preparations = ['fv', 'mini']
+
 rule mini_imputation_all:
     input:
         RData = [regions_to_prep],
         vcf_regions = [vcfs_to_impute],
-        vcfs = [final_vcfs]
+        vcfs = [final_vcfs],
+        fv = expand(f"results/mini_imputation/splited_vcfs/{PANEL_NAME}/fv/quilt.chr{{chr}}.vcf.gz", chr = chromosome),
+        mini = expand(f"results/mini_imputation/splited_vcfs/{PANEL_NAME}/mini/quilt.chr{{chr}}.vcf.gz", chr = chromosome)
+
+rule filter_vcf_all:
+    input:
+        high_info_vcf = expand(f"results/wip_vcfs/{PANEL_NAME}/{{prep}}/high_info/lc.chr{{chr}}.vcf.gz", chr = chromosome, prep = preparations),
+        high_info_high_maf_vcf = expand(f"results/wip_vcfs/{PANEL_NAME}/{{prep}}/high_info_high_af/lc.chr{{chr}}.vcf.gz", chr = chromosome, prep = preparations),
+        high_info_high_maf_chip_sites_vcf = expand(f"results/wip_vcfs/{PANEL_NAME}/{{prep}}/high_info_high_af_chip_sites/lc.chr{{chr}}.vcf.gz", chr = chromosome, prep = preparations)
+
+pair = ['lc', 'hc']
+axis = ['h', 'v']
+
+imputation_dir = config['imputation_dir'][-6:]
+lc_vcf_dir = config['lc_vcf_dir'][-6:]
+hc_vcf_dir = config['hc_vcf_dir'][-6:]
+
+rule mini_imputation_comparison_all:
+    input:
+        vcfs_all = expand('{imp_dir}vcf/all_samples/{pair}_vcf/{pair}.chr{chr}.vcf.gz', imp_dir = imputation_dir, chr = chromosome, pair = pair),
+        h_report_all = expand("{imp_dir}impacc/all_samples/by_variant/chr{chr}.h.tsv", imp_dir = imputation_dir, chr = chromosome),
+        h_impacc_all = expand("{imp_dir}impacc/all_samples/by_variant/chr{chr}.h.impacc.tsv", imp_dir = imputation_dir, chr = chromosome),
+        v_report_all = expand("{imp_dir}impacc/all_samples/by_sample/chr{chr}.v.tsv", imp_dir = imputation_dir, chr = chromosome),
+        v_impacc_all = expand("{imp_dir}impacc/all_samples/by_sample/chr{chr}.v.impacc.tsv", imp_dir = imputation_dir, chr = chromosome),
+
+        lc_vcfs = expand("{imp_dir}vcf/all_samples/filtered_vcfs/lc.chr{chr}.vcf.gz", imp_dir = imputation_dir, chr = chromosome),
+        hc_vcfs = expand("{imp_dir}vcf/all_samples/filtered_vcfs/hc.chr{chr}.vcf.gz", imp_dir = imputation_dir, chr = chromosome),
+        afs = expand("{imp_dir}vcf/all_samples/af/af.chr{chr}.tsv", imp_dir = imputation_dir, chr = chromosome),
+        
+        sumstats = expand("{imp_dir}summary_metrics.tsv", imp_dir = imputation_dir)
