@@ -109,11 +109,11 @@ rule lr_clean_bam:
         -RGPU unknown \
         -RGSM {params.sample}
 
-        picard FixMateInformation -I {output.tmp1}
+        java -Xmx40G -Xms20G -jar /well/band/users/rbx225/conda/skylake/envs/sus/share/picard-slim-2.27.4-0/picard.jar FixMateInformation -I {output.tmp1}
 
         samtools sort -@6 -m 1G -T {params.tmpdir} -o {output.bam} {output.tmp1}
 
-        picard MarkDuplicates \
+        java -Xmx40G -Xms20G -jar /well/band/users/rbx225/conda/skylake/envs/sus/share/picard-slim-2.27.4-0/picard.jar MarkDuplicates \
         -I {output.bam} \
         -O {output.tmp1} \
         -M {output.metric} \
