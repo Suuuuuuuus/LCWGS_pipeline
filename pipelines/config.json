@@ -79,10 +79,10 @@
         "/well/band/users/rbx225/GAMCC/results/two-stage-imputation/oneKG_topmed/vcf/",
 
         "/well/band/users/rbx225/GAMCC/results/mini_imputation/splited_vcfs/oneKG/fv/", 
-        "/well/band/users/rbx225/GAMCC/results/mini_imputation/splited_vcfs/oneKG/fv/", 
+        "/well/band/users/rbx225/GAMCC/results/wip_vcfs/oneKG/fv/high_info/",
         "/well/band/users/rbx225/GAMCC/results/mini_imputation/splited_vcfs/oneKG/fv/", 
         "/well/band/users/rbx225/GAMCC/results/mini_imputation/splited_vcfs/oneKG/mini/", 
-        "/well/band/users/rbx225/GAMCC/results/mini_imputation/splited_vcfs/oneKG/mini/", 
+        "/well/band/users/rbx225/GAMCC/results/wip_vcfs/oneKG/mini/high_info/", 
         "/well/band/users/rbx225/GAMCC/results/mini_imputation/splited_vcfs/oneKG/mini/"
     ],
     "hc_vcf_dir": [
