@@ -22,9 +22,9 @@ ethnicities = ['fula', 'jola', 'mandinka', 'wollof']
 pair = ['lc', 'hc']
 axis = ['h', 'v']
 
-imputation_dir = config['imputation_dir']
-lc_vcf_dir = config['lc_vcf_dir']
-hc_vcf_dir = config['hc_vcf_dir']
+imputation_dir = config['imputation_dir'][1]
+lc_vcf_dir = config['lc_vcf_dir'][1]
+hc_vcf_dir = config['hc_vcf_dir'][1]
 
 def get_lc_vcf_dir(wildcards):
     ix = imputation_dir.index(wildcards.imp_dir)
@@ -209,11 +209,11 @@ rule calculate_imputation_sumstat:
 
 rule subset_lc_samples_by_eth:
     input:
-        quilt_vcf = '{imp_dir}vcf/by_eth/lc_vcf/lc.chr{chr}.vcf.gz',
-        chip_vcf = '{imp_dir}vcf/by_eth/hc_vcf/hc.chr{chr}.vcf.gz'
+        quilt_vcf = '{imp_dir}vcf/by_eth/lc_vcf/{eth}.lc.chr{chr}.vcf.gz',
+        chip_vcf = '{imp_dir}vcf/by_eth/hc_vcf{eth}.hc.chr{chr}.vcf.gz'
     output:
-        ss_lc_vcf = temp('{imp_dir}vcf/by_eth/hc_vcf/lc.subset.chr{chr}.vcf.gz'),
-        tmp_names = temp('{imp_dir}vcf/by_eth/samples.chr{chr}.tsv')
+        ss_lc_vcf = temp('{imp_dir}vcf/by_eth/hc_vcf/{eth}.lc.subset.chr{chr}.vcf.gz'),
+        tmp_names = temp('{imp_dir}vcf/by_eth/{eth}.samples.chr{chr}.tsv')
     resources:
         mem = '10G'
     run: 
@@ -316,11 +316,11 @@ rule plot_imputation_accuracy_by_eth:
 
 rule subset_lc_samples_by_cc:
     input:
-        quilt_vcf = '{imp_dir}vcf/by_cc/lc_vcf/lc.chr{chr}.vcf.gz',
-        chip_vcf = '{imp_dir}vcf/by_cc/hc_vcf/hc.chr{chr}.vcf.gz'
+        quilt_vcf = '{imp_dir}vcf/by_cc/lc_vcf/{cc}.lc.chr{chr}.vcf.gz',
+        chip_vcf = '{imp_dir}vcf/by_cc/hc_vcf/{cc}.hc.chr{chr}.vcf.gz'
     output:
-        ss_lc_vcf = temp('{imp_dir}vcf/by_cc/hc_vcf/lc.subset.chr{chr}.vcf.gz'),
-        tmp_names = temp('{imp_dir}vcf/by_cc/samples.chr{chr}.tsv')
+        ss_lc_vcf = temp('{imp_dir}vcf/by_cc/hc_vcf/{cc}.lc.subset.chr{chr}.vcf.gz'),
+        tmp_names = temp('{imp_dir}vcf/by_cc/{cc}.samples.chr{chr}.tsv')
     resources:
         mem = '10G'
     run: 
