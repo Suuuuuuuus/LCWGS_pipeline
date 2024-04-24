@@ -1,5 +1,5 @@
 include: "mini.smk"
-include: "subsample.smk"
+#include: "subsample.smk"
 
 #include: "test.smk"
 include: "auxiliary.smk"

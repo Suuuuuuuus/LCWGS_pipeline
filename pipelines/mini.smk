@@ -247,7 +247,7 @@ rule concat_quilt_vcf:
         tabix {output.vcf}
         rm {output.vcf}.temp*
     """
-
+'''
 rule split_mini_vcf:
     input:
         vcf = rules.concat_quilt_vcf.output.vcf
@@ -265,11 +265,9 @@ rule split_mini_vcf:
         shell("mkdir -p results/mini_imputation/splited_vcfs/{PANEL_NAME}/fv/")
         shell("mkdir -p results/mini_imputation/splited_vcfs/{PANEL_NAME}/mini/")
 
-        shell("bcftools view -S {params.fv} {input.vcf} | bcftools reheader -s {params.fv_rename} -o {output.fv}")
-        shell("bcftools view -S {params.mini} {input.vcf} | bcftools reheader -s {params.mini_rename} -o {output.mini}")
-
-        lcwgsus.rezip_vcf(output.fv)
-        lcwgsus.rezip_vcf(output.mini)
+        bcftools view -S {params.fv} {input.vcf} | bcftools reheader -s {params.fv_rename} -o {output.fv}
+        bcftools view -S {params.mini} {input.vcf} | bcftools reheader -s {params.mini_rename} -o {output.mini}
+    """
 
 rule filter_lc_info:
     input:
