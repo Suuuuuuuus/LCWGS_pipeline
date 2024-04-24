@@ -257,7 +257,7 @@ rule split_mini_vcf:
         fv_unzip = temp(f"results/mini_imputation/splited_vcfs/{PANEL_NAME}/fv/quilt.chr{{chr}}.vcf"),
         mini_unzip = temp(f"results/mini_imputation/splited_vcfs/{PANEL_NAME}/mini/quilt.chr{{chr}}.vcf")
     resources:
-        mem_mb = 30000
+        mem = '30G'
     params:
         fv = "data/sample_tsvs/chip_idt_names.tsv",
         fv_rename = "data/rename_tsvs/chip_idt_to_gam.tsv",
