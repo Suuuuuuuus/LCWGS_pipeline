@@ -253,7 +253,9 @@ rule split_mini_vcf:
         vcf = rules.concat_quilt_vcf.output.vcf
     output:
         fv = f"results/mini_imputation/splited_vcfs/{PANEL_NAME}/fv/quilt.chr{{chr}}.vcf.gz",
-        mini = f"results/mini_imputation/splited_vcfs/{PANEL_NAME}/mini/quilt.chr{{chr}}.vcf.gz"
+        mini = f"results/mini_imputation/splited_vcfs/{PANEL_NAME}/mini/quilt.chr{{chr}}.vcf.gz",
+        fv_unzip = temp(f"results/mini_imputation/splited_vcfs/{PANEL_NAME}/fv/quilt.chr{{chr}}.vcf"),
+        mini_unzip = temp(f"results/mini_imputation/splited_vcfs/{PANEL_NAME}/mini/quilt.chr{{chr}}.vcf")
     resources:
         mem_mb = 30000
     params:
@@ -261,15 +263,16 @@ rule split_mini_vcf:
         fv_rename = "data/rename_tsvs/chip_idt_to_gam.tsv",
         mini = "data/sample_tsvs/mini_idt_names.tsv",
         mini_rename = "data/rename_tsvs/mini_idt_to_gam.tsv"
-    run: 
-        shell("mkdir -p results/mini_imputation/splited_vcfs/{PANEL_NAME}/fv/")
-        shell("mkdir -p results/mini_imputation/splited_vcfs/{PANEL_NAME}/mini/")
+    shell: """ 
+        mkdir -p results/mini_imputation/splited_vcfs/{PANEL_NAME}/fv/
+        mkdir -p results/mini_imputation/splited_vcfs/{PANEL_NAME}/mini/
 
-        shell("bcftools view -S {params.fv} {input.vcf} | bcftools reheader -s {params.fv_rename} -o {output.fv}")
-        shell("bcftools view -S {params.mini} {input.vcf} | bcftools reheader -s {params.mini_rename} -o {output.mini}")
+        bcftools view -S {params.fv} {input.vcf} | bcftools reheader -s {params.fv_rename} -o {output.fv_unzip}
+        bcftools view -S {params.mini} {input.vcf} | bcftools reheader -s {params.mini_rename} -o {output.mini_unzip}
 
-        lcwgsus.rezip_vcf(output.fv)
-        lcwgsus.rezip_vcf(output.mini)
+        bgzip {output.fv_unzip}
+        bgzip {output.mini_unzip}
+    """
 
 rule filter_lc_info:
     input:
