@@ -272,6 +272,9 @@ rule split_mini_vcf:
 
         bgzip {output.fv_unzip}
         bgzip {output.mini_unzip}
+
+        touch {output.fv_unzip}
+        touch {output.mini_unzip}
     """
 
 rule filter_lc_info:
