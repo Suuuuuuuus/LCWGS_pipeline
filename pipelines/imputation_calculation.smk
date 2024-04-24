@@ -133,14 +133,7 @@ rule calculate_imputation_accuracy_all:
         chip_vcf = input.chip_vcf
         af_txt = input.af
 
-        # This bit determines whether the input lc file is from QUILT or Server
-        server = wildcards.imp_dir.split('/')[-2].split('_')[0]
-        if server == 'lc':
-            server = False
-        else:
-            server = True
-
-        chip, lc, af = lcwgsus.imputation_calculation_preprocess(chip_vcf, quilt_vcf, af_txt, from_server = server, save_vcfs = True, lc_vcf_outdir = params.common_savedir + "filtered_vcfs/", hc_vcf_outdir = params.common_savedir + "filtered_vcfs/", lc_vcf_name = "lc.chr" + wildcards.chr + ".vcf.gz", hc_vcf_name = "hc.chr" + wildcards.chr + ".vcf.gz", af_outdir = params.common_savedir + "af/", af_name = "af.chr" + wildcards.chr + ".tsv")
+        chip, lc, af = lcwgsus.imputation_calculation_preprocess(chip_vcf, quilt_vcf, af_txt, save_vcfs = True, lc_vcf_outdir = params.common_savedir + "filtered_vcfs/", hc_vcf_outdir = params.common_savedir + "filtered_vcfs/", lc_vcf_name = "lc.chr" + wildcards.chr + ".vcf.gz", hc_vcf_name = "hc.chr" + wildcards.chr + ".vcf.gz", af_outdir = params.common_savedir + "af/", af_name = "af.chr" + wildcards.chr + ".tsv")
 
         h_report = lcwgsus.calculate_h_imputation_accuracy(chip, lc, af, 
                                                    save_file = True, 
@@ -158,18 +151,14 @@ rule calculate_imputation_accuracy_all:
                                            outdir = params.common_outdir + "by_sample/", 
                                            save_name = 'chr' + wildcards.chr +'.v.tsv')
 
-        v_impacc = lcwgsus.generate_v_impacc(v_report, 
+        v_impacc = lcwgsus.generate_v_impacc(v_report,
                                            save_impacc = True, 
                                            outdir = params.common_outdir + "by_sample/", 
                                            save_name = 'chr' + wildcards.chr +'.v.impacc.tsv')
         # Ignore the _BC fields in vertical reports as they are not reliable
-        
-        shell("""
-            gunzip {imp_dir}vcf/all_samples/filtered_vcfs/lc.chr{c}.vcf.gz; bgzip {imp_dir}vcf/all_samples/filtered_vcfs/lc.chr{c}.vcf; tabix {imp_dir}vcf/all_samples/filtered_vcfs/lc.chr{c}.vcf.gz
-        """.format(imp_dir = wildcards.imp_dir, c = params.chrom))
-        shell("""
-            gunzip {imp_dir}vcf/all_samples/filtered_vcfs/hc.chr{c}.vcf.gz; bgzip {imp_dir}vcf/all_samples/filtered_vcfs/hc.chr{c}.vcf; tabix {imp_dir}vcf/all_samples/filtered_vcfs/hc.chr{c}.vcf.gz
-        """.format(imp_dir = wildcards.imp_dir, c = params.chrom))
+
+        lcwgsus.rezip_vcf(output.lc_vcf)
+        lcwgsus.rezip_vcf(output.hc_vcf)
 
 rule plot_imputation_accuracy_all:
     input:
@@ -218,9 +207,31 @@ rule calculate_imputation_sumstat:
     run:
         lcwgsus.calculate_imputation_sumstats(wildcards.imp_dir, subset = False, axis = params.axis, save_file = True)
 
+rule subset_lc_samples_by_eth:
+    input:
+        quilt_vcf = '{imp_dir}vcf/by_eth/lc_vcf/lc.chr{chr}.vcf.gz',
+        chip_vcf = '{imp_dir}vcf/by_eth/hc_vcf/hc.chr{chr}.vcf.gz'
+    output:
+        ss_lc_vcf = temp('{imp_dir}vcf/by_eth/hc_vcf/lc.subset.chr{chr}.vcf.gz'),
+        tmp_names = temp('{imp_dir}vcf/by_eth/samples.chr{chr}.tsv')
+    resources:
+        mem = '10G'
+    run: 
+        lc_names = lcwgsus.bcftools_get_samples(input.quilt_vcf)
+        chip_names = lcwgsus.bcftools_get_samples(input.chip_vcf)
+        sample_linker = pd.read_csv(config['sample_linker'])
+        sample_linker = sample_linker[sample_linker['Sample_Name'].isin(lc_names)]
+        d = {k:v for k, v in zip(sample_linker['Chip_Name'].values, sample_linker['Sample_Name'].values)}
+        lc_return = []
+        for i in chip_names:
+            lc_return.append(d[i])
+
+        lcwgsus.save_lst(output.tmp_names, lc_return)
+        shell("bcftools view -S {output.tmp_names} -Oz -o {output.ss_lc_vcf} {input.quilt_vcf}")
+
 rule calculate_imputation_accuracy_by_eth:
     input:
-        quilt_vcf = '{imp_dir}vcf/by_eth/lc_vcf/{eth}.lc.chr{chr}.vcf.gz',
+        quilt_vcf = rules.subset_lc_samples_by_eth.output.ss_lc_vcf,
         chip_vcf = '{imp_dir}vcf/by_eth/hc_vcf/{eth}.hc.chr{chr}.vcf.gz',
         af = "data/gnomAD_MAFs/afr/gnomAD_MAF_afr_chr{chr}.txt"
     output:
@@ -303,9 +314,31 @@ rule plot_imputation_accuracy_by_eth:
         dfs = [v[['AF', 'ccd_homref', 'ccd_homref_AC']], v[['AF', 'ccd_het', 'ccd_het_AC']], v[['AF', 'ccd_homalt', 'ccd_homalt_AC']]]
         lcwgsus.plot_imputation_accuracy(dfs, title = 'Comparing different genotypes', save_fig = True, outdir = outdir_v, save_name = wildcards.eth + ".ccd_by_genotype.png")
 
+rule subset_lc_samples_by_cc:
+    input:
+        quilt_vcf = '{imp_dir}vcf/by_cc/lc_vcf/lc.chr{chr}.vcf.gz',
+        chip_vcf = '{imp_dir}vcf/by_cc/hc_vcf/hc.chr{chr}.vcf.gz'
+    output:
+        ss_lc_vcf = temp('{imp_dir}vcf/by_cc/hc_vcf/lc.subset.chr{chr}.vcf.gz'),
+        tmp_names = temp('{imp_dir}vcf/by_cc/samples.chr{chr}.tsv')
+    resources:
+        mem = '10G'
+    run: 
+        lc_names = lcwgsus.bcftools_get_samples(input.quilt_vcf)
+        chip_names = lcwgsus.bcftools_get_samples(input.chip_vcf)
+        sample_linker = pd.read_csv(config['sample_linker'])
+        sample_linker = sample_linker[sample_linker['Sample_Name'].isin(lc_names)]
+        d = {k:v for k, v in zip(sample_linker['Chip_Name'].values, sample_linker['Sample_Name'].values)}
+        lc_return = []
+        for i in chip_names:
+            lc_return.append(d[i])
+
+        lcwgsus.save_lst(output.tmp_names, lc_return)
+        shell("bcftools view -S {output.tmp_names} -Oz -o {output.ss_lc_vcf} {input.quilt_vcf}")
+
 rule calculate_imputation_accuracy_by_cc:
     input:
-        quilt_vcf = '{imp_dir}vcf/by_cc/lc_vcf/{cc}.lc.chr{chr}.vcf.gz',
+        quilt_vcf = rules.subset_lc_samples_by_cc.output.ss_lc_vcf,
         chip_vcf = '{imp_dir}vcf/by_cc/hc_vcf/{cc}.hc.chr{chr}.vcf.gz',
         af = "data/gnomAD_MAFs/afr/gnomAD_MAF_afr_chr{chr}.txt"
     output:
@@ -390,8 +423,8 @@ rule plot_imputation_accuracy_by_cc:
 
 rule calculate_imputation_sumstat_all:
     input:
-        h_impaccs = expand("{imp_dir}impacc/all_samples/by_variant/chr{chr}.h.impacc.tsv", chr = chromosome, allow_missing = True),
-        v_impaccs = expand("{imp_dir}impacc/all_samples/by_sample/chr{chr}.v.impacc.tsv", chr = chromosome, allow_missing = True),
+        # h_impaccs = expand("{imp_dir}impacc/all_samples/by_variant/chr{chr}.h.impacc.tsv", chr = chromosome, allow_missing = True),
+        # v_impaccs = expand("{imp_dir}impacc/all_samples/by_sample/chr{chr}.v.impacc.tsv", chr = chromosome, allow_missing = True),
         cc_h_impaccs = expand("{imp_dir}impacc/by_cc/by_variant/{cc}.chr{chr}.h.impacc.tsv", chr = chromosome, cc = case_controls, allow_missing = True),
         cc_v_impaccs = expand("{imp_dir}impacc/by_cc/by_sample/{cc}.chr{chr}.v.impacc.tsv", chr = chromosome, cc = case_controls, allow_missing = True),
         eth_h_impaccs = expand("{imp_dir}impacc/by_eth/by_variant/{eth}.chr{chr}.h.impacc.tsv", chr = chromosome, eth = ethnicities, allow_missing = True),
