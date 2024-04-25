@@ -64,7 +64,7 @@ for chr in chromosome:
 
 rule lr_imputation_prep_all:
     input:
-        bamlist = "results/lr_imputation/bamlist.txt",
+        # bamlist = "results/lr_imputation/bamlist.txt",
         recomb = expand("results/lr_imputation/" + RECOMB_POP + "/" + RECOMB_POP + "-chr{chr}-final.b38.txt.gz", chr = chromosome),
         json = "results/lr_imputation/regions.json",
         hap = expand(f"results/lr_imputation/refs/{PANEL_NAME}.chr{{chr}}.hap.gz", chr = chromosome),
