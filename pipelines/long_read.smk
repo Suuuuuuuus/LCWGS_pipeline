@@ -12,12 +12,12 @@ import lcwgsus
 
 chromosome = [i for i in range(1,23)]
 
-read_lengths = ['1kb', '2kb', '5kb', '10kb', '20kb']
-# read_lengths = ['1kb', '2kb']
+# read_lengths = ['1kb', '2kb', '5kb', '10kb', '20kb']
+read_lengths = ['1kb']
 haplotypes = ['mat', 'pat']
 # haplotypes = ['mat']
 method = 'CCS'
-coverage = '0.5'
+coverage = '0.01'
 # coverage = '0.001'
 
 def get_num_mean_length(wildcards):
