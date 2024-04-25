@@ -12,13 +12,12 @@ import lcwgsus
 
 chromosome = [i for i in range(1,23)]
 
-# read_lengths = ['1kb', '2kb', '5kb', '10kb', '20kb']
-read_lengths = ['1kb']
+read_lengths = ['1kb', '2kb', '5kb', '10kb', '20kb']
+# read_lengths = ['1kb']
 haplotypes = ['mat', 'pat']
 # haplotypes = ['mat']
 method = 'CCS'
-coverage = '0.01'
-# coverage = '0.001'
+coverage = '0.5'
 
 def get_num_mean_length(wildcards):
     return int(wildcards.rl[:-2])*1000
@@ -63,6 +62,7 @@ rule lr_alignment:
         fastq = rules.simulate_reads.output.fastq,
         reference = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta" if config['concatenate'] else config["ref38"]
     output:
+        sam = temp("data/lr_bams/tmp/{hap}.{rl}.sam"),
         bam = temp("data/lr_bams/tmp/{hap}.{rl}.bam")
     resources:
         mem = '30G'
@@ -70,13 +70,12 @@ rule lr_alignment:
     shell: """
         mkdir -p data/lr_bams/tmp/
 
-        pbmm2 align {input.reference} {input.fastq} {output.bam} \
-        --sort -j 4 -J 2
+        minimap2 -t {threads} -ax map-hifi {input.reference} {input.fastq} > {output.sam}
+        samtools view -bS {output.sam} > {output.bam}
     """
 
-# pbmm2 align {input.reference} {input.fastq} {output.bam} \
-#         --rg '@RG\tID:HG02886\tSM:HG02886' \
-#         --sort -j 4 -J 2
+#         pbmm2 align {input.reference} {input.fastq} {output.bam} \
+        # --sort -j 4 -J 2
 
 rule lr_clean_bam:
     input:
@@ -222,7 +221,7 @@ rule prepare_ref:
 
 rule quilt_imputation:
     input:
-        # bamlist = "results/lr_imputation/bamlist.txt",
+        bamlist = "results/lr_imputation/bamlist.txt",
         RData = rules.prepare_ref.output.RData
     output:
         vcf = f"results/lr_imputation/vcfs/{PANEL_NAME}/regions/quilt.chr{{chr}}.{{regionStart}}.{{regionEnd}}.vcf.gz"
@@ -235,8 +234,7 @@ rule quilt_imputation:
         regionStart='\d{1,9}',
         regionEnd='\d{1,9}'
     params:
-        panel = PANEL_NAME,
-        bamlist = "results/lr_imputation/bamlist.txt"
+        panel = PANEL_NAME
     shell: """
         ## set a seed here, randomly, so can try to reproduce if it fails
         SEED=`echo $RANDOM`

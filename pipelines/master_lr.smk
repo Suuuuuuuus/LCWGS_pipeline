@@ -15,13 +15,12 @@ import lcwgsus
 
 chromosome = [i for i in range(1,23)]
 
-# read_lengths = ['1kb', '2kb', '5kb', '10kb', '20kb']
-read_lengths = ['1kb']
+read_lengths = ['1kb', '2kb', '5kb', '10kb', '20kb']
+# read_lengths = ['1kb']
 haplotypes = ['mat', 'pat']
 # haplotypes = ['mat']
 method = 'CCS'
-coverage = '0.01'
-# coverage = '0.001'
+coverage = '0.5'
 
 QUILT_HOME = config["QUILT_HOME"]
 lr_analysis_dir = config["lr_analysis_dir"]
@@ -64,7 +63,7 @@ for chr in chromosome:
 
 rule lr_imputation_prep_all:
     input:
-        # bamlist = "results/lr_imputation/bamlist.txt",
+        bamlist = "results/lr_imputation/bamlist.txt",
         recomb = expand("results/lr_imputation/" + RECOMB_POP + "/" + RECOMB_POP + "-chr{chr}-final.b38.txt.gz", chr = chromosome),
         json = "results/lr_imputation/regions.json",
         hap = expand(f"results/lr_imputation/refs/{PANEL_NAME}.chr{{chr}}.hap.gz", chr = chromosome),
