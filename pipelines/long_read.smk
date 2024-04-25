@@ -233,7 +233,8 @@ rule quilt_imputation:
         regionStart='\d{1,9}',
         regionEnd='\d{1,9}'
     params:
-        panel = PANEL_NAME
+        panel = PANEL_NAME,
+        bamlist = "results/lr_imputation/bamlist.txt"
     shell: """
         ## set a seed here, randomly, so can try to reproduce if it fails
         SEED=`echo $RANDOM`
@@ -244,7 +245,7 @@ rule quilt_imputation:
         regionStart={wildcards.regionStart}, \
         regionEnd={wildcards.regionEnd}, \
         buffer=0, \
-        bamlist="{input.bamlist}", \
+        bamlist="{params.bamlist}", \
         prepared_reference_filename="{input.RData}", \
         output_filename="{output.vcf}", \
         seed='${{SEED}}')'
