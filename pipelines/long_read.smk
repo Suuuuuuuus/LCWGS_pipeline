@@ -245,7 +245,7 @@ rule quilt_imputation:
         regionStart={wildcards.regionStart}, \
         regionEnd={wildcards.regionEnd}, \
         buffer=0, \
-        bamlist="{params.bamlist}", \
+        bamlist="{input.bamlist}", \
         prepared_reference_filename="{input.RData}", \
         output_filename="{output.vcf}", \
         seed='${{SEED}}')'
