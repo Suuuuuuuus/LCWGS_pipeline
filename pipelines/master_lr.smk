@@ -96,3 +96,23 @@ rule lr_imputation_all:
         vcf_regions = [vcfs_to_impute],
         vcfs = [final_vcfs],
         truth = expand("results/lr_imputation/truth/long_read_truth.{chr}.vcf.gz", chr = chromosome)
+
+pair = ['lc', 'hc']
+axis = ['h', 'v']
+
+imputation_dir = config['imputation_dir'][-1]
+lc_vcf_dir = config['lc_vcf_dir'][-1]
+hc_vcf_dir = config['hc_vcf_dir'][-1]
+
+rule lr_imputation_comparison_all:
+    input:
+        h_report_all = expand("{imp_dir}impacc/all_samples/by_variant/chr{chr}.h.tsv", imp_dir = imputation_dir, chr = chromosome),
+        h_impacc_all = expand("{imp_dir}impacc/all_samples/by_variant/chr{chr}.h.impacc.tsv", imp_dir = imputation_dir, chr = chromosome),
+        v_report_all = expand("{imp_dir}impacc/all_samples/by_sample/chr{chr}.v.tsv", imp_dir = imputation_dir, chr = chromosome),
+        v_impacc_all = expand("{imp_dir}impacc/all_samples/by_sample/chr{chr}.v.impacc.tsv", imp_dir = imputation_dir, chr = chromosome),
+
+        lc_vcfs = expand("{imp_dir}vcf/all_samples/filtered_vcfs/lc.chr{chr}.vcf.gz", imp_dir = imputation_dir, chr = chromosome),
+        hc_vcfs = expand("{imp_dir}vcf/all_samples/filtered_vcfs/hc.chr{chr}.vcf.gz", imp_dir = imputation_dir, chr = chromosome),
+        afs = expand("{imp_dir}vcf/all_samples/af/af.chr{chr}.tsv", imp_dir = imputation_dir, chr = chromosome),
+        
+        sumstats = expand("{imp_dir}summary_metrics.tsv", imp_dir = imputation_dir)
