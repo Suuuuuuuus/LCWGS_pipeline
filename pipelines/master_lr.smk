@@ -95,7 +95,7 @@ rule lr_imputation_all:
         RData = [regions_to_prep],
         vcf_regions = [vcfs_to_impute],
         vcfs = [final_vcfs],
-        truth = expand("results/lr_imputation/truth/long_read_truth.{chr}.vcf.gz", chr = chromosome)
+        truth = expand("results/lr_imputation/truth/long_read_truth.chr{chr}.vcf.gz", chr = chromosome)
 
 pair = ['lc', 'hc']
 axis = ['h', 'v']
