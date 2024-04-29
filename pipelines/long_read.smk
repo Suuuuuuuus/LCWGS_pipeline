@@ -342,6 +342,7 @@ rule prepare_lr_vcf:
             bcftools view -s {params.sample} {input.vcf} | \
             bcftools reheader -s {output.rename} -o results/lr_imputation/truth/$l.chr{wildcards.chr}.vcf
             bgzip results/lr_imputation/truth/$l.chr{wildcards.chr}.vcf
+            tabix results/lr_imputation/truth/$l.chr{wildcards.chr}.vcf
         done
 
         bcftools merge -Oz -o {output.truth} {output.one} {output.two} {output.five} {output.ten} {output.twenty}
