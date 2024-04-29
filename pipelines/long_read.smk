@@ -316,3 +316,167 @@ rule concat_quilt_vcf:
         tabix {output.vcf}
         rm {output.vcf}.temp*
     """
+
+rule prepare_lr_vcf:
+    input:
+        vcf = f"data/ref_panel/{PANEL_NAME}/oneKG.chr{{chr}}.vcf.gz"
+    output:
+        one = temp("results/lr_imputation/truth/1kb.{chr}.vcf.gz"),
+        two = temp("results/lr_imputation/truth/2kb.{chr}.vcf.gz"),
+        five = temp("results/lr_imputation/truth/5kb.{chr}.vcf.gz"),
+        ten = temp("results/lr_imputation/truth/10kb.{chr}.vcf.gz"),
+        twenty = temp("results/lr_imputation/truth/20kb.{chr}.vcf.gz"),
+        truth = "results/lr_imputation/truth/long_read_truth.{chr}.vcf.gz",
+        rename = temp("results/lr_imputation/truth/name.{chr}.txt")
+    resources: mem = '10G'
+    params:
+        sample = 'HG02886'
+    shell: """
+        mkdir -p results/lr_imputation/truth/
+        
+        length=("10kb" "1kb" "20kb" "2kb" "5kb")
+
+        for l in "${{length[@]}}"
+        do
+            echo $l > {output.rename}
+            bcftools view -s {params.sample} {input.vcf} | bcftools reheader -s {output.rename} -o "results/lr_imputation/truth/$l.{chr}.vcf"
+            bgzip "results/lr_imputation/truth/$l.{chr}.vcf"
+        done
+
+        bcftools merge -Oz -o {output.truth} {output.one} {output.two} {output.five} {output.ten} {output.twenty}
+    """
+
+pair = ['lc', 'hc']
+axis = ['h', 'v']
+
+imputation_dir = config['imputation_dir'][-1]
+lc_vcf_dir = config['lc_vcf_dir'][-1]
+hc_vcf_dir = config['hc_vcf_dir'][-1]
+
+def get_lc_vcf_dir(wildcards):
+    ix = imputation_dir.index(wildcards.imp_dir)
+    return lc_vcf_dir[ix]
+
+def get_hc_vcf_dir(wildcards):
+    ix = imputation_dir.index(wildcards.imp_dir)
+    return hc_vcf_dir[ix]
+
+rule copy_vcf_in_working_dir:
+    input:
+        lc_vcf_dir = get_lc_vcf_dir,
+        hc_vcf_dir = get_hc_vcf_dir
+    output:
+        vcfs = temp(expand('{imp_dir}vcf/all_samples/{pair}_vcf/{pair}.chr{chr}.vcf.gz', chr = chromosome, pair = pair, allow_missing = True))
+    resources:
+        mem = '30G'
+    threads: 4
+    shell: """
+        mkdir -p {wildcards.imp_dir}vcf/
+        mkdir -p {wildcards.imp_dir}impacc/
+        mkdir -p {wildcards.imp_dir}graphs/
+        mkdir -p {wildcards.imp_dir}vcf/all_samples/lc_vcf/
+        mkdir -p {wildcards.imp_dir}vcf/all_samples/hc_vcf/
+        mkdir -p {wildcards.imp_dir}vcf/by_cc/lc_vcf/
+        mkdir -p {wildcards.imp_dir}vcf/by_cc/hc_vcf/
+        mkdir -p {wildcards.imp_dir}vcf/by_eth/lc_vcf/
+        mkdir -p {wildcards.imp_dir}vcf/by_eth/hc_vcf/
+
+        for i in {{1..22}}
+        do
+            cp {input.lc_vcf_dir}/*chr$i.*.gz {wildcards.imp_dir}vcf/all_samples/lc_vcf/lc.chr$i.vcf.gz
+            cp {input.hc_vcf_dir}/*chr$i.*.gz {wildcards.imp_dir}vcf/all_samples/hc_vcf/hc.chr$i.vcf.gz
+        done
+    """
+
+rule subset_lc_samples:
+    input:
+        quilt_vcf = '{imp_dir}vcf/all_samples/lc_vcf/lc.chr{chr}.vcf.gz',
+        chip_vcf = '{imp_dir}vcf/all_samples/hc_vcf/hc.chr{chr}.vcf.gz'
+    output:
+        ss_lc_vcf = temp('{imp_dir}vcf/all_samples/lc_vcf/lc.subset.chr{chr}.vcf.gz'),
+        ss_hc_vcf = temp('{imp_dir}vcf/all_samples/hc_vcf/hc.subset.chr{chr}.vcf.gz'),
+        tmp_names = temp('{imp_dir}vcf/all_samples/samples.chr{chr}.tsv')
+    resources:
+        mem = '10G'
+    run: 
+        if (wildcards.imp_dir.split('/')[-3] == 'mini') and ('lc_chip' in wildcards.imp_dir.split('/')[-2]):
+            lc_names = lcwgsus.bcftools_get_samples(input.quilt_vcf)
+            lcwgsus.save_lst(output.tmp_names, lc_names)
+            shell("bcftools view -S {output.tmp_names} -Oz -o {output.ss_hc_vcf} {input.chip_vcf}")
+            shell("cp {input.quilt_vcf} {output.ss_lc_vcf}")
+        else:
+            hc_names = lcwgsus.bcftools_get_samples(input.chip_vcf)
+            lcwgsus.save_lst(output.tmp_names, hc_names)
+            shell("bcftools view -S {output.tmp_names} -Oz -o {output.ss_lc_vcf} {input.quilt_vcf}")
+            shell("cp {input.chip_vcf} {output.ss_hc_vcf}")
+
+rule calculate_imputation_accuracy_all:
+    input:
+        quilt_vcf = rules.subset_lc_samples.output.ss_lc_vcf,
+        chip_vcf = rules.subset_lc_samples.output.ss_hc_vcf,
+        af = "data/gnomAD_MAFs/afr/gnomAD_MAF_afr_chr{chr}.txt"
+    output:
+        h_report = "{imp_dir}impacc/all_samples/by_variant/chr{chr}.h.tsv",
+        h_impacc = "{imp_dir}impacc/all_samples/by_variant/chr{chr}.h.impacc.tsv",
+        v_report = "{imp_dir}impacc/all_samples/by_sample/chr{chr}.v.tsv",
+        v_impacc = "{imp_dir}impacc/all_samples/by_sample/chr{chr}.v.impacc.tsv",
+        lc_vcf = "{imp_dir}vcf/all_samples/filtered_vcfs/lc.chr{chr}.vcf.gz",
+        hc_vcf = "{imp_dir}vcf/all_samples/filtered_vcfs/hc.chr{chr}.vcf.gz",
+        af = "{imp_dir}vcf/all_samples/af/af.chr{chr}.tsv"
+    resources:
+        mem = '100G'
+    threads: 16
+    params:
+        linker = config['sample_linker'],
+        common_outdir = "{imp_dir}impacc/all_samples/",
+        common_savedir = "{imp_dir}vcf/all_samples/",
+        chrom = "{chr}"
+    run:
+        mini = False
+        common_cols = ['chr', 'pos', 'ref', 'alt']
+        lc_sample_prefix = 'GM'
+        chip_sample_prefix = 'GAM'
+        seq_sample_prefix = 'IDT'
+
+        quilt_vcf = input.quilt_vcf
+        chip_vcf = input.chip_vcf
+        af_txt = input.af
+
+        chip, lc, af = lcwgsus.imputation_calculation_preprocess(chip_vcf, quilt_vcf, af_txt, save_vcfs = True, lc_vcf_outdir = params.common_savedir + "filtered_vcfs/", hc_vcf_outdir = params.common_savedir + "filtered_vcfs/", lc_vcf_name = "lc.chr" + wildcards.chr + ".vcf.gz", hc_vcf_name = "hc.chr" + wildcards.chr + ".vcf.gz", af_outdir = params.common_savedir + "af/", af_name = "af.chr" + wildcards.chr + ".tsv")
+
+        h_report = lcwgsus.calculate_h_imputation_accuracy(chip, lc, af, 
+                                                   save_file = True, 
+                                                   outdir = params.common_outdir + "by_variant/", 
+                                                   save_name = 'chr' + wildcards.chr +'.h.tsv')
+        h_report = h_report.drop(columns = common_cols)
+
+        h_impacc = lcwgsus.generate_h_impacc(h_report, 
+                                           save_impacc = True, 
+                                           outdir = params.common_outdir + "by_variant/", 
+                                           save_name = 'chr' + wildcards.chr +'.h.impacc.tsv')
+
+        v_report = lcwgsus.calculate_v_imputation_accuracy(chip, lc, af, 
+                                           save_file = True, 
+                                           outdir = params.common_outdir + "by_sample/", 
+                                           save_name = 'chr' + wildcards.chr +'.v.tsv')
+
+        v_impacc = lcwgsus.generate_v_impacc(v_report, 
+                                           save_impacc = True, 
+                                           outdir = params.common_outdir + "by_sample/", 
+                                           save_name = 'chr' + wildcards.chr +'.v.impacc.tsv')
+
+        lcwgsus.rezip_vcf(output.lc_vcf)
+        lcwgsus.rezip_vcf(output.hc_vcf)
+
+rule calculate_imputation_sumstat:
+    input:
+        h_impaccs = expand("{imp_dir}impacc/all_samples/by_variant/chr{chr}.h.impacc.tsv", chr = chromosome, allow_missing = True),
+        v_impaccs = expand("{imp_dir}impacc/all_samples/by_sample/chr{chr}.v.impacc.tsv", chr = chromosome, allow_missing = True)
+    output:
+        sumstats = "{imp_dir}summary_metrics.tsv"
+    resources:
+        mem = '30G'
+    params:
+        axis = "v"
+    run:
+        lcwgsus.calculate_imputation_sumstats(wildcards.imp_dir, subset = False, axis = params.axis, save_file = True)

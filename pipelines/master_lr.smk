@@ -94,4 +94,5 @@ rule lr_imputation_all:
     input:
         RData = [regions_to_prep],
         vcf_regions = [vcfs_to_impute],
-        vcfs = [final_vcfs]
+        vcfs = [final_vcfs],
+        truth = expand("results/lr_imputation/truth/long_read_truth.{chr}.vcf.gz", chr = chromosome)
