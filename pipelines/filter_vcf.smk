@@ -19,6 +19,23 @@ chromosome = [i for i in range(1,23)]
 PANEL_NAME = config["PANEL_NAME"]
 imp_dir = config["imputation_dir"]
 
+rule retain_chip_sites:
+    input:
+        lc_vcf = f"results/imputation/vcfs/{PANEL_NAME}/quilt.chr{{chr}}.vcf.gz",
+        chip_vcf = "/well/band/users/rbx225/GAMCC/results/chip/vcf/chip_by_chr/chip.chr{chr}.vcf.gz"
+    output:
+        filtered_vcf = f"results/wip_vcfs/{PANEL_NAME}/chip_sites/lc.chr{{chr}}.vcf.gz",
+        site = temp(f"results/wip_vcfs/{PANEL_NAME}/chip_sites/chr{{chr}}.tsv")
+    resources:
+        mem = '30G'
+    threads: 4
+    shell: """
+        mkdir -p results/wip_vcfs/{PANEL_NAME}/chip_sites/
+
+        zgrep -v '#' {input.chip_vcf} | cut -f1,2 > {output.site}
+        bcftools view -R {output.site} -Oz -o {output.filtered_vcf} {input.lc_vcf}
+    """
+
 rule filter_lc_info:
     input:
         lc_vcf = f"results/imputation/vcfs/{PANEL_NAME}/quilt.chr{{chr}}.vcf.gz"
