@@ -348,25 +348,7 @@ rule prepare_lr_vcf:
         bcftools merge -Oz -o {output.truth} {output.one} {output.two} {output.five} {output.ten} {output.twenty}
     """
 
-pair = ['lc', 'hc']
-axis = ['h', 'v']
-
-imputation_dir = list(config['imputation_dir'][-1])
-lc_vcf_dir = list(config['lc_vcf_dir'][-1])
-hc_vcf_dir = list(config['hc_vcf_dir'][-1])
-
-def get_lc_vcf_dir(wildcards):
-    ix = imputation_dir.index(wildcards.imp_dir)
-    return lc_vcf_dir[ix]
-
-def get_hc_vcf_dir(wildcards):
-    ix = imputation_dir.index(wildcards.imp_dir)
-    return hc_vcf_dir[ix]
-
-rule copy_vcf_in_working_dir:
-    input:
-        lc_vcf_dir = get_lc_vcf_dir,
-        hc_vcf_dir = get_hc_vcf_dir
+rule copy_vcf_in_working_dir_hack:
     output:
         vcfs = temp(expand('{imp_dir}vcf/all_samples/{pair}_vcf/{pair}.chr{chr}.vcf.gz', chr = chromosome, pair = pair, allow_missing = True))
     resources:
@@ -385,10 +367,52 @@ rule copy_vcf_in_working_dir:
 
         for i in {{1..22}}
         do
-            cp {input.lc_vcf_dir}/*chr$i.*.gz {wildcards.imp_dir}vcf/all_samples/lc_vcf/lc.chr$i.vcf.gz
-            cp {input.hc_vcf_dir}/*chr$i.*.gz {wildcards.imp_dir}vcf/all_samples/hc_vcf/hc.chr$i.vcf.gz
+            cp /well/band/users/rbx225/GAMCC/results/lr_imputation/vcfs/oneKG/*chr$i.*.gz {wildcards.imp_dir}vcf/all_samples/lc_vcf/lc.chr$i.vcf.gz
+            cp /well/band/users/rbx225/GAMCC/results/lr_imputation/truth/*chr$i.*.gz {wildcards.imp_dir}vcf/all_samples/hc_vcf/hc.chr$i.vcf.gz
         done
     """
+
+pair = ['lc', 'hc']
+axis = ['h', 'v']
+
+# imputation_dir = list(config['imputation_dir'][-1])
+# lc_vcf_dir = list(config['lc_vcf_dir'][-1])
+# hc_vcf_dir = list(config['hc_vcf_dir'][-1])
+
+# def get_lc_vcf_dir(wildcards):
+#     ix = imputation_dir.index(wildcards.imp_dir)
+#     return lc_vcf_dir[ix]
+
+# def get_hc_vcf_dir(wildcards):
+#     ix = imputation_dir.index(wildcards.imp_dir)
+#     return hc_vcf_dir[ix]
+
+# rule copy_vcf_in_working_dir:
+#     input:
+#         lc_vcf_dir = get_lc_vcf_dir,
+#         hc_vcf_dir = get_hc_vcf_dir
+#     output:
+#         vcfs = temp(expand('{imp_dir}vcf/all_samples/{pair}_vcf/{pair}.chr{chr}.vcf.gz', chr = chromosome, pair = pair, allow_missing = True))
+#     resources:
+#         mem = '30G'
+#     threads: 4
+#     shell: """
+#         mkdir -p {wildcards.imp_dir}vcf/
+#         mkdir -p {wildcards.imp_dir}impacc/
+#         mkdir -p {wildcards.imp_dir}graphs/
+#         mkdir -p {wildcards.imp_dir}vcf/all_samples/lc_vcf/
+#         mkdir -p {wildcards.imp_dir}vcf/all_samples/hc_vcf/
+#         mkdir -p {wildcards.imp_dir}vcf/by_cc/lc_vcf/
+#         mkdir -p {wildcards.imp_dir}vcf/by_cc/hc_vcf/
+#         mkdir -p {wildcards.imp_dir}vcf/by_eth/lc_vcf/
+#         mkdir -p {wildcards.imp_dir}vcf/by_eth/hc_vcf/
+
+#         for i in {{1..22}}
+#         do
+#             cp {input.lc_vcf_dir}/*chr$i.*.gz {wildcards.imp_dir}vcf/all_samples/lc_vcf/lc.chr$i.vcf.gz
+#             cp {input.hc_vcf_dir}/*chr$i.*.gz {wildcards.imp_dir}vcf/all_samples/hc_vcf/hc.chr$i.vcf.gz
+#         done
+#     """
 
 rule subset_lc_samples:
     input:
