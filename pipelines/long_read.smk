@@ -351,9 +351,9 @@ rule prepare_lr_vcf:
 pair = ['lc', 'hc']
 axis = ['h', 'v']
 
-imputation_dir = config['imputation_dir'][-1]
-lc_vcf_dir = config['lc_vcf_dir'][-1]
-hc_vcf_dir = config['hc_vcf_dir'][-1]
+imputation_dir = list(config['imputation_dir'][-1])
+lc_vcf_dir = list(config['lc_vcf_dir'][-1])
+hc_vcf_dir = list(config['hc_vcf_dir'][-1])
 
 def get_lc_vcf_dir(wildcards):
     ix = imputation_dir.index(wildcards.imp_dir)
