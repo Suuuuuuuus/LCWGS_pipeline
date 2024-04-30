@@ -471,7 +471,22 @@ rule calculate_imputation_accuracy_all:
         chip_vcf = input.chip_vcf
         af_txt = input.af
 
-        chip, lc, af = lcwgsus.imputation_calculation_preprocess(chip_vcf, quilt_vcf, af_txt, save_vcfs = True, lc_vcf_outdir = params.common_savedir + "filtered_vcfs/", hc_vcf_outdir = params.common_savedir + "filtered_vcfs/", lc_vcf_name = "lc.chr" + wildcards.chr + ".vcf.gz", hc_vcf_name = "hc.chr" + wildcards.chr + ".vcf.gz", af_outdir = params.common_savedir + "af/", af_name = "af.chr" + wildcards.chr + ".tsv")
+        def lr_encode_genotype(r: pd.Series, chip_prefix = 'kb'):
+            samples = r.index[r.index.str.contains(chip_prefix)]
+            for i in samples:
+                if r[i][:3] == '0|0' or r[i][:3] == '0/0':
+                    r[i] = 0.
+                elif r[i][:3] == '1|0' or r[i][:3] == '1/0':
+                    r[i] = 1.
+                elif r[i][:3] == '0|1' or r[i][:3] == '0/1':
+                    r[i] = 1.
+                elif r[i][:3] == '1|1' or r[i][:3] == '1/1':
+                    r[i] = 2.
+                else:
+                    r[i] = np.nan
+            return r
+
+        chip, lc, af = lcwgsus.imputation_calculation_preprocess(chip_vcf, quilt_vcf, af_txt, chip_extract_func = lr_encode_genotype, save_vcfs = True, lc_vcf_outdir = params.common_savedir + "filtered_vcfs/", hc_vcf_outdir = params.common_savedir + "filtered_vcfs/", lc_vcf_name = "lc.chr" + wildcards.chr + ".vcf.gz", hc_vcf_name = "hc.chr" + wildcards.chr + ".vcf.gz", af_outdir = params.common_savedir + "af/", af_name = "af.chr" + wildcards.chr + ".tsv")
 
         h_report = lcwgsus.calculate_h_imputation_accuracy(chip, lc, af, 
                                                    save_file = True, 
