@@ -348,6 +348,9 @@ rule prepare_lr_vcf:
         bcftools merge -Oz -o {output.truth} {output.one} {output.two} {output.five} {output.ten} {output.twenty}
     """
 
+pair = ['lc', 'hc']
+axis = ['h', 'v']
+
 rule copy_vcf_in_working_dir_hack:
     output:
         vcfs = temp(expand('{imp_dir}vcf/all_samples/{pair}_vcf/{pair}.chr{chr}.vcf.gz', chr = chromosome, pair = pair, allow_missing = True))
