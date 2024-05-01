@@ -163,6 +163,8 @@ rule convert_ref:
         tbi = f"data/ref_panel/{PANEL_NAME}/{PANEL_NAME}.chr{{chr}}.vcf.gz.tbi"
     output:
         tmp_vcf = temp(f"results/lr_imputation/refs/tmp.{PANEL_NAME}.chr{{chr}}.vcf.gz"),
+        tmp_vcf2 = temp(f"results/lr_imputation/refs/tmp2.{PANEL_NAME}.chr{{chr}}.vcf.gz"),
+        name = temp(f"results/lr_imputation/refs/tmp.{PANEL_NAME}.chr{{chr}}.names.tsv"),
         hap = f"results/lr_imputation/refs/{PANEL_NAME}.chr{{chr}}.hap.gz",
         legend = f"results/lr_imputation/refs/{PANEL_NAME}.chr{{chr}}.legend.gz",
         samples = f"results/lr_imputation/refs/{PANEL_NAME}.chr{{chr}}.samples"
@@ -170,15 +172,22 @@ rule convert_ref:
         chr='\d{1,2}'
     params:
         panel = PANEL_NAME,
-        threads=1
+        threads = 1,
+        sample = 'HG02886'
     shell: """
         mkdir -p results/lr_imputation/refs/
         bcftools norm -m+ {input.vcf} | bcftools view -Oz -o {output.tmp_vcf} -m2 -M2 -v snps
 
         tabix {output.tmp_vcf}
 
+        bcftools query -l {output.tmp_vcf} | \
+        grep -v {params.sample} > {output.name}
+
+        bcftools view -S {output.name} -Oz -o {output.tmp_vcf2} {output.tmp_vcf}
+        tabix {output.tmp_vcf2}
+
         bcftools convert --haplegendsample \
-        results/lr_imputation/refs/{params.panel}.chr{wildcards.chr} {output.tmp_vcf}
+        results/lr_imputation/refs/{params.panel}.chr{wildcards.chr} {output.tmp_vcf2}
     """
 
 rule determine_chunks:
