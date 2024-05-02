@@ -50,7 +50,7 @@ rule concat_chip_sites_vcfs:
     shell: """
         bcftools concat {input.lc_vcf} | bcftools sort -Oz -o {output.concat}
 
-        {params.qctool} -g {output.concat} -og {output,bgen} -bgen-bits 8 -bgen-compression zstd
+        {params.qctool} -g {output.concat} -og {output.bgen} -bgen-bits 8 -bgen-compression zstd
         
     """
 
