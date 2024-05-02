@@ -162,39 +162,54 @@ rule calculate_imputation_accuracy_all:
         lcwgsus.rezip_vcf(output.lc_vcf)
         lcwgsus.rezip_vcf(output.hc_vcf)
 
-rule plot_imputation_accuracy_all:
+rule aggregate_impaccs_all:
     input:
         h_impaccs = expand("{imp_dir}impacc/all_samples/by_variant/chr{chr}.h.impacc.tsv", chr = chromosome, allow_missing = True),
         v_impaccs = expand("{imp_dir}impacc/all_samples/by_sample/chr{chr}.v.impacc.tsv", chr = chromosome, allow_missing = True)
     output:
-        r2NRC_h = "{imp_dir}graphs/all_samples/by_variant/r2_NRC.png",
-        ccd_h = "{imp_dir}graphs/all_samples/by_variant/ccd_by_genotype.png",
-        r2NRC_v = "{imp_dir}graphs/all_samples/by_sample/r2_NRC.png",
-        ccd_v = "{imp_dir}graphs/all_samples/by_sample/ccd_by_genotype.png",
-        impacc_h = "{imp_dir}impacc/all_samples/by_variant/all.h.impacc.tsv",
-        impacc_v = "{imp_dir}impacc/all_samples/by_sample/all.v.impacc.tsv"
+        h_impacc = "{imp_dir}impacc/all_samples/by_variant/all.h.impacc.tsv",
+        v_impacc = "{imp_dir}impacc/all_samples/by_sample/all.v.impacc.tsv"
     resources:
         mem = '30G'
     params:
-        common_outdir = "{imp_dir}graphs/all_samples/",
         impacc_outdir = "{imp_dir}impacc/all_samples/"
     run:
         h_lst = input.h_impaccs
-        outdir_h = params.common_outdir + "by_variant/"
+        outdir_h = params.impacc_outdir + "by_variant/"
         h_dfs = [pd.read_csv(i, sep = '\t') for i in h_lst]
         h = lcwgsus.average_impacc_by_chr(h_dfs, save_file = True,
-        outdir = params.impacc_outdir + 'by_variant/', save_name = 'all.h.impacc.tsv')
+        outdir = outdir_h, save_name = 'all.h.impacc.tsv')
+
+        v_lst = input.v_impaccs
+        outdir_v = params.impacc_outdir + "by_sample/"
+        v_dfs = [pd.read_csv(i, sep = '\t') for i in v_lst]
+        v = lcwgsus.average_impacc_by_chr(v_dfs, save_file = True,
+        outdir = outdir_v, save_name = 'all.v.impacc.tsv')
+
+rule plot_imputation_accuracy_all:
+    input:
+        h_impacc = rules.aggregate_impaccs_all.output.h_impacc,
+        v_impacc = rules.aggregate_impaccs_all.output.v_impacc
+    output:
+        r2NRC_h = "{imp_dir}graphs/all_samples/by_variant/r2_NRC.png",
+        ccd_h = "{imp_dir}graphs/all_samples/by_variant/ccd_by_genotype.png",
+        r2NRC_v = "{imp_dir}graphs/all_samples/by_sample/r2_NRC.png",
+        ccd_v = "{imp_dir}graphs/all_samples/by_sample/ccd_by_genotype.png"
+    resources:
+        mem = '30G'
+    params:
+        common_outdir = "{imp_dir}graphs/all_samples/"
+    run:
+        h = input.h_impacc
+        outdir_h = params.common_outdir + "by_variant/"
 
         dfs = [h[['AF', 'r2', 'r2_AC']], h[['AF', 'NRC', 'NRC_AC']]]
         lcwgsus.plot_imputation_accuracy(dfs, title = 'r2 and NRC by variant', save_fig = True, outdir = outdir_h, save_name = "r2_NRC.png")
         dfs = [h[['AF', 'ccd_homref', 'ccd_homref_AC']], h[['AF', 'ccd_het', 'ccd_het_AC']], h[['AF', 'ccd_homalt', 'ccd_homalt_AC']]]
         lcwgsus.plot_imputation_accuracy(dfs, title = 'Comparing different genotypes', save_fig = True, outdir = outdir_h, save_name = "ccd_by_genotype.png")
 
-        v_lst = input.v_impaccs
+        v = input.v_impacc
         outdir_v = params.common_outdir + "by_sample/"
-        v_dfs = [pd.read_csv(i, sep = '\t') for i in v_lst]
-        v = lcwgsus.average_impacc_by_chr(v_dfs, save_file = True,
-        outdir = params.impacc_outdir + 'by_sample/', save_name = 'all.v.impacc.tsv')
 
         dfs = [v[['AF', 'r2', 'r2_AC']], v[['AF', 'NRC', 'NRC_AC']]]
         lcwgsus.plot_imputation_accuracy(dfs, title = 'r2 and NRC by sample', save_fig = True, outdir = outdir_v, save_name = "r2_NRC.png")
@@ -287,39 +302,54 @@ rule calculate_imputation_accuracy_by_eth:
                                            save_name = wildcards.eth + '.chr' + wildcards.chr +'.v.impacc.tsv')
         # Ignore the _BC fields in vertical reports as they are not reliable
 
-rule plot_imputation_accuracy_by_eth:
+rule aggregate_impaccs_by_eth:
     input:
         h_impaccs = expand("{imp_dir}impacc/by_eth/by_variant/{eth}.chr{chr}.h.impacc.tsv", chr = chromosome, allow_missing = True),
         v_impaccs = expand("{imp_dir}impacc/by_eth/by_sample/{eth}.chr{chr}.v.impacc.tsv", chr = chromosome, allow_missing = True)
     output:
-        r2NRC_h = "{imp_dir}graphs/by_eth/by_variant/{eth}.r2_NRC.png",
-        ccd_h = "{imp_dir}graphs/by_eth/by_variant/{eth}.ccd_by_genotype.png",
-        r2NRC_v = "{imp_dir}graphs/by_eth/by_sample/{eth}.r2_NRC.png",
-        ccd_v = "{imp_dir}graphs/by_eth/by_sample/{eth}.ccd_by_genotype.png",
-        impacc_h = "{imp_dir}impacc/by_eth/by_variant/{eth}.all.h.impacc.tsv",
-        impacc_v = "{imp_dir}impacc/by_eth/by_sample/{eth}.all.v.impacc.tsv"
+        h_impacc = "{imp_dir}impacc/by_eth/by_variant/{eth}.all.h.impacc.tsv",
+        v_impacc = "{imp_dir}impacc/by_eth/by_sample/{eth}.all.v.impacc.tsv"
     resources:
         mem = '30G'
     params:
-        common_outdir = "{imp_dir}graphs/by_eth/",
         impacc_outdir = "{imp_dir}impacc/by_eth/"
     run:
         h_lst = input.h_impaccs
-        outdir_h = params.common_outdir + "by_variant/"
+        outdir_h = params.impacc_outdir + "by_variant/"
         h_dfs = [pd.read_csv(i, sep = '\t') for i in h_lst]
         h = lcwgsus.average_impacc_by_chr(h_dfs, save_file = True,
         outdir = params.impacc_outdir + 'by_variant/', save_name = wildcards.eth + '.all.h.impacc.tsv')
+
+        v_lst = input.v_impaccs
+        outdir_v = params.impacc_outdir + "by_sample/"
+        v_dfs = [pd.read_csv(i, sep = '\t') for i in v_lst]
+        v = lcwgsus.average_impacc_by_chr(v_dfs, save_file = True,
+        outdir = params.impacc_outdir + 'by_sample/', save_name = wildcards.eth + '.all.v.impacc.tsv')
+
+rule plot_imputation_accuracy_by_eth:
+    input:
+        h_impacc = rules.aggregate_impaccs_by_eth.output.h_impacc,
+        v_impacc = rules.aggregate_impaccs_by_eth.output.v_impacc
+    output:
+        r2NRC_h = "{imp_dir}graphs/by_eth/by_variant/{eth}.r2_NRC.png",
+        ccd_h = "{imp_dir}graphs/by_eth/by_variant/{eth}.ccd_by_genotype.png",
+        r2NRC_v = "{imp_dir}graphs/by_eth/by_sample/{eth}.r2_NRC.png",
+        ccd_v = "{imp_dir}graphs/by_eth/by_sample/{eth}.ccd_by_genotype.png"
+    resources:
+        mem = '30G'
+    params:
+        common_outdir = "{imp_dir}graphs/by_eth/"
+    run:
+        h = input.h_impacc
+        outdir_h = params.common_outdir + "by_variant/"
 
         dfs = [h[['AF', 'r2', 'r2_AC']], h[['AF', 'NRC', 'NRC_AC']]]
         lcwgsus.plot_imputation_accuracy(dfs, title = 'r2 and NRC by variant', save_fig = True, outdir = outdir_h, save_name = wildcards.eth + ".r2_NRC.png")
         dfs = [h[['AF', 'ccd_homref', 'ccd_homref_AC']], h[['AF', 'ccd_het', 'ccd_het_AC']], h[['AF', 'ccd_homalt', 'ccd_homalt_AC']]]
         lcwgsus.plot_imputation_accuracy(dfs, title = 'Comparing different genotypes', save_fig = True, outdir = outdir_h, save_name = wildcards.eth + ".ccd_by_genotype.png")
 
-        v_lst = input.v_impaccs
+        v = input.v_impacc
         outdir_v = params.common_outdir + "by_sample/"
-        v_dfs = [pd.read_csv(i, sep = '\t') for i in v_lst]
-        v = lcwgsus.average_impacc_by_chr(v_dfs, save_file = True,
-        outdir = params.impacc_outdir + 'by_sample/', save_name = wildcards.eth + '.all.v.impacc.tsv')
 
         dfs = [v[['AF', 'r2', 'r2_AC']], v[['AF', 'NRC', 'NRC_AC']]]
         lcwgsus.plot_imputation_accuracy(dfs, title = 'r2 and NRC by sample', save_fig = True, outdir = outdir_v, save_name = wildcards.eth + ".r2_NRC.png")
@@ -399,39 +429,54 @@ rule calculate_imputation_accuracy_by_cc:
                                            save_name = wildcards.cc + '.chr' + wildcards.chr +'.v.impacc.tsv')
         # Ignore the _BC fields in vertical reports as they are not reliable
 
-rule plot_imputation_accuracy_by_cc:
+rule aggregate_impaccs_by_cc:
     input:
         h_impaccs = expand("{imp_dir}impacc/by_cc/by_variant/{cc}.chr{chr}.h.impacc.tsv", chr = chromosome, allow_missing = True),
         v_impaccs = expand("{imp_dir}impacc/by_cc/by_sample/{cc}.chr{chr}.v.impacc.tsv", chr = chromosome, allow_missing = True)
     output:
-        r2NRC_h = "{imp_dir}graphs/by_cc/by_variant/{cc}.r2_NRC.png",
-        ccd_h = "{imp_dir}graphs/by_cc/by_variant/{cc}.ccd_by_genotype.png",
-        r2NRC_v = "{imp_dir}graphs/by_cc/by_sample/{cc}.r2_NRC.png",
-        ccd_v = "{imp_dir}graphs/by_cc/by_sample/{cc}.ccd_by_genotype.png",
-        impacc_h = "{imp_dir}impacc/by_cc/by_variant/{cc}.all.h.impacc.tsv",
-        impacc_v = "{imp_dir}impacc/by_cc/by_sample/{cc}.all.v.impacc.tsv"
+        h_impacc = "{imp_dir}impacc/by_cc/by_variant/{cc}.all.h.impacc.tsv",
+        v_impacc = "{imp_dir}impacc/by_cc/by_sample/{cc}.all.v.impacc.tsv"
     resources:
         mem = '30G'
     params:
-        common_outdir = "{imp_dir}graphs/by_cc/",
         impacc_outdir = "{imp_dir}impacc/by_cc/"
     run:
         h_lst = input.h_impaccs
-        outdir_h = params.common_outdir + "by_variant/"
+        outdir_h = params.impacc_outdir + "by_variant/"
         h_dfs = [pd.read_csv(i, sep = '\t') for i in h_lst]
         h = lcwgsus.average_impacc_by_chr(h_dfs, save_file = True,
         outdir = params.impacc_outdir + 'by_variant/', save_name = wildcards.cc + '.all.h.impacc.tsv')
+
+        v_lst = input.v_impaccs
+        outdir_v = params.impacc_outdir + "by_sample/"
+        v_dfs = [pd.read_csv(i, sep = '\t') for i in v_lst]
+        v = lcwgsus.average_impacc_by_chr(v_dfs, save_file = True,
+        outdir = params.impacc_outdir + 'by_sample/', save_name = wildcards.cc + '.all.v.impacc.tsv')
+
+rule plot_imputation_accuracy_by_cc:
+    input:
+        h_impacc = rules.aggregate_impaccs_by_cc.output.h_impacc,
+        v_impacc = rules.aggregate_impaccs_by_cc.output.v_impacc
+    output:
+        r2NRC_h = "{imp_dir}graphs/by_cc/by_variant/{cc}.r2_NRC.png",
+        ccd_h = "{imp_dir}graphs/by_cc/by_variant/{cc}.ccd_by_genotype.png",
+        r2NRC_v = "{imp_dir}graphs/by_cc/by_sample/{cc}.r2_NRC.png",
+        ccd_v = "{imp_dir}graphs/by_cc/by_sample/{cc}.ccd_by_genotype.png"
+    resources:
+        mem = '30G'
+    params:
+        common_outdir = "{imp_dir}graphs/by_cc/"
+    run:
+        h = input.h_impacc
+        outdir_h = params.common_outdir + "by_variant/"
 
         dfs = [h[['AF', 'r2', 'r2_AC']], h[['AF', 'NRC', 'NRC_AC']]]
         lcwgsus.plot_imputation_accuracy(dfs, title = 'r2 and NRC by variant', save_fig = True, outdir = outdir_h, save_name = wildcards.cc + ".r2_NRC.png")
         dfs = [h[['AF', 'ccd_homref', 'ccd_homref_AC']], h[['AF', 'ccd_het', 'ccd_het_AC']], h[['AF', 'ccd_homalt', 'ccd_homalt_AC']]]
         lcwgsus.plot_imputation_accuracy(dfs, title = 'Comparing different genotypes', save_fig = True, outdir = outdir_h, save_name = wildcards.cc + ".ccd_by_genotype.png")
 
-        v_lst = input.v_impaccs
+        v = input.v_impacc
         outdir_v = params.common_outdir + "by_sample/"
-        v_dfs = [pd.read_csv(i, sep = '\t') for i in v_lst]
-        v = lcwgsus.average_impacc_by_chr(v_dfs, save_file = True,
-        outdir = params.impacc_outdir + 'by_sample/', save_name = wildcards.cc + '.all.v.impacc.tsv')
 
         dfs = [v[['AF', 'r2', 'r2_AC']], v[['AF', 'NRC', 'NRC_AC']]]
         lcwgsus.plot_imputation_accuracy(dfs, title = 'r2 and NRC by sample', save_fig = True, outdir = outdir_v, save_name = wildcards.cc + ".r2_NRC.png")
