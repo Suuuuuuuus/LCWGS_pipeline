@@ -36,6 +36,107 @@ rule retain_chip_sites:
         bcftools view -R {output.site} -Oz -o {output.filtered_vcf} {input.lc_vcf}
     """
 
+rule concat_chip_sites_vcfs:
+    input:
+        lc_vcf = expand(f"results/imputation/vcfs/{PANEL_NAME}/quilt.chr{{chr}}.vcf.gz", chr = chromosome)
+    output:
+        concat = f"results/wip_vcfs/{PANEL_NAME}/chip_sites/lc.vcf.gz",
+        bgen = f"results/wip_vcfs/{PANEL_NAME}/chip_sites/lc.bgen"
+    resources:
+        mem = '30G'
+    threads: 4
+    params:
+        qctool = tools['qctool']
+    shell: """
+        bcftools concat {input.lc_vcf} | bcftools sort -Oz -o {output.concat}
+
+        {params.qctool} -g {output.concat} -og {output,bgen} -bgen-bits 8 -bgen-compression zstd
+        
+    """
+
+rule compute_chip_stats:
+    input:
+	    bgen = rules.concat_chip_sites_vcfs.output.bgen
+    output:
+        sqlite = f"results/wip_vcfs/{PANEL_NAME}/chip_sites/lc.sqlite"
+    params:
+        qctool = tools['qctool']
+    shell: """
+        {params.qctool} \
+        -analysis-name "qc:autosomes" \
+        -g {input.bgen} \
+        -excl-range X:0- -excl-range Y:0- \
+        -snp-stats \
+        -osnp sqlite://{output.sqlite}:autosomes \
+        -sample-stats \
+        -osample sqlite://{output.sqlite}:sample_stats
+
+        {params.qctool} \
+        -analysis-name "qc:sex_chromosomes" \
+        -g {input.bgen} \
+        -incl-range X:0- -incl-range Y:0- \
+        -snp-stats \
+        -osnp sqlite://{output.sqlite}:sex_chromosomes \
+    """
+
+rule thin_stats:
+    input:
+        db = rules.compute_chip_stats.output.sqlite
+    output:
+        thinned_ok = touch( f"results/wip_vcfs/{PANEL_NAME}/chip_sites/thinned_ok.ok" ),
+        tsv = temp( f"results/wip_vcfs/{PANEL_NAME}/chip_sites/included_variants_included.gen" ),
+        tmp = temp( f"results/wip_vcfs/{PANEL_NAME}/chip_sites/tmp.gen" )
+    params:
+        MAC = 5,
+        missing = 10,
+        inthinnerator = tools['inthinnerator']
+    resources:
+        mem = '10G'
+    shell: r"""
+        mkdir -p results/wip_vcfs/oneKG/chip_sites/
+
+        sqlite3 -header -separator $'\t' {input.db} \
+        "SELECT rsid AS SNPID, rsid, chromosome, position, alleleA, alleleB FROM autosomesView WHERE (alleleA_count >= {params.MAC}) AND (alleleB_count >= {params.MAC}) AND \`NULL\` < {params.missing}" > {output.tmp}
+
+        tail -n +2 {output.tmp} > {output.tsv}
+
+        {params.inthinnerator} \
+        -analysis-name thin_1bp \
+        -g {output.tsv} \
+        -suppress-excluded \
+        -min-distance 1bp \
+        -excl-range 06:25000000-40000000 \
+        -o sqlite://{input.db}:thin_1bp
+    """
+
+rule calculate_chip_PC:
+    input:
+        sqlite = rules.compute_chip_stats.output.sqlite,
+        thin = rules.thin_stats.output.thinned_ok,
+        bgen = rules.concat_chip_sites_vcfs.output.bgen
+    output:
+        variants = f"results/wip_vcfs/{PANEL_NAME}/chip_sites/pc_variants_thin_1bp.txt",
+        kinship1 = f"results/wip_vcfs/{PANEL_NAME}/chip_sites/chip_kinship_thin_1bp.all.tsv.gz",
+        UDUT1 = f"results/wip_vcfs/{PANEL_NAME}/chip_sites/chip_UDUT_thin_1bp.all.tsv.gz"
+    params:
+        PCs = 20,
+        qctool = tools['qctool']
+    resources:
+        mem = '10G'
+    shell: """
+        sqlite3 {input.sqlite} \
+        "SELECT chromosome FROM thin_1bp View WHERE result == 'picked'" > {output.variants}
+        
+        {params.qctool} \
+        -analysis-name "PCs:thin_1bp:all" \
+        -g {input.bgen} \
+        -incl-rsids {output.variants} \
+        -kinship {output.kinship1} \
+        -UDUT {output.UDUT1} \
+        -PCs {params.PCs} \
+        -osample sqlite://{input.sqlite}:PCs
+    """
+
 rule filter_lc_info:
     input:
         lc_vcf = f"results/imputation/vcfs/{PANEL_NAME}/quilt.chr{{chr}}.vcf.gz"
