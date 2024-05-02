@@ -79,14 +79,12 @@ rule get_fragment_length:
 rule calculate_per_bin_kmer_error_rate:
     input:
         fragment_length = "results/kmer/{id}/fragment_length.tsv",
-        reads = "results/kmer/{id}/read{read}/{id}_read{read}.tsv",
-        script = "scripts/calculate_per_bin_kmer_error_rate.py"
+        reads = "results/kmer/{id}/read{read}/{id}_read{read}.tsv"
     output:
         per_bin_kmer_accuracy = "results/kmer/{id}/read{read}/per_bin_kmer_error_rate_read{read}.txt"
     resources: mem_mb = 50000
-    shell: """
-        python {input.script} {wildcards.id} {wildcards.read} {input.reads}
-    """
+    run:
+        lcwgsus.calculate_per_bin_kmer_error_rate(wildcards.id, wilcards.strand, input.reads)
 
 rule aggregate_per_bin_kmer_error_rate_1:
     input:

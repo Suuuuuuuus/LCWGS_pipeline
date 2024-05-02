@@ -188,7 +188,7 @@ rule convert_ref:
 rule determine_chunks:
     input:
         legend = expand(f"results/lr_imputation/refs/{PANEL_NAME}.chr{{chr}}.legend.gz", chr = chromosome),
-        code = "scripts/determine_chunks.R"
+        code = "scripts/quilt_accessories/determine_chunks.R"
     output:
         json = "results/lr_imputation/regions.json"
     resources: mem = '10G'
