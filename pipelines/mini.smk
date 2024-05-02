@@ -492,6 +492,30 @@ rule calculate_imputation_accuracy_all:
         lcwgsus.rezip_vcf(output.lc_vcf)
         lcwgsus.rezip_vcf(output.hc_vcf)
 
+rule aggregate_impaccs:
+    input:
+        h_impaccs = expand("{imp_dir}impacc/all_samples/by_variant/chr{chr}.h.impacc.tsv", chr = chromosome, allow_missing = True),
+        v_impaccs = expand("{imp_dir}impacc/all_samples/by_sample/chr{chr}.v.impacc.tsv", chr = chromosome, allow_missing = True)
+    output:
+        h_impacc = "{imp_dir}impacc/all_samples/by_variant/all.h.impacc.tsv",
+        v_impacc = "{imp_dir}impacc/all_samples/by_sample/all.v.impacc.tsv"
+    resources:
+        mem = '30G'
+    params:
+        impacc_outdir = "{imp_dir}impacc/all_samples/"
+    run:
+        h_lst = input.h_impaccs
+        outdir_h = params.impacc_outdir + "by_variant/"
+        h_dfs = [pd.read_csv(i, sep = '\t') for i in h_lst]
+        h = lcwgsus.average_impacc_by_chr(h_dfs, save_file = True,
+        outdir = outdir_h, save_name = 'all.h.impacc.tsv')
+
+        v_lst = input.v_impaccs
+        outdir_v = params.impacc_outdir + "by_sample/"
+        v_dfs = [pd.read_csv(i, sep = '\t') for i in v_lst]
+        v = lcwgsus.average_impacc_by_chr(v_dfs, save_file = True,
+        outdir = outdir_v, save_name = 'all.v.impacc.tsv')
+
 rule calculate_imputation_sumstat:
     input:
         h_impaccs = expand("{imp_dir}impacc/all_samples/by_variant/chr{chr}.h.impacc.tsv", chr = chromosome, allow_missing = True),
