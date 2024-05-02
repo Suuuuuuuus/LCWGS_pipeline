@@ -373,9 +373,9 @@ rule filter_lc_sites:
 pair = ['lc', 'hc']
 axis = ['h', 'v']
 
-imputation_dir = config['imputation_dir'][-6:]
-lc_vcf_dir = config['lc_vcf_dir'][-6:]
-hc_vcf_dir = config['hc_vcf_dir'][-6:]
+imputation_dir = config['mini_imputation_dir']
+lc_vcf_dir = config['mini_lc_vcf_dir']
+hc_vcf_dir = config['mini_hc_vcf_dir']
 
 def get_lc_vcf_dir(wildcards):
     ix = imputation_dir.index(wildcards.imp_dir)

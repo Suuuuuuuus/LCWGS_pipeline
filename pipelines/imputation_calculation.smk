@@ -22,9 +22,9 @@ ethnicities = ['fula', 'jola', 'mandinka', 'wollof']
 pair = ['lc', 'hc']
 axis = ['h', 'v']
 
-imputation_dir = config['imputation_dir'][1]
-lc_vcf_dir = config['lc_vcf_dir'][1]
-hc_vcf_dir = config['hc_vcf_dir'][1]
+imputation_dir = config['imputation_dir']
+lc_vcf_dir = config['lc_vcf_dir']
+hc_vcf_dir = config['hc_vcf_dir']
 
 def get_lc_vcf_dir(wildcards):
     ix = imputation_dir.index(wildcards.imp_dir)

@@ -100,9 +100,9 @@ rule lr_imputation_all:
 pair = ['lc', 'hc']
 axis = ['h', 'v']
 
-imputation_dir = config['imputation_dir'][-1]
-lc_vcf_dir = config['lc_vcf_dir'][-1]
-hc_vcf_dir = config['hc_vcf_dir'][-1]
+imputation_dir = config['lr_imputation_dir']
+lc_vcf_dir = config['lr_lc_vcf_dir']
+hc_vcf_dir = config['lr_hc_vcf_dir']
 
 rule lr_imputation_comparison_all:
     input:
