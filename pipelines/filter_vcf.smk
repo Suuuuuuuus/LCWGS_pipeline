@@ -43,12 +43,12 @@ rule concat_chip_sites_vcfs:
         concat = f"results/wip_vcfs/{PANEL_NAME}/chip_sites/lc.vcf.gz",
         bgen = f"results/wip_vcfs/{PANEL_NAME}/chip_sites/lc.bgen"
     resources:
-        mem = '30G'
-    threads: 4
+        mem = '100G'
+    threads: 16
     params:
         qctool = tools['qctool']
     shell: """
-        bcftools concat {input.lc_vcf} | bcftools sort -Oz -o {output.concat}
+        bcftools concat --threads 8 {input.lc_vcf} | bcftools sort -Oz -o {output.concat}
 
         {params.qctool} -g {output.concat} -og {output.bgen} -bgen-bits 8 -bgen-compression zstd
         
