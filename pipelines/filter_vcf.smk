@@ -22,7 +22,7 @@ imp_dir = config["imputation_dir"]
 rule retain_chip_sites:
     input:
         lc_vcf = f"results/imputation/vcfs/{PANEL_NAME}/quilt.chr{{chr}}.vcf.gz",
-        chip_vcf = "/well/band/users/rbx225/GAMCC/results/chip/vcf/chip_by_chr/chip.chr{chr}.vcf.gz"
+        chip_vcf = "results/chip/vcf/chip_by_chr/chip.chr{chr}.vcf.gz"
     output:
         filtered_vcf = f"results/wip_vcfs/{PANEL_NAME}/chip_sites/lc.chr{{chr}}.vcf.gz",
         site = temp(f"results/wip_vcfs/{PANEL_NAME}/chip_sites/chr{{chr}}.tsv")
@@ -38,7 +38,7 @@ rule retain_chip_sites:
 
 rule concat_chip_sites_vcfs:
     input:
-        lc_vcf = expand(f"results/imputation/vcfs/{PANEL_NAME}/quilt.chr{{chr}}.vcf.gz", chr = chromosome)
+        lc_vcf = expand(f"results/wip_vcfs/{PANEL_NAME}/chip_sites/lc.chr{{chr}}.vcf.gz", chr = chromosome)
     output:
         concat = f"results/wip_vcfs/{PANEL_NAME}/chip_sites/lc.vcf.gz",
         bgen = f"results/wip_vcfs/{PANEL_NAME}/chip_sites/lc.bgen"
