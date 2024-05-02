@@ -54,15 +54,15 @@
     "maf_filter": 0.01,
 
     "imputation_dir": [
-        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/oneKG/lc_chip_typed/", 
-        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/oneKG/lc_chip_typed_high_info/", 
-        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/oneKG/chip_hc_snps_gw/", 
-        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/oneKG/lc_hc_snps_gw/", 
-        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/topmed/chip_hc_snps_gw/",
-        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/oneKG/lc_oneKG_hc_snps_gw/", 
-        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/topmed/lc_topmed_hc_snps_gw/",
-        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/oneKG/lc_typed_oneKG_hc_snps_gw/",
-        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/topmed/lc_typed_topmed_hc_snps_gw/"
+        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/vanilla/lc_oneKG--chip--typed/", 
+        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/vanilla/lc_oneKG--chip--typed_high_info/", 
+        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/vanilla/chip_oneKG--hc--snps_gw/", 
+        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/vanilla/lc_oneKG--hc--snps_gw/", 
+        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/vanilla/chip_topmed--hc--snps_gw/",
+        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/vanilla/lc_oneKG_oneKG--hc--snps_gw/", 
+        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/vanilla/lc_oneKG_topmed--hc--snps_gw/",
+        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/vanilla/lc_oneKG_typed_oneKG--hc--snps_gw/",
+        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/vanilla/lc_oneKG_typed_topmed--hc--snps_gw/"
     ],
     "lc_vcf_dir" : [
         "/well/band/users/rbx225/GAMCC/results/imputation/vcfs/oneKG/", 
@@ -88,16 +88,16 @@
     ],
 
     "mini_imputation_dir": [
-        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/oneKG/fv/lc_chip_typed/", 
-        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/oneKG/fv/lc_chip_typed_high_info/", 
-        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/oneKG/fv/lc_hc_snps_gw/",
-        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/oneKG/mini/lc_chip_typed/", 
-        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/oneKG/mini/lc_chip_typed_high_info/", 
-        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/oneKG/mini/lc_hc_snps_gw/",
-        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/oneKG/fv/lc_oneKG_hc_snps_gw/",
-        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/oneKG/mini/lc_oneKG_hc_snps_gw/",
-        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/topmed/fv/lc_topmed_hc_snps_gw/",
-        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/topmed/mini/lc_topmed_hc_snps_gw/"
+        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/fv-mini/fv/lc_oneKG--chip--typed/", 
+        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/fv-mini/fv/lc_oneKG--chip--typed_high_info/", 
+        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/fv-mini/fv/lc_oneKG--hc--snps_gw/",
+        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/fv-mini/mini/lc_oneKG--chip--typed/", 
+        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/fv-mini/mini/lc_oneKG--chip--typed_high_info/", 
+        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/fv-mini/mini/lc_oneKG--hc--snps_gw/",
+        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/fv-mini/fv/lc_oneKG_oneKG--hc--snps_gw/",
+        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/fv-mini/mini/lc_oneKG_oneKG--hc--snps_gw/",
+        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/fv-mini/fv/lc_oneKG_topmed--hc--snps_gw/",
+        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/fv-mini/mini/lc_oneKG_topmed--hc--snps_gw/"
     ],
     "mini_lc_vcf_dir" : [
         "/well/band/users/rbx225/GAMCC/results/mini_imputation/splited_vcfs/oneKG/fv/", 
@@ -125,7 +125,7 @@
     ],
 
     "lr_imputation_dir": [
-        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/oneKG/lr_simulation/lc_hc_snps_gw/"
+        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/lr_simulation/lc_oneKG--hc--snps_gw/"
     ],
     "lr_lc_vcf_dir" : [
         "/well/band/users/rbx225/GAMCC/results/lr_imputation/vcfs/oneKG/"
