@@ -50,8 +50,14 @@ rule concat_chip_sites_vcfs:
     shell: """
         bcftools concat --threads 8 {input.lc_vcf} | bcftools sort -Oz -o {output.concat}
 
-        {params.qctool} -g {output.concat} -og {output.bgen} -bgen-bits 8 -bgen-compression zstd
-        
+        gunzip -c {output.concat}.temp1.vcf.gz | grep '#' > {output.concat}.temp2.vcf
+        bcftools query -f '%CHROM\t%POS\t%ID\t%REF\t%ALT\t%QUAL\t%FILTER\t%INFO\tGT\t[%GT\t]\n' \
+        {output.concat}.temp1.vcf.gz  >> {output.concat}.temp2.vcf
+        bcftools sort -Oz -o {output.concat} {output.concat}.temp2.vcf
+        tabix {output.concat}
+        rm {output.concat}.temp*
+
+        {params.qctool} -g {output.concat} -og {output.bgen} -bgen-bits 8 -bgen-compression zstd 
     """
 
 rule compute_chip_stats:
