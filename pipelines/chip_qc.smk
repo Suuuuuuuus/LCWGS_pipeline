@@ -200,7 +200,7 @@ rule calculate_PCA:
         PC = f"results/chip/qc/PCs/PCs.eigenvec"
     params:
         PCs = 10,
-        plink_name = "{output.bed}".split('.')[0]
+        plink_name = "results/chip/qc/PCs/lc_pca"
     resources:
         mem = '10G'
     shell: """
