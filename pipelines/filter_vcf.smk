@@ -67,12 +67,13 @@ rule calculate_PCA:
         PC = f"results/wip_vcfs/{PANEL_NAME}/chip_sites/PCs.eigenvec"
     params:
         PCs = 10,
-        plink_name = 'lc_pca'
+        plink_name = f"results/wip_vcfs/{PANEL_NAME}/chip_sites/lc_pca",
+        PC_name = f"results/wip_vcfs/{PANEL_NAME}/chip_sites/PCs"
     resources:
         mem = '10G'
     shell: """
         plink --vcf {input.vcf} --make-bed --out {params.plink_name}
-        plink --bfile {params.plink_name} --pca {params.PCs} --out PCs
+        plink --bfile {params.plink_name} --pca {params.PCs} --out {params.PC_name}
     """
 
 rule filter_lc_info:
