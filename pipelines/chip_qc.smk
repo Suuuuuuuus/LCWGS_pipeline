@@ -190,6 +190,24 @@ rule exclude_chip_dup_samples:
         -osample sqlite://{input.sqlite}:PCs
     """
 
+rule calculate_PCA:
+    input:
+        vcf = "results/chip/vcf/chip_genotype.vcf.gz"
+    output:
+        bed = temp(f"results/chip/qc/PCs/lc_pca.bed"),
+        bim = temp(f"results/chip/qc/PCs/lc_pca.bim"),
+        fam = temp(f"results/chip/qc/PCs/lc_pca.fam"),
+        PC = f"results/chip/qc/PCs/PCs.eigenvec"
+    params:
+        PCs = 10,
+        plink_name = 'lc_pca'
+    resources:
+        mem = '10G'
+    shell: """
+        plink --vcf {input.vcf} --make-bed --out {params.plink_name}
+        plink --bfile {params.plink_name} --pca {params.PCs} --out PCs
+    """
+
 # Try if -T and -R make any difference (it shouldn't)
 # This rule has to be run separately with the previous, as it needs manual creation of the drop_samples and retain_sites file from the qc results. See the provided jupyter notebook.
 rule clean_chip_vcf:

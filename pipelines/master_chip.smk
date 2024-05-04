@@ -48,6 +48,7 @@ rule chip_qc_all:
         #kinship2 = expand("results/chip/qc/PCs/chip_kinship_{thinning}.exclude-duplicates.tsv.gz", thinning = chip_thinning),
         #UDUT2 = expand("results/chip/qc/PCs/chip_UDUT_{thinning}.exclude-duplicates.tsv.gz", thinning = chip_thinning)
         #vcf_qced = "results/chip/vcf/chip_qced.vcf.gz"
+        PC = f"results/chip/qc/PCs/PCs.eigenvec"
 
 rule chip_imputation_all:
     input:

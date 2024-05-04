@@ -40,8 +40,7 @@ rule concat_chip_sites_vcfs:
     input:
         lc_vcf = expand(f"results/wip_vcfs/{PANEL_NAME}/chip_sites/lc.chr{{chr}}.vcf.gz", chr = chromosome)
     output:
-        concat = f"results/wip_vcfs/{PANEL_NAME}/chip_sites/lc.vcf.gz",
-        bgen = f"results/wip_vcfs/{PANEL_NAME}/chip_sites/lc.bgen"
+        concat = f"results/wip_vcfs/{PANEL_NAME}/chip_sites/lc.vcf.gz"
     resources:
         mem = '100G'
     threads: 16
@@ -56,91 +55,24 @@ rule concat_chip_sites_vcfs:
         bcftools sort -Oz -o {output.concat} {output.concat}.temp1.vcf
         tabix {output.concat}
         rm {output.concat}.temp*
-
-        {params.qctool} -g {output.concat} -og {output.bgen} -bgen-bits 8 -bgen-compression zstd 
     """
 
-rule compute_chip_stats:
+rule calculate_PCA:
     input:
-	    bgen = rules.concat_chip_sites_vcfs.output.bgen
+        vcf = rules.concat_chip_sites_vcfs.output.concat
     output:
-        sqlite = f"results/wip_vcfs/{PANEL_NAME}/chip_sites/lc.sqlite"
+        bed = temp(f"results/wip_vcfs/{PANEL_NAME}/chip_sites/lc_pca.bed"),
+        bim = temp(f"results/wip_vcfs/{PANEL_NAME}/chip_sites/lc_pca.bim"),
+        fam = temp(f"results/wip_vcfs/{PANEL_NAME}/chip_sites/lc_pca.fam"),
+        PC = f"results/wip_vcfs/{PANEL_NAME}/chip_sites/PCs.eigenvec"
     params:
-        qctool = tools['qctool']
-    shell: """
-        {params.qctool} \
-        -analysis-name "qc:autosomes" \
-        -g {input.bgen} \
-        -excl-range X:0- -excl-range Y:0- \
-        -snp-stats \
-        -osnp sqlite://{output.sqlite}:autosomes \
-        -sample-stats \
-        -osample sqlite://{output.sqlite}:sample_stats
-
-        {params.qctool} \
-        -analysis-name "qc:sex_chromosomes" \
-        -g {input.bgen} \
-        -incl-range X:0- -incl-range Y:0- \
-        -snp-stats \
-        -osnp sqlite://{output.sqlite}:sex_chromosomes \
-    """
-
-rule thin_stats:
-    input:
-        db = rules.compute_chip_stats.output.sqlite
-    output:
-        thinned_ok = touch( f"results/wip_vcfs/{PANEL_NAME}/chip_sites/thinned_ok.ok" ),
-        tsv = temp( f"results/wip_vcfs/{PANEL_NAME}/chip_sites/included_variants_included.gen" ),
-        tmp = temp( f"results/wip_vcfs/{PANEL_NAME}/chip_sites/tmp.gen" )
-    params:
-        MAC = 5,
-        missing = 10,
-        inthinnerator = tools['inthinnerator']
-    resources:
-        mem = '10G'
-    shell: r"""
-        mkdir -p results/wip_vcfs/oneKG/chip_sites/
-
-        sqlite3 -header -separator $'\t' {input.db} \
-        "SELECT rsid AS SNPID, rsid, chromosome, position, alleleA, alleleB FROM autosomesView WHERE (alleleA_count >= {params.MAC}) AND (alleleB_count >= {params.MAC}) AND \`NULL\` < {params.missing}" > {output.tmp}
-
-        tail -n +2 {output.tmp} > {output.tsv}
-
-        {params.inthinnerator} \
-        -analysis-name thin_1bp \
-        -g {output.tsv} \
-        -suppress-excluded \
-        -min-distance 1bp \
-        -excl-range 06:25000000-40000000 \
-        -o sqlite://{input.db}:thin_1bp
-    """
-
-rule calculate_chip_PC:
-    input:
-        sqlite = rules.compute_chip_stats.output.sqlite,
-        thin = rules.thin_stats.output.thinned_ok,
-        bgen = rules.concat_chip_sites_vcfs.output.bgen
-    output:
-        variants = f"results/wip_vcfs/{PANEL_NAME}/chip_sites/pc_variants_thin_1bp.txt",
-        kinship1 = f"results/wip_vcfs/{PANEL_NAME}/chip_sites/chip_kinship_thin_1bp.all.tsv.gz",
-        UDUT1 = f"results/wip_vcfs/{PANEL_NAME}/chip_sites/chip_UDUT_thin_1bp.all.tsv.gz"
-    params:
-        PCs = 20,
-        qctool = tools['qctool']
+        PCs = 10,
+        plink_name = 'lc_pca'
     resources:
         mem = '10G'
     shell: """
-        sqlite3 {input.sqlite} \
-        "SELECT chromosome FROM thin_1bp View WHERE result == 'picked'" > {output.variants}
-        
-        {params.qctool} \
-        -analysis-name "PCs:thin_1bp:all" \
-        -g {input.bgen} \
-        -incl-rsids {output.variants} \
-        -kinship {output.kinship1} \
-        -UDUT {output.UDUT1} \
-        -PCs {params.PCs} \
-        -osample sqlite://{input.sqlite}:PCs
+        plink --vcf {input.vcf} --make-bed --out {params.plink_name}
+        plink --bfile {params.plink_name} --pca {params.PCs} --out PCs
     """
 
 rule filter_lc_info:

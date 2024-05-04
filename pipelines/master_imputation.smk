@@ -28,11 +28,7 @@ rule filter_vcf_all:
     input:
         lc_chip_site_vcf = expand(f"results/wip_vcfs/{PANEL_NAME}/chip_sites/lc.chr{{chr}}.vcf.gz", chr = chromosome),
         concat = f"results/wip_vcfs/{PANEL_NAME}/chip_sites/lc.vcf.gz",
-        bgen = f"results/wip_vcfs/{PANEL_NAME}/chip_sites/lc.bgen",
-        sqlite = f"results/wip_vcfs/{PANEL_NAME}/chip_sites/lc.sqlite",
-        variants = f"results/wip_vcfs/{PANEL_NAME}/chip_sites/pc_variants_thin_1bp.txt",
-        kinship1 = f"results/wip_vcfs/{PANEL_NAME}/chip_sites/chip_kinship_thin_1bp.all.tsv.gz",
-        UDUT1 = f"results/wip_vcfs/{PANEL_NAME}/chip_sites/chip_UDUT_thin_1bp.all.tsv.gz",
+        PC = f"results/wip_vcfs/{PANEL_NAME}/chip_sites/PCs.eigenvec",
 
         high_info_vcf = expand(f"results/wip_vcfs/{PANEL_NAME}/high_info/lc.chr{{chr}}.vcf.gz", chr = chromosome),
         high_info_high_maf_vcf = expand(f"results/wip_vcfs/{PANEL_NAME}/high_info_high_af/lc.chr{{chr}}.vcf.gz", chr = chromosome),
