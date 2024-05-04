@@ -423,7 +423,7 @@ rule subset_lc_samples:
     resources:
         mem = '10G'
     run: 
-        if (wildcards.imp_dir.split('/')[-3] == 'mini') and ('lc_chip' in wildcards.imp_dir.split('/')[-2]):
+        if (wildcards.imp_dir.split('/')[-3] == 'mini') and ('chip' in wildcards.imp_dir.split('/')[-2]):
             lc_names = lcwgsus.bcftools_get_samples(input.quilt_vcf)
             lcwgsus.save_lst(output.tmp_names, lc_names)
             shell("bcftools view -S {output.tmp_names} -Oz -o {output.ss_hc_vcf} {input.chip_vcf}")

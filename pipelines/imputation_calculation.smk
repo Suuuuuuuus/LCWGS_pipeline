@@ -200,7 +200,7 @@ rule plot_imputation_accuracy_all:
     params:
         common_outdir = "{imp_dir}graphs/all_samples/"
     run:
-        h = input.h_impacc
+        h = pd.read_csv(input.h_impacc, sep = '\t')
         outdir_h = params.common_outdir + "by_variant/"
 
         dfs = [h[['AF', 'r2', 'r2_AC']], h[['AF', 'NRC', 'NRC_AC']]]
@@ -208,7 +208,7 @@ rule plot_imputation_accuracy_all:
         dfs = [h[['AF', 'ccd_homref', 'ccd_homref_AC']], h[['AF', 'ccd_het', 'ccd_het_AC']], h[['AF', 'ccd_homalt', 'ccd_homalt_AC']]]
         lcwgsus.plot_imputation_accuracy(dfs, title = 'Comparing different genotypes', save_fig = True, outdir = outdir_h, save_name = "ccd_by_genotype.png")
 
-        v = input.v_impacc
+        v = pd.read_csv(input.v_impacc, sep = '\t')
         outdir_v = params.common_outdir + "by_sample/"
 
         dfs = [v[['AF', 'r2', 'r2_AC']], v[['AF', 'NRC', 'NRC_AC']]]
@@ -340,7 +340,7 @@ rule plot_imputation_accuracy_by_eth:
     params:
         common_outdir = "{imp_dir}graphs/by_eth/"
     run:
-        h = input.h_impacc
+        h = pd.read_csv(input.h_impacc, sep = '\t')
         outdir_h = params.common_outdir + "by_variant/"
 
         dfs = [h[['AF', 'r2', 'r2_AC']], h[['AF', 'NRC', 'NRC_AC']]]
@@ -348,7 +348,7 @@ rule plot_imputation_accuracy_by_eth:
         dfs = [h[['AF', 'ccd_homref', 'ccd_homref_AC']], h[['AF', 'ccd_het', 'ccd_het_AC']], h[['AF', 'ccd_homalt', 'ccd_homalt_AC']]]
         lcwgsus.plot_imputation_accuracy(dfs, title = 'Comparing different genotypes', save_fig = True, outdir = outdir_h, save_name = wildcards.eth + ".ccd_by_genotype.png")
 
-        v = input.v_impacc
+        v = pd.read_csv(input.v_impacc, sep = '\t')
         outdir_v = params.common_outdir + "by_sample/"
 
         dfs = [v[['AF', 'r2', 'r2_AC']], v[['AF', 'NRC', 'NRC_AC']]]
@@ -467,7 +467,7 @@ rule plot_imputation_accuracy_by_cc:
     params:
         common_outdir = "{imp_dir}graphs/by_cc/"
     run:
-        h = input.h_impacc
+        h = pd.read_csv(input.h_impacc, sep = '\t')
         outdir_h = params.common_outdir + "by_variant/"
 
         dfs = [h[['AF', 'r2', 'r2_AC']], h[['AF', 'NRC', 'NRC_AC']]]
@@ -475,7 +475,7 @@ rule plot_imputation_accuracy_by_cc:
         dfs = [h[['AF', 'ccd_homref', 'ccd_homref_AC']], h[['AF', 'ccd_het', 'ccd_het_AC']], h[['AF', 'ccd_homalt', 'ccd_homalt_AC']]]
         lcwgsus.plot_imputation_accuracy(dfs, title = 'Comparing different genotypes', save_fig = True, outdir = outdir_h, save_name = wildcards.cc + ".ccd_by_genotype.png")
 
-        v = input.v_impacc
+        v = pd.read_csv(input.v_impacc, sep = '\t')
         outdir_v = params.common_outdir + "by_sample/"
 
         dfs = [v[['AF', 'r2', 'r2_AC']], v[['AF', 'NRC', 'NRC_AC']]]

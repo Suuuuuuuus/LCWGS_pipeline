@@ -50,10 +50,10 @@ rule concat_chip_sites_vcfs:
     shell: """
         bcftools concat --threads 8 {input.lc_vcf} | bcftools sort -Oz -o {output.concat}
 
-        gunzip -c {output.concat}.temp1.vcf.gz | grep '#' > {output.concat}.temp2.vcf
+        gunzip -c {output.concat} | grep '#' > {output.concat}.temp1.vcf
         bcftools query -f '%CHROM\t%POS\t%ID\t%REF\t%ALT\t%QUAL\t%FILTER\t%INFO\tGT\t[%GT\t]\n' \
-        {output.concat}.temp1.vcf.gz  >> {output.concat}.temp2.vcf
-        bcftools sort -Oz -o {output.concat} {output.concat}.temp2.vcf
+        {output.concat} >> {output.concat}.temp1.vcf
+        bcftools sort -Oz -o {output.concat} {output.concat}.temp1.vcf
         tabix {output.concat}
         rm {output.concat}.temp*
 
