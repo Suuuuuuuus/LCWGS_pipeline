@@ -204,8 +204,8 @@ rule calculate_PCA:
     resources:
         mem = '10G'
     shell: """
-        plink --vcf {input.vcf} --make-bed --out {params.plink_name}
-        plink --bfile {params.plink_name} --pca {params.PCs} --out PCs
+        plink --vcf {input.vcf} --make-bed --out pca
+        plink --bfile pca --pca {params.PCs} --out PCs
     """
 
 # Try if -T and -R make any difference (it shouldn't)
