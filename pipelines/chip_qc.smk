@@ -200,12 +200,13 @@ rule calculate_PCA:
         PC = f"results/chip/qc/PCs/PCs.eigenvec"
     params:
         PCs = 10,
-        plink_name = "results/chip/qc/PCs/lc_pca"
+        plink_name = "results/chip/qc/PCs/lc_pca",
+        PC_name = "results/chip/qc/PCs/PCs"
     resources:
         mem = '10G'
     shell: """
         plink --vcf {input.vcf} --make-bed --out {params.plink_name}
-        plink --bfile {params.plink_name} --pca {params.PCs} --out PCs
+        plink --bfile {params.plink_name} --pca {params.PCs} --out {params.PC_name}
     """
 
 # Try if -T and -R make any difference (it shouldn't)
