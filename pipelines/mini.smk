@@ -250,7 +250,7 @@ rule concat_quilt_vcf:
 '''
 rule split_mini_vcf:
     input:
-        vcf = rules.concat_quilt_vcf.output.vcf
+        vcf = f"results/mini_imputation/vcfs/{PANEL_NAME}/quilt.chr{{chr}}.vcf.gz"
     output:
         fv = f"results/mini_imputation/splited_vcfs/{PANEL_NAME}/fv/quilt.chr{{chr}}.vcf.gz",
         mini = f"results/mini_imputation/splited_vcfs/{PANEL_NAME}/mini/quilt.chr{{chr}}.vcf.gz",
