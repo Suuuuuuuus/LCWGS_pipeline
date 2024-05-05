@@ -186,29 +186,9 @@ rule exclude_chip_dup_samples:
         -PCs {params.PCs} \
         -excl-samples-where "ID = 'GAM370894'" \
         -excl-samples-where "ID = 'GAM916387'" \
-        -excl-samples-where "ID = 'GAM654203'" \
         -osample sqlite://{input.sqlite}:PCs
     """
-
-rule calculate_PCA:
-    input:
-        vcf = "results/chip/vcf/chip_genotype.vcf.gz"
-    output:
-        bed = temp(f"results/chip/qc/PCs/lc_pca.bed"),
-        bim = temp(f"results/chip/qc/PCs/lc_pca.bim"),
-        fam = temp(f"results/chip/qc/PCs/lc_pca.fam"),
-        PC = f"results/chip/qc/PCs/PCs.eigenvec"
-    params:
-        PCs = 10,
-        plink_name = "results/chip/qc/PCs/lc_pca",
-        PC_name = "results/chip/qc/PCs/PCs"
-    resources:
-        mem = '10G'
-    shell: """
-        plink --vcf {input.vcf} --make-bed --out {params.plink_name}
-        plink --bfile {params.plink_name} --pca {params.PCs} --out {params.PC_name}
-    """
-
+   
 # Try if -T and -R make any difference (it shouldn't)
 # This rule has to be run separately with the previous, as it needs manual creation of the drop_samples and retain_sites file from the qc results. See the provided jupyter notebook.
 rule clean_chip_vcf:
@@ -230,4 +210,28 @@ rule clean_chip_vcf:
         else
             touch {output.vcf_qced} # A place holder to avoid errors
         fi
+    """
+
+rule calculate_PCA:
+    input:
+        vcf = "results/chip/vcf/chip_qced.vcf.gz"
+    output:
+        bed = temp("results/chip/qc/PCs/chip_pca.bed"),
+        bim = temp("results/chip/qc/PCs/chip_pca.bim"),
+        fam = temp("results/chip/qc/PCs/chip_pca.fam"),
+        PC = "results/chip/qc/PCs/PCs.eigenvec",
+        tmp_vcf = temp("results/chip/qc/PCs/tmp.vcf.gz"),
+        name_txt = temp("results/chip/qc/PCs/name.txt")
+    params:
+        num_PCs = 10,
+        plink_name = "results/chip/qc/PCs/chip_pca",
+        PC_name = "results/chip/qc/PCs/PCs",
+        gam_to_exclude = "data/sample_tsvs/PC_exclude/gam_to_exclude.tsv"
+    resources:
+        mem = '10G'
+    shell: """
+        cp {params.gam_to_exclude} {output.name_txt}
+        bcftools view -S ^{output.name_txt} -Oz -o {output.tmp_vcf} {input.vcf}
+        plink --vcf {output.tmp_vcf} --make-bed --out {params.plink_name}
+        plink --bfile {params.plink_name} --pca {params.num_PCs} --out {params.PC_name}
     """

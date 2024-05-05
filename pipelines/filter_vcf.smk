@@ -64,16 +64,24 @@ rule calculate_PCA:
         bed = temp(f"results/wip_vcfs/{PANEL_NAME}/chip_sites/lc_pca.bed"),
         bim = temp(f"results/wip_vcfs/{PANEL_NAME}/chip_sites/lc_pca.bim"),
         fam = temp(f"results/wip_vcfs/{PANEL_NAME}/chip_sites/lc_pca.fam"),
-        PC = f"results/wip_vcfs/{PANEL_NAME}/chip_sites/PCs.eigenvec"
+        PC = f"results/wip_vcfs/{PANEL_NAME}/chip_sites/PCs.eigenvec",
+        name_txt = temp(f"results/wip_vcfs/{PANEL_NAME}/chip_sites/name.txt"),
+        tmp_vcf = temp(f"results/wip_vcfs/{PANEL_NAME}/chip_sites/tmp.vcf.gz"),
+        tmp_vcf1 = temp(f"results/wip_vcfs/{PANEL_NAME}/chip_sites/tmp1.vcf.gz")
     params:
-        PCs = 10,
+        num_PCs = 10,
         plink_name = f"results/wip_vcfs/{PANEL_NAME}/chip_sites/lc_pca",
-        PC_name = f"results/wip_vcfs/{PANEL_NAME}/chip_sites/PCs"
+        PC_name = f"results/wip_vcfs/{PANEL_NAME}/chip_sites/PCs",
+        chip_gm_names = "data/sample_tsvs/chip_gm_names.tsv"
     resources:
         mem = '10G'
     shell: """
-        plink --vcf {input.vcf} --make-bed --out {params.plink_name}
-        plink --bfile {params.plink_name} --pca {params.PCs} --out {params.PC_name}
+        cp {params.chip_gm_names} {output.name_txt}
+        bcftools view -S {output.name_txt} -Oz -o {output.tmp_vcf} {input.vcf}
+        cp {params.gm_to_exclude} {output.name_txt}
+        bcftools view -S ^{output.name_txt} -Oz -o {output.tmp_vcf1} {output.tmp_vcf}
+        plink --vcf {output.tmp_vcf1} --make-bed --out {params.plink_name}
+        plink --bfile {params.plink_name} --pca {params.num_PCs} --out {params.PC_name}
     """
 
 rule filter_lc_info:
