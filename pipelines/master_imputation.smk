@@ -53,6 +53,7 @@ rule imputation_calculation_hc_all:
         hc_vcfs = expand("{imp_dir}vcf/all_samples/filtered_vcfs/hc.chr{chr}.vcf.gz", imp_dir = imputation_dir, chr = chromosome),
         afs = expand("{imp_dir}vcf/all_samples/af/af.chr{chr}.tsv", imp_dir = imputation_dir, chr = chromosome),
         
+        tsv = expand("{imp_dir}impacc/all_samples/by_variant/all_r2less0.5.tsv", imp_dir = imputation_dir),
         sumstats = expand("{imp_dir}summary_metrics.tsv", imp_dir = imputation_dir)
 
 rule imputation_calculation_all:

@@ -9,6 +9,7 @@ import sys
 import os
 sys.path.append("/well/band/users/rbx225/software/lcwgsus/")
 import lcwgsus
+from lcwgsus.variables import *
 
 samples_hc = read_tsv_as_lst(config['samples_hc'])
 samples_lc = read_tsv_as_lst(config['samples_lc'])
@@ -161,6 +162,27 @@ rule calculate_imputation_accuracy_all:
 
         lcwgsus.rezip_vcf(output.lc_vcf)
         lcwgsus.rezip_vcf(output.hc_vcf)
+
+rule get_badly_imputed_variants:
+    input:
+        h_impaccs = expand("{imp_dir}impacc/all_samples/by_variant/chr{chr}.h.impacc.tsv", chr = chromosome, allow_missing = True)
+    output:
+        tsv = "{imp_dir}impacc/all_samples/by_variant/all_r2less0.5.tsv"
+    resources:
+        mem = '30G'
+    params:
+        threshold = 0.5
+    run:
+        h_lst = input.h_impaccs
+        h_dfs = [pd.read_csv(i, sep = '\t') for i in h_lst]
+        lcwgsus.get_badly_imputed_regions(
+            wildcards.imp_dir + 'impacc/all_samples/by_variant/',
+            retain_cols = COMMON_COLS + ['MAF', 'r2'],
+            threshold = params.threshold,
+            save_file = True,
+            outdir = wildcards.imp_dir + 'impacc/all_samples/by_variant/',
+            save_name = 'all_r2less0.5.tsv'
+        )
 
 rule aggregate_impaccs_all:
     input:
