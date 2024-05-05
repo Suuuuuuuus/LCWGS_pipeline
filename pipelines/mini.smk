@@ -21,7 +21,7 @@ BUFFER=config["BUFFER"]
 PANEL_NAME=config["PANEL_NAME"]
 
 samples_lc = read_tsv_as_lst(config['samples_lc'])
-
+'''
 rule mini_clean_bam:
     input:
         bam = "data/subsampled_bams/{id}_subsampled.bam"
@@ -247,7 +247,7 @@ rule concat_quilt_vcf:
         tabix {output.vcf}
         rm {output.vcf}.temp*
     """
-
+'''
 rule split_mini_vcf:
     input:
         vcf = rules.concat_quilt_vcf.output.vcf

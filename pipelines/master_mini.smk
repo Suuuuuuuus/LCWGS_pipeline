@@ -92,9 +92,9 @@ preparations = ['fv', 'mini']
 
 rule mini_imputation_all:
     input:
-        RData = [regions_to_prep],
-        vcf_regions = [vcfs_to_impute],
-        vcfs = [final_vcfs],
+        # RData = [regions_to_prep],
+        # vcf_regions = [vcfs_to_impute],
+        # vcfs = [final_vcfs],
         fv = expand(f"results/mini_imputation/splited_vcfs/{PANEL_NAME}/fv/quilt.chr{{chr}}.vcf.gz", chr = chromosome),
         mini = expand(f"results/mini_imputation/splited_vcfs/{PANEL_NAME}/mini/quilt.chr{{chr}}.vcf.gz", chr = chromosome)
 
