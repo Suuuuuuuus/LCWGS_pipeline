@@ -2,8 +2,10 @@ suppressPackageStartupMessages(library(tidyverse))
 library( RSQLite )
 library( argparse )
 
+# From Dr Gavin Band on converting Affymetrix PDRA array results to vcf file
+
 echo <- function( message, ... ) {
-	cat( sprintf( message, ... ))
+	cat( sprintf( message, ... )) # nolint
 }
 
 parse_args = function() {
