@@ -66,7 +66,7 @@
     ],
     "lc_vcf_dir" : [
         "/well/band/users/rbx225/GAMCC/results/imputation/vcfs/oneKG/", 
-        "/well/band/users/rbx225/GAMCC/results/wip_vcfs/oneKG/high_info_high_af/", 
+        "/well/band/users/rbx225/GAMCC/results/wip_vcfs/oneKG/vanilla/high_info_high_af/", 
         "/well/band/users/rbx225/GAMCC/results/chip/imputed/oneKG/vcf/", 
         "/well/band/users/rbx225/GAMCC/results/imputation/vcfs/oneKG/", 
         "/well/band/users/rbx225/GAMCC/results/chip/imputed/topmed/vcf/",
@@ -101,10 +101,10 @@
     ],
     "mini_lc_vcf_dir" : [
         "/well/band/users/rbx225/GAMCC/results/mini_imputation/splited_vcfs/oneKG/fv/", 
-        "/well/band/users/rbx225/GAMCC/results/wip_vcfs/oneKG/fv/high_info/",
+        "/well/band/users/rbx225/GAMCC/results/wip_vcfs/oneKG/fv-mini/fv/high_info/",
         "/well/band/users/rbx225/GAMCC/results/mini_imputation/splited_vcfs/oneKG/fv/", 
         "/well/band/users/rbx225/GAMCC/results/mini_imputation/splited_vcfs/oneKG/mini/", 
-        "/well/band/users/rbx225/GAMCC/results/wip_vcfs/oneKG/mini/high_info/", 
+        "/well/band/users/rbx225/GAMCC/results/wip_vcfs/oneKG/fv-mini/mini/high_info/", 
         "/well/band/users/rbx225/GAMCC/results/mini_imputation/splited_vcfs/oneKG/mini/",
         "/well/band/users/rbx225/GAMCC/results/two-stage-imputation/fv-mini/fv/oneKG_oneKG/vcf/",
         "/well/band/users/rbx225/GAMCC/results/two-stage-imputation/fv-mini/mini/oneKG_oneKG/vcf/",

@@ -281,14 +281,14 @@ rule filter_lc_info:
     input:
         lc_vcf = f"results/mini_imputation/splited_vcfs/{PANEL_NAME}/{{prep}}/quilt.chr{{chr}}.vcf.gz"
     output:
-        filtered_vcf = f"results/wip_vcfs/{PANEL_NAME}/{{prep}}/high_info/lc.chr{{chr}}.vcf.gz"
+        filtered_vcf = f"results/wip_vcfs/{PANEL_NAME}/fv-mini/{{prep}}/high_info/lc.chr{{chr}}.vcf.gz"
     resources:
         mem = '30G'
     threads: 4
     params:
         info = config['info_filter']
     shell: """
-        mkdir -p results/wip_vcfs/{PANEL_NAME}/{wildcards.prep}/high_info/
+        mkdir -p results/wip_vcfs/{PANEL_NAME}/fv-mini/{wildcards.prep}/high_info/
 
         bcftools filter -i 'INFO_SCORE>{params.info}' -Oz -o {output.filtered_vcf} {input.lc_vcf}
     """
@@ -298,7 +298,7 @@ rule filter_lc_maf:
         lc_vcf = rules.filter_lc_info.output.filtered_vcf,
         af = "data/oneKG_MAFs/oneKG_AF_AFR_chr{chr}.txt"
     output:
-        filtered_vcf = f"results/wip_vcfs/{PANEL_NAME}/{{prep}}/high_info_high_af/lc.chr{{chr}}.vcf.gz"
+        filtered_vcf = f"results/wip_vcfs/{PANEL_NAME}/fv-mini/{{prep}}/high_info_high_af/lc.chr{{chr}}.vcf.gz"
     resources:
         mem = '60G'
     threads: 8
@@ -327,7 +327,7 @@ rule filter_lc_maf:
         lcwgsus.save_vcf(lc_af,
              metadata,
              prefix='chr',
-             outdir="results/wip_vcfs/" + params.panel + "/" + wildcards.prep + "/high_info_high_af/",
+             outdir="results/wip_vcfs/" + params.panel + "/fv-mini/" + wildcards.prep + "/high_info_high_af/",
              save_name="lc.chr" + str(wildcards.chr) + ".vcf.gz"
              )
 
@@ -336,7 +336,7 @@ rule filter_lc_sites:
         vcf = rules.filter_lc_maf.output.filtered_vcf,
         sites = "data/chip/omni5m/omni5m_sites.tsv"
     output:
-        filtered_vcf = f"results/wip_vcfs/{PANEL_NAME}/{{prep}}/high_info_high_af_chip_sites/lc.chr{{chr}}.vcf.gz"
+        filtered_vcf = f"results/wip_vcfs/{PANEL_NAME}/fv-mini/{{prep}}/high_info_high_af_chip_sites/lc.chr{{chr}}.vcf.gz"
     resources:
         mem = '60G'
     threads: 8
@@ -366,7 +366,7 @@ rule filter_lc_sites:
         lcwgsus.save_vcf(lc_sites,
              metadata,
              prefix='chr',
-             outdir="results/wip_vcfs/" + params.panel + "/" + wildcards.prep + "/high_info_high_af_chip_sites/",
+             outdir="results/wip_vcfs/" + params.panel + "/fv-mini/" + wildcards.prep + "/high_info_high_af_chip_sites/",
              save_name="lc.chr" + str(wildcards.chr) + ".vcf.gz"
              )
 
