@@ -43,29 +43,7 @@ wget ftp-trace.ncbi.nih.gov/1000genomes/ftp/technical/working/20130507_omni_reco
 tar -xvf ACB_omni_recombination_20130507.tar
 R -f /well/band/users/rbx225/software/QUILT/scripts/make_b38_recomb_map.R --args . ACB 6
 
-refseq_table_file=/well/band/users/rbx225/software/QUILT/hla_ancillary_files/refseq.hg38.chr6.26000000.34000000.txt.gz
-
 cd ${inputs_dir}
 wget http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/GRCh38_reference_genome/GRCh38_full_analysis_set_plus_decoy_hla.fa
-samtools faidx GRCh38_full_analysis_set_plus_decoy_hla.fa
-ref_fasta=${inputs_dir}GRCh38_full_analysis_set_plus_decoy_hla.fa
 
-cd /well/band/users/rbx225/software/QUILT/
-./QUILT_HLA_prepare_reference.R \
---outputdir=${reference_package_dir} \
---nGen=100 \
---hla_types_panel=${test_dir}/20181129_HLA_types_full_1000_Genomes_Project_panel.txt \
---ipd_igmt_alignments_zip_file=${test_dir}${ipdigmt_filename} \
---ref_fasta=${ref_fasta} \
---refseq_table_file=${refseq_table_file} \
---full_regionStart=25587319 \
---full_regionEnd=33629686 \
---buffer=500000 \
---region_exclude_file=hla_ancillary_files/hlagenes.txt \
---genetic_map_file=${inputs_dir}ACB/ACB-chr6-final.b38.txt.gz \
---reference_haplotype_file=${reference_haplotype_file} \
---reference_legend_file=${reference_legend_file} \
---reference_sample_file=${reference_sample_file} \
---reference_exclude_samples_for_initial_phasing=FALSE \
---hla_regions_to_prepare="c('A','B','C','DQB1','DRB1')" \
---nCores=6
+ref_fasta=${inputs_dir}GRCh38_full_analysis_set_plus_decoy_hla.fa
