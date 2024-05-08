@@ -19,4 +19,4 @@ rule hla_all:
     input:
         chrs = expand("results/hla/bams/{id}.chr6.bam", id = samples_lc),
         bamlist = "results/hla/imputation/bamlist.txt",
-        hla_imputed = expand("results/hla/imputation/genes/{hla_gene}/quilt.hla.output.combined.all.txt", hla_gene = hla_genes)
+        # hla_imputed = expand("results/hla/imputation/genes/{hla_gene}/quilt.hla.output.combined.all.txt", hla_gene = hla_genes)
