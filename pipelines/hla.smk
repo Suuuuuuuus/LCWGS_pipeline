@@ -16,11 +16,24 @@ samples_lc = read_tsv_as_lst(config['samples_lc'])
 chromosome = [i for i in range(1,23)]
 QUILT_HOME = config["QUILT_HOME"]
 
+rule index:
+    input:
+        reference = "data/references/GRCh38_full_analysis_set_plus_decoy_hla.fa"
+    output:
+        indexed = "data/references/GRCh38_full_analysis_set_plus_decoy_hla.fa.amb"
+    resources:
+        mem = '50G'
+    threads: 8
+    shell: """
+        bwa index {input.reference}
+    """
+
 rule alignment:
     input:
         fastq1 = "data/fastq/{id}_1.fastq.gz",
         fastq2 = "data/fastq/{id}_2.fastq.gz",
-        reference = "data/references/GRCh38_full_analysis_set_plus_decoy_hla.fa"
+        reference = "data/references/GRCh38_full_analysis_set_plus_decoy_hla.fa",
+        index = rules.index.output.indexed
     output:
         bam = temp("data/bams/tmp/{id}.bam")
     resources:
