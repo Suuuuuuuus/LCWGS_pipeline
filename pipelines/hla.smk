@@ -45,7 +45,7 @@ rule alignment:
 
 rule hla_imputation_preprocess:
     input:
-        bam = "data/dedup_bams/{id}.bam"
+        bam = "data/bams/tmp/{id}.bam"
     output:
         tmp = temp("results/hla/bams/{id}.tmp.bam"),
         chr = temp("results/hla/bams/{id}.chr6.tmp.bam")
