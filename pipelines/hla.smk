@@ -43,31 +43,12 @@ rule alignment:
         bwa mem -t {threads} {input.reference} {input.fastq1} {input.fastq2} | samtools view -b -o {output.bam}
     """
 
-rule drop_duplicates:
-    input:
-        bam = rules.alignment.output.bam
-    output:
-        fixmate = temp("data/bams/tmp/{id}.fixmate.bam"),
-        dedup_bam = "data/dedup_bams/{id}.bam"
-    resources: mem = '10G'
-    shell: """
-        samtools view -h {input.bam} chr6 | \
-        samtools sort -n - | \
-        samtools fixmate -m - - -u | \
-        samtools sort - -u | \
-        samtools markdup - {output.fixmate}
-        samtools index {output.fixmate}
-
-        samtools rmdup {output.fixmate} {output.dedup_bam}
-        samtools index {output.dedup_bam}
-    """
-
 rule hla_imputation_preprocess:
     input:
         bam = "data/dedup_bams/{id}.bam"
     output:
         tmp = temp("results/hla/bams/{id}.tmp.bam"),
-        chr = "results/hla/bams/{id}.chr6.bam"
+        chr = temp("results/hla/bams/{id}.chr6.tmp.bam")
     params:
         verbosity = "ERROR",
         sample = "{id}"
@@ -86,6 +67,39 @@ rule hla_imputation_preprocess:
         samtools index {output.tmp}
 
         samtools view -o {output.chr} {output.tmp} chr6:25000000-35000000
+    """
+
+rule hla_clean_bam:
+    input:
+        bam = rules.hla_imputation_preprocess.output.chr
+    output:
+        bam = "results/hla/bams/{id}.chr6.bam",
+        bai = "results/hla/bams/{id}.chr6.bam.bai",
+        tmp1 = temp("data/hla/bams/{id}.tmp1.bam"),
+        metric = temp("data/hla/bams/{id}.metrics.txt")
+    threads: 8
+    resources:
+        mem = '50G'
+    params:
+        tmpdir = "data/hla/bams/tmp/{id}/",
+        sample = "{id}"
+    shell: """
+        mkdir -p {params.tmpdir}
+
+        samtools index {input.bam}
+
+        picard FixMateInformation -I {output.tmp1}
+
+        samtools sort -@6 -m 1G -T {params.tmpdir} -o {output.bam} {output.tmp1}
+
+        picard MarkDuplicates \
+        -I {output.bam} \
+        -O {output.tmp1} \
+        -M {output.metric} \
+        --REMOVE_DUPLICATES
+
+        samtools sort -@6 -m 1G -T {params.tmpdir} -o {output.bam} {output.tmp1}
+        samtools index {output.bam}
     """
 
 rule prepare_hla_bamlist:
