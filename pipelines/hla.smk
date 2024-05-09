@@ -53,6 +53,7 @@ rule hla_imputation_preprocess:
         verbosity = "ERROR",
         sample = "{id}"
     threads: 4
+    resources: mem='30G'
     shell: """
         mkdir -p results/hla/bams/
 
