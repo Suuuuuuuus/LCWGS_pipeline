@@ -52,21 +52,25 @@ rule hla_imputation_preprocess:
     params:
         verbosity = "ERROR",
         sample = "{id}"
+    threads: 4
     shell: """
         mkdir -p results/hla/bams/
 
         picard AddOrReplaceReadGroups \
         -VERBOSITY {params.verbosity} \
         -I {input.bam} \
-        -O {output.tmp} \
+        -O {output.chr} \
         -RGLB OGC \
         -RGPL ILLUMINA \
         -RGPU unknown \
         -RGSM {params.sample}
 
+        samtools sort -@4 -m 1G -o {output.tmp} {output.chr}
+
         samtools index {output.tmp}
 
         samtools view -o {output.chr} {output.tmp} chr6:25000000-35000000
+        samtools index {output.chr}
     """
 
 rule hla_clean_bam:
@@ -85,8 +89,6 @@ rule hla_clean_bam:
         sample = "{id}"
     shell: """
         mkdir -p {params.tmpdir}
-
-        samtools index {input.bam}
 
         picard FixMateInformation -I {output.tmp1}
 
