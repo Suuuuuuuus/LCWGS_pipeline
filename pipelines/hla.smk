@@ -91,9 +91,9 @@ rule hla_clean_bam:
     shell: """
         mkdir -p {params.tmpdir}
 
-        picard FixMateInformation -I {output.tmp1}
+        picard FixMateInformation -I {input.bam}
 
-        samtools sort -@6 -m 1G -T {params.tmpdir} -o {output.bam} {output.tmp1}
+        samtools sort -@6 -m 1G -T {params.tmpdir} -o {output.bam} {input.bam}
 
         picard MarkDuplicates \
         -I {output.bam} \
