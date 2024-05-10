@@ -118,6 +118,7 @@ rule prepare_hla_bamlist:
 
 hla_ref_panel_indir = "results/hla/imputation/ref_panel/auxiliary_files/"
 hla_ref_panel_outdir = "results/hla/imputation/ref_panel/"
+hla_genes = ['A', 'B', 'C', 'DRB1', 'DQB1']
 
 rule prepare_hla_reference_panel:
     input:
@@ -129,7 +130,7 @@ rule prepare_hla_reference_panel:
         legend = f"{hla_ref_panel_indir}oneKG.legend.gz",
         sample = f"{hla_ref_panel_indir}oneKG.samples"
     output:
-        ref_panel = f"{hla_ref_panel_outdir}HLA{{gene}}fullallelesfilledin.RData"
+        ref_panel = expand(f"{hla_ref_panel_outdir}HLA{{gene}}fullallelesfilledin.RData", gene = hla_genes)
     resources:
         mem = '30G'
     threads: 4
@@ -154,7 +155,7 @@ rule prepare_hla_reference_panel:
         --reference_legend_file={input.legend} \
         --reference_sample_file={input.sample} \
         --reference_exclude_samples_for_initial_phasing=FALSE \
-        --hla_regions_to_prepare="c({wildcards.gene:q})" \
+        --hla_regions_to_prepare="c('A','B','C','DQB1','DRB1')" \
         --nCores=6
     """
 
