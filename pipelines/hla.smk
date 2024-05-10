@@ -154,7 +154,7 @@ rule prepare_hla_reference_panel:
         --reference_legend_file={input.legend} \
         --reference_sample_file={input.sample} \
         --reference_exclude_samples_for_initial_phasing=FALSE \
-        --hla_regions_to_prepare="c('{wildcards.gene}')" \
+        --hla_regions_to_prepare="c({wildcards.gene:q})" \
         --nCores=6
     """
 
