@@ -160,7 +160,7 @@ rule prepare_hla_reference_panel:
 rule hla_imputation:
     input:
         bamlist = rules.prepare_hla_bamlist.output.bamlist,
-        ref_dir = "data/hla_ref_panel"
+        ref_dir = hla_ref_panel_dir
     output:
         vcf = "results/hla/imputation/genes/{hla_gene}/quilt.hla.output.combined.all.txt"
     resources:
