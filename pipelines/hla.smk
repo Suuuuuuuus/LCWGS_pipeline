@@ -116,19 +116,20 @@ rule prepare_hla_bamlist:
         ls results/hla/bams/*.bam > {output.bamlist}
     """
 
-hla_ref_panel_dir = "data/hla_ref_panel/new/"
+hla_ref_panel_indir = "data/hla_ref_panel/new/"
+hla_ref_panel_outdir = "results/hla/imputation/ref_panel/"
 
 rule prepare_hla_reference_panel:
     input:
-        hla_types_panel = f"{hla_ref_panel_dir}20181129_HLA_types_full_1000_Genomes_Project_panel.txt",
-        ipd_igmt = f"{hla_ref_panel_dir}Alignments_Rel_3390.zip",
+        hla_types_panel = f"{hla_ref_panel_indir}20181129_HLA_types_full_1000_Genomes_Project_panel.txt",
+        ipd_igmt = f"{hla_ref_panel_indir}Alignments_Rel_3390.zip",
         fasta = "data/references/GRCh38_full_analysis_set_plus_decoy_hla.fa",
-        genetic_map = f"{hla_ref_panel_dir}ACB/ACB-chr6-final.b38.txt.gz",
-        hap = f"{hla_ref_panel_dir}oneKG.hap.gz",
-        legend = f"{hla_ref_panel_dir}oneKG.legend.gz",
-        sample = f"{hla_ref_panel_dir}oneKG.samples"
+        genetic_map = f"{hla_ref_panel_indir}ACB/ACB-chr6-final.b38.txt.gz",
+        hap = f"{hla_ref_panel_indir}oneKG.hap.gz",
+        legend = f"{hla_ref_panel_indir}oneKG.legend.gz",
+        sample = f"{hla_ref_panel_indir}oneKG.samples"
     output:
-        ref_panel = "results/hla/imputation/ref_panel/"
+        ref_panel = f"{hla_ref_panel_outdir}HLA{{gene}}fullallelesfilledin.RData"
     resources:
         mem = '30G'
     threads: 4
@@ -138,7 +139,7 @@ rule prepare_hla_reference_panel:
         region_exclude_file = "/well/band/users/rbx225/software/QUILT/hla_ancillary_files/hlagenes.txt"
     shell: """
         {params.quilt_hla_prep} \
-        --outputdir={output.ref_panel} \
+        --outputdir={hla_ref_panel_outdir} \
         --nGen=100 \
         --hla_types_panel={input.hla_types_panel} \
         --ipd_igmt_alignments_zip_file={input.ipdigmt_filename} \
@@ -153,14 +154,14 @@ rule prepare_hla_reference_panel:
         --reference_legend_file={input.legend} \
         --reference_sample_file={input.sample} \
         --reference_exclude_samples_for_initial_phasing=FALSE \
-        --hla_regions_to_prepare="c('A','B','C','DQB1','DRB1')" \
+        --hla_regions_to_prepare="c({wildcards.gene})" \
         --nCores=6
     """
 
 rule hla_imputation:
     input:
         bamlist = rules.prepare_hla_bamlist.output.bamlist,
-        ref_dir = directory(hla_ref_panel_dir)
+        ref_dir = directory(hla_ref_panel_indir)
     output:
         vcf = "results/hla/imputation/genes/{hla_gene}/quilt.hla.output.combined.all.txt"
     resources:
