@@ -142,7 +142,7 @@ rule prepare_hla_reference_panel:
         --outputdir={hla_ref_panel_outdir} \
         --nGen=100 \
         --hla_types_panel={input.hla_types_panel} \
-        --ipd_igmt_alignments_zip_file={input.ipdigmt_filename} \
+        --ipd_igmt_alignments_zip_file={input.ipd_igmt} \
         --ref_fasta={input.fasta} \
         --refseq_table_file={params.refseq} \
         --full_regionStart=25587319 \
@@ -160,8 +160,7 @@ rule prepare_hla_reference_panel:
 
 rule hla_imputation:
     input:
-        bamlist = rules.prepare_hla_bamlist.output.bamlist,
-        ref_dir = directory(hla_ref_panel_indir)
+        bamlist = rules.prepare_hla_bamlist.output.bamlist
     output:
         vcf = "results/hla/imputation/genes/{hla_gene}/quilt.hla.output.combined.all.txt"
     resources:
