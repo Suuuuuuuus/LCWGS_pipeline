@@ -154,7 +154,6 @@ rule prepare_hla_reference_panel:
         --reference_haplotype_file={input.hap} \
         --reference_legend_file={input.legend} \
         --reference_sample_file={input.sample} \
-        --reference_exclude_samples_for_initial_phasing=FALSE \
         --hla_regions_to_prepare="c('A','B','C','DQB1','DRB1')" \
         --nCores=6
     """
