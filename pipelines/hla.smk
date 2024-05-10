@@ -116,13 +116,13 @@ rule prepare_hla_bamlist:
         ls results/hla/bams/*.bam > {output.bamlist}
     """
 
-hla_ref_panel_indir = "data/hla_ref_panel/new/"
+hla_ref_panel_indir = "results/hla/imputation/ref_panel/auxiliary_files/"
 hla_ref_panel_outdir = "results/hla/imputation/ref_panel/"
 
 rule prepare_hla_reference_panel:
     input:
         hla_types_panel = f"{hla_ref_panel_indir}20181129_HLA_types_full_1000_Genomes_Project_panel.txt",
-        ipd_igmt = f"{hla_ref_panel_indir}Alignments_Rel_3390.zip",
+        ipd_igmt = f"{hla_ref_panel_indir}IPD_IGMT.zip",
         fasta = "data/references/GRCh38_full_analysis_set_plus_decoy_hla.fa",
         genetic_map = f"{hla_ref_panel_indir}ACB/ACB-chr6-final.b38.txt.gz",
         hap = f"{hla_ref_panel_indir}oneKG.hap.gz",

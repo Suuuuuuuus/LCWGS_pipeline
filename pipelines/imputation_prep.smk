@@ -68,7 +68,7 @@ rule convert_ref:
         threads=1
     shell: """
         mkdir -p results/imputation/refs/
-        bcftools view --output-file {output.tmp_vcf} --output-type z --min-alleles 2 --max-alleles 2 --types snps {input.vcf}
+        bcftools norm -m+ {input.vcf} | bcftools view --output-file {output.tmp_vcf} --output-type z --min-alleles 2 --max-alleles 2 --types snps
         tabix {output.tmp_vcf}
         bcftools convert --haplegendsample results/imputation/refs/{params.panel}.chr{wildcards.chr} {output.tmp_vcf}
     """
