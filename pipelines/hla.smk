@@ -124,7 +124,7 @@ rule prepare_hla_reference_panel:
         hla_types_panel = f"{hla_ref_panel_indir}20181129_HLA_types_full_1000_Genomes_Project_panel.txt",
         ipd_igmt = f"{hla_ref_panel_indir}IPD_IGMT.zip",
         fasta = "data/references/GRCh38_full_analysis_set_plus_decoy_hla.fa",
-        genetic_map = f"{hla_ref_panel_indir}ACB/ACB-chr6-final.b38.txt.gz",
+        genetic_map = f"{hla_ref_panel_indir}YRI/YRI-chr6-final.b38.txt.gz",
         hap = f"{hla_ref_panel_indir}oneKG.hap.gz",
         legend = f"{hla_ref_panel_indir}oneKG.legend.gz",
         sample = f"{hla_ref_panel_indir}oneKG.samples"
