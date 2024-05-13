@@ -29,8 +29,8 @@ PANEL_NAME=config["PANEL_NAME"]
 
 rule short_read_all:
     input:
-        fastq1 = expand("data/sr_simulations/{rl}/{rl}.fastq1.gz", rl = read_legnths),
-        fastq2 = expand("data/sr_simulations/{rl}/{rl}.fastq2.gz", rl = read_legnths),
+        fastq1 = expand("data/sr_simulations/{rl}/{rl}.fastq1.gz", rl = read_lengths),
+        fastq2 = expand("data/sr_simulations/{rl}/{rl}.fastq2.gz", rl = read_lengths),
         bams = expand("data/sr_bams/{rl}.bam", rl = read_lengths),
         bais = expand("data/sr_bams/{rl}.bam.bai", rl = read_lengths)
 
