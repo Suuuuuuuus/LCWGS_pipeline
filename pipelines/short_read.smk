@@ -67,19 +67,19 @@ rule sr_alignment:
         fastq2 = rules.combine_fastq.output.fastq2,
         reference = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta"
     output:
-        bam = temp("data/sr_bams/tmp/{rl}.bam")
+        bam = temp("data/sr_bams/temp/{rl}.bam")
     resources:
         mem = '30G'
     threads: 6
     shell: """
-        mkdir -p data/sr_bams/tmp/
+        mkdir -p data/sr_bams/temp/
 
         bwa mem -t {threads} {input.reference} {input.fastq1} {input.fastq2} | samtools view -b -o {output.bam}
     """
 
 rule sr_clean_bam:
     input:
-        bam = "data/sr_bams/tmp/{rl}.bam"
+        bam = "data/sr_bams/temp/{rl}.bam"
     output:
         bam = "data/sr_bams/{rl}.bam",
         bai = "data/sr_bams/{rl}.bam.bai",
