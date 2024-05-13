@@ -47,6 +47,9 @@
     "lr_analysis_dir": "/well/band/users/rbx225/GAMCC/results/lr_imputation/",
     "lr_bamlist": "/well/band/users/rbx225/GAMCC/results/lr_imputation/bamlist.txt",
 
+    "sr_analysis_dir": "/well/band/users/rbx225/GAMCC/results/sr_imputation/",
+    "sr_bamlist": "/well/band/users/rbx225/GAMCC/results/sr_imputation/bamlist.txt",
+
     "mini_analysis_dir": "/well/band/users/rbx225/GAMCC/results/mini_imputation/",
     "mini_bamlist": "/well/band/users/rbx225/GAMCC/results/mini_imputation/bamlist.txt",
 
@@ -132,5 +135,15 @@
     ],
     "lr_hc_vcf_dir": [
         "/well/band/users/rbx225/GAMCC/results/lr_imputation/truth/"
+    ],
+
+    "sr_imputation_dir": [
+        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/sr_simulation/lc_oneKG--hc--snps_gw/"
+    ],
+    "sr_lc_vcf_dir" : [
+        "/well/band/users/rbx225/GAMCC/results/sr_imputation/vcfs/oneKG/"
+    ],
+    "sr_hc_vcf_dir": [
+        "/well/band/users/rbx225/GAMCC/results/sr_imputation/truth/"
     ]
 }
