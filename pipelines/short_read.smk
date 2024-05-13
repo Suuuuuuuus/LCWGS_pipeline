@@ -103,7 +103,7 @@ rule sr_clean_bam:
         -I {output.bam} \
         -O {output.tmp1} \
         -RGLB OGC \
-        -RGPL PacBio \
+        -RGPL Illumina \
         -RGPU unknown \
         -RGSM {params.sample}
 
