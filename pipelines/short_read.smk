@@ -89,12 +89,9 @@ rule sr_clean_bam:
     resources:
         mem = '50G'
     params:
-        tmpdir = "data/sr_bams/tmp/{rl}/",
         sample = "{rl}"
     shell: """
-        mkdir -p {params.tmpdir}
-
-        samtools sort -@6 -m 1G -T {params.tmpdir} -o {output.bam} {output.tmp1}
+        samtools sort -@6 -m 1G -o {output.bam} {output.tmp1}
 
         samtools index {output.bam}
 
@@ -110,7 +107,7 @@ rule sr_clean_bam:
         java -Xmx40G -Xms20G -jar /well/band/users/rbx225/conda/skylake/envs/sus/share/picard-slim-2.27.4-0/picard.jar \
         FixMateInformation -I {output.tmp1}
 
-        samtools sort -@6 -m 1G -T {params.tmpdir} -o {output.bam} {output.tmp1}
+        samtools sort -@6 -m 1G -o {output.bam} {output.tmp1}
 
         java -Xmx40G -Xms20G -jar /well/band/users/rbx225/conda/skylake/envs/sus/share/picard-slim-2.27.4-0/picard.jar \
         MarkDuplicates \
@@ -119,7 +116,7 @@ rule sr_clean_bam:
         -M {output.metric} \
         --REMOVE_DUPLICATES
 
-        samtools sort -@6 -m 1G -T {params.tmpdir} -o {output.bam} {output.tmp1}
+        samtools sort -@6 -m 1G -o {output.bam} {output.tmp1}
         samtools index {output.bam}
     """
 
