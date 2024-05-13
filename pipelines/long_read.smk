@@ -86,9 +86,6 @@ rule lr_alignment:
         samtools view -bS {output.sam} > {output.bam}
     """
 
-#         pbmm2 align {input.reference} {input.fastq} {output.bam} \
-        # --sort -j 4 -J 2
-
 rule lr_clean_bam:
     input:
         bams = expand("data/lr_bams/tmp/{hap}.{rl}.bam", hap = haplotypes, allow_missing = True)
@@ -101,13 +98,10 @@ rule lr_clean_bam:
     resources:
         mem = '50G'
     params:
-        tmpdir = "data/lr_bams/tmp/{rl}/",
         sample = "{rl}"
     shell: """
-        mkdir -p {params.tmpdir}
-
         samtools cat -o {output.tmp1} {input.bams}
-        samtools sort -@6 -m 1G -T {params.tmpdir} -o {output.bam} {output.tmp1}
+        samtools sort -@6 -m 1G -o {output.bam} {output.tmp1}
 
         samtools index {output.bam}
 
@@ -123,7 +117,7 @@ rule lr_clean_bam:
         java -Xmx40G -Xms20G -jar /well/band/users/rbx225/conda/skylake/envs/sus/share/picard-slim-2.27.4-0/picard.jar \
         FixMateInformation -I {output.tmp1}
 
-        samtools sort -@6 -m 1G -T {params.tmpdir} -o {output.bam} {output.tmp1}
+        samtools sort -@6 -m 1G -o {output.bam} {output.tmp1}
 
         java -Xmx40G -Xms20G -jar /well/band/users/rbx225/conda/skylake/envs/sus/share/picard-slim-2.27.4-0/picard.jar \
         MarkDuplicates \
@@ -132,7 +126,7 @@ rule lr_clean_bam:
         -M {output.metric} \
         --REMOVE_DUPLICATES
 
-        samtools sort -@6 -m 1G -T {params.tmpdir} -o {output.bam} {output.tmp1}
+        samtools sort -@6 -m 1G -o {output.bam} {output.tmp1}
         samtools index {output.bam}
     """
 
