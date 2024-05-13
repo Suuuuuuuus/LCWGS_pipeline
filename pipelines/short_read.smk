@@ -27,7 +27,7 @@ rule simulate_reads:
         fasta = "data/lr_fasta/HG02886.{hap}.fa"
     output:
         fastq1 = temp("data/sr_simulations/{rl}/tmp.{hap}.{rl}.bwa.read1.fastq.gz"),
-        fastq2 = temp("data/sr_simulations/{rl}/tmp.{hap}.{rl}.bwa.read1.fastq.gz")
+        fastq2 = temp("data/sr_simulations/{rl}/tmp.{hap}.{rl}.bwa.read2.fastq.gz")
     resources:
         mem = '30G'
     threads: 4
