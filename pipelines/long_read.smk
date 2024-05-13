@@ -74,13 +74,13 @@ rule lr_alignment:
         fastq = rules.simulate_reads.output.fastq,
         reference = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta" if config['concatenate'] else config["ref38"]
     output:
-        sam = temp("data/lr_bams/tmp/{hap}.{rl}.sam"),
-        bam = temp("data/lr_bams/tmp/{hap}.{rl}.bam")
+        sam = temp("data/lr_bams/{hap}.{rl}.sam"),
+        bam = temp("data/lr_bams/{hap}.{rl}.bam")
     resources:
         mem = '30G'
     threads: 6
     shell: """
-        mkdir -p data/lr_bams/tmp/
+        mkdir -p data/lr_bams/
 
         minimap2 -t {threads} -ax map-hifi {input.reference} {input.fastq} > {output.sam}
         samtools view -bS {output.sam} > {output.bam}
@@ -88,7 +88,7 @@ rule lr_alignment:
 
 rule lr_clean_bam:
     input:
-        bams = expand("data/lr_bams/tmp/{hap}.{rl}.bam", hap = haplotypes, allow_missing = True)
+        bams = expand("data/lr_bams/{hap}.{rl}.bam", hap = haplotypes, allow_missing = True)
     output:
         bam = "data/lr_bams/{rl}.bam",
         bai = "data/lr_bams/{rl}.bam.bai",
