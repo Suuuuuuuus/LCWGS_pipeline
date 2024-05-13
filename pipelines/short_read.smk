@@ -73,6 +73,8 @@ rule sr_alignment:
         metric = temp("data/sr_bams/{rl}.metrics.txt")
     resources:
         mem = '30G'
+    params: 
+        sample = "{rl}"
     threads: 6
     shell: """
         bwa mem -t {threads} {input.reference} {input.fastq1} {input.fastq2} | samtools view -b -o {output.tmp1}
