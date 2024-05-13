@@ -34,7 +34,8 @@ rule long_read_all:
     input:
         fastqs = expand("data/lr_simulations/{rl}/{hap}.{rl}.fastq.gz", rl = read_lengths, hap = haplotypes),
         bams = expand("data/lr_bams/{rl}.bam", rl = read_lengths),
-        bais = expand("data/lr_bams/{rl}.bam.bai", rl = read_lengths)
+        bais = expand("data/lr_bams/{rl}.bam.bai", rl = read_lengths),
+        fastq = expand("data/lr_simulations/{rl}/{rl}.fastq.gz", rl = read_lengths)
 
 REGIONS={}
 for chr in chromosome:

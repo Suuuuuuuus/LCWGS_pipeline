@@ -57,6 +57,18 @@ rule simulate_reads:
         touch {output.tmp}
     """
 
+rule combine_fastq:
+    input:
+        fastq = expand("data/lr_simulations/{rl}/{hap}.{rl}.fastq.gz", hap = haplotypes, allow_missing = True)
+    output:
+        fastq = "data/lr_simulations/{rl}/{rl}.fastq.gz"
+    resources:
+        mem = '50G'
+    shell: """
+        zcat data/lr_simulations/{wildcards.rl}/mat.{wildcards.rl}.fastq.gz > {output.fastq}
+        zcat data/lr_simulations/{wildcards.rl}/pat.{wildcards.rl}.fastq.gz >> {output.fastq}
+    """
+
 rule lr_alignment:
     input:
         fastq = rules.simulate_reads.output.fastq,
