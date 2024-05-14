@@ -15,9 +15,12 @@ samples_lc = read_tsv_as_lst(config['samples_lc'])
 chromosome = [i for i in range(1,23)]
 hla_genes = ['A', 'B', 'C', 'DRB1', 'DQB1']
 
-rule hla_all:
+rule hla_imputation_prep_all:
     input:
         chrs = expand("results/hla/bams/{id}.chr6.bam", id = samples_lc),
         bamlist = "results/hla/imputation/bamlist.txt",
-        ref_panel = expand("results/hla/imputation/ref_panel/HLA{gene}fullallelesfilledin.RData", gene = hla_genes),
+        ref_panel = expand("results/hla/imputation/ref_panel/HLA{gene}fullallelesfilledin.RData", gene = hla_genes)
+
+rule hla_imputation_all:
+    input:
         hla_imputed = expand("results/hla/imputation/genes/{hla_gene}/quilt.hla.output.combined.all.txt", hla_gene = hla_genes)
