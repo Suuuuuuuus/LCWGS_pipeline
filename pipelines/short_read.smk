@@ -365,10 +365,6 @@ rule copy_vcf_in_working_dir:
         mkdir -p {wildcards.imp_dir}graphs/
         mkdir -p {wildcards.imp_dir}vcf/all_samples/lc_vcf/
         mkdir -p {wildcards.imp_dir}vcf/all_samples/hc_vcf/
-        mkdir -p {wildcards.imp_dir}vcf/by_cc/lc_vcf/
-        mkdir -p {wildcards.imp_dir}vcf/by_cc/hc_vcf/
-        mkdir -p {wildcards.imp_dir}vcf/by_eth/lc_vcf/
-        mkdir -p {wildcards.imp_dir}vcf/by_eth/hc_vcf/
 
         for i in {{1..22}}
         do
