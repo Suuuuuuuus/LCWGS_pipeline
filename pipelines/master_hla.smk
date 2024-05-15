@@ -19,7 +19,7 @@ rule hla_imputation_prep_all:
     input:
         chrs = expand("results/hla/bams/{id}.chr6.bam", id = samples_lc),
         bamlist = "results/hla/imputation/bamlist.txt",
-        ref_panel = expand("results/hla/imputation/ref_panel/HLA{gene}fullallelesfilledin.RData", gene = hla_genes)
+        # ref_panel = expand("results/hla/imputation/ref_panel/HLA{gene}fullallelesfilledin.RData", gene = hla_genes)
 
 rule hla_imputation_all:
     input:

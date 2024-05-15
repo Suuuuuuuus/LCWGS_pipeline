@@ -47,30 +47,27 @@ rule hla_imputation_preprocess:
     input:
         bam = "data/bams/tmp/{id}.bam"
     output:
-        tmp = temp("results/hla/bams/{id}.tmp.bam"),
-        chr = temp("results/hla/bams/{id}.chr6.tmp.bam")
+        tmp = temp("data/hla_bams/{id}.tmp.bam"),
+        chr = temp("data/hla_bams/{id}.chr6.tmp.bam")
     params:
         verbosity = "ERROR",
         sample = "{id}"
     threads: 4
     resources: mem='30G'
     shell: """
-        mkdir -p results/hla/bams/
+        mkdir -p data/hla_bams/
 
         picard AddOrReplaceReadGroups \
         -VERBOSITY {params.verbosity} \
         -I {input.bam} \
-        -O {output.chr} \
+        -O {output.tmp} \
         -RGLB OGC \
         -RGPL ILLUMINA \
         -RGPU unknown \
         -RGSM {params.sample}
 
-        samtools sort -@4 -m 1G -o {output.tmp} {output.chr}
+        samtools sort -@4 -m 1G -o {output.chr} {output.tmp}
 
-        samtools index {output.tmp}
-
-        samtools view -o {output.chr} {output.tmp} chr6:25000000-35000000
         samtools index {output.chr}
     """
 
