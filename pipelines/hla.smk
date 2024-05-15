@@ -75,8 +75,8 @@ rule hla_clean_bam:
     input:
         bam = rules.hla_imputation_preprocess.output.chr
     output:
-        bam = "results/hla/bams/{id}.chr6.bam",
-        bai = "results/hla/bams/{id}.chr6.bam.bai",
+        bam = "data/hla_bams/{id}.chr6.bam",
+        bai = "data/hla_bams/{id}.chr6.bam.bai",
         tmp1 = temp("data/hla/bams/{id}.tmp1.bam"),
         metric = temp("data/hla/bams/{id}.metrics.txt")
     threads: 8
@@ -104,13 +104,13 @@ rule hla_clean_bam:
 
 rule prepare_hla_bamlist:
     input:
-        bams = expand("results/hla/bams/{id}.chr6.bam", id = samples_lc)
+        bams = expand("data/hla_bams/{id}.chr6.bam", id = samples_lc)
     output:
         bamlist = "results/hla/imputation/bamlist.txt"
     shell: """
         mkdir -p results/hla/imputation/
 
-        ls results/hla/bams/*.bam > {output.bamlist}
+        ls data/hla_bams/*.bam > {output.bamlist}
     """
 
 hla_ref_panel_indir = "results/hla/imputation/ref_panel/auxiliary_files/"
