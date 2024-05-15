@@ -117,7 +117,7 @@ rule prepare_hla_bamlist:
     """
 
 hla_ref_panel_indir = "results/hla/imputation/ref_panel/auxiliary_files/"
-hla_ref_panel_outdir = "results/hla/imputation/ref_panel/"
+hla_ref_panel_outdir = "results/hla/imputation/ref_panel/QUILT_ref_files/"
 hla_genes = ['A', 'B', 'C', 'DRB1', 'DQB1']
 
 rule prepare_hla_reference_panel:
