@@ -118,7 +118,11 @@ rule prepare_hla_bamlist:
 
 hla_ref_panel_indir = "results/hla/imputation/ref_panel/auxiliary_files/"
 hla_ref_panel_outdir = "results/hla/imputation/ref_panel/QUILT_ref_files/"
+hla_ref_panel_outdir_original = "results/hla/imputation/ref_panel/QUILT_ref_files_original/"
 hla_genes = ['A', 'B', 'C', 'DRB1', 'DQB1']
+
+bamlist_file = "results/hla/imputation/bamlist.txt"
+bamlist_test_file = "results/hla/imputation/test.txt"
 
 rule prepare_hla_reference_panel:
     input:
@@ -160,9 +164,8 @@ rule prepare_hla_reference_panel:
 
 rule hla_imputation:
     input:
-        # bamlist = rules.prepare_hla_bamlist.output.bamlist,
-        bamlist = "results/hla/imputation/test.txt",
-        ref_dir = hla_ref_panel_outdir
+        bamlist = bamlist_file,
+        ref_dir = hla_ref_panel_outdir_original
     output:
         vcf = "results/hla/imputation/genes/{hla_gene}/quilt.hla.output.combined.all.txt"
     resources:
