@@ -100,13 +100,13 @@ rule hla_clean_bam:
         --REMOVE_DUPLICATES
 
         samtools sort -@6 -m 1G -T {params.tmpdir} -o {output.bam} {output.tmp1}
-        
+
 # Filter chr6 and HLA contigs as well as recode QUAL strs
 
         samtools view -H {output.bam} > {output.sam}
         samtools view {output.bam} | \
         awk -F '\t' '($3~/chr6/||$3~/HLA/){{print}}' | \
-        awk 'BEGIN {{OFS="\t"}} {
+        awk 'BEGIN {{OFS="\t"}} {{
             if ($1 ~ /^@/) {{
                 print $0
             }} else {{
