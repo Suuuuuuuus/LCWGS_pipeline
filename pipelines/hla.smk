@@ -48,7 +48,7 @@ rule hla_imputation_preprocess:
         bam = "data/bams/tmp/{id}.bam"
     output:
         tmp = temp("data/hla_bams/{id}.tmp.bam"),
-        chr = temp("data/hla_bams/{id}.chr6.tmp.bam")
+        chr = "data/hla_bams/{id}.chr6.tmp.bam"
     params:
         verbosity = "ERROR",
         sample = "{id}"
