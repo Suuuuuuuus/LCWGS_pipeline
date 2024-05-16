@@ -103,9 +103,13 @@ rule hla_clean_bam:
 
 # Filter chr6 and HLA contigs as well as recode QUAL strs
 
-        samtools view -H {output.bam} > {output.sam}
+        samtools view -h {output.bam} chr6:26000000-34000000 > {output.sam}
         samtools view {output.bam} | \
-        awk -F '\t' '($3~/chr6/||$3~/HLA/){{print}}' | \
+        awk -F '\t' '($3~/HLA/){{print}} >> {output.sam}
+        samtools view -bS {output.sam} > {output.tmp1}
+
+        samtools view -H {output.bam} > {output.sam}
+        samtools view {output.tmp1} | \
         awk 'BEGIN {{OFS="\t"}} {{
             if ($1 ~ /^@/) {{
                 print $0
@@ -133,10 +137,11 @@ rule prepare_hla_bamlist:
         bams = expand("data/hla_bams/{id}.chr6.bam", id = samples_lc)
     output:
         bamlist = "results/hla/imputation/bamlist.txt"
+    localrule: True
     shell: """
         mkdir -p results/hla/imputation/
 
-        ls data/hla_bams/*.bam > {output.bamlist}
+        ls data/hla_bams/*.bam | head -n 1 > {output.bamlist}
     """
 
 hla_ref_panel_indir = "results/hla/imputation/ref_panel/auxiliary_files/"
