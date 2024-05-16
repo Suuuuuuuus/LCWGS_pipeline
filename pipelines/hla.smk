@@ -77,6 +77,7 @@ rule hla_clean_bam:
     output:
         bam = "data/hla_bams/{id}.chr6.bam",
         bai = "data/hla_bams/{id}.chr6.bam.bai",
+        sam = temp("data/hla_bams/{id}.chr6.sam"),
         tmp1 = temp("data/hla/bams/{id}.tmp1.bam"),
         metric = temp("data/hla/bams/{id}.metrics.txt")
     threads: 8
@@ -99,6 +100,31 @@ rule hla_clean_bam:
         --REMOVE_DUPLICATES
 
         samtools sort -@6 -m 1G -T {params.tmpdir} -o {output.bam} {output.tmp1}
+        
+# Filter chr6 and HLA contigs as well as recode QUAL strs
+
+        samtools view -H {output.bam} > {output.sam}
+        samtools view {output.bam} | \
+        awk -F '\t' '($3~/chr6/||$3~/HLA/){{print}}' | \
+        awk 'BEGIN {{OFS="\t"}} {
+            if ($1 ~ /^@/) {{
+                print $0
+            }} else {{
+                new_qual = ""
+                qual = $11
+                for (i = 1; i <= length(qual); i++) {{
+                    q = substr(qual, i, 1)
+                    if (q ~ /[@ABCDEF]/) {{
+                        q = "?"
+                    }}
+                    new_qual = new_qual q
+                }}
+                $11 = new_qual
+                print $0
+            }}
+        }}' >> {output.sam}
+        samtools view -bS {output.sam} > {output.bam}
+
         samtools index {output.bam}
     """
 
