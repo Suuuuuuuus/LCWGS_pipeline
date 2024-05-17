@@ -107,7 +107,7 @@ rule hla_clean_bam:
 
         samtools view -h {output.bam} chr6:26000000-34000000 > {output.sam}
         samtools view {output.bam} | \
-        awk -F '\t' '{{($3~/HLA/){{print}}}}' >> {output.sam}
+        awk -F '\t' '($3~/HLA/){{print}}' >> {output.sam}
         samtools view -bS {output.sam} > {output.tmp1}
 
         samtools view -H {output.bam} > {output.sam}
