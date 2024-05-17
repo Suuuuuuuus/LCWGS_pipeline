@@ -101,6 +101,8 @@ rule hla_clean_bam:
 
         samtools sort -@6 -m 1G -T {params.tmpdir} -o {output.bam} {output.tmp1}
 
+        samtools index {output.bam}
+
 # Filter chr6 and HLA contigs as well as recode QUAL strs
 
         samtools view -h {output.bam} chr6:26000000-34000000 > {output.sam}
