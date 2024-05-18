@@ -138,6 +138,27 @@ rule filter_lc_maf:
              save_name="lc.chr" + str(wildcards.chr) + ".vcf.gz"
              )
 
+rule filter_low_confidence_regions:
+    input:
+        filtered_vcf = f"results/wip_vcfs/{PANEL_NAME}/vanilla/high_info_high_af/lc.chr{{chr}}.vcf.gz"
+    output:
+        filtered_vcf = temp(f"results/wip_vcfs/{PANEL_NAME}/vanilla/high_info_high_af_high_conf/lc.chr{{chr}}.vcf"),
+        filtered_vcf_gz = f"results/wip_vcfs/{PANEL_NAME}/vanilla/high_info_high_af_high_conf/lc.chr{{chr}}.vcf.gz"
+    resources:
+        mem = '30G'
+    threads: 4
+    params:
+        bed = "data/bedgraph/strict.all.bed"
+    shell: """
+        mkdir -p results/wip_vcfs/{PANEL_NAME}/vanilla/high_info_high_af_high_conf/
+
+        gunzip -c {input.filtered_vcf} | grep '#' > {output.filtered_vcf}
+        tabix -R {params.bed} {input.filtered_vcf} >> {output.filtered_vcf}
+        bgzip {output.filtered_vcf}
+        tabix {output.filtered_vcf_gz}
+        touch {output.filtered_vcf}
+    """
+
 # The omni5m manifest has col3,4 to be chr and pos
 rule prepare_chip_manifest:
     input:
