@@ -27,7 +27,7 @@ rule index:
     shell: """
         bwa index {input.reference}
     """
-
+'''
 rule alignment:
     input:
         fastq1 = "data/fastq/{id}_1.fastq.gz",
@@ -42,7 +42,7 @@ rule alignment:
     shell: """
         bwa mem -t {threads} {input.reference} {input.fastq1} {input.fastq2} | samtools view -b -o {output.bam}
     """
-
+'''
 rule alignment_alt:
     input:
         fastq1 = "data/fastq/{id}_1.fastq.gz",
