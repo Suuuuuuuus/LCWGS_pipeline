@@ -19,6 +19,31 @@ chromosome = [i for i in range(1,23)]
 PANEL_NAME = config["PANEL_NAME"]
 imp_dir = config["imputation_dir"]
 
+# The omni5m manifest has col3,4 to be chr and pos
+rule prepare_chip_manifest:
+    input:
+        bpm = config['dense_bpm'],
+        egt = config['dense_egt']
+    output:
+        csv = "data/chip/omni5m/omni5m.csv",
+        pos = "data/chip/omni5m/omni5m_sites.tsv"
+    resources:
+        mem = '30G'
+    params:
+        picard = tools['picard']
+    shell: """
+        mkdir -p results/data/chip/omni5m/
+
+        {params.picard} BpmToNormalizationManifestCsv \
+        -I {input.bpm} \
+        -CF {input.egt} \
+        -O {output.csv}
+
+        cut -d ',' -f3,4 {output.csv} | \
+        sed 's/,/\t/g' | \
+        tail -n +2 > {output.pos}
+    """
+
 rule retain_chip_sites:
     input:
         lc_vcf = f"results/imputation/vcfs/{PANEL_NAME}/quilt.chr{{chr}}.vcf.gz",
@@ -197,31 +222,6 @@ rule filter_lc_sites_alt:
              outdir="results/wip_vcfs/" + params.panel + "/vanilla/high_info_high_af_high_conf_chip_sites/",
              save_name="lc.chr" + str(wildcards.chr) + ".vcf.gz"
              )
-
-# The omni5m manifest has col3,4 to be chr and pos
-rule prepare_chip_manifest:
-    input:
-        bpm = config['dense_bpm'],
-        egt = config['dense_egt']
-    output:
-        csv = "data/chip/omni5m/omni5m.csv",
-        pos = "data/chip/omni5m/omni5m_sites.tsv"
-    resources:
-        mem = '30G'
-    params:
-        picard = tools['picard']
-    shell: """
-        mkdir -p results/data/chip/omni5m/
-
-        {params.picard} BpmToNormalizationManifestCsv \
-        -I {input.bpm} \
-        -CF {input.egt} \
-        -O {output.csv}
-
-        cut -d ',' -f3,4 {output.csv} | \
-        sed 's/,/\t/g' | \
-        tail -n +2 > {output.pos}
-    """
 
 rule filter_lc_sites:
     input:
