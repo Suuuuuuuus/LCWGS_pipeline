@@ -159,6 +159,37 @@ rule filter_low_confidence_regions:
         touch {output.filtered_vcf}
     """
 
+rule convert_high_confidence_regions_to_chip:
+    input:
+        vcf = f"results/wip_vcfs/{PANEL_NAME}/vanilla/high_info_high_af_high_conf/lc.chr{{chr}}.vcf.gz"
+    output:
+        filtered_vcf = f"results/wip_vcfs/{PANEL_NAME}/vanilla/high_info_high_af_high_conf_chip_sites/lc.chr{{chr}}.vcf.gz"
+    resources:
+        mem = '60G'
+    threads: 8
+    params:
+        panel = PANEL_NAME,
+        chrom = "{chr}"
+    run:
+        common_cols = ['chr', 'pos']
+        lc_sample_prefix = 'GM'
+        chip_sample_prefix = 'GAM'
+        seq_sample_prefix = 'IDT'
+
+        imp_vcf = input.vcf
+
+        lc = lcwgsus.read_vcf(imp_vcf).sort_values(by=['chr', 'pos'])
+        metadata = lcwgsus.read_metadata(imp_vcf)
+
+        lc = lc.apply(lcwgsus.convert_to_chip_format, axis = 1)
+
+        lcwgsus.save_vcf(lc,
+             metadata,
+             prefix='chr',
+             outdir="results/wip_vcfs/" + params.panel + "/vanilla/high_info_high_af_high_conf_chip_sites/",
+             save_name="lc.chr" + str(wildcards.chr) + ".vcf.gz"
+             )
+
 # The omni5m manifest has col3,4 to be chr and pos
 rule prepare_chip_manifest:
     input:
