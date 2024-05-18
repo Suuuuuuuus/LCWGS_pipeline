@@ -22,6 +22,13 @@ rule hla_imputation_prep_all:
         aligned_bams = expand("data/hla_bams/{id}.chr6.tmp.bam", id = samples_lc),
         # ref_panel = expand("results/hla/imputation/ref_panel/HLA{gene}fullallelesfilledin.RData", gene = hla_genes)
 
+rule hla_imputation_prep_alt_all:
+    input:
+        chrs = expand("data/hla_bams_alt/{id}.chr6.bam", id = samples_lc),
+        # bamlist = "results/hla/imputation/bamlist.txt",
+        aligned_bams = expand("data/hla_bams_alt/{id}.chr6.tmp.bam", id = samples_lc),
+        # hla_imputed = expand("results/hla/imputation/genes/{hla_gene}/quilt.hla.output.combined.all.txt", hla_gene = hla_genes)
+
 rule hla_imputation_all:
     input:
         hla_imputed = expand("results/hla/imputation/genes/{hla_gene}/quilt.hla.output.combined.all.txt", hla_gene = hla_genes)

@@ -43,6 +43,20 @@ rule alignment:
         bwa mem -t {threads} {input.reference} {input.fastq1} {input.fastq2} | samtools view -b -o {output.bam}
     """
 
+rule alignment_alt:
+    input:
+        fastq1 = "data/fastq/{id}_1.fastq.gz",
+        fastq2 = "data/fastq/{id}_2.fastq.gz",
+        reference = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta"
+    output:
+        bam = temp("data/bams/tmp/{id}.bam")
+    resources:
+        mem = '10G'
+    threads: 8
+    shell: """
+        bwa mem -t {threads} {input.reference} {input.fastq1} {input.fastq2} | samtools view -b -o {output.bam}
+    """
+
 rule hla_imputation_preprocess:
     input:
         bam = "data/bams/tmp/{id}.bam"
@@ -56,6 +70,34 @@ rule hla_imputation_preprocess:
     resources: mem='30G'
     shell: """
         mkdir -p data/hla_bams/
+
+        picard AddOrReplaceReadGroups \
+        -VERBOSITY {params.verbosity} \
+        -I {input.bam} \
+        -O {output.tmp} \
+        -RGLB OGC \
+        -RGPL ILLUMINA \
+        -RGPU unknown \
+        -RGSM {params.sample}
+
+        samtools sort -@4 -m 1G -o {output.chr} {output.tmp}
+
+        samtools index {output.chr}
+    """
+
+rule hla_imputation_preprocess_alt:
+    input:
+        bam = "data/bams/tmp/{id}.bam"
+    output:
+        tmp = temp("data/hla_bams_alt/{id}.tmp.bam"),
+        chr = "data/hla_bams_alt/{id}.chr6.tmp.bam"
+    params:
+        verbosity = "ERROR",
+        sample = "{id}"
+    threads: 4
+    resources: mem='30G'
+    shell: """
+        mkdir -p data/hla_bams_alt/
 
         picard AddOrReplaceReadGroups \
         -VERBOSITY {params.verbosity} \
@@ -134,6 +176,67 @@ rule hla_clean_bam:
         samtools index {output.bam}
     """
 
+rule hla_clean_bam_alt:
+    input:
+        bam = rules.hla_imputation_preprocess_alt.output.chr
+    output:
+        bam = "data/hla_bams_alt/{id}.chr6.bam",
+        bai = "data/hla_bams_alt/{id}.chr6.bam.bai",
+        sam = temp("data/hla_bams_alt/{id}.chr6.sam"),
+        tmp1 = temp("data/hla_bams_alt/{id}.tmp1.bam"),
+        metric = temp("data/hla_bams_alt/{id}.metrics.txt")
+    threads: 8
+    resources:
+        mem = '50G'
+    params:
+        tmpdir = "data/hla_bams_alt/tmp/{id}/",
+        sample = "{id}"
+    shell: """
+        mkdir -p {params.tmpdir}
+
+        picard FixMateInformation -I {input.bam}
+
+        samtools sort -@6 -m 1G -T {params.tmpdir} -o {output.bam} {input.bam}
+
+        picard MarkDuplicates \
+        -I {output.bam} \
+        -O {output.tmp1} \
+        -M {output.metric} \
+        --REMOVE_DUPLICATES
+
+        samtools sort -@6 -m 1G -T {params.tmpdir} -o {output.bam} {output.tmp1}
+
+        samtools index {output.bam}
+
+        samtools view -h {output.bam} chr6:26000000-34000000 > {output.sam}
+        samtools view {output.bam} | \
+        awk -F '\t' '($3~/HLA/){{print}}' >> {output.sam}
+        samtools view -bS {output.sam} > {output.tmp1}
+
+        samtools view -H {output.bam} > {output.sam}
+        samtools view {output.tmp1} | \
+        awk 'BEGIN {{OFS="\t"}} {{
+            if ($1 ~ /^@/) {{
+                print $0
+            }} else {{
+                new_qual = ""
+                qual = $11
+                for (i = 1; i <= length(qual); i++) {{
+                    q = substr(qual, i, 1)
+                    if (q ~ /[@ABCDEF]/) {{
+                        q = "?"
+                    }}
+                    new_qual = new_qual q
+                }}
+                $11 = new_qual
+                print $0
+            }}
+        }}' >> {output.sam}
+        samtools view -bS {output.sam} > {output.bam}
+
+        samtools index {output.bam}
+    """
+
 rule prepare_hla_bamlist:
     input:
         bams = expand("data/hla_bams/{id}.chr6.bam", id = samples_lc)
@@ -144,6 +247,18 @@ rule prepare_hla_bamlist:
         mkdir -p results/hla/imputation/
 
         ls data/hla_bams/*.bam | head -n 1 > {output.bamlist}
+    """
+
+rule prepare_hla_bamlist_alt:
+    input:
+        bams = expand("data/hla_bams_alt/{id}.chr6.bam", id = samples_lc)
+    output:
+        bamlist = "results/hla/imputation/bamlist.txt"
+    localrule: True
+    shell: """
+        mkdir -p results/hla/imputation/
+
+        ls data/hla_bams_alt/*.bam | head -n 1 > {output.bamlist}
     """
 
 hla_ref_panel_indir = "results/hla/imputation/ref_panel/auxiliary_files/"
