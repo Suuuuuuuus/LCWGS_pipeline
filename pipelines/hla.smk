@@ -333,7 +333,7 @@ rule hla_imputation:
 rule hla_imputation_alt:
     input:
         bamlist = "results/hla/imputation/bamlist_alt.txt",
-        ref_dir = hla_ref_panel_outdir
+        ref_dir = hla_ref_panel_outdir_original
     output:
         vcf = "results/hla/imputation/genes/{hla_gene}/quilt.hla.output.combined.all.txt"
     resources:
