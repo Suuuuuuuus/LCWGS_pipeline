@@ -182,7 +182,6 @@ rule hla_clean_bam_alt:
     output:
         bam = "data/hla_bams_alt/{id}.chr6.bam",
         bai = "data/hla_bams_alt/{id}.chr6.bam.bai",
-        sam = temp("data/hla_bams_alt/{id}.chr6.sam"),
         tmp1 = temp("data/hla_bams_alt/{id}.tmp1.bam"),
         metric = temp("data/hla_bams_alt/{id}.metrics.txt")
     threads: 8
