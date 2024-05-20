@@ -782,3 +782,65 @@ rule plot_imputation_accuracy:
 
         dfs = [v[['AF', 'ccd_homref', 'ccd_homref_AC']], v[['AF', 'ccd_het', 'ccd_het_AC']], v[['AF', 'ccd_homalt', 'ccd_homalt_AC']]]
         plot_imputation_accuracy(dfs, title = 'Comparing different genotypes', save_fig = True, outdir = outdir_v, save_name = "ccd_by_genotype.png")
+
+
+rule hla_clean_bam_alt:
+    input:
+        bam = rules.hla_imputation_preprocess_alt.output.chr
+    output:
+        bam = "data/hla_bams_alt/{id}.chr6.bam",
+        bai = "data/hla_bams_alt/{id}.chr6.bam.bai",
+        sam = temp("data/hla_bams_alt/{id}.chr6.sam"),
+        tmp1 = temp("data/hla_bams_alt/{id}.tmp1.bam"),
+        metric = temp("data/hla_bams_alt/{id}.metrics.txt")
+    threads: 8
+    resources:
+        mem = '50G'
+    params:
+        tmpdir = "data/hla_bams_alt/tmp/{id}/",
+        sample = "{id}"
+    shell: """
+        mkdir -p {params.tmpdir}
+
+        picard FixMateInformation -I {input.bam}
+
+        samtools sort -@6 -m 1G -T {params.tmpdir} -o {output.bam} {input.bam}
+
+        picard MarkDuplicates \
+        -I {output.bam} \
+        -O {output.tmp1} \
+        -M {output.metric} \
+        --REMOVE_DUPLICATES
+
+        samtools sort -@6 -m 1G -T {params.tmpdir} -o {output.bam} {output.tmp1}
+
+        samtools index {output.bam}
+
+        samtools view -h {output.bam} chr6:26000000-34000000 > {output.sam}
+        samtools view {output.bam} | \
+        awk -F '\t' '($3~/HLA/){{print}}' >> {output.sam}
+        samtools view -bS {output.sam} > {output.tmp1}
+
+        samtools view -H {output.bam} > {output.sam}
+        samtools view {output.tmp1} | \
+        awk 'BEGIN {{OFS="\t"}} {{
+            if ($1 ~ /^@/) {{
+                print $0
+            }} else {{
+                new_qual = ""
+                qual = $11
+                for (i = 1; i <= length(qual); i++) {{
+                    q = substr(qual, i, 1)
+                    if (q ~ /[@ABCDEF]/) {{
+                        q = "?"
+                    }}
+                    new_qual = new_qual q
+                }}
+                $11 = new_qual
+                print $0
+            }}
+        }}' >> {output.sam}
+        samtools view -bS {output.sam} > {output.bam}
+
+        samtools index {output.bam}
+    """

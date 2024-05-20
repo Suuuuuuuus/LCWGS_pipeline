@@ -196,44 +196,19 @@ rule hla_clean_bam_alt:
 
         picard FixMateInformation -I {input.bam}
 
-        samtools sort -@6 -m 1G -T {params.tmpdir} -o {output.bam} {input.bam}
+        samtools sort -@6 -m 1G -T {params.tmpdir} -o {output.tmp1} {input.bam}
 
         picard MarkDuplicates \
-        -I {output.bam} \
-        -O {output.tmp1} \
+        -I {output.tmp1} \
+        -O {output.bam} \
         -M {output.metric} \
         --REMOVE_DUPLICATES
 
-        samtools sort -@6 -m 1G -T {params.tmpdir} -o {output.bam} {output.tmp1}
+        samtools sort -@6 -m 1G -T {params.tmpdir} -o {output.tmp1} {output.bam}
 
-        samtools index {output.bam}
+        samtools index {output.tmp1}
 
-        samtools view -h {output.bam} chr6:26000000-34000000 > {output.sam}
-        samtools view {output.bam} | \
-        awk -F '\t' '($3~/HLA/){{print}}' >> {output.sam}
-        samtools view -bS {output.sam} > {output.tmp1}
-
-        samtools view -H {output.bam} > {output.sam}
-        samtools view {output.tmp1} | \
-        awk 'BEGIN {{OFS="\t"}} {{
-            if ($1 ~ /^@/) {{
-                print $0
-            }} else {{
-                new_qual = ""
-                qual = $11
-                for (i = 1; i <= length(qual); i++) {{
-                    q = substr(qual, i, 1)
-                    if (q ~ /[@ABCDEF]/) {{
-                        q = "?"
-                    }}
-                    new_qual = new_qual q
-                }}
-                $11 = new_qual
-                print $0
-            }}
-        }}' >> {output.sam}
-        samtools view -bS {output.sam} > {output.bam}
-
+        samtools view -h {output.tmp1} -o {output.bam} chr6
         samtools index {output.bam}
     """
 
