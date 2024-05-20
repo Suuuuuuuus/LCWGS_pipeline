@@ -306,7 +306,7 @@ rule prepare_hla_reference_panel:
         --hla_regions_to_prepare="c('A','B','C','DQB1','DRB1')" \
         --nCores=6
     """
-
+'''
 rule hla_imputation:
     input:
         bamlist = bamlist_file,
@@ -329,7 +329,7 @@ rule hla_imputation:
         --quilt_hla_haplotype_panelfile={input.ref_dir}/quilt.hrc.hla.{wildcards.hla_gene}.haplotypes.RData \
         --dict_file={QUILT_HOME}hla_ancillary_files/GRCh38_full_analysis_set_plus_decoy_hla.dict
     """
-
+'''
 rule hla_imputation_alt:
     input:
         bamlist = "results/hla/imputation/bamlist_alt.txt",
