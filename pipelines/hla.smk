@@ -189,7 +189,8 @@ rule hla_clean_bam_alt:
         mem = '50G'
     params:
         tmpdir = "data/hla_bams_alt/tmp/{id}/",
-        sample = "{id}"
+        sample = "{id}",
+        picard = software['picard_plus']
     shell: """
         mkdir -p {params.tmpdir}
 
@@ -197,7 +198,7 @@ rule hla_clean_bam_alt:
 
         samtools sort -@6 -m 1G -T {params.tmpdir} -o {output.tmp1} {input.bam}
 
-        picard MarkDuplicates \
+        {params.picard} MarkDuplicates \
         -I {output.tmp1} \
         -O {output.bam} \
         -M {output.metric} \
