@@ -31,4 +31,9 @@ rule hla_imputation_prep_alt_all:
 
 rule hla_imputation_all:
     input:
-        hla_imputed = expand("results/hla/imputation/genes/{hla_gene}/quilt.hla.output.combined.all.txt", hla_gene = hla_genes)
+        hla_imputed = expand("results/hla/imputation/genes/{hla_gene}/quilt.hla.output.combined.all.txt", hla_gene = hla_genes)"results/hla/imputation/bamlist_alt.txt"
+
+rule hla_imputation_alt_all:
+    input:
+        hla_imputed = expand("results/hla/imputation/genes/{hla_gene}/quilt.hla.output.combined.all.txt", hla_gene = hla_genes),
+        bamlist = "results/hla/imputation/bamlist_alt.txt"

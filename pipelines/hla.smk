@@ -253,12 +253,12 @@ rule prepare_hla_bamlist_alt:
     input:
         bams = expand("data/hla_bams_alt/{id}.chr6.bam", id = samples_lc)
     output:
-        bamlist = "results/hla/imputation/bamlist.txt"
+        bamlist = "results/hla/imputation/bamlist_alt.txt"
     localrule: True
     shell: """
         mkdir -p results/hla/imputation/
 
-        ls data/hla_bams_alt/*.bam | head -n 1 > {output.bamlist}
+        ls data/hla_bams_alt/*.bam | head -n 10 > {output.bamlist}
     """
 
 hla_ref_panel_indir = "results/hla/imputation/ref_panel/auxiliary_files/"
@@ -310,6 +310,29 @@ rule prepare_hla_reference_panel:
 rule hla_imputation:
     input:
         bamlist = bamlist_file,
+        ref_dir = hla_ref_panel_outdir
+    output:
+        vcf = "results/hla/imputation/genes/{hla_gene}/quilt.hla.output.combined.all.txt"
+    resources:
+        mem = '30G'
+    threads: 4
+    params:
+        quilt_hla = tools['quilt_hla']
+    shell: """
+        mkdir -p results/hla/imputation/genes/{wildcards.hla_gene}/
+
+        {params.quilt_hla} \
+        --outputdir="results/hla/imputation/genes/{wildcards.hla_gene}/" \
+        --bamlist={input.bamlist} \
+        --region={wildcards.hla_gene} \
+        --prepared_hla_reference_dir={input.ref_dir} \
+        --quilt_hla_haplotype_panelfile={input.ref_dir}/quilt.hrc.hla.{wildcards.hla_gene}.haplotypes.RData \
+        --dict_file={QUILT_HOME}hla_ancillary_files/GRCh38_full_analysis_set_plus_decoy_hla.dict
+    """
+
+rule hla_imputation_alt:
+    input:
+        bamlist = "results/hla/imputation/bamlist_alt.txt",
         ref_dir = hla_ref_panel_outdir
     output:
         vcf = "results/hla/imputation/genes/{hla_gene}/quilt.hla.output.combined.all.txt"
