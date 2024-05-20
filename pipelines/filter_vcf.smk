@@ -184,6 +184,66 @@ rule filter_low_confidence_regions:
         touch {output.filtered_vcf}
     """
 
+rule filter_giab_low_confidence_regions:
+    input:
+        filtered_vcf = f"results/wip_vcfs/{PANEL_NAME}/vanilla/high_info_high_af/lc.chr{{chr}}.vcf.gz"
+    output:
+        filtered_vcf = temp(f"results/wip_vcfs/{PANEL_NAME}/vanilla/high_info_high_af_giab_high_conf/lc.chr{{chr}}.vcf"),
+        filtered_vcf_gz = f"results/wip_vcfs/{PANEL_NAME}/vanilla/high_info_high_af_giab_high_conf/lc.chr{{chr}}.vcf.gz"
+    resources:
+        mem = '30G'
+    threads: 4
+    params:
+        bed = "data/bedgraph/GIAB_not_in_difficult_regions.bed"
+    shell: """
+        mkdir -p results/wip_vcfs/{PANEL_NAME}/vanilla/high_info_high_af_giab_high_conf/
+
+        gunzip -c {input.filtered_vcf} | grep '#' > {output.filtered_vcf}
+        tabix -R {params.bed} {input.filtered_vcf} >> {output.filtered_vcf}
+        bgzip {output.filtered_vcf}
+        tabix {output.filtered_vcf_gz}
+        touch {output.filtered_vcf}
+    """
+
+rule filter_giab_lc_sites:
+    input:
+        vcf = f"results/wip_vcfs/{PANEL_NAME}/vanilla/high_info_high_af_giab_high_conf/lc.chr{{chr}}.vcf.gz",
+        sites = rules.prepare_chip_manifest.output.pos
+    output:
+        filtered_vcf = f"results/wip_vcfs/{PANEL_NAME}/vanilla/high_info_high_af_giab_high_conf_chip_sites/lc.chr{{chr}}.vcf.gz"
+    resources:
+        mem = '60G'
+    threads: 8
+    params:
+        panel = PANEL_NAME,
+        chrom = "{chr}"
+    run:
+        common_cols = ['chr', 'pos']
+        lc_sample_prefix = 'GM'
+        chip_sample_prefix = 'GAM'
+        seq_sample_prefix = 'IDT'
+
+        imp_vcf = input.vcf
+        chip_sites = input.sites
+
+        lc = lcwgsus.read_vcf(imp_vcf).sort_values(by=['chr', 'pos'])
+        metadata = lcwgsus.read_metadata(imp_vcf)
+
+        lc = lc.apply(lcwgsus.convert_to_chip_format, axis = 1)
+        
+        sites = pd.read_table(chip_sites, sep = '\t', names = common_cols, dtype = {'chr': str, 'pos': int}).drop_duplicates(ignore_index = True)
+        sites = sites[sites['chr'] == str(wildcards.chr)]
+        sites['chr'] = sites['chr'].astype(int)
+
+        lc_sites = pd.merge(lc, sites, on = common_cols)
+
+        lcwgsus.save_vcf(lc_sites,
+             metadata,
+             prefix='chr',
+             outdir="results/wip_vcfs/" + params.panel + "/vanilla/high_info_high_af_giab_high_conf_chip_sites/",
+             save_name="lc.chr" + str(wildcards.chr) + ".vcf.gz"
+             )
+
 rule filter_lc_sites_alt:
     input:
         vcf = f"results/wip_vcfs/{PANEL_NAME}/vanilla/high_info_high_af_high_conf/lc.chr{{chr}}.vcf.gz",
