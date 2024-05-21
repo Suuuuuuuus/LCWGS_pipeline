@@ -190,7 +190,7 @@ rule hla_clean_bam_alt:
     params:
         tmpdir = "data/hla_bams_alt/tmp/{id}/",
         sample = "{id}",
-        picard = software['picard_plus']
+        picard = tools['picard_plus']
     shell: """
         mkdir -p {params.tmpdir}
 
