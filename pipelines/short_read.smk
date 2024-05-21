@@ -12,15 +12,25 @@ import lcwgsus
 
 chromosome = [i for i in range(1,23)]
 
-read_lengths = ['151', '300']
+read_lengths = ['151-optimal', '151-real', '300-optimal', '300-real']
+means = ['500', '328.92', '1000', '750']
+stds = ['10', '12.69', '100', '20']
 haplotypes = ['mat', 'pat']
-coverage = '0.5'
+coverage = '0.6'
 
 def get_num_reads(wildcards):
     total = 3200000000
-    cov = 0.5
-    num = int(total*cov/(2*int(wildcards.rl)))
+    cov = 0.6
+    num = int(total*cov/(2*int(wildcards.rl.split('-')[0])))
     return num
+
+def get_mean_length(wildcards):
+    ix = read_lengths.index(wildcards.rl)
+    return int(means[ix])
+
+def get_mean_std(wildcards):
+    ix = read_lengths.index(wildcards.rl)
+    return int(stds[ix])
 
 rule simulate_reads:
     input:
@@ -33,14 +43,14 @@ rule simulate_reads:
     threads: 4
     params:
         num_reads = get_num_reads,
-        mean_length = 500,
-        sd_length = 50,
+        mean_length = get_mean_length,
+        sd_length = get_mean_std,
         outdir = "data/sr_simulations/{rl}/",
         output_prefix = "data/sr_simulations/{rl}/tmp.{hap}.{rl}"
     shell: """
         mkdir -p {params.outdir}
 
-        dwgsim -N {params.num_reads} -1 {wildcards.rl} -2 {wildcards.rl} -y 0 {input.fasta} {params.output_prefix}
+        dwgsim -N {params.num_reads} -1 {wildcards.rl} -2 {wildcards.rl} {input.fasta} {params.output_prefix}
     """
 
 rule combine_fastq:
