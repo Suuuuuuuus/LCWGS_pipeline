@@ -305,10 +305,13 @@ rule hla_imputation:
         --dict_file={QUILT_HOME}hla_ancillary_files/GRCh38_full_analysis_set_plus_decoy_hla.dict
     """
 '''
+
+bamlist = "results/hla/imputation/bamlist.txt"
+
 rule hla_imputation_alt:
     input:
-        bamlist = "results/hla/imputation/bamlist_alt.txt",
-        ref_dir = hla_ref_panel_outdir_original
+        bamlist = bamlist,
+        ref_dir = hla_ref_panel_outdir
     output:
         vcf = "results/hla/imputation/genes/{hla_gene}/quilt.hla.output.combined.all.txt"
     resources:
