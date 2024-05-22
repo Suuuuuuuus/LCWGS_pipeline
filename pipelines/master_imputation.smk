@@ -48,10 +48,10 @@ rule imputation_calculation_hc_all:
         impacc_h = expand("{imp_dir}impacc/all_samples/by_variant/all.h.impacc.tsv", imp_dir = imputation_dir),
         impacc_v = expand("{imp_dir}impacc/all_samples/by_sample/all.v.impacc.tsv", imp_dir = imputation_dir),
 
-        r2NRC_h_all = expand("{imp_dir}graphs/all_samples/by_variant/r2_NRC.png", imp_dir = imputation_dir),
-        ccd_h_all = expand("{imp_dir}graphs/all_samples/by_variant/ccd_by_genotype.png", imp_dir = imputation_dir),
-        r2NRC_v_all = expand("{imp_dir}graphs/all_samples/by_sample/r2_NRC.png", imp_dir = imputation_dir),
-        ccd_v_all = expand("{imp_dir}graphs/all_samples/by_sample/ccd_by_genotype.png", imp_dir = imputation_dir),
+        # r2NRC_h_all = expand("{imp_dir}graphs/all_samples/by_variant/r2_NRC.png", imp_dir = imputation_dir),
+        # ccd_h_all = expand("{imp_dir}graphs/all_samples/by_variant/ccd_by_genotype.png", imp_dir = imputation_dir),
+        # r2NRC_v_all = expand("{imp_dir}graphs/all_samples/by_sample/r2_NRC.png", imp_dir = imputation_dir),
+        # ccd_v_all = expand("{imp_dir}graphs/all_samples/by_sample/ccd_by_genotype.png", imp_dir = imputation_dir),
 
         lc_vcfs = expand("{imp_dir}vcf/all_samples/filtered_vcfs/lc.chr{chr}.vcf.gz", imp_dir = imputation_dir, chr = chromosome),
         hc_vcfs = expand("{imp_dir}vcf/all_samples/filtered_vcfs/hc.chr{chr}.vcf.gz", imp_dir = imputation_dir, chr = chromosome),
