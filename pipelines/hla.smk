@@ -220,6 +220,7 @@ rule prepare_hla_bamlist:
     localrule: True
     shell: """
         mkdir -p results/hla/imputation/
+        rm data/hla_bams/*tmp*
 
         ls data/hla_bams/*.bam | head -n 1 > {output.bamlist}
     """
@@ -232,6 +233,7 @@ rule prepare_hla_bamlist_alt:
     localrule: True
     shell: """
         mkdir -p results/hla/imputation/
+        rm data/hla_bams_alt/*tmp*
 
         ls data/hla_bams_alt/*.bam | head -n 10 > {output.bamlist}
     """
@@ -306,7 +308,7 @@ rule hla_imputation:
     """
 '''
 
-bamlist = "results/hla/imputation/bamlist.txt"
+bamlist = "results/hla/imputation/bamlist_alt.txt"
 
 rule hla_imputation_alt:
     input:
