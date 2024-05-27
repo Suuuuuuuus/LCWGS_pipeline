@@ -56,7 +56,7 @@ rule lift_over_malariaGen:
     params:
         picard = tools["picard_plus"]
     shell: """
-       {picard} LiftoverVcf \
+       {params.picard} LiftoverVcf \
        -I {input.vcf} \
        -O {output.lifted} \
        -CHAIN {input.chain} \
