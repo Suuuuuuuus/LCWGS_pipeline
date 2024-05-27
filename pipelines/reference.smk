@@ -62,7 +62,7 @@ rule lift_over_malariaGen:
         touch {output.tmp_vcf}
         
         {params.picard} LiftoverVcf \
-        -I {output.vcf}.gz \
+        -I {output.tmp_vcf}.gz \
         -O {output.lifted} \
         -CHAIN {input.chain} \
         -REJECT {output.rejected} \
