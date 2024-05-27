@@ -13,6 +13,7 @@ include: "alignment.smk"
 #include: "imputation.smk"
 
 include: "auxiliary.smk"
+include: "software.smk"
 configfile: "pipelines/config.json"
 
 import json
