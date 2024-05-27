@@ -49,17 +49,22 @@ rule lift_over_malariaGen:
         reference = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta",
         chain = "data/ref_panel/hg19ToHg38.over.chain.gz"
     output:
+        tmp_vcf = temp("data/ref_panel/{ref_outdir}/{ref_outdir}.chr{chr}.tmp.vcf"),
         lifted = "data/ref_panel/{ref_outdir}/{ref_outdir}.chr{chr}.vcf.gz",
         rejected = "data/ref_panel/{ref_outdir}/{ref_outdir}.chr{chr}.rejected.vcf.gz"
-    resources:
-        mem = '30G'
+    resources: mem = '50G'
+    threads: 4
     params:
         picard = tools["picard_plus"]
     shell: """
-       {params.picard} LiftoverVcf \
-       -I {input.vcf} \
-       -O {output.lifted} \
-       -CHAIN {input.chain} \
-       -REJECT {output.rejected} \
-       -R {input.reference}
+        gunzip -c {input.vcf} | sed 's/Type=String,Number=1/Number=1,Type=String/g' > {output.tmp_vcf}
+        bgzip {output.tmp_vcf}
+        touch {output.tmp_vcf}
+        
+        {params.picard} LiftoverVcf \
+        -I {output.vcf}.gz \
+        -O {output.lifted} \
+        -CHAIN {input.chain} \
+        -REJECT {output.rejected} \
+        -R {input.reference}
     """
