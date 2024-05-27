@@ -40,7 +40,8 @@ rule index_reference:
 ref_outdir = ["malariaGen_v1_b38"]
 
 def get_indir_vcf(wildcards):
-    return wildcards.ref_outdir.replace("38", "37")
+    d = wildcards.ref_outdir.replace("38", "37")
+    return "data/ref_panel/" + d + "/" + d + ".chr" + wildcards.chr + ".vcf.gz"
 
 rule lift_over_malariaGen:
     input:
