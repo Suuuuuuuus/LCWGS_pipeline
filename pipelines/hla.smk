@@ -320,7 +320,8 @@ rule hla_imputation_alt:
         mem = '30G'
     threads: 4
     params:
-        quilt_hla = tools['quilt_hla']
+        quilt_hla = tools['quilt_hla'],
+        fa_dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict" 
     shell: """
         mkdir -p results/hla/imputation/genes/{wildcards.hla_gene}/
 
@@ -330,5 +331,5 @@ rule hla_imputation_alt:
         --region={wildcards.hla_gene} \
         --prepared_hla_reference_dir={input.ref_dir} \
         --quilt_hla_haplotype_panelfile={input.ref_dir}/quilt.hrc.hla.{wildcards.hla_gene}.haplotypes.RData \
-        --dict_file={QUILT_HOME}hla_ancillary_files/GRCh38_full_analysis_set_plus_decoy_hla.dict
+        --dict_file={params.fa_dict}
     """
