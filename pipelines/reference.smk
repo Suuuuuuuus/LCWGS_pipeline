@@ -33,3 +33,30 @@ rule index_reference:
     shell: """
         bwa index {input.reference}
     """
+
+# ref_indir = ["malariaGen_v1_b37"]
+ref_outdir = ["malariaGen_v1_b38"]
+
+def get_indir_vcf(wildcards):
+    return wildcards.ref_outdir.replace("38", "37")
+
+rule lift_over_malariaGen:
+    input:
+        vcf = get_indir_vcf,
+        reference = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta",
+        chain = "data/ref_panel/hg19ToHg38.over.chain.gz"
+    output:
+        lifted = "data/ref_panel/{ref_outdir}/{ref_outdir}.chr{chr}.vcf.gz",
+        rejected = "data/ref_panel/{ref_outdir}/{ref_outdir}.chr{chr}.rejected.vcf.gz"
+    resources:
+        mem = '30G'
+    params:
+        picard = tools["picard_plus"]
+    shell: """
+       {picard} LiftoverVcf \
+       -I {input.vcf} \
+       -O {output.lifted} \
+       -CHAIN {input.chain} \
+       -REJECT {output.rejected} \
+       -R {input.reference}
+    """

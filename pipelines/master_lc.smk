@@ -1,9 +1,9 @@
-include: "preprocess.smk"
+# include: "preprocess.smk"
 #include: "fastqc.smk"
-#include: "reference.smk"
+include: "reference.smk"
 include: "alignment.smk"
 
-include: "rmdup.smk"
+# include: "rmdup.smk"
 #include: "subsample.smk"
 #include: "kmer.smk"
 #include: "dup_rate.smk"
@@ -39,13 +39,18 @@ rule preprocess_all:
         fwd_unpair = expand("data/fastq_cleaned/{id}_unpaired_1.fastq.gz", id = samples_lc),
         rev_unpair = expand("data/fastq_cleaned/{id}_unpaired_2.fastq.gz", id = samples_lc)
 
+ref_outdir = ["malariaGen_v1_b38"]
+
 rule reference_all:
     input:
         amb = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta.amb" if concatenate else "data/references/GRCh38.fa.amb",
         ann = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta.ann" if concatenate else "data/references/GRCh38.fa.ann",
         bwt = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta.bwt" if concatenate else "data/references/GRCh38.fa.bwt",
         pac = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta.pac" if concatenate else "data/references/GRCh38.fa.pac",
-        sa = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta.sa" if concatenate else "data/references/GRCh38.fa.sa"
+        sa = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta.sa" if concatenate else "data/references/GRCh38.fa.sa",
+
+        lifted = expand("data/ref_panel/{ref_outdir}/{ref_outdir}.chr{chr}.vcf.gz", ref_outdir = ref_outdir, chr = chromosome),
+        rejected = expand("data/ref_panel/{ref_outdir}/{ref_outdir}.chr{chr}.rejected.vcf.gz", ref_outdir = ref_outdir, chr = chromosome)
 
 rule fastqc_all:
     input:
