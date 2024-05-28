@@ -1,5 +1,6 @@
 include: "imputation_calculation.smk"
 include: "filter_vcf.smk"
+include: "post_server.smk"
 
 include: "auxiliary.smk"
 include: "software.smk"
@@ -102,3 +103,9 @@ rule imputation_calculation_all:
         # afs = expand("{imp_dir}vcf/all_samples/af/af.chr{chr}.tsv", imp_dir = imputation_dir, chr = chromosome),
         
         sumstats = expand("{imp_dir}summary_metrics_all.tsv", imp_dir = imputation_dir)
+
+two_stage_vcf_outdir = config["two_stage_vcf_outdir"]
+
+rule post_server_all:
+    input:
+        vcf = expand("{two_stage_vcf_outdir}chr6.vcf.gz", two_stage_vcf_outdir = two_stage_vcf_outdir)

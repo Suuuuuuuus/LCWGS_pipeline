@@ -151,5 +151,14 @@
     ],
     "sr_hc_vcf_dir": [
         "/well/band/users/rbx225/GAMCC/results/sr_imputation/truth/"
+    ],
+
+    "two_stage_vcf_indir": [
+        "results/two-stage-imputation/vanilla/oneKG_giab_topmed/vcf/",
+        "results/two-stage-imputation/vanilla/oneKG_topmed/vcf/"
+    ],
+    "two_stage_vcf_outdir": [
+        "results/two-stage-imputation/further_filter/oneKG_giab_topmed_chr6/",
+        "results/two-stage-imputation/further_filter/oneKG_topmed_chr6/"
     ]
 }
