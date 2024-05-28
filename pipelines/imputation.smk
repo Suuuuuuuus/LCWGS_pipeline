@@ -38,19 +38,19 @@ if os.path.exists(file):
 rule prepare_ref:
     input:
         json = "results/imputation/regions.json",
-        hap = f"results/imputation/refs/{PANEL_NAME}.chr{{chr}}.hap.gz",
-        legend = f"results/imputation/refs/{PANEL_NAME}.chr{{chr}}.legend.gz",
+        hap = f"results/imputation/refs/{PANEL_NAME}/{PANEL_NAME}.chr{{chr}}.hap.gz",
+        legend = f"results/imputation/refs/{PANEL_NAME}/{PANEL_NAME}.chr{{chr}}.legend.gz",
         recomb = f"results/imputation/{RECOMB_POP}/{RECOMB_POP}-chr{{chr}}-final.b38.txt.gz"
     output:
-        RData = f"results/imputation/refs/RData/ref_package.chr{{chr}}.{{regionStart}}.{{regionEnd}}.RData"
+        RData = f"results/imputation/refs/{PANEL_NAME}/RData/ref_package.chr{{chr}}.{{regionStart}}.{{regionEnd}}.RData"
     resources:
         mem_mb = 30000
     params:
         threads = 8
     shell: """
-        mkdir -p results/imputation/refs/RData/other/
+        mkdir -p results/imputation/refs/{PANEL_NAME}/RData/other/
         R -e 'library("data.table"); library("QUILT"); QUILT_prepare_reference( \
-        outputdir="results/imputation/refs/RData/other/", \
+        outputdir="results/imputation/refs/{PANEL_NAME}/RData/other/", \
         chr="chr{wildcards.chr}", \
         nGen={NGEN}, \
         reference_haplotype_file="{input.hap}" ,\
@@ -83,7 +83,7 @@ rule quilt_imputation:
         SEED=`echo $RANDOM`
         mkdir -p "results/imputation/vcfs/{params.panel}/regions/"
         R -e 'library("data.table"); library("QUILT"); QUILT( \
-        outputdir="results/imputation/refs/RData/other/", \
+        outputdir="results/imputation/refs/{params.panel}/RData/other/", \
         chr="chr{wildcards.chr}", \
         regionStart={wildcards.regionStart}, \
         regionEnd={wildcards.regionEnd}, \
@@ -150,13 +150,3 @@ rule concat_quilt_vcf:
         tabix {output.vcf}
         rm {output.vcf}.temp*
     """
-"""
-        if [[ -d {params.rename_samples_file} && {params.rename_samples} == "True"]]
-        then
-            mv {output.vcf} tmp.{output.vcf}
-            rm {output.vcf}.tbi
-            bcftools reheader -o {output.vcf} -s {params.rename_samples_file} tmp.{output.vcf}
-            tabix {output.vcf}
-            rm tmp.{output.vcf}
-        fi
-"""

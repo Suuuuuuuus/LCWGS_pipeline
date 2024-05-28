@@ -25,13 +25,15 @@ sys.path.append("/well/band/users/rbx225/software/lcwgsus/")
 import lcwgsus
 
 samples_lc = read_tsv_as_lst(config['samples_lc'])
-panels = config['panels']
-
 chromosome = [i for i in range(1,23)]
 
 concatenate = config['concatenate']
 RECOMB_POP=config["RECOMB_POP"]
 PANEL_NAME=config["PANEL_NAME"]
+panels = config['panels']
+
+# panels are a lsit of panels, whereas PANEL_NAME is the current panel in use
+# decide later whether to incorporate into the pipeline
 
 rule preprocess_all:
     input:
@@ -140,9 +142,9 @@ rule imputation_prep_all:
         bamlist = "results/imputation/bamlist.txt",
         recomb = expand("results/imputation/" + RECOMB_POP + "/" + RECOMB_POP + "-chr{chr}-final.b38.txt.gz", chr = chromosome),
         json = "results/imputation/regions.json",
-        hap = expand(f"results/imputation/refs/{PANEL_NAME}.chr{{chr}}.hap.gz", chr = chromosome),
-        legend = expand(f"results/imputation/refs/{PANEL_NAME}.chr{{chr}}.legend.gz", chr = chromosome),
-        samples = expand(f"results/imputation/refs/{PANEL_NAME}.chr{{chr}}.samples", chr = chromosome)
+        hap = expand(f"results/imputation/refs/{PANEL_NAME}/{PANEL_NAME}.chr{{chr}}.hap.gz", chr = chromosome),
+        legend = expand(f"results/imputation/refs/{PANEL_NAME}/{PANEL_NAME}.chr{{chr}}.legend.gz", chr = chromosome),
+        samples = expand(f"results/imputation/refs/{PANEL_NAME}/{PANEL_NAME}.chr{{chr}}.samples", chr = chromosome)
 
 vcfs_to_concat={}
 final_vcfs=[]

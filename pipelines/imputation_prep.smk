@@ -33,6 +33,7 @@ rule prepare_bamlist:
         then
             ls data/dedup_bams/*.bam > {output.bamlist}
         else
+            rm -r data/bams/*tmp*
             ls data/bams/*.bam > {output.bamlist}
         fi
     """
@@ -54,28 +55,28 @@ rule convert_recomb:
 
 rule convert_ref:
     input:
-        vcf = f"data/imputation_refs/{PANEL_NAME}.chr{{chr}}.vcf.gz",
-        tbi = f"data/imputation_refs/{PANEL_NAME}.chr{{chr}}.vcf.gz.tbi"
+        vcf = f"data/ref_panel/{PANEL_NAME}/{PANEL_NAME}.chr{{chr}}.vcf.gz",
+        tbi = f"data/ref_panel/{PANEL_NAME}/{PANEL_NAME}.chr{{chr}}.vcf.gz.tbi"
     output:
-        tmp_vcf = temp(f"results/imputation/refs/tmp.{PANEL_NAME}.chr{{chr}}.vcf.gz"),
-        hap = f"results/imputation/refs/{PANEL_NAME}.chr{{chr}}.hap.gz",
-        legend = f"results/imputation/refs/{PANEL_NAME}.chr{{chr}}.legend.gz",
-        samples = f"results/imputation/refs/{PANEL_NAME}.chr{{chr}}.samples"
+        tmp_vcf = temp(f"results/imputation/refs/{PANEL_NAME}/tmp.{PANEL_NAME}.chr{{chr}}.vcf.gz"),
+        hap = f"results/imputation/refs/{PANEL_NAME}/{PANEL_NAME}.chr{{chr}}.hap.gz",
+        legend = f"results/imputation/refs/{PANEL_NAME}/{PANEL_NAME}.chr{{chr}}.legend.gz",
+        samples = f"results/imputation/refs/{PANEL_NAME}/{PANEL_NAME}.chr{{chr}}.samples"
     wildcard_constraints:
         chr='\d{1,2}'
     params:
         panel = PANEL_NAME,
         threads=1
     shell: """
-        mkdir -p results/imputation/refs/
+        mkdir -p results/imputation/refs/{params.panel}/
         bcftools norm -m+ {input.vcf} | bcftools view --output-file {output.tmp_vcf} --output-type z --min-alleles 2 --max-alleles 2 --types snps
         tabix {output.tmp_vcf}
-        bcftools convert --haplegendsample results/imputation/refs/{params.panel}.chr{wildcards.chr} {output.tmp_vcf}
+        bcftools convert --haplegendsample results/imputation/refs/{params.panel}/{params.panel}.chr{wildcards.chr} {output.tmp_vcf}
     """
 
 rule determine_chunks:
     input:
-        legend = expand(f"results/imputation/refs/{PANEL_NAME}.chr{{chr}}.legend.gz", chr = chromosome),
+        legend = expand(f"results/imputation/refs/{PANEL_NAME}/{PANEL_NAME}.chr{{chr}}.legend.gz", chr = chromosome),
         code = "scripts/quilt_accessories/determine_chunks.R"
     output:
         json = "results/imputation/regions.json"
