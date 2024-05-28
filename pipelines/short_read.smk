@@ -26,11 +26,11 @@ def get_num_reads(wildcards):
 
 def get_mean_length(wildcards):
     ix = read_lengths.index(wildcards.rl)
-    return int(means[ix])
+    return round(means[ix])
 
 def get_mean_std(wildcards):
     ix = read_lengths.index(wildcards.rl)
-    return int(stds[ix])
+    return round(stds[ix])
 
 rule simulate_reads:
     input:
