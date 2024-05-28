@@ -958,3 +958,114 @@ rule rename_alignment_files:
 		mv {input.bai} {output.bai}
 	"""
 
+ule hla_clean_bam:
+    input:
+        bam = rules.hla_imputation_preprocess.output.chr
+    output:
+        bam = "data/hla_bams/{id}.chr6.bam",
+        bai = "data/hla_bams/{id}.chr6.bam.bai",
+        sam = temp("data/hla_bams/{id}.chr6.sam"),
+        tmp1 = temp("data/hla/bams/{id}.tmp1.bam"),
+        metric = temp("data/hla/bams/{id}.metrics.txt")
+    threads: 8
+    resources:
+        mem = '50G'
+    params:
+        tmpdir = "data/hla/bams/tmp/{id}/",
+        sample = "{id}"
+    shell: """
+        mkdir -p {params.tmpdir}
+
+        picard FixMateInformation -I {input.bam}
+
+        samtools sort -@6 -m 1G -T {params.tmpdir} -o {output.bam} {input.bam}
+
+        picard MarkDuplicates \
+        -I {output.bam} \
+        -O {output.tmp1} \
+        -M {output.metric} \
+        --REMOVE_DUPLICATES
+
+        samtools sort -@6 -m 1G -T {params.tmpdir} -o {output.bam} {output.tmp1}
+
+        samtools index {output.bam}
+
+# Filter chr6 and HLA contigs as well as recode QUAL strs
+
+        samtools view -h {output.bam} chr6:26000000-34000000 > {output.sam}
+        samtools view {output.bam} | \
+        awk -F '\t' '($3~/HLA/){{print}}' >> {output.sam}
+        samtools view -bS {output.sam} > {output.tmp1}
+
+        samtools view -H {output.bam} > {output.sam}
+        samtools view {output.tmp1} | \
+        awk 'BEGIN {{OFS="\t"}} {{
+            if ($1 ~ /^@/) {{
+                print $0
+            }} else {{
+                new_qual = ""
+                qual = $11
+                for (i = 1; i <= length(qual); i++) {{
+                    q = substr(qual, i, 1)
+                    if (q ~ /[@ABCDEF]/) {{
+                        q = "?"
+                    }}
+                    new_qual = new_qual q
+                }}
+                $11 = new_qual
+                print $0
+            }}
+        }}' >> {output.sam}
+        samtools view -bS {output.sam} > {output.bam}
+
+        samtools index {output.bam}
+    """
+
+rule hla_clean_bam_alt:
+    input:
+        bam = rules.hla_imputation_preprocess_alt.output.chr
+    output:
+        bam = "data/hla_bams_alt/{id}.chr6.bam",
+        bai = "data/hla_bams_alt/{id}.chr6.bam.bai",
+        tmp1 = temp("data/hla_bams_alt/{id}.tmp1.bam"),
+        metric = temp("data/hla_bams_alt/{id}.metrics.txt")
+    threads: 8
+    resources:
+        mem = '50G'
+    params:
+        tmpdir = "data/hla_bams_alt/tmp/{id}/",
+        sample = "{id}",
+        picard = tools['picard_plus']
+    shell: """
+        mkdir -p {params.tmpdir}
+
+        picard FixMateInformation -I {input.bam}
+
+        samtools sort -@6 -m 1G -T {params.tmpdir} -o {output.tmp1} {input.bam}
+
+        {params.picard} MarkDuplicates \
+        -I {output.tmp1} \
+        -O {output.bam} \
+        -M {output.metric} \
+        --REMOVE_DUPLICATES
+
+        samtools sort -@6 -m 1G -T {params.tmpdir} -o {output.tmp1} {output.bam}
+
+        samtools index {output.tmp1}
+
+        samtools view -h {output.tmp1} -o {output.bam} chr6
+        samtools index {output.bam}
+    """
+
+
+rule index:
+    input:
+        reference = "data/references/GRCh38_full_analysis_set_plus_decoy_hla.fa"
+    output:
+        indexed = "data/references/GRCh38_full_analysis_set_plus_decoy_hla.fa.amb"
+    resources:
+        mem = '50G'
+    threads: 8
+    shell: """
+        bwa index {input.reference}
+    """
