@@ -43,6 +43,7 @@ rule simulate_reads:
     threads: 4
     params:
         num_reads = get_num_reads,
+        read_length = int(wildcards.rl.split('-')[0]),
         mean_length = get_mean_length,
         sd_length = get_mean_std,
         outdir = "data/sr_simulations/{rl}/",
@@ -50,10 +51,10 @@ rule simulate_reads:
     shell: """
         mkdir -p {params.outdir}
         
-        if [ {params.mean_length} -eq 151 ]; then
-            dwgsim -N {params.num_reads} -1 {wildcards.rl} -2 {wildcards.rl} -e 0.01-0.1 -E 0.05-0.15 -d {params.mean_length} -s {params.sd_length} {input.fasta} {params.output_prefix}
+        if [ {params.read_length} -eq 151 ]; then
+            dwgsim -N {params.num_reads} -1 {params.read_length} -2 {params.read_length} -e 0.01-0.1 -E 0.05-0.15 -d {params.mean_length} -s {params.sd_length} {input.fasta} {params.output_prefix}
         else
-            dwgsim -N {params.num_reads} -1 {wildcards.rl} -2 {wildcards.rl} -e 0.005 -E 0.005 -d {params.mean_length} -s {params.sd_length} {input.fasta} {params.output_prefix}
+            dwgsim -N {params.num_reads} -1 {params.read_length} -2 {params.read_length} -e 0.005 -E 0.005 -d {params.mean_length} -s {params.sd_length} {input.fasta} {params.output_prefix}
         fi
     """
 
