@@ -15,9 +15,11 @@ import lcwgsus
 
 chromosome = [i for i in range(1,23)]
 
-read_lengths = ['151', '300']
+read_lengths = ['151-optimal', '151-real', '300-optimal', '300-real']
+means = ['500', '328.92', '1000', '750']
+stds = ['10', '12.69', '30', '50']
 haplotypes = ['mat', 'pat']
-coverage = '0.5'
+coverage = '0.6'
 
 QUILT_HOME = config["QUILT_HOME"]
 sr_analysis_dir = config["sr_analysis_dir"]

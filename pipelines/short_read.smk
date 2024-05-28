@@ -137,7 +137,7 @@ rule prepare_bamlist:
         bamlist = "results/sr_imputation/bamlist.txt"
     shell: """
         mkdir -p {sr_analysis_dir}
-
+        rm -r data/sr_bams/*tmp*
         ls data/sr_bams/*.bam > {output.bamlist}
     """
 
