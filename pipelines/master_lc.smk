@@ -1,7 +1,7 @@
-# include: "preprocess.smk"
+include: "preprocess.smk"
 #include: "fastqc.smk"
 include: "reference.smk"
-# include: "alignment.smk"
+include: "alignment.smk"
 
 # include: "rmdup.smk"
 #include: "subsample.smk"
