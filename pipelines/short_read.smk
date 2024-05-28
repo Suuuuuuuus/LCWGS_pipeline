@@ -21,7 +21,7 @@ coverage = '0.6'
 def get_num_reads(wildcards):
     total = 3200000000
     cov = 0.6
-    num = int(total*cov/(2*int(wildcards.rl.split('-')[0])))
+    num = round(total*cov/(2*int(wildcards.rl.split('-')[0])))
     return num
 
 def get_mean_length(wildcards):
