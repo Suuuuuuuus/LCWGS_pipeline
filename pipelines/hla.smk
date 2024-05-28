@@ -49,7 +49,7 @@ rule hla_clean_bam:
 
         samtools index {output.bam}
     """
-'''
+
 rule prepare_hla_bamlist:
     input:
         bams = expand("data/bams/{id}.bam", id = samples_lc)
@@ -62,7 +62,7 @@ rule prepare_hla_bamlist:
 
         ls data/bams/*.bam > {output.bamlist}
     """
-
+'''
 hla_ref_panel_indir = "results/hla/imputation/ref_panel/auxiliary_files/"
 hla_ref_panel_outdir = "results/hla/imputation/ref_panel/QUILT_ref_files/"
 # hla_ref_panel_outdir_original = "results/hla/imputation/ref_panel/QUILT_ref_files_original/"
