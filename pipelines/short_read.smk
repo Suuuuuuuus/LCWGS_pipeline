@@ -14,7 +14,7 @@ chromosome = [i for i in range(1,23)]
 
 read_lengths = ['151-optimal', '151-real', '300-optimal', '300-real']
 means = ['500', '328.92', '1000', '750']
-stds = ['10', '12.69', '100', '20']
+stds = ['10', '12.69', '30', '50']
 haplotypes = ['mat', 'pat']
 coverage = '0.6'
 
@@ -49,8 +49,12 @@ rule simulate_reads:
         output_prefix = "data/sr_simulations/{rl}/tmp.{hap}.{rl}"
     shell: """
         mkdir -p {params.outdir}
-
-        dwgsim -N {params.num_reads} -1 {wildcards.rl} -2 {wildcards.rl} {input.fasta} {params.output_prefix}
+        
+        if [ {params.mean_length} -eq 151 ]; then
+            dwgsim -N {params.num_reads} -1 {wildcards.rl} -2 {wildcards.rl} -e 0.01-0.1 -E 0.05-0.15 -d {params.mean_length} -s {params.sd_length} {input.fasta} {params.output_prefix}
+        else
+            dwgsim -N {params.num_reads} -1 {wildcards.rl} -2 {wildcards.rl} -e 0.005 -E 0.005 -d {params.mean_length} -s {params.sd_length} {input.fasta} {params.output_prefix}
+        fi
     """
 
 rule combine_fastq:
