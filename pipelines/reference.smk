@@ -60,7 +60,7 @@ rule lift_over_malariaGen:
     threads: 4
     params:
         picard = tools["picard_plus"],
-        c = int("{chr}"),
+        c = "{chr}",
         rename_chr = "data/ref_panel/{ref_outdir}/rename_chr{chr}.tsv"
     shell: """
         gunzip -c {input.vcf} | sed 's/Type=String,Number=1/Number=1,Type=String/g' > {output.tmp1_vcf}
