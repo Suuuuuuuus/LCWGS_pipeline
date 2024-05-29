@@ -16,41 +16,6 @@ samples_lc = read_tsv_as_lst(config['samples_lc'])
 chromosome = [i for i in range(1,23)]
 QUILT_HOME = config["QUILT_HOME"]
 
-'''
-rule hla_clean_bam:
-    input:
-        bam = rules.hla_imputation_preprocess.output.chr
-    output:
-        bam = "data/hla_bams/{id}.chr6.bam",
-        bai = "data/hla_bams/{id}.chr6.bam.bai",
-        sam = temp("data/hla_bams/{id}.chr6.sam"),
-        tmp1 = temp("data/hla/bams/{id}.tmp1.bam"),
-        metric = temp("data/hla/bams/{id}.metrics.txt")
-    threads: 8
-    resources:
-        mem = '50G'
-    params:
-        tmpdir = "data/hla/bams/tmp/{id}/",
-        sample = "{id}"
-    shell: """
-        mkdir -p {params.tmpdir}
-
-        picard FixMateInformation -I {input.bam}
-
-        samtools sort -@6 -m 1G -T {params.tmpdir} -o {output.bam} {input.bam}
-
-        picard MarkDuplicates \
-        -I {output.bam} \
-        -O {output.tmp1} \
-        -M {output.metric} \
-        --REMOVE_DUPLICATES
-
-        samtools sort -@6 -m 1G -T {params.tmpdir} -o {output.bam} {output.tmp1}
-
-        samtools index {output.bam}
-    """
-'''
-
 rule prepare_hla_bamlist:
     input:
         bams = expand("data/bams/{id}.bam", id = samples_lc)
@@ -66,7 +31,6 @@ rule prepare_hla_bamlist:
 
 hla_ref_panel_indir = "results/hla/imputation/ref_panel/auxiliary_files/"
 hla_ref_panel_outdir = "results/hla/imputation/ref_panel/QUILT_ref_files/"
-# hla_ref_panel_outdir_original = "results/hla/imputation/ref_panel/QUILT_ref_files_original/"
 hla_genes = ['A', 'B', 'C', 'DRB1', 'DQB1']
 
 rule prepare_hla_reference_panel:
