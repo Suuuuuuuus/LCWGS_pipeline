@@ -42,10 +42,7 @@ ref_outdirs = ["malariaGen_v1_b38"]
 def get_indir_vcf(wildcards):
     d = wildcards.ref_outdir.replace("38", "37")
     c = wildcards.chr
-    if int(c) < 10:
-        return "data/ref_panel/" + d + "/" + d + ".chr0" + c + ".vcf.gz"
-    else:
-        return "data/ref_panel/" + d + "/" + d + ".chr" + c + ".vcf.gz"
+    return "data/ref_panel/" + d + "/" + d + ".chr" + c + ".vcf.gz"
 
 rule lift_over_malariaGen:
     input:
