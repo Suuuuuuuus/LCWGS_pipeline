@@ -51,8 +51,8 @@ rule reference_all:
         bwt = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta.bwt" if concatenate else "data/references/GRCh38.fa.bwt",
         pac = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta.pac" if concatenate else "data/references/GRCh38.fa.pac",
         sa = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta.sa" if concatenate else "data/references/GRCh38.fa.sa",
-        lifted = expand("data/ref_panel/{ref_outdir}/{ref_outdir}.chr{chr}.vcf.gz", ref_outdir = ref_outdirs, chr = chromosome),
-        rejected = expand("data/ref_panel/{ref_outdir}/{ref_outdir}.chr{chr}.rejected.vcf.gz", ref_outdir = ref_outdirs, chr = chromosome)
+        lifted = expand("data/ref_panel/{ref_outdir}/{ref_outdir}.chr{chr}.vcf.gz", ref_outdir = ref_outdirs, chr = chromosome)
+        # rejected = expand("data/ref_panel/{ref_outdir}/{ref_outdir}.chr{chr}.rejected.vcf.gz", ref_outdir = ref_outdirs, chr = chromosome)
 
 rule fastqc_all:
     input:
