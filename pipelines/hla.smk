@@ -24,7 +24,6 @@ rule prepare_hla_bamlist:
     localrule: True
     shell: """
         mkdir -p results/hla/imputation/
-        rm data/bams/*tmp*
 
         ls data/bams/*.bam > {output.bamlist}
     """
