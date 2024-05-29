@@ -28,7 +28,7 @@ rule further_filter_vcf:
         mem = '30G'
     threads: 4
     shell:"""
-        mkdir -p {wilrcards.two_stage_vcf_outdir}
+        mkdir -p {wildcards.two_stage_vcf_outdir}
 
         bcftools view -r chr6:25000000-34000000 -Oz -o {output.vcf} {input.vcf}
     """
