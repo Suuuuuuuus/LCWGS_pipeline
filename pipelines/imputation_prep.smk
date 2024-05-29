@@ -33,7 +33,6 @@ rule prepare_bamlist:
         then
             ls data/dedup_bams/*.bam > {output.bamlist}
         else
-            rm -r data/bams/*tmp*
             ls data/bams/*.bam > {output.bamlist}
         fi
     """
