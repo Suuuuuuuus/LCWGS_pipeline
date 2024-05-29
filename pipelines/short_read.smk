@@ -43,7 +43,7 @@ rule simulate_reads:
     threads: 4
     params:
         num_reads = get_num_reads,
-        read_length = int("{rl}".split('-')[0]),
+        read_length = "{rl}".split('-')[0],
         mean_length = get_mean_length,
         sd_length = get_mean_std,
         outdir = "data/sr_simulations/{rl}/",
