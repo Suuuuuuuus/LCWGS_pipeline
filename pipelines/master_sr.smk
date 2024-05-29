@@ -27,7 +27,7 @@ RECOMB_POP=config["RECOMB_POP"]
 NGEN=config["NGEN"]
 WINDOWSIZE=config["WINDOWSIZE"]
 BUFFER=config["BUFFER"]
-PANEL_NAME=config["PANEL_NAME"]
+PANEL_NAME=config["hc_panel"]
 
 rule short_read_all:
     input:

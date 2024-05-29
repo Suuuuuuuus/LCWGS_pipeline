@@ -32,6 +32,9 @@ def get_mean_std(wildcards):
     ix = read_lengths.index(wildcards.rl)
     return round(float(stds[ix]))
 
+def get_read_length(wildcards):
+    return wildcards.rl.split('-')[0]
+
 rule simulate_reads:
     input:
         fasta = "data/lr_fasta/HG02886.{hap}.fa"
@@ -43,7 +46,7 @@ rule simulate_reads:
     threads: 4
     params:
         num_reads = get_num_reads,
-        read_length = "{rl}".split('-')[0],
+        read_length = get_read_length,
         mean_length = get_mean_length,
         sd_length = get_mean_std,
         outdir = "data/sr_simulations/{rl}/",
@@ -129,7 +132,7 @@ RECOMB_POP=config["RECOMB_POP"]
 NGEN=config["NGEN"]
 WINDOWSIZE=config["WINDOWSIZE"]
 BUFFER=config["BUFFER"]
-PANEL_NAME=config["PANEL_NAME"]
+PANEL_NAME=config["hc_panel"]
 
 rule prepare_bamlist:
     input:
