@@ -35,6 +35,7 @@ def get_mean_std(wildcards):
 def get_read_length(wildcards):
     return wildcards.rl.split('-')[0]
 
+# Note that I have to simulate with no random DNA, otherwise bwa mem won't be able to align those..
 rule simulate_reads:
     input:
         fasta = "data/lr_fasta/HG02886.{hap}.fa"
@@ -55,9 +56,23 @@ rule simulate_reads:
         mkdir -p {params.outdir}
         
         if [ {params.read_length} -eq 151 ]; then
-            dwgsim -N {params.num_reads} -1 {params.read_length} -2 {params.read_length} -e 0.01-0.1 -E 0.05-0.15 -d {params.mean_length} -s {params.sd_length} {input.fasta} {params.output_prefix}
+            dwgsim -N {params.num_reads} \
+            -1 {params.read_length} \
+            -2 {params.read_length} \
+            -e 0.02-0.1 -E 0.05-0.15 \
+            -d {params.mean_length} \
+            -s {params.sd_length} \
+            -y 0 \
+            {input.fasta} {params.output_prefix}
         else
-            dwgsim -N {params.num_reads} -1 {params.read_length} -2 {params.read_length} -e 0.005 -E 0.005 -d {params.mean_length} -s {params.sd_length} {input.fasta} {params.output_prefix}
+            dwgsim -N {params.num_reads} \
+            -1 {params.read_length} \
+            -2 {params.read_length} \
+            -e 0.005 -E 0.005 \
+            -d {params.mean_length} \
+            -s {params.sd_length} \
+            -y 0 \
+            {input.fasta} {params.output_prefix}
         fi
     """
 
@@ -92,7 +107,8 @@ rule sr_alignment:
     resources:
         mem = '30G'
     params: 
-        sample = "{rl}"
+        sample = "{rl}",
+        picard = tools["picard_plus"]
     threads: 6
     shell: """
         bwa mem -t {threads} {input.reference} {input.fastq1} {input.fastq2} | samtools view -b -o {output.tmp1}
@@ -110,13 +126,11 @@ rule sr_alignment:
         -RGPU unknown \
         -RGSM {params.sample}
 
-        java -Xmx40G -Xms20G -jar /well/band/users/rbx225/conda/skylake/envs/sus/share/picard-slim-2.27.4-0/picard.jar \
-        FixMateInformation -I {output.tmp1}
+        {params.picard} FixMateInformation -I {output.tmp1}
 
         samtools sort -@6 -m 1G -o {output.bam} {output.tmp1}
 
-        java -Xmx40G -Xms20G -jar /well/band/users/rbx225/conda/skylake/envs/sus/share/picard-slim-2.27.4-0/picard.jar \
-        MarkDuplicates \
+        {params.picard} MarkDuplicates \
         -I {output.bam} \
         -O {output.tmp1} \
         -M {output.metric} \

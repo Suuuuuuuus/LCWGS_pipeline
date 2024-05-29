@@ -44,7 +44,7 @@ def get_indir_vcf(wildcards):
     c = wildcards.chr
     return "data/ref_panel/" + d + "/" + d + ".chr" + c + ".vcf.gz"
 
-rule lift_over_malariaGen:
+rule lift_over_malariaGen_v1:
     input:
         vcf = get_indir_vcf,
         reference = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta",
@@ -79,4 +79,71 @@ rule lift_over_malariaGen:
         -CHAIN {input.chain} \
         -REJECT {output.rejected} \
         -R {input.reference}
+    """
+
+rule convert_shapeit_to_vcf:
+    input:
+        shapeit = "data/ref_panel/shapeit/MalariaGEN_combined_reference_panel_v3_chr{chr}_biallelic_snps.shapeit.haps.gz",
+        samples = "data/ref_panel/shapeit/malariaGen_v3_b37.samples"
+    output:
+        vcf = temp("data/ref_panel/malariaGen_v3_b37_alone/malariaGen_v3_b37_alone.chr{chr}.tmp.vcf.gz")
+    resources: mem = '50G'
+    threads: 4
+    params:
+        qctool = tools["qctool"]
+    shell: """
+        mkdir -p data/ref_panel/malariaGen_v3_b37_alone/
+
+        {params.qctool} \
+        -filetype shapeit_haplotypes \
+        -g {input.shapeit} \
+        -s {input.samples} \
+        -ofiletype vcf \
+        -og {output.vcf}
+    """
+
+rule lift_over_malariaGen_v3:
+    input:
+        vcf = "data/ref_panel/malariaGen_v3_b37_alone/malariaGen_v3_b37_alone.chr{chr}.tmp.vcf.gz",
+        reference = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta",
+        chain = "data/ref_panel/b37ToHg38.over.chain"
+    output:
+        tmp1_vcf = temp("data/ref_panel/malariaGen_v3_b38_alone/malariaGen_v3_b38_alone.chr{chr}.tmp1.vcf"),
+        lifted = "data/ref_panel/malariaGen_v3_b38_alone/malariaGen_v3_b38_alone.chr{chr}.vcf.gz",
+        rejected = "data/ref_panel/malariaGen_v3_b38_alone/malariaGen_v3_b38_alone.chr{chr}.rejected.vcf.gz"
+    resources: mem = '50G'
+    threads: 4
+    params:
+        picard = tools["picard_plus"]
+    shell: """
+        mkdir -p data/ref_panel/malariaGen_v3_b38_alone/
+
+        gunzip -c {input.vcf} | sed 's/Type=1,Number=String/Number=1,Type=String/g' > {output.tmp1_vcf}
+        bgzip {output.tmp1_vcf}
+        touch {output.tmp1_vcf}
+
+        {params.picard} LiftoverVcf \
+        -I {output.tmp1_vcf}.gz \
+        -O {output.lifted} \
+        -CHAIN {input.chain} \
+        -REJECT {output.rejected} \
+        -R {input.reference}
+    """
+
+rule merge_malariaGen_v3_with_oneKG:
+    input:
+        mg = "data/ref_panel/malariaGen_v3_b38_alone/malariaGen_v3_b38_alone.chr{chr}.vcf.gz",
+        oneKG = "data/ref_panel/oneKG/oneKG.chr{chr}.vcf.gz"
+    output:
+        vcf = "data/ref_panel/malariaGen_v3_b38/malariaGen_v3_b38.chr{chr}.vcf.gz",
+        tbi = "data/ref_panel/malariaGen_v3_b38/malariaGen_v3_b38.chr{chr}.vcf.gz.tbi"
+    resources: mem = '70G'
+    threads: 4
+    shell: """
+        mkdir -p data/ref_panel/malariaGen_v3_b38/
+        
+        bcftools merge {input.mg} {input.oneKG} -Ou | \
+        bcftools view -i 'GT!="mis"' -Oz -o {output.vcf}
+
+        tabix {output.vcf} 
     """

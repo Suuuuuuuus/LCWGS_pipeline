@@ -51,8 +51,11 @@ rule reference_all:
         bwt = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta.bwt" if concatenate else "data/references/GRCh38.fa.bwt",
         pac = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta.pac" if concatenate else "data/references/GRCh38.fa.pac",
         sa = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta.sa" if concatenate else "data/references/GRCh38.fa.sa",
-        lifted = expand("data/ref_panel/{ref_outdir}/{ref_outdir}.chr{chr}.vcf.gz", ref_outdir = ref_outdirs, chr = chromosome)
-        # rejected = expand("data/ref_panel/{ref_outdir}/{ref_outdir}.chr{chr}.rejected.vcf.gz", ref_outdir = ref_outdirs, chr = chromosome)
+
+        lifted_v1 = expand("data/ref_panel/{ref_outdir}/{ref_outdir}.chr{chr}.vcf.gz", ref_outdir = ref_outdirs, chr = chromosome),
+        lifted_v3_alone = expand("data/ref_panel/malariaGen_v3_b38_alone/malariaGen_v3_b38_alone.chr{chr}.vcf.gz", chr = chromosome),
+        vcf = expand("data/ref_panel/malariaGen_v3_b38/malariaGen_v3_b38.chr{chr}.vcf.gz", chr = chromosome),
+        tbi = expand("data/ref_panel/malariaGen_v3_b38/malariaGen_v3_b38.chr{chr}.vcf.gz.tbi", chr = chromosome)
 
 rule fastqc_all:
     input:
