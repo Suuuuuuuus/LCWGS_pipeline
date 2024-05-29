@@ -9,7 +9,7 @@ include: "alignment.smk"
 #include: "dup_rate.smk"
 #include: "coverage.smk"
 
-#include: "imputation_prep.smk"
+include: "imputation_prep.smk"
 #include: "imputation.smk"
 
 include: "auxiliary.smk"
