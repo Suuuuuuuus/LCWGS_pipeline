@@ -30,8 +30,13 @@ rule further_filter_vcf:
     shell:"""
         mkdir -p {wildcards.two_stage_vcf_outdir}
         tabix {input.vcf}
-
-        bcftools view -r chr6:25000000-34000000 -Oz -o {output.vcf} {input.vcf}
+        
+        bcftools view \
+        -r chr6:25000000-35000000 \
+        -i 'TYPED=1' \
+        -m2 -M2 -v snps \
+        -c1 \
+        -Oz -o {output.vcf} {input.vcf}
     """
 
 rule convert_chr6_to_chip_form:
