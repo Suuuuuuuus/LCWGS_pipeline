@@ -37,7 +37,7 @@ rule index_reference:
     """
 
 # ref_indir = ["malariaGen_v1_b37"]
-ref_outdir = ["malariaGen_v1_b38"]
+ref_outdirs = ["malariaGen_v1_b38"]
 
 def get_indir_vcf(wildcards):
     d = wildcards.ref_outdir.replace("38", "37")
@@ -53,7 +53,7 @@ rule lift_over_malariaGen:
         chain = "data/ref_panel/b37ToHg38.over.chain"
     output:
         tmp1_vcf = temp("data/ref_panel/{ref_outdir}/{ref_outdir}.chr{chr}.tmp1.vcf"),
-        tmp2_vcf = temp("data/ref_panel/{ref_outdir}/{ref_outdir}.chr{chr}.tmp2.vcf"),
+        tmp2_vcf = temp("data/ref_panel/{ref_outdir}/{ref_outdir}.chr{chr}.tmp2.vcf.gz"),
         lifted = "data/ref_panel/{ref_outdir}/{ref_outdir}.chr{chr}.vcf.gz",
         rejected = "data/ref_panel/{ref_outdir}/{ref_outdir}.chr{chr}.rejected.vcf.gz"
     resources: mem = '50G'
