@@ -29,7 +29,7 @@ rule further_filter_vcf:
     threads: 4
     shell:"""
         mkdir -p {wildcards.two_stage_vcf_outdir}
-        tabix {input.vcf}
+        tabix -f {input.vcf}
         
         bcftools view \
         -r chr6:25000000-35000000 \
