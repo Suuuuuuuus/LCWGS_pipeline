@@ -1,5 +1,5 @@
 include: "preprocess.smk"
-#include: "fastqc.smk"
+include: "fastqc.smk"
 include: "reference.smk"
 include: "alignment.smk"
 

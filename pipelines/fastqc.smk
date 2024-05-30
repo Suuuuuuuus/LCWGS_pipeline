@@ -37,8 +37,6 @@ rule fastqc_alt:
     params:
         outdir = "results/fastqc/"
     shell: """
-        mkdir -p results
-        mkdir -p results/fastqc
         mkdir -p {params.outdir}
         fastqc -q -o {params.outdir} {input.fastq1} {input.fastq2}
     """
