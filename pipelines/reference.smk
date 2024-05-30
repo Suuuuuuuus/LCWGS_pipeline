@@ -122,7 +122,8 @@ rule lift_over_malariaGen_v3:
         mkdir -p data/ref_panel/malariaGen_v3_b38_alone/
 
         gunzip -c {input.vcf} | sed 's/Type=1,Number=String/Number=1,Type=String/g' > {output.tmp1_vcf}
-        bgzip {output.tmp1_vcf}
+        if [ -f {output.tmp1_vcf}.gz]; then
+            rm {output.tmp1_vcf}.gz
         touch {output.tmp1_vcf}
 
         {params.picard} LiftoverVcf \
