@@ -72,9 +72,9 @@ rule lift_over_malariaGen_v1:
             echo "0{params.c}    {params.c}" > {params.rename_chr}
             bcftools annotate --rename-chrs {params.rename_chr} -Oz -o {output.tmp2_vcf} {output.tmp1_vcf}.gz
             rm {params.rename_chr}
-            tabix {output.tmp2_vcf}
         else
             cp {output.tmp1_vcf}.gz {output.tmp2_vcf}
+        tabix {output.tmp2_vcf}
         
         {params.picard} LiftoverVcf \
         -I {output.tmp2_vcf} \
