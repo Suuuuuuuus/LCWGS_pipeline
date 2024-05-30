@@ -65,6 +65,7 @@ rule lift_over_malariaGen_v1:
 
         if [ -f {output.tmp1_vcf}.gz]; then
             rm {output.tmp1_vcf}.gz
+        fi
         bgzip {output.tmp1_vcf}
         touch {output.tmp1_vcf}
 
@@ -74,6 +75,7 @@ rule lift_over_malariaGen_v1:
             rm {params.rename_chr}
         else
             cp {output.tmp1_vcf}.gz {output.tmp2_vcf}
+        fi
         tabix {output.tmp2_vcf}
         
         {params.picard} LiftoverVcf \
@@ -124,6 +126,7 @@ rule lift_over_malariaGen_v3:
         gunzip -c {input.vcf} | sed 's/Type=1,Number=String/Number=1,Type=String/g' > {output.tmp1_vcf}
         if [ -f {output.tmp1_vcf}.gz]; then
             rm {output.tmp1_vcf}.gz
+        fi
         touch {output.tmp1_vcf}
 
         {params.picard} LiftoverVcf \
