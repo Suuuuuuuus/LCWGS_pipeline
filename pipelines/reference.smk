@@ -62,6 +62,9 @@ rule lift_over_malariaGen_v1:
         rename_chr = "data/ref_panel/{ref_outdir}/rename_chr{chr}.tsv"
     shell: """
         gunzip -c {input.vcf} | sed 's/Type=String,Number=1/Number=1,Type=String/g' > {output.tmp1_vcf}
+
+        if [ -f {output.tmp1_vcf}.gz]; then
+            rm {output.tmp1_vcf}.gz
         bgzip {output.tmp1_vcf}
         touch {output.tmp1_vcf}
 
