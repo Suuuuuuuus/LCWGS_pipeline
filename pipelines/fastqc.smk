@@ -47,8 +47,7 @@ rule multiqc_lc:
         html2 = expand("results/fastqc/{id}_2_fastqc.html",id = samples_lc),
         zip = expand("results/fastqc/{id}_{read}_fastqc.zip",id = samples_lc, read = ['1', '2'])
     output:
-        html = "results/fastqc/multiqc_lc/multiqc_report.html",
-        directory("results/fastqc/multiqc_lc")
+        html = "results/fastqc/multiqc_lc/multiqc_report.html"
     threads: 1
     resources:
         mem = '10G'
