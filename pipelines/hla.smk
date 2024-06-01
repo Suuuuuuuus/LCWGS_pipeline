@@ -25,7 +25,7 @@ rule hla_clean_bam:
     shell: """
         mkdir -p data/hla_bams/
 
-        samtools view -h {input.bam} | awk 'BEGIN {OFS="\t"} {if ($1 ~ /^@/ || length($10) == 151) print $0}' | samtools view -bo {output.bam} -
+        samtools view -h {input.bam} | awk 'BEGIN {{OFS="\t"}} {{if ($1 ~ /^@/ || length($10) == 151) print $0}}' | samtools view -bo {output.bam} -
     """
 
 
