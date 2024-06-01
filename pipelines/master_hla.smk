@@ -47,4 +47,4 @@ three_stage_vcf_outdir = config["three_stage_vcf_outdir"]
 rule post_hla_all:
     input:
         two_stage_vcf = expand("{two_stage_vcf_outdir}chr6.vcf.gz", two_stage_vcf_outdir = two_stage_vcf_outdir),
-        three_stage_vcf = expand("{three_stage_vcf}chr6.vcf.gz", three_stage_vcf_outdir = three_stage_vcf_outdir)
+        three_stage_vcf = expand("{two_stage_vcf_outdir}chr6.vcf.gz", three_stage_vcf_outdir = three_stage_vcf_outdir)
