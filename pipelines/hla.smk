@@ -27,7 +27,8 @@ rule hla_clean_bam:
 
         samtools view -h {input.bam} | awk 'BEGIN {OFS="\t"} {if ($1 ~ /^@/ || length($10) == 151) print $0}' | samtools view -bo {output.bam} -
     """
-'''
+
+
 rule prepare_hla_bamlist:
     input:
         bams = expand("data/hla_bams/{id}.bam", id = samples_lc)
@@ -39,7 +40,7 @@ rule prepare_hla_bamlist:
 
         ls data/hla_bams/*.bam > {output.bamlist}
     """
-'''
+
 hla_ref_panel_indir = "results/hla/imputation/ref_panel/auxiliary_files/"
 hla_ref_panel_outdir = "results/hla/imputation/ref_panel/QUILT_ref_files/"
 hla_genes = ['A', 'B', 'C', 'DRB1', 'DQB1']
@@ -105,28 +106,3 @@ rule hla_imputation:
         --quilt_hla_haplotype_panelfile={input.ref_dir}/quilt.hrc.hla.{wildcards.hla_gene}.haplotypes.RData \
         --dict_file={params.fa_dict}
     """
-'''
-rule hla_imputation_alt:
-    input:
-        bamlist = "results/hla/imputation/bamlist.txt",
-        ref_dir = hla_ref_panel_outdir
-    output:
-        vcf = "results/hla/imputation/genes/{hla_gene}/quilt.hla.output.combined.all.txt"
-    resources:
-        mem = '30G'
-    threads: 4
-    params:
-        quilt_hla = tools['quilt_hla'],
-        fa_dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict" 
-    shell: """
-        mkdir -p results/hla/imputation/genes/{wildcards.hla_gene}/
-
-        {params.quilt_hla} \
-        --outputdir="results/hla/imputation/genes/{wildcards.hla_gene}/" \
-        --bamlist={input.bamlist} \
-        --region={wildcards.hla_gene} \
-        --prepared_hla_reference_dir={input.ref_dir} \
-        --quilt_hla_haplotype_panelfile={input.ref_dir}/quilt.hrc.hla.{wildcards.hla_gene}.haplotypes.RData \
-        --dict_file={params.fa_dict}
-    """
-'''
