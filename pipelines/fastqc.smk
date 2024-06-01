@@ -78,12 +78,12 @@ rule get_per_base_error_rate:
         mem = '10G'
     params:
         outdir = "results/fastqc/tmp/{id}_read{read}/",
-        data = "results/fastqc/{id}_{read}_fastqc/fastqc_data.txt"
+        data = "{id}_{read}_fastqc/fastqc_data.txt"
     shell: """
         mkdir -p {params.outdir}
 
         unzip -j {input.zip} {params.data} -d {params.outdir}
-        sed -n '15,52p' {params.data} | cut -f2 > {output.tsv}
+        sed -n '15,52p' {params.outdir}fastqc_data.txt | cut -f2 > {output.tsv}
     """
 
 def convert_phred_to_prob(num):
