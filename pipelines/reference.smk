@@ -50,7 +50,7 @@ rule lift_over_malariaGen_v1:
         reference = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta",
         chain = "data/ref_panel/b37ToHg38.over.chain"
     output:
-        tmp1_vcf = temp("data/ref_panel/{ref_outdir}/{ref_outdir}.chr{chr}.tmp1.vcf"),
+        tmp1_vcf = temp("data/ref_panel/{ref_outdir}/{ref_outdir}.chr{chr}.tmp1.vcf.gz"),
         tmp2_vcf = temp("data/ref_panel/{ref_outdir}/{ref_outdir}.chr{chr}.tmp2.vcf.gz"),
         lifted = "data/ref_panel/{ref_outdir}/{ref_outdir}.chr{chr}.vcf.gz",
         rejected = "data/ref_panel/{ref_outdir}/{ref_outdir}.chr{chr}.rejected.vcf.gz"
@@ -61,17 +61,11 @@ rule lift_over_malariaGen_v1:
         c = "{chr}",
         rename_chr = "data/ref_panel/{ref_outdir}/rename_chr{chr}.tsv"
     shell: """
-        gunzip -c {input.vcf} | sed 's/Type=String,Number=1/Number=1,Type=String/g' > {output.tmp1_vcf}
-
-        if [ -f {output.tmp1_vcf}.gz ]; then
-            rm {output.tmp1_vcf}.gz
-        fi
-        bgzip {output.tmp1_vcf}
-        touch {output.tmp1_vcf}
+        gunzip -c {input.vcf} | sed 's/Type=String,Number=1/Number=1,Type=String/g' | bcftools view -Oz -o {output.tmp1_vcf}
 
         if [ {params.c} -lt 10 ]; then
             echo "0{params.c}    {params.c}" > {params.rename_chr}
-            bcftools annotate --rename-chrs {params.rename_chr} -Oz -o {output.tmp2_vcf} {output.tmp1_vcf}.gz
+            bcftools annotate --rename-chrs {params.rename_chr} -Oz -o {output.tmp2_vcf} {output.tmp1_vcf}
             rm {params.rename_chr}
         else
             cp {output.tmp1_vcf}.gz {output.tmp2_vcf}
@@ -113,7 +107,7 @@ rule lift_over_malariaGen_v3:
         reference = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta",
         chain = "data/ref_panel/b37ToHg38.over.chain"
     output:
-        tmp1_vcf = temp("data/ref_panel/malariaGen_v3_b38_alone/malariaGen_v3_b38_alone.chr{chr}.tmp1.vcf"),
+        tmp1_vcf = temp("data/ref_panel/malariaGen_v3_b38_alone/malariaGen_v3_b38_alone.chr{chr}.tmp1.vcf.gz"),
         lifted = "data/ref_panel/malariaGen_v3_b38_alone/malariaGen_v3_b38_alone.chr{chr}.vcf.gz",
         rejected = "data/ref_panel/malariaGen_v3_b38_alone/malariaGen_v3_b38_alone.chr{chr}.rejected.vcf.gz"
     resources: mem = '50G'
@@ -123,14 +117,10 @@ rule lift_over_malariaGen_v3:
     shell: """
         mkdir -p data/ref_panel/malariaGen_v3_b38_alone/
 
-        gunzip -c {input.vcf} | sed 's/Type=1,Number=String/Number=1,Type=String/g' > {output.tmp1_vcf}
-        if [ -f {output.tmp1_vcf}.gz ]; then
-            rm {output.tmp1_vcf}.gz
-        fi
-        touch {output.tmp1_vcf}
+        gunzip -c {input.vcf} | sed 's/Type=1,Number=String/Number=1,Type=String/g' | bcftools view -Oz -o {output.tmp1_vcf}
 
         {params.picard} LiftoverVcf \
-        -I {output.tmp1_vcf}.gz \
+        -I {output.tmp1_vcf} \
         -O {output.lifted} \
         -CHAIN {input.chain} \
         -REJECT {output.rejected} \
