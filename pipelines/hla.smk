@@ -16,18 +16,30 @@ samples_lc = read_tsv_as_lst(config['samples_lc'])
 chromosome = [i for i in range(1,23)]
 QUILT_HOME = config["QUILT_HOME"]
 
+rule hla_clean_bam:
+    input:
+        bam = "data/bams/{id}.bam"
+    output:
+        bam = temp("data/hla_bams/{id}.bam")
+    resources: mem = '30G'
+    shell: """
+        mkdir -p data/hla_bams/
+
+        samtools view -h {input.bam} | awk 'BEGIN {OFS="\t"} {if ($1 ~ /^@/ || length($10) == 151) print $0}' | samtools view -bo {output.bam} -
+    """
+'''
 rule prepare_hla_bamlist:
     input:
-        bams = expand("data/bams/{id}.bam", id = samples_lc)
+        bams = expand("data/hla_bams/{id}.bam", id = samples_lc)
     output:
         bamlist = "results/hla/imputation/bamlist.txt"
     localrule: True
     shell: """
         mkdir -p results/hla/imputation/
 
-        ls data/bams/*.bam > {output.bamlist}
+        ls data/hla_bams/*.bam > {output.bamlist}
     """
-
+'''
 hla_ref_panel_indir = "results/hla/imputation/ref_panel/auxiliary_files/"
 hla_ref_panel_outdir = "results/hla/imputation/ref_panel/QUILT_ref_files/"
 hla_genes = ['A', 'B', 'C', 'DRB1', 'DQB1']
