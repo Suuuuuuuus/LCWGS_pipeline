@@ -78,7 +78,7 @@ rule get_per_base_error_rate:
         mem = '10G'
     params:
         outdir = "results/fastqc/tmp/{id}_read{read}/",
-        data = "{id}_{read}_fastqc/fastqc_data.txt"
+        data = "results/fastqc/{id}_{read}_fastqc/fastqc_data.txt"
     shell: """
         mkdir -p {params.outdir}
 
