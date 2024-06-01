@@ -153,19 +153,19 @@
         "/well/band/users/rbx225/GAMCC/results/sr_imputation/truth/"
     ],
     "two_stage_vcf_indir": [
-        "results/wip_vcfs/oneKG/vanilla/high_info_high_af_giab_high_conf_chip_sites/",
+        "results/wip_vcfs/oneKG/vanilla/high_info_high_af_high_conf_chip_sites/",
         "results/wip_vcfs/oneKG/vanilla/high_info_high_af_chip_sites/"
     ],
     "two_stage_vcf_outdir": [
-        "results/two-stage-hla/lc_oneKG_GIABHighConfidence/",
+        "results/two-stage-hla/lc_oneKG_strict/",
         "results/two-stage-hla/lc_oneKG/"
     ],
     "three_stage_vcf_indir": [
-        "results/two-stage-imputation/vanilla/oneKG_giab_topmed/vcf/",
+        "results/two-stage-imputation/vanilla/oneKG_strict_topmed/vcf/",
         "results/two-stage-imputation/vanilla/oneKG_topmed/vcf/"
     ],
     "three_stage_vcf_outdir": [
-        "results/two-stage-hla/lc_oneKG_GIABHighConfidence_topmed/",
+        "results/two-stage-hla/lc_oneKG_strict_topmed/",
         "results/two-stage-hla/lc_oneKG_topmed/"
     ]
 }
