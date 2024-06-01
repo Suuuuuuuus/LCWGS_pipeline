@@ -62,6 +62,7 @@ rule lift_over_malariaGen_v1:
         rename_chr = "data/ref_panel/{ref_outdir}/rename_chr{chr}.tsv"
     shell: """
         gunzip -c {input.vcf} | sed 's/Type=String,Number=1/Number=1,Type=String/g' | bcftools view -Oz -o {output.tmp1_vcf}
+        tabix -f {output.tmp1_vcf}
 
         if [ {params.c} -lt 10 ]; then
             echo "0{params.c}    {params.c}" > {params.rename_chr}
@@ -118,6 +119,7 @@ rule lift_over_malariaGen_v3:
         mkdir -p data/ref_panel/malariaGen_v3_b38_alone/
 
         gunzip -c {input.vcf} | sed 's/Type=1,Number=String/Number=1,Type=String/g' | bcftools view -Oz -o {output.tmp1_vcf}
+        tabix -f {output.tmp1_vcf}
 
         {params.picard} LiftoverVcf \
         -I {output.tmp1_vcf} \
@@ -127,6 +129,7 @@ rule lift_over_malariaGen_v3:
         -R {input.reference}
     """
 
+# ";NA;" is a common feature for a match in both ref panels
 rule merge_malariaGen_v3_with_oneKG:
     input:
         mg = "data/ref_panel/malariaGen_v3_b38_alone/malariaGen_v3_b38_alone.chr{chr}.vcf.gz",
@@ -140,7 +143,7 @@ rule merge_malariaGen_v3_with_oneKG:
         mkdir -p data/ref_panel/malariaGen_v3_b38/
         
         bcftools merge {input.mg} {input.oneKG} -Ou | \
-        bcftools view -i 'GT!="mis"' -Oz -o {output.vcf}
+        bcftools view -i 'ID~";NA;"' -Oz -o {output.vcf}
 
         tabix {output.vcf} 
     """
