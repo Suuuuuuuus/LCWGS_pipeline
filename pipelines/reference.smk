@@ -47,7 +47,7 @@ def get_indir_vcf(wildcards):
 rule lift_over_malariaGen_v1:
     input:
         vcf = get_indir_vcf,
-        reference = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta",
+        reference = "data/references/GRCh38_with_alt.fa",
         chain = "data/ref_panel/b37ToHg38.over.chain"
     output:
         tmp1_vcf = temp("data/ref_panel/{ref_outdir}/{ref_outdir}.chr{chr}.tmp1.vcf.gz"),
@@ -78,6 +78,7 @@ rule lift_over_malariaGen_v1:
         -O {output.lifted} \
         -CHAIN {input.chain} \
         -REJECT {output.rejected} \
+        -WMC true \
         -R {input.reference}
     """
 
@@ -105,7 +106,7 @@ rule convert_shapeit_to_vcf:
 rule lift_over_malariaGen_v3:
     input:
         vcf = "data/ref_panel/malariaGen_v3_b37_alone/malariaGen_v3_b37_alone.chr{chr}.tmp.vcf.gz",
-        reference = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta",
+        reference = "data/references/GRCh38_with_alt.fa",
         chain = "data/ref_panel/b37ToHg38.over.chain"
     output:
         tmp1_vcf = temp("data/ref_panel/malariaGen_v3_b38_alone/malariaGen_v3_b38_alone.chr{chr}.tmp1.vcf.gz"),
@@ -126,6 +127,7 @@ rule lift_over_malariaGen_v3:
         -O {output.lifted} \
         -CHAIN {input.chain} \
         -REJECT {output.rejected} \
+        -WMC true \
         -R {input.reference}
     """
 
