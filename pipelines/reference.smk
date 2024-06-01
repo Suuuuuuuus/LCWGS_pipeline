@@ -63,13 +63,13 @@ rule lift_over_malariaGen_v1:
     shell: """
         gunzip -c {input.vcf} | sed 's/Type=String,Number=1/Number=1,Type=String/g' > {output.tmp1_vcf}
 
-        if [ -f {output.tmp1_vcf}.gz]; then
+        if [ -f {output.tmp1_vcf}.gz ]; then
             rm {output.tmp1_vcf}.gz
         fi
         bgzip {output.tmp1_vcf}
         touch {output.tmp1_vcf}
 
-        if [{params.c} -lt 10]; then
+        if [ {params.c} -lt 10 ]; then
             echo "0{params.c}    {params.c}" > {params.rename_chr}
             bcftools annotate --rename-chrs {params.rename_chr} -Oz -o {output.tmp2_vcf} {output.tmp1_vcf}.gz
             rm {params.rename_chr}
@@ -124,7 +124,7 @@ rule lift_over_malariaGen_v3:
         mkdir -p data/ref_panel/malariaGen_v3_b38_alone/
 
         gunzip -c {input.vcf} | sed 's/Type=1,Number=String/Number=1,Type=String/g' > {output.tmp1_vcf}
-        if [ -f {output.tmp1_vcf}.gz]; then
+        if [ -f {output.tmp1_vcf}.gz ]; then
             rm {output.tmp1_vcf}.gz
         fi
         touch {output.tmp1_vcf}
