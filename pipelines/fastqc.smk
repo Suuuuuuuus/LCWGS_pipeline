@@ -1,4 +1,14 @@
 configfile: "pipelines/config.json"
+include: "auxiliary.smk"
+include: "software.smk"
+
+import json
+import pandas as pd
+import numpy as np
+import sys
+import os
+sys.path.append("/well/band/users/rbx225/software/lcwgsus/")
+import lcwgsus
 
 samples_lc = read_tsv_as_lst(config['samples_lc'])
 
@@ -55,3 +65,55 @@ rule multiqc_lc:
         outdir = "results/fastqc/multiqc_lc"
     shell:
         "multiqc {input.zip} --interactive -o {params.outdir}"
+
+samples_fv = read_tsv_as_lst("data/sample_tsvs/fv_gm_names.tsv")
+
+rule get_per_base_error_rate:
+    input:
+        zip = "results/fastqc/{id}_{read}_fastqc.zip"
+    output:
+        tsv = temp("results/fastqc/{id}_{read}_per_base_error_rate.tsv")
+    threads: 1
+    resources:
+        mem = '10G'
+    params:
+        outdir = "results/fastqc/tmp/{id}_read{read}/",
+        data = "{id}_{read}_fastqc/fastqc_data.txt"
+    shell: """
+        mkdir -p {params.outdir}
+
+        unzip -j {input.zip} {params.data} -d {params.outdir}
+        sed -n '15,52p' {params.data} | cut -f2 > {output.tsv}
+    """
+
+def convert_phred_to_prob(num):
+    return 10**(-0.1*float(num))
+
+rule calculate_average_per_base_error_rate:
+    input:
+        tsv1 = expand("results/fastqc/{id}_1_per_base_error_rate.tsv", id = samples_fv),
+        tsv2 = expand("results/fastqc/{id}_2_per_base_error_rate.tsv", id = samples_fv)
+    output:
+        tsv = "results/fastqc/per_base_error_rate.tsv"
+    threads: 1
+    resources:
+        mem = '10G'
+    run:
+        read1 = []
+        read2 = []
+
+        for i in input.tsv1:
+            ary1 = read_tsv_as_lst(i)
+            read1.append([convert_phred_to_prob(ary1[0]), convert_phred_to_prob(ary1[-1])])
+        for j in input.tsv2:
+            ary2 = read_tsv_as_lst(j)
+            read2.append([convert_phred_to_prob(ary2[0]), convert_phred_to_prob(ary2[-1])])
+        
+        read1 = np.array(read1)
+        read2 = np.array(read2)
+
+        r1_b1, r1_b151 = read1.mean(axis = 0)
+        r2_b1, r2_b151 = read2.mean(axis = 0)
+
+        res = pd.DataFrame({'start': [r1_b1, r2_b1], 'end': [r1_b151, r2_b151]})
+        res.to_csv(output.tsv, sep = '\t', index = False, header = True)
