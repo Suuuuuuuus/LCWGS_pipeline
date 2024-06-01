@@ -1,5 +1,6 @@
 include: "hla.smk"
 include: "alignment.smk"
+include: "post_hla.smk"
 
 include: "auxiliary.smk"
 include: "software.smk"
@@ -39,3 +40,11 @@ rule hla_imputation_all:
 #     input:
 #         hla_imputed = expand("results/hla/imputation/genes/{hla_gene}/quilt.hla.output.combined.all.txt", hla_gene = hla_genes),
 #         # bamlist = "results/hla/imputation/bamlist_alt.txt"
+
+two_stage_vcf_outdir = config["two_stage_vcf_outdir"]
+three_stage_vcf_outdir = config["three_stage_vcf_outdir"]
+
+rule post_hla_all:
+    input:
+        two_stage_vcf = expand("{two_stage_vcf_outdir}chr6.vcf.gz", two_stage_vcf_outdir = two_stage_vcf_outdir),
+        three_stage_vcf = expand("{three_stage_vcf}chr6.vcf.gz", three_stage_vcf_outdir = three_stage_vcf_outdir)
