@@ -114,7 +114,7 @@ rule lift_over_malariaGen_v3:
         chain = "data/ref_panel/b37ToHg38.over.chain"
     output:
         tmp1_vcf = temp("data/ref_panel/malariaGen_v3_b38_alone/malariaGen_v3_b38_alone.chr{chr}.tmp1.vcf.gz"),
-        tmp_vcf = temp("data/ref_panel/{ref_outdir}/{ref_outdir}.chr{chr}.tmp.vcf.gz"),
+        tmp_vcf = temp("data/ref_panel/malariaGen_v3_b38_alone/malariaGen_v3_b38_alone.chr{chr}.tmp.vcf.gz"),
         lifted = "data/ref_panel/malariaGen_v3_b38_alone/malariaGen_v3_b38_alone.chr{chr}.vcf.gz",
         rejected = "data/ref_panel/malariaGen_v3_b38_alone/malariaGen_v3_b38_alone.chr{chr}.rejected.vcf.gz"
     resources: mem = '50G'
