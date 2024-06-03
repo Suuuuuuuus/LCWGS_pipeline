@@ -62,12 +62,12 @@ rule convert_chr6_to_chip_form:
              )
         lcwgsus.rezip_vcf(output.vcf)
 
-two_stage_vcf_indir = config["two_stage_vcf_indir"]
-two_stage_vcf_outdir = config["two_stage_vcf_outdir"]
+two_stage_vcf_indir_lst = config["two_stage_vcf_indir"]
+two_stage_vcf_outdir_lst = config["two_stage_vcf_outdir"]
 
 def get_two_stage_indir_vcf(wildcards):
-    ix = two_stage_vcf_outdir.index(wildcards.two_stage_vcf_outdir)
-    return two_stage_vcf_indir[ix] + "lc.chr6.vcf.gz"
+    ix = two_stage_vcf_outdir_lst.index(wildcards.two_stage_vcf_outdir)
+    return two_stage_vcf_indir_lst[ix] + "lc.chr6.vcf.gz"
 
 rule filter_two_stage_vcf:
     input:
