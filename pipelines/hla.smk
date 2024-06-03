@@ -25,9 +25,10 @@ rule hla_clean_bam:
     shell: """
         mkdir -p data/hla_bams/
 
-        samtools view -h {input.bam} | awk 'BEGIN {{OFS="\t"}} {{if ($1 ~ /^@/ || length($10) == 151) print $0}}' | samtools view -bo {output.bam} -
+        samtools view -h {input.bam} | \
+        awk 'BEGIN {{OFS="\t"}} {{if ($1 ~ /^@/ || length($10) == 151) print $0}}' | \
+        samtools view -bo {output.bam} -
     """
-
 
 rule prepare_hla_bamlist:
     input:
@@ -85,6 +86,7 @@ rule prepare_hla_reference_panel:
 
 rule hla_imputation:
     input:
+        bams = expand("data/hla_bams/{id}.bam", id = samples_lc),
         bamlist = "results/hla/imputation/bamlist.txt",
         ref_dir = hla_ref_panel_outdir
     output:
