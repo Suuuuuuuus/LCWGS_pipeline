@@ -96,6 +96,7 @@ rule calculate_average_per_base_error_rate:
     output:
         tsv = "results/fastqc/per_base_error_rate.tsv"
     threads: 1
+    localrule: True
     resources:
         mem = '10G'
     run:
