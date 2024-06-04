@@ -108,7 +108,7 @@ rule calculate_average_per_base_error_rate:
         for j in input.tsv2:
             ary2 = read_tsv_as_lst(j)
             read2.append([convert_phred_to_prob(ary2[0]), convert_phred_to_prob(ary2[-1])])
-        
+
         read1 = np.array(read1)
         read2 = np.array(read2)
 
