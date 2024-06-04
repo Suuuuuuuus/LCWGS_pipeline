@@ -49,8 +49,8 @@ rule create_ref_dict:
     params:
         picard = tools["picard_plus"]
     shell: """
-        {params.picard} CreateSequenceDictionary \ 
-        -R {input.reference} \ 
+        {params.picard} CreateSequenceDictionary \
+        -R {input.reference} \
         -O {output.dictionary}
     """ 
 
