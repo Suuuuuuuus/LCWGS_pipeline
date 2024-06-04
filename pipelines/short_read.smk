@@ -12,10 +12,11 @@ import lcwgsus
 
 chromosome = [i for i in range(1,23)]
 
-read_lengths = ['151-optimal', '151-real', '300-optimal', '300-real']
-means = ['500', '328.92', '1000', '750']
-stds = ['10', '12.69', '30', '50']
-haplotypes = ['mat', 'pat']
+read_lengths = ['151-optimal', '151-long', '151-short', '151-real', '300-optimal', '300-long', '300-short', '300-real']
+means = ['500', '500', '328.92', '328.92', '1000', '1000', '830', '830']
+stds = ['10', '10', '12.69', '12.69', '50', '50', '200', '200']
+error1 = ['0', '0.001-0.002', '0', '0.001-0.002', '0', '0.002', '0', '0.002']
+error2 = ['0', '0.001-0.002', '0', '0.001-0.002', '0', '0.002', '0', '0.002']
 coverage = '0.6'
 
 def get_num_reads(wildcards):
@@ -35,6 +36,14 @@ def get_mean_std(wildcards):
 def get_read_length(wildcards):
     return wildcards.rl.split('-')[0]
 
+def get_error1(wildcards):
+    ix = read_lengths.index(wildcards.rl)
+    return error1[ix]
+
+def get_error2(wildcards):
+    ix = read_lengths.index(wildcards.rl)
+    return error2[ix]
+
 # Note that I have to simulate with no random DNA, otherwise bwa mem won't be able to align those..
 rule simulate_reads:
     input:
@@ -50,30 +59,21 @@ rule simulate_reads:
         read_length = get_read_length,
         mean_length = get_mean_length,
         sd_length = get_mean_std,
+        error1 = get_error1,
+        error2 = get_error2,
         outdir = "data/sr_simulations/{rl}/",
         output_prefix = "data/sr_simulations/{rl}/tmp.{hap}.{rl}"
     shell: """
         mkdir -p {params.outdir}
         
-        if [ {params.read_length} -eq 151 ]; then
-            dwgsim -N {params.num_reads} \
-            -1 {params.read_length} \
-            -2 {params.read_length} \
-            -e 0.02-0.1 -E 0.05-0.15 \
-            -d {params.mean_length} \
-            -s {params.sd_length} \
-            -y 0 \
-            {input.fasta} {params.output_prefix}
-        else
-            dwgsim -N {params.num_reads} \
-            -1 {params.read_length} \
-            -2 {params.read_length} \
-            -e 0.005 -E 0.005 \
-            -d {params.mean_length} \
-            -s {params.sd_length} \
-            -y 0 \
-            {input.fasta} {params.output_prefix}
-        fi
+        dwgsim -N {params.num_reads} \
+        -1 {params.read_length} \
+        -2 {params.read_length} \
+        -e {params.error1} -E {params.error2} \
+        -d {params.mean_length} \
+        -s {params.sd_length} \
+        -y 0 \
+        {input.fasta} {params.output_prefix}
     """
 
 rule combine_fastq:
