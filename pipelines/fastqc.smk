@@ -111,9 +111,9 @@ rule calculate_average_per_base_error_rate:
 
         read1 = np.array(read1)
         read2 = np.array(read2)
-
         r1_b1, r1_b151 = read1.mean(axis = 0)
         r2_b1, r2_b151 = read2.mean(axis = 0)
 
         res = pd.DataFrame({'start': [r1_b1, r2_b1], 'end': [r1_b151, r2_b151]})
+        print(res)
         res.to_csv(output.tsv, sep = '\t', index = False, header = True)
