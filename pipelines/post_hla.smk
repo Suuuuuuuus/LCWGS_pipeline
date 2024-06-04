@@ -73,7 +73,7 @@ rule filter_two_stage_vcf_tmp:
     input:
         vcf = get_two_stage_indir_vcf
     output:
-        vcf = temp("{two_stage_vcf_outdir}chr6.tmp.vcf.gz")
+        vcf = temp("{two_stage_vcf_outdir}chr6.tmp2.vcf.gz")
     resources:
         mem = '30G'
     threads: 4
@@ -85,7 +85,7 @@ rule filter_two_stage_vcf_tmp:
 
 rule filter_two_stage_vcf:
     input:
-        vcf = "{two_stage_vcf_outdir}chr6.tmp.vcf.gz"
+        vcf = "{two_stage_vcf_outdir}chr6.tmp2.vcf.gz"
     output:
         vcf = "{two_stage_vcf_outdir}chr6.vcf.gz"
     resources:
