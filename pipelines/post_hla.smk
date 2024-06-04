@@ -69,7 +69,7 @@ def get_two_stage_indir_vcf(wildcards):
     ix = two_stage_vcf_outdir_lst.index(wildcards.two_stage_vcf_outdir)
     return two_stage_vcf_indir_lst[ix] + "lc.chr6.vcf.gz"
 
-rule filter_two_stage_vcf:
+rule filter_two_stage_vcf_tmp:
     input:
         vcf = get_two_stage_indir_vcf
     output:
