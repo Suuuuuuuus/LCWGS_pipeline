@@ -39,6 +39,21 @@ rule index_reference:
 # ref_indir = ["malariaGen_v1_b37"]
 ref_outdirs = ["malariaGen_v1_b38"]
 
+rule create_ref_dict:
+    input:
+        reference = "data/references/GRCh38_with_alt.fa"
+    output:
+        dictionary = "data/references/GRCh38_with_alt.dict"
+    resources: mem = '50G'
+    threads: 4
+    params:
+        picard = tools["picard_plus"]
+    shell: """
+        {params.picard} CreateSequenceDictionary \ 
+        -R {input.reference} \ 
+        -O {output.dictionary}
+    """ 
+
 def get_indir_vcf(wildcards):
     d = wildcards.ref_outdir.replace("38", "37")
     c = wildcards.chr
@@ -48,7 +63,8 @@ rule lift_over_malariaGen_v1:
     input:
         vcf = get_indir_vcf,
         reference = "data/references/GRCh38_with_alt.fa",
-        chain = "data/ref_panel/b37ToHg38.over.chain"
+        chain = "data/ref_panel/b37ToHg38.over.chain",
+        dictionary = "data/references/GRCh38_with_alt.dict"
     output:
         tmp1_vcf = temp("data/ref_panel/{ref_outdir}/{ref_outdir}.chr{chr}.tmp1.vcf.gz"),
         tmp_vcf = temp("data/ref_panel/{ref_outdir}/{ref_outdir}.chr{chr}.tmp.vcf.gz"),
@@ -111,7 +127,8 @@ rule lift_over_malariaGen_v3:
     input:
         vcf = "data/ref_panel/malariaGen_v3_b37_alone/malariaGen_v3_b37_alone.chr{chr}.tmp.vcf.gz",
         reference = "data/references/GRCh38_with_alt.fa",
-        chain = "data/ref_panel/b37ToHg38.over.chain"
+        chain = "data/ref_panel/b37ToHg38.over.chain",
+        dictionary = "data/references/GRCh38_with_alt.dict"
     output:
         tmp1_vcf = temp("data/ref_panel/malariaGen_v3_b38_alone/malariaGen_v3_b38_alone.chr{chr}.tmp1.vcf.gz"),
         tmp_vcf = temp("data/ref_panel/malariaGen_v3_b38_alone/malariaGen_v3_b38_alone.chr{chr}.tmp.vcf.gz"),
