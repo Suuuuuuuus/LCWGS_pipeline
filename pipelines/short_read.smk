@@ -339,16 +339,20 @@ rule concat_quilt_vcf:
         rm {output.vcf}.temp*
     """
 
+def get_vcf_lst(wildcards):
+    vcfs = ["results/sr_imputation/truth/" + wildcards.rl + ".chr" + c + ".vcf.gz" for c in chromosome]
+    return vcfs
+
 rule prepare_sr_vcf:
     input:
         vcf = f"data/ref_panel/{PANEL_NAME}/{PANEL_NAME}.chr{{chr}}.vcf.gz"
     output:
-        vcfs = temp(expand("results/sr_imputation/truth/{rl}.chr{chr}.vcf.gz", rl = read_lengths, chr = chromosome)),
         truth = "results/sr_imputation/truth/short_read_truth.chr{chr}.vcf.gz",
         rename = temp("results/sr_imputation/truth/name.chr{chr}.txt")
     resources: mem = '10G'
     params:
-        sample = 'HG02886'
+        sample = 'HG02886',
+        vcfs = get_vcf_lst
     shell: """
         mkdir -p results/sr_imputation/truth/
         
@@ -363,7 +367,7 @@ rule prepare_sr_vcf:
             tabix results/sr_imputation/truth/$l.chr{wildcards.chr}.vcf.gz
         done
 
-        bcftools merge -Oz -o {output.truth} {output.vcfs}
+        bcftools merge -Oz -o {output.truth} {params.vcfs}
     """
 
 pair = ['lc', 'hc']
