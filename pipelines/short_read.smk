@@ -343,8 +343,7 @@ rule prepare_sr_vcf:
     input:
         vcf = f"data/ref_panel/{PANEL_NAME}/oneKG.chr{{chr}}.vcf.gz"
     output:
-        one = temp("results/sr_imputation/truth/151.chr{chr}.vcf.gz"),
-        three = temp("results/sr_imputation/truth/300.chr{chr}.vcf.gz"),
+        vcfs = temp(expand("results/sr_imputation/truth/{rl}.chr{chr}.vcf.gz"), rl = read_lengths),
         truth = "results/sr_imputation/truth/short_read_truth.chr{chr}.vcf.gz",
         rename = temp("results/sr_imputation/truth/name.chr{chr}.txt")
     resources: mem = '10G'
@@ -353,7 +352,7 @@ rule prepare_sr_vcf:
     shell: """
         mkdir -p results/sr_imputation/truth/
         
-        length=("151" "300")
+        length=("151-optimal" "151-long" "151-short" "151-real" "300-optimal" "300-long" "300-short" "300-real")
 
         for l in "${{length[@]}}"
         do
@@ -364,7 +363,7 @@ rule prepare_sr_vcf:
             tabix results/sr_imputation/truth/$l.chr{wildcards.chr}.vcf.gz
         done
 
-        bcftools merge -Oz -o {output.truth} {output.one} {output.three}
+        bcftools merge -Oz -o {output.truth} {output.vcfs}
     """
 
 pair = ['lc', 'hc']
@@ -394,7 +393,6 @@ rule copy_vcf_in_working_dir:
     shell: """
         mkdir -p {wildcards.imp_dir}vcf/
         mkdir -p {wildcards.imp_dir}impacc/
-        mkdir -p {wildcards.imp_dir}graphs/
         mkdir -p {wildcards.imp_dir}vcf/all_samples/lc_vcf/
         mkdir -p {wildcards.imp_dir}vcf/all_samples/hc_vcf/
 
