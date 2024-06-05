@@ -107,7 +107,8 @@ rule convert_shapeit_to_vcf:
         shapeit = "data/ref_panel/shapeit/MalariaGEN_combined_reference_panel_v3_chr{chr}_biallelic_snps.shapeit.haps.gz",
         samples = "data/ref_panel/shapeit/malariaGen_v3_b37.samples"
     output:
-        vcf = temp("data/ref_panel/malariaGen_v3_b37_alone/malariaGen_v3_b37_alone.chr{chr}.tmp.vcf.gz")
+        vcf = temp("data/ref_panel/malariaGen_v3_b37_alone/malariaGen_v3_b37_alone.chr{chr}.tmp.vcf.gz"),
+        tmp1 = temp("data/ref_panel/malariaGen_v3_b37_alone/malariaGen_v3_b37_alone.chr{chr}.tmp1.vcf.gz")
     resources: mem = '50G'
     threads: 4
     params:
@@ -119,8 +120,10 @@ rule convert_shapeit_to_vcf:
         -filetype shapeit_haplotypes \
         -g {input.shapeit} \
         -s {input.samples} \
-        -ofiletype vcf \
-        -og {output.vcf}
+        -og {output.tmp1}
+
+        gunzip -c {output.tmp1} | sed 's/Type=1,Number=String/Number=1,Type=String/g' | bcftools view -Oz -o {output.vcf}
+        tabix -f {output.vcf}
     """
 
 rule lift_over_malariaGen_v3:
@@ -141,10 +144,7 @@ rule lift_over_malariaGen_v3:
     shell: """
         mkdir -p data/ref_panel/malariaGen_v3_b38_alone/
 
-        gunzip -c {input.vcf} | sed 's/Type=1,Number=String/Number=1,Type=String/g' | bcftools view -Oz -o {output.tmp1_vcf}
-        tabix -f {output.tmp1_vcf}
-
-        bcftools view -Oz -o {output.tmp_vcf} {output.tmp1_vcf}
+        bcftools view -Oz -o {output.tmp_vcf} {input.vcf}
 
         {params.picard} LiftoverVcf \
         -I {output.tmp_vcf} \
