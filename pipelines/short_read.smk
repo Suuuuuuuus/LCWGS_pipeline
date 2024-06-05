@@ -340,7 +340,7 @@ rule concat_quilt_vcf:
     """
 
 def get_vcf_lst(wildcards):
-    vcfs = ["results/sr_imputation/truth/" + wildcards.rl + ".chr" + c + ".vcf.gz" for c in chromosome]
+    vcfs = ["results/sr_imputation/truth/" + rl + ".chr" + wildcards.chr + ".vcf.gz" for rl in read_lengths]
     return vcfs
 
 rule prepare_sr_vcf:
