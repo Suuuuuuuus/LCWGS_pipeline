@@ -66,7 +66,8 @@ rule fastqc_all:
         zip2 = expand("results/fastqc/{id}_2_fastqc.zip", id = samples_lc),
         multiqc_lc = "results/fastqc/multiqc_lc/multiqc_report.html",
 
-        error_rate_tsv = "results/fastqc/per_base_error_rate.tsv"
+        error_rate_tsv = "results/fastqc/per_base_error_rate.tsv",
+        bqsr_reports = expand("results/fastqc/BQSR_reports/{id}.BQSR.report", id = samples_lc)
 
 rule alignment_all:
     input:

@@ -118,3 +118,27 @@ rule calculate_average_per_base_error_rate:
         res = pd.DataFrame({'start': [r1_b1, r2_b1], 'end': [r1_b151, r2_b151]})
         print(res)
         res.to_csv(output.tsv, sep = '\t', index = False, header = True)
+
+rule get_lc_bqsr_report:
+    input:
+        bam = "data/bams/{id}.bam",
+        reference = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta",
+        fai = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta.fai",
+        dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict"
+    output:
+        bqsr_report = "results/call/BQSR_reports/{id}.BQSR.report"
+    params:
+        bqsr_known_sites = config["bqsr_known_sites"]
+    resources:
+        mem = '10G'
+    run:
+        cmd = ""
+        for file in params.bqsr_known_sites:
+            cmd = cmd + "--known-sites " + file + " "
+        shell("""
+            gatk --java-options "-Xmx8G" BaseRecalibrator \
+            -I {bam} \
+            -R {ref} \
+            -O {report} \
+            {cmd}
+        """.format(cmd = cmd, bam = input.bam, ref = input.reference, report = output.bqsr_report))
