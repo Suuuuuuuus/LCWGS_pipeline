@@ -126,7 +126,7 @@ rule get_lc_bqsr_report:
         fai = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta.fai",
         dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict"
     output:
-        bqsr_report = "results/call/BQSR_reports/{id}.BQSR.report"
+        bqsr_report = "results/fastqc/BQSR_reports/{id}.BQSR.report"
     params:
         bqsr_known_sites = config["bqsr_known_sites"]
     resources:
