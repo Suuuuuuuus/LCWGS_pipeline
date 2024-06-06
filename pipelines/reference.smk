@@ -71,10 +71,10 @@ rule lift_over_malariaGen_v1:
         tmp2_vcf = temp("data/ref_panel/{ref_outdir}/{ref_outdir}.chr{chr}.tmp2.vcf.gz"),
         lifted = "data/ref_panel/{ref_outdir}/{ref_outdir}.chr{chr}.vcf.gz",
         rejected = "data/ref_panel/{ref_outdir}/{ref_outdir}.chr{chr}.rejected.vcf.gz"
-    resources: mem = '50G'
+    resources: mem = '80G'
     threads: 4
     params:
-        picard = tools["picard_plus"],
+        picard = tools["picard_pplus"],
         c = "{chr}",
         rename_chr = "data/ref_panel/{ref_outdir}/rename_chr{chr}.tsv"
     shell: """
@@ -137,10 +137,10 @@ rule lift_over_malariaGen_v3:
         tmp_vcf = temp("data/ref_panel/malariaGen_v3_b38_alone/malariaGen_v3_b38_alone.chr{chr}.tmp.vcf.gz"),
         lifted = "data/ref_panel/malariaGen_v3_b38_alone/malariaGen_v3_b38_alone.chr{chr}.vcf.gz",
         rejected = "data/ref_panel/malariaGen_v3_b38_alone/malariaGen_v3_b38_alone.chr{chr}.rejected.vcf.gz"
-    resources: mem = '50G'
+    resources: mem = '80G'
     threads: 4
     params:
-        picard = tools["picard_plus"]
+        picard = tools["picard_pplus"]
     shell: """
         mkdir -p data/ref_panel/malariaGen_v3_b38_alone/
 
