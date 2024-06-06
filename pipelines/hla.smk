@@ -94,8 +94,8 @@ rule hla_imputation:
     output:
         vcf = "results/hla/imputation/genes/{hla_gene}/quilt.hla.output.combined.all.txt"
     resources:
-        mem = '30G'
-    threads: 4
+        mem = '50G'
+    threads: 6
     params:
         quilt_hla = tools['quilt_hla'],
         fa_dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict"
