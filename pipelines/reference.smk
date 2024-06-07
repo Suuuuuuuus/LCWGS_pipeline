@@ -71,10 +71,10 @@ rule lift_over_malariaGen_v1:
         tmp2_vcf = temp("data/ref_panel/{ref_outdir}/{ref_outdir}.chr{chr}.tmp2.vcf.gz"),
         lifted = "data/ref_panel/{ref_outdir}/{ref_outdir}.chr{chr}.vcf.gz",
         rejected = "data/ref_panel/{ref_outdir}/{ref_outdir}.chr{chr}.rejected.vcf.gz"
-    resources: mem = '80G'
+    resources: mem = '90G'
     threads: 4
     params:
-        picard = tools["picard_pplus"],
+        picard = tools["picard_ppplus"],
         c = "{chr}",
         rename_chr = "data/ref_panel/{ref_outdir}/rename_chr{chr}.tsv"
     shell: """
