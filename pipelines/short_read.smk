@@ -15,8 +15,8 @@ chromosome = [i for i in range(1,23)]
 read_lengths = ['151-optimal', '151-long', '151-short', '151-real', '300-optimal', '300-long', '300-short', '300-real']
 means = ['500', '500', '328.92', '328.92', '1000', '1000', '830', '830']
 stds = ['10', '10', '12.69', '12.69', '50', '50', '200', '200']
-error1 = ['0', '0.000262-0.000391', '0', '0.000262-0.000391', '0', '0.0001', '0', '0.0001']
-error2 = ['0', '0.000276-0.000468', '0', '0.000276-0.000468', '0', '0.0001', '0', '0.0001']
+error1 = ['0', '0.0024-0.0072', '0', '0.0024-0.0072', '0', '0.0001', '0', '0.0001']
+error2 = ['0', '0.0036-0.0115', '0', '0.0036-0.0115', '0', '0.0001', '0', '0.0001']
 haplotypes = ['mat', 'pat']
 coverage = '0.6'
 
@@ -368,6 +368,7 @@ rule prepare_sr_vcf:
         done
 
         bcftools merge -Oz -o {output.truth} {params.vcfs}
+        rm {params.vcfs}
     """
 
 pair = ['lc', 'hc']
@@ -394,6 +395,7 @@ rule copy_vcf_in_working_dir:
     resources:
         mem = '30G'
     threads: 4
+    localrule: True
     shell: """
         mkdir -p {wildcards.imp_dir}vcf/
         mkdir -p {wildcards.imp_dir}impacc/
@@ -451,12 +453,7 @@ rule calculate_imputation_accuracy_all:
         common_savedir = "{imp_dir}vcf/all_samples/",
         chrom = "{chr}"
     run:
-        mini = False
         common_cols = ['chr', 'pos', 'ref', 'alt']
-        lc_sample_prefix = 'GM'
-        chip_sample_prefix = 'GAM'
-        seq_sample_prefix = 'IDT'
-
         quilt_vcf = input.quilt_vcf
         chip_vcf = input.chip_vcf
         af_txt = input.af
