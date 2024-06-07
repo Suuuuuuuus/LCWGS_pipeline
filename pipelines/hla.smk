@@ -32,16 +32,32 @@ rule hla_clean_bam:
         samtools index {output.bam}
     """
 
+bam_batches = config['bam_batch']
+bam_numbers = [str(i) for i in range(int(bam_batches))]
+
 rule prepare_hla_bamlist:
     input:
         bams = expand("data/hla_bams/{id}.bam", id = samples_lc)
     output:
-        bamlist = "results/hla/imputation/bamlist.txt"
+        bamlist = expand("results/hla/imputation/bamlist{num}.txt", num = bam_numbers),
+        bam_all = temp("results/hla/imputation/bamlist.txt")
     localrule: True
+    params:
+        batch = bam_batches
     shell: """
         mkdir -p results/hla/imputation/
+        ls data/hla_bams/*.bam > {output.bam_all}
 
-        ls data/hla_bams/*.bam > {output.bamlist}
+        total_lines=$(wc -l < {output.bam_all})
+        lines_per_file=$(( (total_lines + 2) / 3 ))
+        split -l $lines_per_file {output.bam_all} prefix_
+
+        i=1
+        for file in prefix_*
+        do
+            mv "$file" "bamlist${{i}}.txt"
+            i=$((i + 1))
+        done
     """
 
 hla_ref_panel_indir = "results/hla/imputation/ref_panel/auxiliary_files/"

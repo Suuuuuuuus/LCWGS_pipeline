@@ -20,17 +20,13 @@ hla_genes = ['A', 'B', 'C', 'DRB1', 'DQB1']
 
 hla_ref_panel_outdir = "results/hla/imputation/ref_panel/QUILT_ref_files/"
 
+bam_batches = config['bam_batch']
+bam_numbers = [str(i) for i in range(int(bam_batches))]
+
 rule hla_imputation_prep_all:
     input:
-        bamlist = "results/hla/imputation/bamlist.txt",
+        bamlist = expand("results/hla/imputation/bamlist{num}.txt", num = bam_numbers),
         # ref_panel = expand(f"{hla_ref_panel_outdir}HLA{{gene}}fullallelesfilledin.RData", gene = hla_genes)
-
-# rule hla_imputation_prep_alt_all:
-#     input:
-#         chrs = expand("data/hla_bams_alt/{id}.chr6.bam", id = samples_lc),
-#         # bamlist = "results/hla/imputation/bamlist.txt",
-#         aligned_bams = expand("data/hla_bams_alt/{id}.chr6.tmp.bam", id = samples_lc),
-#         # hla_imputed = expand("results/hla/imputation/genes/{hla_gene}/quilt.hla.output.combined.all.txt", hla_gene = hla_genes)
 
 rule hla_imputation_all:
     input:
