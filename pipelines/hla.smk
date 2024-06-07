@@ -33,7 +33,7 @@ rule hla_clean_bam:
     """
 
 bam_batches = config['bam_batch']
-bam_numbers = [str(i) for i in range(int(bam_batches))]
+bam_numbers = [str(i) for i in range(1, int(bam_batches) + 1)]
 
 rule prepare_hla_bamlist:
     input:
@@ -104,7 +104,7 @@ rule prepare_hla_reference_panel:
 
 rule hla_imputation:
     input:
-        bams = expand("data/hla_bams/{id}.bam", id = samples_lc),
+        bams = expand("data/hla_bams/{id}.bam", id = samples_lc), # modify this to suit batch execution
         bamlist = "results/hla/imputation/bamlist.txt",
         ref_dir = hla_ref_panel_outdir
     output:

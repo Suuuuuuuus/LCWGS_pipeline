@@ -21,7 +21,7 @@ hla_genes = ['A', 'B', 'C', 'DRB1', 'DQB1']
 hla_ref_panel_outdir = "results/hla/imputation/ref_panel/QUILT_ref_files/"
 
 bam_batches = config['bam_batch']
-bam_numbers = [str(i) for i in range(int(bam_batches))]
+bam_numbers = [str(i) for i in range(1, int(bam_batches) + 1)]
 
 rule hla_imputation_prep_all:
     input:
