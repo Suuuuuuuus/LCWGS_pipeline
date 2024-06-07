@@ -50,12 +50,12 @@ rule prepare_hla_bamlist:
 
         total_lines=$(wc -l < {output.bam_all})
         lines_per_file=$(( (total_lines + 2) / 3 ))
-        split -l $lines_per_file {output.bam_all} prefix_
+        split -l $lines_per_file {output.bam_all} results/hla/imputation/prefix_
 
         i=1
-        for file in prefix_*
+        for file in results/hla/imputation/prefix_*
         do
-            mv "$file" "bamlist${{i}}.txt"
+            mv "$file" "results/hla/imputation/bamlist${{i}}.txt"
             i=$((i + 1))
         done
     """
@@ -105,10 +105,10 @@ rule prepare_hla_reference_panel:
 rule hla_imputation:
     input:
         bams = expand("data/hla_bams/{id}.bam", id = samples_lc), # modify this to suit batch execution
-        bamlist = "results/hla/imputation/bamlist.txt",
+        bamlist = "results/hla/imputation/bamlist{num}.txt",
         ref_dir = hla_ref_panel_outdir
     output:
-        vcf = "results/hla/imputation/genes/{hla_gene}/quilt.hla.output.combined.all.txt"
+        imputed = "results/hla/imputation/batches/genes{num}/{hla_gene}/quilt.hla.output.combined.all.txt"
     resources:
         mem = '50G'
     threads: 6
@@ -116,10 +116,10 @@ rule hla_imputation:
         quilt_hla = tools['quilt_hla'],
         fa_dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict"
     shell: """
-        mkdir -p results/hla/imputation/genes/{wildcards.hla_gene}/
+        mkdir -p results/hla/imputation/batches/genes{num}/{wildcards.hla_gene}/
 
         {params.quilt_hla} \
-        --outputdir="results/hla/imputation/genes/{wildcards.hla_gene}/" \
+        --outputdir="results/hla/imputation/batches/genes{num}/{wildcards.hla_gene}/" \
         --bamlist={input.bamlist} \
         --region={wildcards.hla_gene} \
         --prepared_hla_reference_dir={input.ref_dir} \

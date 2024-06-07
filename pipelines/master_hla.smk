@@ -30,7 +30,7 @@ rule hla_imputation_prep_all:
 
 rule hla_imputation_all:
     input:
-        hla_imputed = expand("results/hla/imputation/genes/{hla_gene}/quilt.hla.output.combined.all.txt", hla_gene = hla_genes)
+        hla_imputed = expand("results/hla/imputation/batches/genes{num}/{hla_gene}/quilt.hla.output.combined.all.txt", hla_gene = hla_genes, num = bam_numbers)
 
 # rule hla_imputation_alt_all:
 #     input:
