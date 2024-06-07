@@ -26,6 +26,8 @@ bam_numbers = [str(i) for i in range(1, int(bam_batches) + 1)]
 rule hla_imputation_prep_all:
     input:
         bamlist = expand("results/hla/imputation/bamlist{num}.txt", num = bam_numbers),
+        bam = expand("data/hla_bams/{id}.bam", id = samples_lc),
+        bai = expand("data/hla_bams/{id}.bam.bai", id = samples_lc),
         # ref_panel = expand(f"{hla_ref_panel_outdir}HLA{{gene}}fullallelesfilledin.RData", gene = hla_genes)
 
 rule hla_imputation_all:

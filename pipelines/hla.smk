@@ -20,7 +20,8 @@ rule hla_clean_bam:
     input:
         bam = "data/bams/{id}.bam"
     output:
-        bam = temp("data/hla_bams/{id}.bam")
+        bam = "data/hla_bams/{id}.bam",
+        bai = "data/hla_bams/{id}.bam.bai"
     resources: mem = '30G'
     shell: """
         mkdir -p data/hla_bams/
@@ -104,7 +105,6 @@ rule prepare_hla_reference_panel:
 
 rule hla_imputation:
     input:
-        bams = expand("data/hla_bams/{id}.bam", id = samples_lc), # modify this to suit batch execution
         bamlist = "results/hla/imputation/bamlist{num}.txt",
         ref_dir = hla_ref_panel_outdir
     output:
