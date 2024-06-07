@@ -116,10 +116,10 @@ rule hla_imputation:
         quilt_hla = tools['quilt_hla'],
         fa_dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict"
     shell: """
-        mkdir -p results/hla/imputation/batches/genes{num}/{wildcards.hla_gene}/
+        mkdir -p results/hla/imputation/batches/genes{wildcards.num}/{wildcards.hla_gene}/
 
         {params.quilt_hla} \
-        --outputdir="results/hla/imputation/batches/genes{num}/{wildcards.hla_gene}/" \
+        --outputdir="results/hla/imputation/batches/genes{wildcards.num}/{wildcards.hla_gene}/" \
         --bamlist={input.bamlist} \
         --region={wildcards.hla_gene} \
         --prepared_hla_reference_dir={input.ref_dir} \
