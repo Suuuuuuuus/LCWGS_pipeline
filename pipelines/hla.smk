@@ -16,6 +16,7 @@ samples_lc = read_tsv_as_lst(config['samples_lc'])
 chromosome = [i for i in range(1,23)]
 QUILT_HOME = config["QUILT_HOME"]
 
+'''
 rule hla_clean_bam:
     input:
         bam = "data/bams/{id}.bam"
@@ -32,22 +33,22 @@ rule hla_clean_bam:
 
         samtools index {output.bam}
     """
-
+'''
 bam_batches = config['bam_batch']
 bam_numbers = [str(i) for i in range(1, int(bam_batches) + 1)]
 
 rule prepare_hla_bamlist:
     input:
-        bams = expand("data/hla_bams/{id}.bam", id = samples_lc)
+        bams = expand("data/bams/{id}.bam", id = samples_lc)
     output:
-        bamlist = expand("results/hla/imputation/bamlist{num}.txt", num = bam_numbers),
-        bam_all = temp("results/hla/imputation/bamlist.txt")
+        bamlist = expand("results/hla/imputation/bamlists/bamlist{num}.txt", num = bam_numbers),
+        bam_all = temp("results/hla/imputation/bamlists/bamlist.txt")
     localrule: True
     params:
         batch = bam_batches
     shell: """
         mkdir -p results/hla/imputation/
-        ls data/hla_bams/*.bam > {output.bam_all}
+        ls data/bams/*.bam > {output.bam_all}
 
         total_lines=$(wc -l < {output.bam_all})
         lines_per_file=$(( (total_lines + 2) / 3 ))
@@ -56,7 +57,7 @@ rule prepare_hla_bamlist:
         i=1
         for file in results/hla/imputation/prefix_*
         do
-            mv "$file" "results/hla/imputation/bamlist${{i}}.txt"
+            mv "$file" "results/hla/imputation/bamlists/bamlist${{i}}.txt"
             i=$((i + 1))
         done
     """
@@ -105,7 +106,7 @@ rule prepare_hla_reference_panel:
 
 rule hla_imputation:
     input:
-        bamlist = "results/hla/imputation/bamlist{num}.txt",
+        bamlist = "results/hla/imputation/bamlists/bamlist{num}.txt",
         ref_dir = hla_ref_panel_outdir
     output:
         imputed = "results/hla/imputation/batches/genes{num}/{hla_gene}/quilt.hla.output.combined.all.txt"

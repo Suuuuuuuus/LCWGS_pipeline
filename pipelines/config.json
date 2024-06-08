@@ -22,7 +22,7 @@
     "rm_bed_regions": true,
     "bed_regions": "data/bedgraph/rm_regions.bed",
     "access_bed": "data/bedgraph/pilot.bed",
-    "panels": ["oneKG", "malariaGen_v1_b38"],
+    "panels": ["oneKG", "malariaGen_v1_b38", "malariaGen_v3_b38"],
     "hc_panel": "oneKG",
 
     "chip_genotypes": "data/chip/S1025_2023_01-02_Genotype.txt.gz",
