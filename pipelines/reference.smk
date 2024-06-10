@@ -99,7 +99,10 @@ rule lift_over_malariaGen_v1:
         -CHAIN {input.chain} \
         -REJECT {output.rejected} \
         -WMC true \
+        --MAX_RECORDS_IN_RAM 50000 \
         -R {input.reference}
+
+        tabix -f {output.lifted}
     """
 
 rule convert_shapeit_to_vcf:
