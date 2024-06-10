@@ -36,7 +36,7 @@ rule prepare_bamlist:
             ls data/bams/*.bam > {output.bamlist}
         fi
     """
-
+'''
 rule convert_recomb:
     input:
         f"results/imputation/{RECOMB_POP}/{RECOMB_POP}-{{chr}}-final.txt.gz"
@@ -51,7 +51,7 @@ rule convert_recomb:
         R -f {QUILT_HOME}scripts/make_b38_recomb_map.R \
         --args {ANALYSIS_DIR} {RECOMB_POP} {wildcards.chr}
     """
-
+'''
 rule convert_ref:
     input:
         vcf = f"data/ref_panel/{PANEL_NAME}/{PANEL_NAME}.chr{{chr}}.vcf.gz",
@@ -72,7 +72,7 @@ rule convert_ref:
         tabix {output.tmp_vcf}
         bcftools convert --haplegendsample results/imputation/refs/{params.panel}/{params.panel}.chr{wildcards.chr} {output.tmp_vcf}
     """
-
+'''
 rule determine_chunks:
     input:
         legend = expand(f"results/imputation/refs/{PANEL_NAME}/{PANEL_NAME}.chr{{chr}}.legend.gz", chr = chromosome),
@@ -83,3 +83,4 @@ rule determine_chunks:
     shell: """
         Rscript {input.code} {ANALYSIS_DIR:q} {WINDOWSIZE} {BUFFER} {PANEL_NAME:q}
     """
+'''
