@@ -139,7 +139,7 @@ for chr in chromosome:
     for i in range(0, start.__len__()):
         regionStart=start[i]
         regionEnd=end[i]
-        file="results/imputation/refs/RData/ref_package.chr" + str(chr) + "." + str(regionStart) + "." + str(regionEnd) + ".RData"
+        file="results/imputation/refs/" + PANEL_NAME + "/RData/ref_package.chr" + str(chr) + "." + str(regionStart) + "." + str(regionEnd) + ".RData"
         regions_to_prep.append(file)
         file="results/imputation/vcfs/" + PANEL_NAME + "/regions/quilt.chr" + str(chr) + "." + str(regionStart) + "." + str(regionEnd) + ".vcf.gz"
         vcfs_to_impute.append(file)
