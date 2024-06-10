@@ -10,7 +10,7 @@ include: "alignment.smk"
 #include: "coverage.smk"
 
 include: "imputation_prep.smk"
-# include: "imputation.smk"
+include: "imputation.smk"
 
 include: "auxiliary.smk"
 include: "software.smk"
