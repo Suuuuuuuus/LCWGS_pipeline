@@ -42,7 +42,7 @@
     "WINDOWSIZE": 5000000,
     "BUFFER": 0,
     "BAMLIST": "/well/band/users/rbx225/GAMCC/results/imputation/bamlist.txt",
-    "PANEL_NAME": "malariaGen_v1_b38",
+    "PANEL_NAME": "malariaGen_v3_b38",
     "bam_batch": "3",
 
     "lr_analysis_dir": "/well/band/users/rbx225/GAMCC/results/lr_imputation/",
