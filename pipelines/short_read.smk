@@ -118,7 +118,7 @@ rule sr_alignment:
         tmp1 = temp("data/sr_bams/{rl}.tmp1.bam"),
         metric = temp("data/sr_bams/{rl}.metrics.txt")
     resources:
-        mem = '30G'
+        mem = '50G'
     params: 
         sample = "{rl}",
         picard = tools["picard_plus"]
