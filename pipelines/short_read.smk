@@ -13,8 +13,8 @@ import lcwgsus
 chromosome = [i for i in range(1,23)]
 
 read_lengths = ['151-optimal', '151-long', '151-short', '151-real', '300-optimal', '300-long', '300-short', '300-real']
-means = ['500', '500', '328.92', '328.92', '1000', '1000', '830', '830']
-stds = ['10', '10', '12.69', '12.69', '50', '50', '200', '200']
+means = ['500', '500', '329', '329', '1000', '1000', '830', '830']
+stds = ['13', '13', '13', '13', '50', '50', '200', '200']
 error1 = ['0', '0.0024-0.0071', '0', '0.0024-0.0071', '0', '0.0001', '0', '0.0001']
 error2 = ['0', '0.0034-0.0105', '0', '0.0034-0.0105', '0', '0.0001', '0', '0.0001']
 haplotypes = ['mat', 'pat']
@@ -38,19 +38,13 @@ HC
  '151': 0.004376682798429562}
 '''
 
-def get_num_reads(wildcards):
-    total = 3200000000
-    cov = 0.6
-    num = round(total*cov/(2*int(wildcards.rl.split('-')[0])))
-    return num
-
 def get_mean_length(wildcards):
     ix = read_lengths.index(wildcards.rl)
-    return round(float(means[ix]))
+    return means[ix]
 
 def get_mean_std(wildcards):
     ix = read_lengths.index(wildcards.rl)
-    return round(float(stds[ix]))
+    return stds[ix]
 
 def get_read_length(wildcards):
     return wildcards.rl.split('-')[0]
@@ -172,6 +166,7 @@ rule prepare_bamlist:
         bams = expand("data/sr_bams/{rl}.bam", rl = read_lengths)
     output:
         bamlist = "results/sr_imputation/bamlist.txt"
+    localrule: True
     shell: """
         mkdir -p {sr_analysis_dir}
         ls data/sr_bams/*.bam > {output.bamlist}

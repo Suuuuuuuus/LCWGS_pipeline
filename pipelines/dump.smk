@@ -1070,6 +1070,12 @@ rule index:
         bwa index {input.reference}
     """
 
+def get_num_reads(wildcards):
+    total = 3200000000
+    cov = 0.6
+    num = round(total*cov/(2*int(wildcards.rl.split('-')[0])))
+    return num
+
 rule simulate_reads:
     input:
         fasta = "data/lr_fasta/HG02886.{hap}.fa"
