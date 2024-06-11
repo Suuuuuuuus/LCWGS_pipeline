@@ -15,7 +15,7 @@ import lcwgsus
 
 chromosome = [i for i in range(1,23)]
 
-PANEL_NAME = config['PANEL_NAME']
+PANEL_NAME = config['hc_panel']
 imp_dir = config['imputation_dir']
 case_controls = ['non-malaria_control', 'mild_malaria', 'severe_malaria']
 ethnicities = ['fula', 'jola', 'mandinka', 'wollof']
@@ -26,17 +26,17 @@ imputation_dir = config['imputation_dir']
 
 rule filter_vcf_all:
     input:
-        lc_chip_site_vcf = expand(f"results/wip_vcfs/{PANEL_NAME}/vanilla/chip_sites/lc.chr{{chr}}.vcf.gz", chr = chromosome),
-        concat = f"results/wip_vcfs/{PANEL_NAME}/vanilla/chip_sites/lc.vcf.gz",
-        PC = f"results/wip_vcfs/{PANEL_NAME}/vanilla/chip_sites/PCs.eigenvec",
+        # lc_chip_site_vcf = expand(f"results/wip_vcfs/{PANEL_NAME}/vanilla/chip_sites/lc.chr{{chr}}.vcf.gz", chr = chromosome),
+        # concat = f"results/wip_vcfs/{PANEL_NAME}/vanilla/chip_sites/lc.vcf.gz",
+        # PC = f"results/wip_vcfs/{PANEL_NAME}/vanilla/chip_sites/PCs.eigenvec",
 
         high_info_vcf = expand(f"results/wip_vcfs/{PANEL_NAME}/vanilla/high_info/lc.chr{{chr}}.vcf.gz", chr = chromosome),
         high_info_high_maf_vcf = expand(f"results/wip_vcfs/{PANEL_NAME}/vanilla/high_info_high_af/lc.chr{{chr}}.vcf.gz", chr = chromosome),
         high_info_high_maf_chip_sites_vcf = expand(f"results/wip_vcfs/{PANEL_NAME}/vanilla/high_info_high_af_chip_sites/lc.chr{{chr}}.vcf.gz", chr = chromosome),
         high_info_high_maf_confident_vcf = expand(f"results/wip_vcfs/{PANEL_NAME}/vanilla/high_info_high_af_high_conf/lc.chr{{chr}}.vcf.gz", chr = chromosome),
         high_info_high_maf_confident_chip_format = expand(f"results/wip_vcfs/{PANEL_NAME}/vanilla/high_info_high_af_high_conf_chip_sites/lc.chr{{chr}}.vcf.gz", chr = chromosome),
-        high_info_high_maf_giab_confident_vcf = expand(f"results/wip_vcfs/{PANEL_NAME}/vanilla/high_info_high_af_giab_high_conf/lc.chr{{chr}}.vcf.gz", chr = chromosome),
-        high_info_high_maf_giab_confident_chip_format = expand(f"results/wip_vcfs/{PANEL_NAME}/vanilla/high_info_high_af_giab_high_conf_chip_sites/lc.chr{{chr}}.vcf.gz", chr = chromosome)
+        # high_info_high_maf_giab_confident_vcf = expand(f"results/wip_vcfs/{PANEL_NAME}/vanilla/high_info_high_af_giab_high_conf/lc.chr{{chr}}.vcf.gz", chr = chromosome),
+        # high_info_high_maf_giab_confident_chip_format = expand(f"results/wip_vcfs/{PANEL_NAME}/vanilla/high_info_high_af_giab_high_conf_chip_sites/lc.chr{{chr}}.vcf.gz", chr = chromosome)
 
 rule imputation_calculation_hc_all:
     input:
