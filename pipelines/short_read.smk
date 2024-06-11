@@ -74,7 +74,7 @@ rule simulate_reads:
         mem = '30G'
     threads: 4
     params:
-        num_reads = get_num_reads,
+        cov = coverage,
         read_length = get_read_length,
         mean_length = get_mean_length,
         sd_length = get_mean_std,
@@ -85,7 +85,7 @@ rule simulate_reads:
     shell: """
         mkdir -p {params.outdir}
         
-        dwgsim -N {params.num_reads} \
+        dwgsim -H -C {params.cov} \
         -1 {params.read_length} \
         -2 {params.read_length} \
         -e {params.error1} -E {params.error2} \

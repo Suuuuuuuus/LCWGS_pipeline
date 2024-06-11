@@ -1069,3 +1069,34 @@ rule index:
     shell: """
         bwa index {input.reference}
     """
+
+rule simulate_reads:
+    input:
+        fasta = "data/lr_fasta/HG02886.{hap}.fa"
+    output:
+        fastq1 = temp("data/sr_simulations/{rl}/tmp.{hap}.{rl}.bwa.read1.fastq.gz"),
+        fastq2 = temp("data/sr_simulations/{rl}/tmp.{hap}.{rl}.bwa.read2.fastq.gz")
+    resources:
+        mem = '30G'
+    threads: 4
+    params:
+        num_reads = get_num_reads,
+        read_length = get_read_length,
+        mean_length = get_mean_length,
+        sd_length = get_mean_std,
+        error1 = get_error1,
+        error2 = get_error2,
+        outdir = "data/sr_simulations/{rl}/",
+        output_prefix = "data/sr_simulations/{rl}/tmp.{hap}.{rl}"
+    shell: """
+        mkdir -p {params.outdir}
+        
+        dwgsim -N {params.num_reads} \
+        -1 {params.read_length} \
+        -2 {params.read_length} \
+        -e {params.error1} -E {params.error2} \
+        -d {params.mean_length} \
+        -s {params.sd_length} \
+        -y 0 \
+        {input.fasta} {params.output_prefix}
+    """
