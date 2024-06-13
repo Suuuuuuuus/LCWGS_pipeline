@@ -237,7 +237,7 @@ rule prepare_ref:
 rule quilt_imputation:
     input:
         bamlist = "results/lr_imputation/bamlist.txt",
-        RData = rules.prepare_ref.output.RData
+        RData = f"results/lr_imputation/refs/RData/ref_package.chr{{chr}}.{{regionStart}}.{{regionEnd}}.RData"
     output:
         vcf = f"results/lr_imputation/vcfs/{PANEL_NAME}/regions/quilt.chr{{chr}}.{{regionStart}}.{{regionEnd}}.vcf.gz"
     resources:
