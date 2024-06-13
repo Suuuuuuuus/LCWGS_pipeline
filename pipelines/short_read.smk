@@ -12,11 +12,11 @@ import lcwgsus
 
 chromosome = [i for i in range(1,23)]
 
-read_lengths = ['151-optimal', '151-long', '151-short', '151-real', '300-optimal', '300-long', '300-short', '300-real']
+read_lengths = ['151-long', '151-optimal', '151-real', '151-short', '300-long', '300-optimal', '300-real', '300-short']
 means = ['500', '500', '329', '329', '1000', '1000', '830', '830']
-stds = ['13', '13', '13', '13', '50', '50', '200', '200']
-error1 = ['0', '0.0024-0.0071', '0', '0.0024-0.0071', '0', '0.0001', '0', '0.0001']
-error2 = ['0', '0.0034-0.0105', '0', '0.0034-0.0105', '0', '0.0001', '0', '0.0001']
+stds = ['13', '13', '13', '13', '200', '200', '200', '200']
+error1 = ['0.0024-0.0071', '0', '0.0024-0.0071', '0', '0.0001', '0', '0.0001', '0']
+error2 = ['0.0034-0.0105', '0', '0.0034-0.0105', '0', '0.0001', '0', '0.0001', '0']
 haplotypes = ['mat', 'pat']
 coverage = '0.6'
 
@@ -369,7 +369,7 @@ rule prepare_sr_vcf:
     shell: """
         mkdir -p results/sr_imputation/truth/
         
-        length=("151-optimal" "151-long" "151-short" "151-real" "300-optimal" "300-long" "300-short" "300-real")
+        length=('151-long', '151-optimal', '151-real', '151-short', '300-long', '300-optimal', '300-real', '300-short')
 
         for l in "${{length[@]}}"
         do
@@ -381,7 +381,7 @@ rule prepare_sr_vcf:
         done
 
         bcftools merge -Oz -o {output.truth} {params.vcfs}
-        rm {params.vcfs}
+        rm {params.vcfs}*
     """
 
 pair = ['lc', 'hc']
