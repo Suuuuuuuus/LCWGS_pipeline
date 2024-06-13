@@ -13,9 +13,8 @@ import lcwgsus
 chromosome = [i for i in range(1,23)]
 
 read_lengths = ['0.5kb', '0.6kb', '0.8kb', '1kb', '2kb', '5kb', '10kb', '20kb']
-# read_lengths = ['1kb']
+rls = ['500', '600', '800', '1000', '2000', '5000', '10000', '20000']
 haplotypes = ['mat', 'pat']
-# haplotypes = ['mat']
 coverage = '0.6'
 
 QUILT_HOME = config["QUILT_HOME"]
@@ -27,7 +26,8 @@ BUFFER=config["BUFFER"]
 PANEL_NAME=config["hc_panel"]
 
 def get_num_mean_length(wildcards):
-    return float(wildcards.rl[:-2])*1000
+    ix = read_lengths.index(wildcards.rl)
+    return rls[ix]
 
 rule simulate_reads:
     input:
