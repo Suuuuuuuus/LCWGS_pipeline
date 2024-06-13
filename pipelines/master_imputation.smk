@@ -15,7 +15,7 @@ import lcwgsus
 
 chromosome = [i for i in range(1,23)]
 
-PANEL_NAME = config['hc_panel']
+PANEL_NAME = config['PANEL_NAME']
 imp_dir = config['imputation_dir']
 case_controls = ['non-malaria_control', 'mild_malaria', 'severe_malaria']
 ethnicities = ['fula', 'jola', 'mandinka', 'wollof']
