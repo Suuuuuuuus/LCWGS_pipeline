@@ -43,7 +43,7 @@ rule simulate_reads:
         mean_length = get_num_mean_length,
         max_length = 50000,
         outdir = "data/lr_simulations/{rl}/",
-        prefix = "data/lr_simulations/{rl}/tmp.{hap}.{rl}"
+        prefix = "data/lr_simulations/{rl}/tp.{hap}.{rl}"
     shell: """
         mkdir -p {params.outdir}
 
