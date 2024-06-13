@@ -97,10 +97,26 @@ rule subset_lc_samples:
         mem = '10G'
     run: 
         hc_names = lcwgsus.bcftools_get_samples(input.chip_vcf)
-        rename_map = lcwgsus.generate_rename_map()
-        lc = wildcards.imp_dir.split('/')[-2].split('_')[0]
-        samples = lcwgsus.find_matching_samples(hc_names, rename_map, lc = lc)
-        lcwgsus.save_lst(output.tmp_names, samples)
+        lc_names = lcwgsus.bcftools_get_samples(input.quilt_vcf)
+
+        if lc_names[0].startswith('IDT'):
+            # Assuming IDT is sorted
+            sl = pd.read_csv(sample_linker).sort_values(by = 'Seq_Name')
+            sl = sl[sl['Seq_Name'].isin(lc_names)]
+            sl = sl[~sl['Sample_Name'].str.contains('mini')]
+            rename_map = {k:v for k,v in zip(sl['Chip_Name'], sl['Seq_Name'])}
+            samples = []
+            for n in hc_names:
+                samples.append(rename_map[n])
+            lcwgsus.save_lst(output.tmp_names, samples)
+
+        elif lc_names[0].startswith('GM'):
+            rename_map = lcwgsus.generate_rename_map()
+            lc = wildcards.imp_dir.split('/')[-2].split('_')[0]
+            samples = lcwgsus.find_matching_samples(hc_names, rename_map, lc = lc)
+            lcwgsus.save_lst(output.tmp_names, samples)
+        else:
+            pass
 
         shell("bcftools view -S {output.tmp_names} -Oz -o {output.ss_vcf} {input.quilt_vcf}")
 
