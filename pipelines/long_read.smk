@@ -12,7 +12,7 @@ import lcwgsus
 
 chromosome = [i for i in range(1,23)]
 
-read_lengths = ['0.5kb', '0.6kb', '0.8kb', '1kb', '2kb', '5kb', '10kb', '20kb']
+read_lengths = ['500b', '600b', '800b', '1kb', '2kb', '5kb', '10kb', '20kb']
 rls = ['500', '600', '800', '1000', '2000', '5000', '10000', '20000']
 haplotypes = ['mat', 'pat']
 coverage = '0.6'
@@ -336,9 +336,9 @@ rule prepare_lr_vcf:
     input:
         vcf = f"data/ref_panel/{PANEL_NAME}/oneKG.chr{{chr}}.vcf.gz"
     output:
-        p5 = temp("results/lr_imputation/truth/0.5kb.chr{chr}.vcf.gz"),
-        p6 = temp("results/lr_imputation/truth/0.6kb.chr{chr}.vcf.gz"),
-        p8 = temp("results/lr_imputation/truth/0.8kb.chr{chr}.vcf.gz"),
+        p5 = temp("results/lr_imputation/truth/500b.chr{chr}.vcf.gz"),
+        p6 = temp("results/lr_imputation/truth/600b.chr{chr}.vcf.gz"),
+        p8 = temp("results/lr_imputation/truth/800b.chr{chr}.vcf.gz"),
         one = temp("results/lr_imputation/truth/1kb.chr{chr}.vcf.gz"),
         two = temp("results/lr_imputation/truth/2kb.chr{chr}.vcf.gz"),
         five = temp("results/lr_imputation/truth/5kb.chr{chr}.vcf.gz"),
@@ -352,7 +352,7 @@ rule prepare_lr_vcf:
     shell: """
         mkdir -p results/lr_imputation/truth/
         
-        length=("0.5kb" "0.6kb" "0.8kb" "10kb" "1kb" "20kb" "2kb" "5kb")
+        length=("10kb" "1kb" "20kb" "2kb" "500b" "5kb" "600b" "800b")
 
         for l in "${{length[@]}}"
         do

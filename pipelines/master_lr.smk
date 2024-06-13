@@ -15,7 +15,7 @@ import lcwgsus
 
 chromosome = [i for i in range(1,23)]
 
-read_lengths = ['0.5kb', '0.6kb', '0.8kb', '1kb', '2kb', '5kb', '10kb', '20kb']
+read_lengths = ['500b', '600b', '800b', '1kb', '2kb', '5kb', '10kb', '20kb']
 rls = ['500', '600', '800', '1000', '2000', '5000', '10000', '20000']
 haplotypes = ['mat', 'pat']
 method = 'CCS'
