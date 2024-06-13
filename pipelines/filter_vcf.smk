@@ -209,7 +209,8 @@ rule filter_oneKG_low_confidence_regions:
 
         gunzip -c {input.filtered_vcf} | grep '#' > {output.filtered_vcf}
         tabix -R {params.bed} {input.filtered_vcf} >> {output.filtered_vcf}
-        bgzip {output.filtered_vcf}
+
+        bgzip -f {output.filtered_vcf}
         tabix {output.filtered_vcf_gz}
         touch {output.filtered_vcf}
     """
