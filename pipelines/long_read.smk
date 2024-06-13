@@ -16,8 +16,15 @@ read_lengths = ['0.5kb', '0.6kb', '0.8kb', '1kb', '2kb', '5kb', '10kb', '20kb']
 # read_lengths = ['1kb']
 haplotypes = ['mat', 'pat']
 # haplotypes = ['mat']
-method = 'CCS'
 coverage = '0.6'
+
+QUILT_HOME = config["QUILT_HOME"]
+lr_analysis_dir = config["lr_analysis_dir"]
+RECOMB_POP=config["RECOMB_POP"]
+NGEN=config["NGEN"]
+WINDOWSIZE=config["WINDOWSIZE"]
+BUFFER=config["BUFFER"]
+PANEL_NAME=config["hc_panel"]
 
 def get_num_mean_length(wildcards):
     return float(wildcards.rl[:-2])*1000
@@ -32,7 +39,7 @@ rule simulate_reads:
         mem = '30G'
     threads: 4
     params:
-        model = "data/lr_models/model_qc_" + method.lower(),
+        model = "data/lr_models/model_qc_ccs",
         mean_length = get_num_mean_length,
         max_length = 50000,
         outdir = "data/lr_simulations/{rl}/",
@@ -40,7 +47,7 @@ rule simulate_reads:
     shell: """
         mkdir -p {params.outdir}
 
-        pbsim --data-type {method} \
+        pbsim --data-type CCS \
         --depth {coverage} \
         --model_qc {params.model} \
         --length-mean {params.mean_length} \
@@ -133,19 +140,12 @@ rule lr_clean_bam:
         samtools index {output.bam}
     """
 
-QUILT_HOME = config["QUILT_HOME"]
-lr_analysis_dir = config["lr_analysis_dir"]
-RECOMB_POP=config["RECOMB_POP"]
-NGEN=config["NGEN"]
-WINDOWSIZE=config["WINDOWSIZE"]
-BUFFER=config["BUFFER"]
-PANEL_NAME=config["hc_panel"]
-
 rule prepare_bamlist:
     input:
         bams = expand("data/lr_bams/{rl}.bam", rl = read_lengths)
     output:
         bamlist = "results/lr_imputation/bamlist.txt"
+    localrule: True
     shell: """
         mkdir -p {lr_analysis_dir}
 

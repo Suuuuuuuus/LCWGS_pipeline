@@ -16,9 +16,7 @@ import lcwgsus
 chromosome = [i for i in range(1,23)]
 
 read_lengths = ['0.5kb', '0.6kb', '0.8kb', '1kb', '2kb', '5kb', '10kb', '20kb']
-# read_lengths = ['1kb']
 haplotypes = ['mat', 'pat']
-# haplotypes = ['mat']
 method = 'CCS'
 coverage = '0.6'
 
