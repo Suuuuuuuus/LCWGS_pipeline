@@ -12,15 +12,15 @@ import lcwgsus
 
 chromosome = [i for i in range(1,23)]
 
-read_lengths = ['1kb', '2kb', '5kb', '10kb', '20kb']
+read_lengths = ['0.5kb', '0.6kb', '0.8kb', '1kb', '2kb', '5kb', '10kb', '20kb']
 # read_lengths = ['1kb']
 haplotypes = ['mat', 'pat']
 # haplotypes = ['mat']
 method = 'CCS'
-coverage = '0.5'
+coverage = '0.6'
 
 def get_num_mean_length(wildcards):
-    return int(wildcards.rl[:-2])*1000
+    return float(wildcards.rl[:-2])*1000
 
 rule simulate_reads:
     input:
@@ -102,7 +102,8 @@ rule lr_clean_bam:
     resources:
         mem = '50G'
     params:
-        sample = "{rl}"
+        sample = "{rl}",
+        picard = tools['picard']
     shell: """
         samtools cat -o {output.tmp1} {input.bams}
         samtools sort -@6 -m 1G -o {output.bam} {output.tmp1}
@@ -118,13 +119,11 @@ rule lr_clean_bam:
         -RGPU unknown \
         -RGSM {params.sample}
 
-        java -Xmx40G -Xms20G -jar /well/band/users/rbx225/conda/skylake/envs/sus/share/picard-slim-2.27.4-0/picard.jar \
-        FixMateInformation -I {output.tmp1}
+        {params.picard} FixMateInformation -I {output.tmp1}
 
         samtools sort -@6 -m 1G -o {output.bam} {output.tmp1}
 
-        java -Xmx40G -Xms20G -jar /well/band/users/rbx225/conda/skylake/envs/sus/share/picard-slim-2.27.4-0/picard.jar \
-        MarkDuplicates \
+        {params.picard} MarkDuplicates \
         -I {output.bam} \
         -O {output.tmp1} \
         -M {output.metric} \
@@ -140,7 +139,7 @@ RECOMB_POP=config["RECOMB_POP"]
 NGEN=config["NGEN"]
 WINDOWSIZE=config["WINDOWSIZE"]
 BUFFER=config["BUFFER"]
-PANEL_NAME=config["PANEL_NAME"]
+PANEL_NAME=config["hc_panel"]
 
 rule prepare_bamlist:
     input:
@@ -153,6 +152,7 @@ rule prepare_bamlist:
         ls data/lr_bams/*.bam > {output.bamlist}
     """
 
+'''
 rule convert_recomb:
     input:
         f"results/lr_imputation/{RECOMB_POP}/{RECOMB_POP}-{{chr}}-final.txt.gz"
@@ -232,6 +232,7 @@ rule prepare_ref:
         buffer=0, \
         output_file="{output.RData}")'
     """
+'''
 
 rule quilt_imputation:
     input:
@@ -335,6 +336,9 @@ rule prepare_lr_vcf:
     input:
         vcf = f"data/ref_panel/{PANEL_NAME}/oneKG.chr{{chr}}.vcf.gz"
     output:
+        p5 = temp("results/lr_imputation/truth/0.5kb.chr{chr}.vcf.gz"),
+        p6 = temp("results/lr_imputation/truth/0.6kb.chr{chr}.vcf.gz"),
+        p8 = temp("results/lr_imputation/truth/0.8kb.chr{chr}.vcf.gz"),
         one = temp("results/lr_imputation/truth/1kb.chr{chr}.vcf.gz"),
         two = temp("results/lr_imputation/truth/2kb.chr{chr}.vcf.gz"),
         five = temp("results/lr_imputation/truth/5kb.chr{chr}.vcf.gz"),
@@ -348,7 +352,7 @@ rule prepare_lr_vcf:
     shell: """
         mkdir -p results/lr_imputation/truth/
         
-        length=("10kb" "1kb" "20kb" "2kb" "5kb")
+        length=("0.5kb" "0.6kb" "0.8kb" "10kb" "1kb" "20kb" "2kb" "5kb")
 
         for l in "${{length[@]}}"
         do

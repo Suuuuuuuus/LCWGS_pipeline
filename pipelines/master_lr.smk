@@ -15,12 +15,12 @@ import lcwgsus
 
 chromosome = [i for i in range(1,23)]
 
-read_lengths = ['1kb', '2kb', '5kb', '10kb', '20kb']
+read_lengths = ['0.5kb', '0.6kb', '0.8kb', '1kb', '2kb', '5kb', '10kb', '20kb']
 # read_lengths = ['1kb']
 haplotypes = ['mat', 'pat']
 # haplotypes = ['mat']
 method = 'CCS'
-coverage = '0.5'
+coverage = '0.6'
 
 QUILT_HOME = config["QUILT_HOME"]
 lr_analysis_dir = config["lr_analysis_dir"]
@@ -28,7 +28,7 @@ RECOMB_POP=config["RECOMB_POP"]
 NGEN=config["NGEN"]
 WINDOWSIZE=config["WINDOWSIZE"]
 BUFFER=config["BUFFER"]
-PANEL_NAME=config["PANEL_NAME"]
+PANEL_NAME=config["panels"]
 
 rule long_read_all:
     input:
@@ -65,11 +65,11 @@ for chr in chromosome:
 rule lr_imputation_prep_all:
     input:
         bamlist = "results/lr_imputation/bamlist.txt",
-        recomb = expand("results/lr_imputation/" + RECOMB_POP + "/" + RECOMB_POP + "-chr{chr}-final.b38.txt.gz", chr = chromosome),
-        json = "results/lr_imputation/regions.json",
-        hap = expand(f"results/lr_imputation/refs/{PANEL_NAME}.chr{{chr}}.hap.gz", chr = chromosome),
-        legend = expand(f"results/lr_imputation/refs/{PANEL_NAME}.chr{{chr}}.legend.gz", chr = chromosome),
-        samples = expand(f"results/lr_imputation/refs/{PANEL_NAME}.chr{{chr}}.samples", chr = chromosome)
+        # recomb = expand("results/lr_imputation/" + RECOMB_POP + "/" + RECOMB_POP + "-chr{chr}-final.b38.txt.gz", chr = chromosome),
+        # json = "results/lr_imputation/regions.json",
+        # hap = expand(f"results/lr_imputation/refs/{PANEL_NAME}.chr{{chr}}.hap.gz", chr = chromosome),
+        # legend = expand(f"results/lr_imputation/refs/{PANEL_NAME}.chr{{chr}}.legend.gz", chr = chromosome),
+        # samples = expand(f"results/lr_imputation/refs/{PANEL_NAME}.chr{{chr}}.samples", chr = chromosome)
 
 vcfs_to_concat={}
 final_vcfs=[]
