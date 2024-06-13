@@ -16,8 +16,7 @@ samples_chip = read_tsv_as_lst(config['samples_chip'])
 sample_linker = pd.read_table(config['sample_linker'], sep = ',')
 chromosome = [i for i in range(1,23)]
 
-PANEL_NAME = config["hc_panel"]
-imp_dir = config["imputation_dir"]
+# panels = config["panels"][:-1]
 
 # The omni5m manifest has col3,4 to be chr and pos
 rule prepare_chip_manifest:
@@ -43,19 +42,19 @@ rule prepare_chip_manifest:
         sed 's/,/\t/g' | \
         tail -n +2 > {output.pos}
     """
-
+'''
 rule retain_chip_sites:
     input:
-        lc_vcf = f"results/imputation/vcfs/{PANEL_NAME}/quilt.chr{{chr}}.vcf.gz",
+        lc_vcf = "results/imputation/vcfs/{panel_name}/quilt.chr{chr}.vcf.gz",
         chip_vcf = "results/chip/vcf/chip_by_chr/chip.chr{chr}.vcf.gz"
     output:
-        filtered_vcf = f"results/wip_vcfs/{PANEL_NAME}/vanilla/chip_sites/lc.chr{{chr}}.vcf.gz",
-        site = temp(f"results/wip_vcfs/{PANEL_NAME}/vanilla/chip_sites/chr{{chr}}.tsv")
+        filtered_vcf = "results/wip_vcfs/{panel_name}/vanilla/chip_sites/lc.chr{chr}.vcf.gz",
+        site = temp("results/wip_vcfs/{panel_name}/vanilla/chip_sites/chr{chr}.tsv")
     resources:
         mem = '30G'
     threads: 4
     shell: """
-        mkdir -p results/wip_vcfs/{PANEL_NAME}/vanilla/chip_sites/
+        mkdir -p results/wip_vcfs/{panel_name}/vanilla/chip_sites/
 
         zgrep -v '#' {input.chip_vcf} | cut -f1,2 > {output.site}
         bcftools view -R {output.site} -Oz -o {output.filtered_vcf} {input.lc_vcf}
@@ -63,9 +62,9 @@ rule retain_chip_sites:
 
 rule concat_chip_sites_vcfs:
     input:
-        lc_vcf = expand(f"results/wip_vcfs/{PANEL_NAME}/vanilla/chip_sites/lc.chr{{chr}}.vcf.gz", chr = chromosome)
+        lc_vcf = expand("results/wip_vcfs/{panel_name}/vanilla/chip_sites/lc.chr{chr}.vcf.gz", chr = chromosome)
     output:
-        concat = f"results/wip_vcfs/{PANEL_NAME}/vanilla/chip_sites/lc.vcf.gz"
+        concat = "results/wip_vcfs/{panel_name}/vanilla/chip_sites/lc.vcf.gz"
     resources:
         mem = '100G'
     threads: 16
@@ -86,17 +85,17 @@ rule calculate_PCA:
     input:
         vcf = rules.concat_chip_sites_vcfs.output.concat
     output:
-        bed = temp(f"results/wip_vcfs/{PANEL_NAME}/vanilla/chip_sites/lc_pca.bed"),
-        bim = temp(f"results/wip_vcfs/{PANEL_NAME}/vanilla/chip_sites/lc_pca.bim"),
-        fam = temp(f"results/wip_vcfs/{PANEL_NAME}/vanilla/chip_sites/lc_pca.fam"),
-        PC = f"results/wip_vcfs/{PANEL_NAME}/vanilla/chip_sites/PCs.eigenvec",
-        name_txt = temp(f"results/wip_vcfs/{PANEL_NAME}/vanilla/chip_sites/name.txt"),
-        tmp_vcf = temp(f"results/wip_vcfs/{PANEL_NAME}/vanilla/chip_sites/tmp.vcf.gz"),
-        tmp_vcf1 = temp(f"results/wip_vcfs/{PANEL_NAME}/vanilla/chip_sites/tmp1.vcf.gz")
+        bed = temp("results/wip_vcfs/{panel_name}/vanilla/chip_sites/lc_pca.bed"),
+        bim = temp("results/wip_vcfs/{panel_name}/vanilla/chip_sites/lc_pca.bim"),
+        fam = temp("results/wip_vcfs/{panel_name}/vanilla/chip_sites/lc_pca.fam"),
+        PC = "results/wip_vcfs/{panel_name}/vanilla/chip_sites/PCs.eigenvec",
+        name_txt = temp("results/wip_vcfs/{panel_name}/vanilla/chip_sites/name.txt"),
+        tmp_vcf = temp("results/wip_vcfs/{panel_name}/vanilla/chip_sites/tmp.vcf.gz"),
+        tmp_vcf1 = temp("results/wip_vcfs/{panel_name}/vanilla/chip_sites/tmp1.vcf.gz")
     params:
         num_PCs = 10,
-        plink_name = f"results/wip_vcfs/{PANEL_NAME}/vanilla/chip_sites/lc_pca",
-        PC_name = f"results/wip_vcfs/{PANEL_NAME}/vanilla/chip_sites/PCs",
+        plink_name = "results/wip_vcfs/{panel_name}/vanilla/chip_sites/lc_pca",
+        PC_name = "results/wip_vcfs/{panel_name}/vanilla/chip_sites/PCs",
         chip_gm_names = "data/sample_tsvs/chip_gm_names.tsv"
     resources:
         mem = '10G'
@@ -108,42 +107,38 @@ rule calculate_PCA:
         plink --vcf {output.tmp_vcf1} --make-bed --out {params.plink_name}
         plink --bfile {params.plink_name} --pca {params.num_PCs} --out {params.PC_name}
     """
-
+'''
 rule filter_lc_info:
     input:
-        lc_vcf = f"results/imputation/vcfs/{PANEL_NAME}/quilt.chr{{chr}}.vcf.gz"
+        lc_vcf = "results/imputation/vcfs/{panel_name}/quilt.chr{chr}.vcf.gz"
     output:
-        filtered_vcf = f"results/wip_vcfs/{PANEL_NAME}/vanilla/high_info/lc.chr{{chr}}.vcf.gz"
+        filtered_vcf = "results/wip_vcfs/{panel_name}/vanilla/high_info/lc.chr{chr}.vcf.gz"
     resources:
         mem = '30G'
     threads: 4
     params:
         info = config['info_filter']
     shell: """
-        mkdir -p results/wip_vcfs/{PANEL_NAME}/vanilla/high_info/
+        mkdir -p results/wip_vcfs/{wildcards.panel_name}/vanilla/high_info/
 
         bcftools filter -i 'INFO_SCORE>{params.info}' -Oz -o {output.filtered_vcf} {input.lc_vcf}
     """
 
 rule filter_lc_maf:
     input:
-        lc_vcf = f"results/wip_vcfs/{PANEL_NAME}/vanilla/high_info/lc.chr{{chr}}.vcf.gz",
+        lc_vcf = "results/wip_vcfs/{panel_name}/vanilla/high_info/lc.chr{chr}.vcf.gz",
         af = "data/oneKG_MAFs/oneKG_AF_AFR_chr{chr}.txt"
     output:
-        filtered_vcf = f"results/wip_vcfs/{PANEL_NAME}/vanilla/high_info_high_af/lc.chr{{chr}}.vcf.gz"
+        filtered_vcf = "results/wip_vcfs/{panel_name}/vanilla/high_info_high_af/lc.chr{chr}.vcf.gz"
     resources:
         mem = '60G'
     threads: 8
     params:
         info = config['info_filter'],
         maf = config['maf_filter'],
-        panel = PANEL_NAME,
         chrom = "{chr}"
     run:
         common_cols = ['chr', 'pos', 'ref', 'alt']
-        lc_sample_prefix = 'GM'
-        chip_sample_prefix = 'GAM'
-        seq_sample_prefix = 'IDT'
 
         imp_vcf = input.lc_vcf
         af_txt = input.af
@@ -159,27 +154,23 @@ rule filter_lc_maf:
         lcwgsus.save_vcf(lc_af,
              metadata,
              prefix='chr',
-             outdir="results/wip_vcfs/" + params.panel + "/vanilla/high_info_high_af/",
+             outdir="results/wip_vcfs/" + wildcards.panel_name + "/vanilla/high_info_high_af/",
              save_name="lc.chr" + str(wildcards.chr) + ".vcf.gz"
              )
 
 rule filter_lc_sites:
     input:
-        vcf = f"results/wip_vcfs/{PANEL_NAME}/vanilla/high_info_high_af/lc.chr{{chr}}.vcf.gz",
+        vcf = "results/wip_vcfs/{panel_name}/vanilla/high_info_high_af/lc.chr{chr}.vcf.gz",
         sites = rules.prepare_chip_manifest.output.pos
     output:
-        filtered_vcf = f"results/wip_vcfs/{PANEL_NAME}/vanilla/high_info_high_af_chip_sites/lc.chr{{chr}}.vcf.gz"
+        filtered_vcf = "results/wip_vcfs/{panel_name}/vanilla/high_info_high_af_chip_sites/lc.chr{chr}.vcf.gz"
     resources:
         mem = '60G'
     threads: 8
     params:
-        panel = PANEL_NAME,
         chrom = "{chr}"
     run:
         common_cols = ['chr', 'pos']
-        lc_sample_prefix = 'GM'
-        chip_sample_prefix = 'GAM'
-        seq_sample_prefix = 'IDT'
 
         imp_vcf = input.vcf
         chip_sites = input.sites
@@ -198,23 +189,23 @@ rule filter_lc_sites:
         lcwgsus.save_vcf(lc_sites,
              metadata,
              prefix='chr',
-             outdir="results/wip_vcfs/" + params.panel + "/vanilla/high_info_high_af_chip_sites/",
+             outdir="results/wip_vcfs/" + wildcards.panel_name + "/vanilla/high_info_high_af_chip_sites/",
              save_name="lc.chr" + str(wildcards.chr) + ".vcf.gz"
              )
 
 rule filter_oneKG_low_confidence_regions:
     input:
-        filtered_vcf = f"results/wip_vcfs/{PANEL_NAME}/vanilla/high_info_high_af/lc.chr{{chr}}.vcf.gz"
+        filtered_vcf = "results/wip_vcfs/{panel_name}/vanilla/high_info_high_af/lc.chr{chr}.vcf.gz"
     output:
-        filtered_vcf = temp(f"results/wip_vcfs/{PANEL_NAME}/vanilla/high_info_high_af_high_conf/lc.chr{{chr}}.vcf"),
-        filtered_vcf_gz = f"results/wip_vcfs/{PANEL_NAME}/vanilla/high_info_high_af_high_conf/lc.chr{{chr}}.vcf.gz"
+        filtered_vcf = temp("results/wip_vcfs/{panel_name}/vanilla/high_info_high_af_high_conf/lc.chr{chr}.vc"),
+        filtered_vcf_gz = "results/wip_vcfs/{panel_name}/vanilla/high_info_high_af_high_conf/lc.chr{chr}.vcf.gz"
     resources:
         mem = '30G'
     threads: 4
     params:
         bed = "data/bedgraph/strict.all.bed"
     shell: """
-        mkdir -p results/wip_vcfs/{PANEL_NAME}/vanilla/high_info_high_af_high_conf/
+        mkdir -p results/wip_vcfs/{wildcards.panel_name}/vanilla/high_info_high_af_high_conf/
 
         gunzip -c {input.filtered_vcf} | grep '#' > {output.filtered_vcf}
         tabix -R {params.bed} {input.filtered_vcf} >> {output.filtered_vcf}
@@ -222,20 +213,20 @@ rule filter_oneKG_low_confidence_regions:
         tabix {output.filtered_vcf_gz}
         touch {output.filtered_vcf}
     """
-
+'''
 rule filter_giab_low_confidence_regions:
     input:
-        filtered_vcf = f"results/wip_vcfs/{PANEL_NAME}/vanilla/high_info_high_af/lc.chr{{chr}}.vcf.gz"
+        filtered_vcf = "results/wip_vcfs/{panel_name}/vanilla/high_info_high_af/lc.chr{chr}.vcf.gz"
     output:
-        filtered_vcf = temp(f"results/wip_vcfs/{PANEL_NAME}/vanilla/high_info_high_af_giab_high_conf/lc.chr{{chr}}.vcf"),
-        filtered_vcf_gz = f"results/wip_vcfs/{PANEL_NAME}/vanilla/high_info_high_af_giab_high_conf/lc.chr{{chr}}.vcf.gz"
+        filtered_vcf = temp("results/wip_vcfs/{panel_name}/vanilla/high_info_high_af_giab_high_conf/lc.chr{chr}.vc"),
+        filtered_vcf_gz = "results/wip_vcfs/{panel_name}/vanilla/high_info_high_af_giab_high_conf/lc.chr{chr}.vcf.gz"
     resources:
         mem = '30G'
     threads: 4
     params:
         bed = "data/bedgraph/GIAB_not_in_difficult_regions.bed"
     shell: """
-        mkdir -p results/wip_vcfs/{PANEL_NAME}/vanilla/high_info_high_af_giab_high_conf/
+        mkdir -p results/wip_vcfs/{panel_name}/vanilla/high_info_high_af_giab_high_conf/
 
         gunzip -c {input.filtered_vcf} | grep '#' > {output.filtered_vcf}
         tabix -R {params.bed} {input.filtered_vcf} >> {output.filtered_vcf}
@@ -246,15 +237,15 @@ rule filter_giab_low_confidence_regions:
 
 rule filter_giab_lc_sites:
     input:
-        vcf = f"results/wip_vcfs/{PANEL_NAME}/vanilla/high_info_high_af_giab_high_conf/lc.chr{{chr}}.vcf.gz",
+        vcf = "results/wip_vcfs/{panel_name}/vanilla/high_info_high_af_giab_high_conf/lc.chr{chr}.vcf.gz",
         sites = rules.prepare_chip_manifest.output.pos
     output:
-        filtered_vcf = f"results/wip_vcfs/{PANEL_NAME}/vanilla/high_info_high_af_giab_high_conf_chip_sites/lc.chr{{chr}}.vcf.gz"
+        filtered_vcf = "results/wip_vcfs/{panel_name}/vanilla/high_info_high_af_giab_high_conf_chip_sites/lc.chr{chr}.vcf.gz"
     resources:
         mem = '60G'
     threads: 8
     params:
-        panel = PANEL_NAME,
+        panel = panel_name,
         chrom = "{chr}"
     run:
         common_cols = ['chr', 'pos']
@@ -282,24 +273,20 @@ rule filter_giab_lc_sites:
              outdir="results/wip_vcfs/" + params.panel + "/vanilla/high_info_high_af_giab_high_conf_chip_sites/",
              save_name="lc.chr" + str(wildcards.chr) + ".vcf.gz"
              )
-
+'''
 rule filter_oneKG_lc_sites:
     input:
-        vcf = f"results/wip_vcfs/{PANEL_NAME}/vanilla/high_info_high_af_high_conf/lc.chr{{chr}}.vcf.gz",
+        vcf = "results/wip_vcfs/{panel_name}/vanilla/high_info_high_af_high_conf/lc.chr{chr}.vcf.gz",
         sites = rules.prepare_chip_manifest.output.pos
     output:
-        filtered_vcf = f"results/wip_vcfs/{PANEL_NAME}/vanilla/high_info_high_af_high_conf_chip_sites/lc.chr{{chr}}.vcf.gz"
+        filtered_vcf = "results/wip_vcfs/{panel_name}/vanilla/high_info_high_af_high_conf_chip_sites/lc.chr{chr}.vcf.gz"
     resources:
         mem = '60G'
     threads: 8
     params:
-        panel = PANEL_NAME,
         chrom = "{chr}"
     run:
         common_cols = ['chr', 'pos']
-        lc_sample_prefix = 'GM'
-        chip_sample_prefix = 'GAM'
-        seq_sample_prefix = 'IDT'
 
         imp_vcf = input.vcf
         chip_sites = input.sites
@@ -318,6 +305,6 @@ rule filter_oneKG_lc_sites:
         lcwgsus.save_vcf(lc_sites,
              metadata,
              prefix='chr',
-             outdir="results/wip_vcfs/" + params.panel + "/vanilla/high_info_high_af_high_conf_chip_sites/",
+             outdir="results/wip_vcfs/" + wildcards.panel_name + "/vanilla/high_info_high_af_high_conf_chip_sites/",
              save_name="lc.chr" + str(wildcards.chr) + ".vcf.gz"
              )
