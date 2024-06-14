@@ -197,7 +197,7 @@ rule filter_oneKG_low_confidence_regions:
     input:
         filtered_vcf = "results/wip_vcfs/{panel_name}/vanilla/high_info_high_af/lc.chr{chr}.vcf.gz"
     output:
-        filtered_vcf = temp("results/wip_vcfs/{panel_name}/vanilla/high_info_high_af_high_conf/lc.chr{chr}.vc"),
+        filtered_vcf = temp("results/wip_vcfs/{panel_name}/vanilla/high_info_high_af_high_conf/lc.chr{chr}.vcf.gz"),
         filtered_vcf_gz = "results/wip_vcfs/{panel_name}/vanilla/high_info_high_af_high_conf/lc.chr{chr}.vcf.gz"
     resources:
         mem = '30G'
@@ -219,7 +219,7 @@ rule filter_giab_low_confidence_regions:
     input:
         filtered_vcf = "results/wip_vcfs/{panel_name}/vanilla/high_info_high_af/lc.chr{chr}.vcf.gz"
     output:
-        filtered_vcf = temp("results/wip_vcfs/{panel_name}/vanilla/high_info_high_af_giab_high_conf/lc.chr{chr}.vc"),
+        filtered_vcf = temp("results/wip_vcfs/{panel_name}/vanilla/high_info_high_af_giab_high_conf/lc.chr{chr}.vcf.gz"),
         filtered_vcf_gz = "results/wip_vcfs/{panel_name}/vanilla/high_info_high_af_giab_high_conf/lc.chr{chr}.vcf.gz"
     resources:
         mem = '30G'
