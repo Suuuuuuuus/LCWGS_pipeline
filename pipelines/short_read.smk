@@ -369,15 +369,15 @@ rule prepare_sr_vcf:
     shell: """
         mkdir -p results/sr_imputation/truth/
         
-        length=('151-long', '151-optimal', '151-real', '151-short', '300-long', '300-optimal', '300-real', '300-short')
+        length=('151-long' '151-optimal' '151-real' '151-short' '300-long' '300-optimal' '300-real' '300-short')
 
         for l in "${{length[@]}}"
         do
             echo $l > {output.rename}
             bcftools view -s {params.sample} {input.vcf} | \
             bcftools reheader -s {output.rename} -o results/sr_imputation/truth/$l.chr{wildcards.chr}.vcf
-            bgzip results/sr_imputation/truth/$l.chr{wildcards.chr}.vcf
-            tabix results/sr_imputation/truth/$l.chr{wildcards.chr}.vcf.gz
+            bgzip -f results/sr_imputation/truth/$l.chr{wildcards.chr}.vcf
+            tabix -f results/sr_imputation/truth/$l.chr{wildcards.chr}.vcf.gz
         done
 
         bcftools merge -Oz -o {output.truth} {params.vcfs}
