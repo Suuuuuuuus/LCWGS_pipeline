@@ -116,7 +116,10 @@ rule subset_lc_samples:
             samples = lcwgsus.find_matching_samples(hc_names, rename_map, lc = lc)
             lcwgsus.save_lst(output.tmp_names, samples)
         else:
-            pass
+            rename_map = lcwgsus.generate_rename_map()
+            lc = wildcards.imp_dir.split('/')[-2].split('_')[0]
+            samples = lcwgsus.find_matching_samples(hc_names, rename_map, lc = lc)
+            lcwgsus.save_lst(output.tmp_names, samples)
 
         shell("bcftools view -S {output.tmp_names} -Oz -o {output.ss_vcf} {input.quilt_vcf}")
 
