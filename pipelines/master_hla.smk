@@ -26,23 +26,16 @@ bam_numbers = [str(i) for i in range(1, int(bam_batches) + 1)]
 rule hla_imputation_prep_all:
     input:
         bamlist = expand("results/hla/imputation/bamlists/bamlist{num}.txt", num = bam_numbers),
-        # bam = expand("data/hla_bams/{id}.bam", id = samples_lc),
-        # bai = expand("data/hla_bams/{id}.bam.bai", id = samples_lc),
         # ref_panel = expand(f"{hla_ref_panel_outdir}HLA{{gene}}fullallelesfilledin.RData", gene = hla_genes)
 
 rule hla_imputation_all:
     input:
         hla_imputed = expand("results/hla/imputation/batches/genes{num}/{hla_gene}/quilt.hla.output.combined.all.txt", hla_gene = hla_genes, num = bam_numbers)
 
-# rule hla_imputation_alt_all:
-#     input:
-#         hla_imputed = expand("results/hla/imputation/genes/{hla_gene}/quilt.hla.output.combined.all.txt", hla_gene = hla_genes),
-#         # bamlist = "results/hla/imputation/bamlist_alt.txt"
-
-two_stage_vcf_outdir_lst = config["two_stage_vcf_outdir"]
+two_stage_vcf_outdir = config["two_stage_vcf_outdir"]
 three_stage_vcf_outdir = config["three_stage_vcf_outdir"]
 
 rule post_hla_all:
     input:
-        two_stage_vcf = expand("{two_stage_vcf_outdir}chr6.vcf.gz", two_stage_vcf_outdir = two_stage_vcf_outdir_lst),
+        two_stage_vcf = expand("{two_stage_vcf_outdir}chr6.vcf.gz", two_stage_vcf_outdir = two_stage_vcf_outdir),
         three_stage_vcf = expand("{three_stage_vcf_outdir}chr6.vcf.gz", three_stage_vcf_outdir = three_stage_vcf_outdir)

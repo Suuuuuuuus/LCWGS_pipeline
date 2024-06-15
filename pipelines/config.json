@@ -164,11 +164,13 @@
     ],
     "two_stage_vcf_indir": [
         "results/wip_vcfs/oneKG/vanilla/high_info_high_af_high_conf_chip_sites/",
-        "results/wip_vcfs/oneKG/vanilla/high_info_high_af_chip_sites/"
+        "results/wip_vcfs/oneKG/vanilla/high_info_high_af_chip_sites/",
+        "/well/band/users/rbx225/GAMCC/results/wip_vcfs/oneKG/vanilla/chip_sites/"
     ],
     "two_stage_vcf_outdir": [
         "results/two-stage-hla/lc_oneKG_strict/",
-        "results/two-stage-hla/lc_oneKG/"
+        "results/two-stage-hla/lc_oneKG/",
+        "results/two-stage-hla/lc_oneKG_chip/"
     ],
     "three_stage_vcf_indir": [
         "results/two-stage-imputation/vanilla/oneKG_strict_topmed/vcf/",
