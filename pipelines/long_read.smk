@@ -363,7 +363,9 @@ rule prepare_lr_vcf:
             tabix results/lr_imputation/truth/$l.chr{wildcards.chr}.vcf.gz
         done
 
-        bcftools merge -Oz -o {output.truth} {output.one} {output.two} {output.five} {output.ten} {output.twenty}
+        bcftools merge -Oz -o {output.truth} {output.ten} {output.one} {output.twenty} {output.two} {output.p5} {output.five} {output.p6} {output.p8}
+
+        rm *chr{wildcards.chr}*.tbi
     """
 
 pair = ['lc', 'hc']
