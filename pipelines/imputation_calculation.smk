@@ -100,8 +100,7 @@ rule subset_lc_samples:
         lc_names = lcwgsus.bcftools_get_samples(input.quilt_vcf)
 
         if lc_names[0].startswith('IDT'):
-            # Assuming IDT is sorted
-            sl = pd.read_csv(sample_linker).sort_values(by = 'Seq_Name')
+            sl = sample_linker.sort_values(by = 'Seq_Name')
             sl = sl[sl['Seq_Name'].isin(lc_names)]
             sl = sl[~sl['Sample_Name'].str.contains('mini')]
             rename_map = {k:v for k,v in zip(sl['Chip_Name'], sl['Seq_Name'])}
