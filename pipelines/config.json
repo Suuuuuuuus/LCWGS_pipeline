@@ -42,7 +42,7 @@
     "WINDOWSIZE": 5000000,
     "BUFFER": 0,
     "BAMLIST": "/well/band/users/rbx225/GAMCC/results/imputation/bamlist.txt",
-    "PANEL_NAME": "malariaGen_v3_b38",
+    "PANEL_NAME": "malariaGen_v1_b38",
     "bam_batch": "3",
 
     "lr_analysis_dir": "/well/band/users/rbx225/GAMCC/results/lr_imputation/",
@@ -71,6 +71,7 @@
         "/well/band/users/rbx225/GAMCC/results/imputation_comparison/vanilla/lc_oneKG_GIABHighConfidence_topmed--hc--snps_gw/",
 
         "/well/band/users/rbx225/GAMCC/results/imputation_comparison/vanilla/lc_malariaGen_v3_b38--chip--typed/", 
+        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/vanilla/lc_malariaGen_v3_b38--chip--typed_high_info/", 
         "/well/band/users/rbx225/GAMCC/results/imputation_comparison/vanilla/lc_malariaGen_v3_b38--hc--snps_gw/"
     ],
     "lc_vcf_dir" : [
@@ -87,6 +88,7 @@
         "/well/band/users/rbx225/GAMCC/results/two-stage-imputation/vanilla/oneKG_strict_topmed/vcf/",
 
         "/well/band/users/rbx225/GAMCC/results/imputation/vcfs/malariaGen_v3_b38/",
+        "/well/band/users/rbx225/GAMCC/results/wip_vcfs/malariaGen_v3_b38/vanilla/high_info_high_af/",
         "/well/band/users/rbx225/GAMCC/results/imputation/vcfs/malariaGen_v3_b38/"
     ],
     "hc_vcf_dir": [
@@ -102,6 +104,7 @@
         "/well/band/users/rbx225/GAMCC/results/call/recal_vcf/oneKG/snps/",
         "/well/band/users/rbx225/GAMCC/results/call/recal_vcf/oneKG/snps/",
 
+        "/well/band/users/rbx225/GAMCC/results/chip/vcf/chip_by_chr/",
         "/well/band/users/rbx225/GAMCC/results/chip/vcf/chip_by_chr/",
         "/well/band/users/rbx225/GAMCC/results/call/recal_vcf/oneKG/snps/"
     ],
