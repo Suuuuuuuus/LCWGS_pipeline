@@ -357,7 +357,7 @@ rule prepare_lr_vcf:
         do
             echo $l > {output.rename}
             bcftools view -s {params.sample} {input.vcf} | \
-            bcftools reheader -s {output.rename} -o results/sr_imputation/truth/$l.chr{wildcards.chr}.vcf
+            bcftools reheader -s {output.rename} -o results/lr_imputation/truth/$l.chr{wildcards.chr}.vcf
             bgzip -f results/lr_imputation/truth/$l.chr{wildcards.chr}.vcf
             tabix -f results/lr_imputation/truth/$l.chr{wildcards.chr}.vcf.gz
         done
