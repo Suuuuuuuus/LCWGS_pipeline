@@ -332,40 +332,38 @@ rule concat_quilt_vcf:
         rm {output.vcf}.temp*
     """
 
+rl_vcf_header = ['10kb', '1kb', '20kb', '2kb', '500b', '5kb', '600b', '800b']
+
+def get_vcf_lst(wildcards):
+    vcfs = ["results/lr_imputation/truth/" + rl + ".chr" + wildcards.chr + ".vcf.gz" for rl in rl_vcf_header]
+    return vcfs
+
 rule prepare_lr_vcf:
     input:
         vcf = f"data/ref_panel/{PANEL_NAME}/oneKG.chr{{chr}}.vcf.gz"
     output:
-        p5 = temp("results/lr_imputation/truth/500b.chr{chr}.vcf.gz"),
-        p6 = temp("results/lr_imputation/truth/600b.chr{chr}.vcf.gz"),
-        p8 = temp("results/lr_imputation/truth/800b.chr{chr}.vcf.gz"),
-        one = temp("results/lr_imputation/truth/1kb.chr{chr}.vcf.gz"),
-        two = temp("results/lr_imputation/truth/2kb.chr{chr}.vcf.gz"),
-        five = temp("results/lr_imputation/truth/5kb.chr{chr}.vcf.gz"),
-        ten = temp("results/lr_imputation/truth/10kb.chr{chr}.vcf.gz"),
-        twenty = temp("results/lr_imputation/truth/20kb.chr{chr}.vcf.gz"),
         truth = "results/lr_imputation/truth/long_read_truth.chr{chr}.vcf.gz",
         rename = temp("results/lr_imputation/truth/name.chr{chr}.txt")
     resources: mem = '10G'
     params:
-        sample = 'HG02886'
+        sample = 'HG02886',
+        vcfs = get_vcf_lst
     shell: """
         mkdir -p results/lr_imputation/truth/
         
-        length=("10kb" "1kb" "20kb" "2kb" "500b" "5kb" "600b" "800b")
+        length=('10kb' '1kb' '20kb' '2kb' '500b' '5kb' '600b' '800b')
 
         for l in "${{length[@]}}"
         do
             echo $l > {output.rename}
             bcftools view -s {params.sample} {input.vcf} | \
-            bcftools reheader -s {output.rename} -o results/lr_imputation/truth/$l.chr{wildcards.chr}.vcf
-            bgzip results/lr_imputation/truth/$l.chr{wildcards.chr}.vcf
-            tabix results/lr_imputation/truth/$l.chr{wildcards.chr}.vcf.gz
+            bcftools reheader -s {output.rename} -o results/sr_imputation/truth/$l.chr{wildcards.chr}.vcf
+            bgzip -f results/lr_imputation/truth/$l.chr{wildcards.chr}.vcf
+            tabix -f results/lr_imputation/truth/$l.chr{wildcards.chr}.vcf.gz
         done
 
-        bcftools merge -Oz -o {output.truth} {output.ten} {output.one} {output.twenty} {output.two} {output.p5} {output.five} {output.p6} {output.p8}
-
-        rm *chr{wildcards.chr}*.tbi
+        bcftools merge -Oz -o {output.truth} {params.vcfs}
+        rm {params.vcfs}*
     """
 
 pair = ['lc', 'hc']
