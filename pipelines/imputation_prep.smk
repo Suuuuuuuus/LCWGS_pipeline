@@ -68,8 +68,10 @@ rule convert_ref:
         threads=1
     shell: """
         mkdir -p results/imputation/refs/{params.panel}/
-        bcftools norm -m+ {input.vcf} | bcftools view -m2 -M2 -v snps -Oz -o {output.tmp_vcf}
+
+        bcftools norm -m+ {input.vcf} | bcftools view -m2 -M2 -v snps | bcftools sort -Oz -o {output.tmp_vcf}
         tabix {output.tmp_vcf}
+
         bcftools convert --haplegendsample results/imputation/refs/{params.panel}/{params.panel}.chr{wildcards.chr} {output.tmp_vcf}
     """
 '''
