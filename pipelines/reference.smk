@@ -136,7 +136,8 @@ rule lift_over_malariaGen_v3:
         chain = "data/ref_panel/b37ToHg38.over.chain",
         dictionary = "data/references/GRCh38_with_alt.dict"
     output:
-        tmp_vcf = temp("data/ref_panel/malariaGen_v3_b38_alone/malariaGen_v3_b38_alone.chr{chr}.tmp.vcf.gz"),
+        tmp1_vcf = temp("data/ref_panel/malariaGen_v3_b38_alone/malariaGen_v3_b38_alone.chr{chr}.tmp1.vcf.gz"),
+        tmp2_vcf = temp("data/ref_panel/malariaGen_v3_b38_alone/malariaGen_v3_b38_alone.chr{chr}.tmp2.vcf.gz"),
         lifted = "data/ref_panel/malariaGen_v3_b38_alone/malariaGen_v3_b38_alone.chr{chr}.vcf.gz",
         rejected = "data/ref_panel/malariaGen_v3_b38_alone/malariaGen_v3_b38_alone.chr{chr}.rejected.vcf.gz"
     resources: mem = '80G'
@@ -146,15 +147,17 @@ rule lift_over_malariaGen_v3:
     shell: """
         mkdir -p data/ref_panel/malariaGen_v3_b38_alone/
 
-        bcftools view -Oz -o {output.tmp_vcf} {input.vcf}
+        bcftools view -Oz -o {output.tmp1_vcf} {input.vcf}
 
         {params.picard} LiftoverVcf \
-        -I {output.tmp_vcf} \
-        -O {output.lifted} \
+        -I {output.tmp1_vcf} \
+        -O {output.tmp2_vcf} \
         -CHAIN {input.chain} \
         -REJECT {output.rejected} \
         -WMC true \
         -R {input.reference}
+
+        bcftools sort -Oz -o {output.vcf} {output.tmp2_vcf}
     """
 
 # ";NA;" is a common feature for a match in both ref panels
