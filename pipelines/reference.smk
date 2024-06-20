@@ -172,6 +172,8 @@ rule merge_malariaGen_v3_with_oneKG:
     threads: 4
     shell: """
         mkdir -p data/ref_panel/malariaGen_v3_b38/
+
+        tabix -f {input.mg}
         
         bcftools merge {input.mg} {input.oneKG} -Ou | \
         bcftools view -i 'ID~";NA;"' -Oz -o {output.vcf}
