@@ -157,7 +157,7 @@ rule lift_over_malariaGen_v3:
         -WMC true \
         -R {input.reference}
 
-        bcftools sort -Oz -o {output.vcf} {output.tmp2_vcf}
+        bcftools sort -Oz -o {output.lifted} {output.tmp2_vcf}
     """
 
 # ";NA;" is a common feature for a match in both ref panels
