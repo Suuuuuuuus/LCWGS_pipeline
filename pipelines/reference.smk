@@ -52,16 +52,11 @@ rule create_ref_dict:
         {params.picard} CreateSequenceDictionary \
         -R {input.reference} \
         -O {output.dictionary}
-    """ 
-
-def get_indir_vcf(wildcards):
-    d = wildcards.ref_outdir.replace("38", "37")
-    c = wildcards.chr
-    return "data/ref_panel/" + d + "/" + d + ".chr" + c + ".vcf.gz"
+    """
 
 rule lift_over_malariaGen_v1:
     input:
-        vcf = get_indir_vcf,
+        vcf = "data/ref_panel/malariaGen_v1_b37/malariaGen_v1_b37.chr{chr}.vcf.gz",
         reference = "data/references/GRCh38_with_alt.fa",
         chain = "data/ref_panel/b37ToHg38.over.chain",
         dictionary = "data/references/GRCh38_with_alt.dict"
