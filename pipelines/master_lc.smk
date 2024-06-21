@@ -51,10 +51,10 @@ rule reference_all:
         sa = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta.sa" if concatenate else "data/references/GRCh38.fa.sa",
 
         v3_b37 = expand("data/ref_panel/malariaGen_v3_b37_alone/malariaGen_v3_b37_alone.chr{chr}.vcf.gz", chr = chromosome),
-        lifted_v1 = expand("data/ref_panel/malariaGen_v1_b38/malariaGen_v1_b38.chr{chr}.vcf.gz", chr = chromosome),
-        lifted_v3_alone = expand("data/ref_panel/malariaGen_v3_b38_alone/malariaGen_v3_b38_alone.chr{chr}.vcf.gz", chr = chromosome),
-        lifted_v3 = expand("data/ref_panel/malariaGen_v3_b38/malariaGen_v3_b38.chr{chr}.vcf.gz", chr = chromosome),
-        tbi = expand("data/ref_panel/malariaGen_v3_b38/malariaGen_v3_b38.chr{chr}.vcf.gz.tbi", chr = chromosome),
+        v1_b38 = expand("data/ref_panel/malariaGen_v1_b38/malariaGen_v1_b38.chr{chr}.vcf.gz", chr = chromosome),
+        v3_b38_alone = expand("data/ref_panel/malariaGen_v3_b38_alone/malariaGen_v3_b38_alone.chr{chr}.vcf.gz", chr = chromosome),
+        v3_b38 = expand("data/ref_panel/malariaGen_v3_b38/malariaGen_v3_b38.chr{chr}.vcf.gz", chr = chromosome),
+        v3_b38_tbi = expand("data/ref_panel/malariaGen_v3_b38/malariaGen_v3_b38.chr{chr}.vcf.gz.tbi", chr = chromosome),
         dictionary = "data/references/GRCh38_with_alt.dict"
 
 rule fastqc_all:

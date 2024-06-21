@@ -130,7 +130,7 @@ rule convert_shapeit_to_vcf:
 
 rule lift_over_malariaGen_v3:
     input:
-        vcf = "data/ref_panel/malariaGen_v3_b37_alone/malariaGen_v3_b37_alone.chr{chr}.tmp.vcf.gz",
+        vcf = "data/ref_panel/malariaGen_v3_b37_alone/malariaGen_v3_b37_alone.chr{chr}.vcf.gz",
         reference = "data/references/GRCh38_with_alt.fa",
         chain = "data/ref_panel/b37ToHg38.over.chain",
         dictionary = "data/references/GRCh38_with_alt.dict"
