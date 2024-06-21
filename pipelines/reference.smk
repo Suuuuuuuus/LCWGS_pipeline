@@ -66,17 +66,17 @@ rule lift_over_malariaGen_v1:
         chain = "data/ref_panel/b37ToHg38.over.chain",
         dictionary = "data/references/GRCh38_with_alt.dict"
     output:
-        tmp1_vcf = temp("data/ref_panel/{ref_outdir}/{ref_outdir}.chr{chr}.tmp1.vcf.gz"),
-        tmp_vcf = temp("data/ref_panel/{ref_outdir}/{ref_outdir}.chr{chr}.tmp.vcf.gz"),
-        tmp2_vcf = temp("data/ref_panel/{ref_outdir}/{ref_outdir}.chr{chr}.tmp2.vcf.gz"),
-        lifted = "data/ref_panel/{ref_outdir}/{ref_outdir}.chr{chr}.vcf.gz",
-        rejected = "data/ref_panel/{ref_outdir}/{ref_outdir}.chr{chr}.rejected.vcf.gz"
+        tmp1_vcf = temp("data/ref_panel/malariaGen_v1_b38/malariaGen_v1_b38.chr{chr}.tmp1.vcf.gz"),
+        tmp_vcf = temp("data/ref_panel/malariaGen_v1_b38/malariaGen_v1_b38.chr{chr}.tmp.vcf.gz"),
+        tmp2_vcf = temp("data/ref_panel/malariaGen_v1_b38/malariaGen_v1_b38.chr{chr}.tmp2.vcf.gz"),
+        lifted = "data/ref_panel/malariaGen_v1_b38/malariaGen_v1_b38.chr{chr}.vcf.gz",
+        rejected = "data/ref_panel/malariaGen_v1_b38/malariaGen_v1_b38.chr{chr}.rejected.vcf.gz"
     resources: mem = '110G'
     threads: 8
     params:
         picard = tools["picard_ppplus"],
         c = "{chr}",
-        rename_chr = "data/ref_panel/{ref_outdir}/rename_chr{chr}.tsv"
+        rename_chr = "data/ref_panel/malariaGen_v1_b38/rename_chr{chr}.tsv"
     shell: """
         gunzip -c {input.vcf} | sed 's/Type=String,Number=1/Number=1,Type=String/g' | bcftools view -Oz -o {output.tmp1_vcf}
         tabix -f {output.tmp1_vcf}
