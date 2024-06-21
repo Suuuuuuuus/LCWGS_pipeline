@@ -110,7 +110,7 @@ rule convert_shapeit_to_vcf:
         shapeit = "data/ref_panel/shapeit/MalariaGEN_combined_reference_panel_v3_chr{chr}_biallelic_snps.shapeit.haps.gz",
         samples = "data/ref_panel/shapeit/malariaGen_v3_b37.samples"
     output:
-        vcf = temp("data/ref_panel/malariaGen_v3_b37_alone/malariaGen_v3_b37_alone.chr{chr}.tmp.vcf.gz"),
+        vcf = "data/ref_panel/malariaGen_v3_b37_alone/malariaGen_v3_b37_alone.chr{chr}.vcf.gz",
         tmp1 = temp("data/ref_panel/malariaGen_v3_b37_alone/malariaGen_v3_b37_alone.chr{chr}.tmp1.vcf.gz")
     resources: mem = '50G'
     threads: 4
