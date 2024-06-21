@@ -154,7 +154,7 @@ rule lift_over_malariaGen_v3:
         -CHAIN {input.chain} \
         -REJECT {output.rejected} \
         -WMC true \
-        --MAX_RECORDS_IN_RAM 50000 \f
+        --MAX_RECORDS_IN_RAM 50000 \
         -R {input.reference}
 
         bcftools view -r chr{wildcards.chr} {output.tmp2_vcf} | \
