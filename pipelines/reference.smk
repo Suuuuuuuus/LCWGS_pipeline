@@ -95,13 +95,17 @@ rule lift_over_malariaGen_v1:
         
         {params.picard} LiftoverVcf \
         -I {output.tmp2_vcf} \
-        -O {output.lifted} \
+        -O {output.tmp1_vcf} \
         -CHAIN {input.chain} \
         -REJECT {output.rejected} \
         -WMC true \
         --MAX_RECORDS_IN_RAM 50000 \
         -R {input.reference}
 
+        tabix -f {output.tmp1_vcf}
+
+        bcftools view -r chr{wildcards.chr} {output.tmp1_vcf} | \
+        bcftools sort -Oz -o {output.lifted}
         tabix -f {output.lifted}
     """
 
@@ -155,9 +159,12 @@ rule lift_over_malariaGen_v3:
         -CHAIN {input.chain} \
         -REJECT {output.rejected} \
         -WMC true \
+        --MAX_RECORDS_IN_RAM 50000 \f
         -R {input.reference}
 
-        bcftools sort -Oz -o {output.lifted} {output.tmp2_vcf}
+        bcftools view -r chr{wildcards.chr} {output.tmp2_vcf} | \
+        bcftools sort -Oz -o {output.lifted}
+        tabix -f {output.lifted}
     """
 
 # ";NA;" is a common feature for a match in both ref panels
@@ -178,5 +185,5 @@ rule merge_malariaGen_v3_with_oneKG:
         bcftools merge {input.mg} {input.oneKG} -Ou | \
         bcftools view -i 'ID~";NA;"' -Oz -o {output.vcf}
 
-        tabix {output.vcf} 
+        tabix -f {output.vcf} 
     """
