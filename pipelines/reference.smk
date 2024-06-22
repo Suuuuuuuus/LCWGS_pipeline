@@ -162,7 +162,6 @@ rule lift_over_malariaGen_v3:
         tabix -f {output.lifted}
     """
 
-# ";NA;" is a common feature for a match in both ref panels
 rule merge_malariaGen_v3_with_oneKG:
     input:
         mg = "data/ref_panel/malariaGen_v3_b38_alone/malariaGen_v3_b38_alone.chr{chr}.vcf.gz",
@@ -177,8 +176,7 @@ rule merge_malariaGen_v3_with_oneKG:
 
         tabix -f {input.mg}
         
-        bcftools merge {input.mg} {input.oneKG} -Ou | \
-        bcftools view -i 'ID~";NA;"' -Oz -o {output.vcf}
+        bcftools merge -0 {input.mg} {input.oneKG} -Oz -o {output.vcf}
 
         tabix -f {output.vcf} 
     """

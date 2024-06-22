@@ -1106,3 +1106,24 @@ rule simulate_reads:
         -y 0 \
         {input.fasta} {params.output_prefix}
     """
+
+# ";NA;" is a common feature for a match in both ref panels
+rule merge_malariaGen_v3_with_oneKG:
+    input:
+        mg = "data/ref_panel/malariaGen_v3_b38_alone/malariaGen_v3_b38_alone.chr{chr}.vcf.gz",
+        oneKG = "data/ref_panel/oneKG/oneKG.chr{chr}.vcf.gz"
+    output:
+        vcf = "data/ref_panel/malariaGen_v3_b38/malariaGen_v3_b38.chr{chr}.vcf.gz",
+        tbi = "data/ref_panel/malariaGen_v3_b38/malariaGen_v3_b38.chr{chr}.vcf.gz.tbi"
+    resources: mem = '70G'
+    threads: 4
+    shell: """
+        mkdir -p data/ref_panel/malariaGen_v3_b38/
+
+        tabix -f {input.mg}
+        
+        bcftools merge {input.mg} {input.oneKG} -Ou | \
+        bcftools view -i 'ID~";NA;"' -Oz -o {output.vcf}
+
+        tabix -f {output.vcf} 
+    """
