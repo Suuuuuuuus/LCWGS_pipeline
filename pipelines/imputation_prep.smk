@@ -64,8 +64,9 @@ rule convert_ref:
     wildcard_constraints:
         chr='\d{1,2}'
     params:
-        panel = PANEL_NAME,
-        threads=1
+        panel = PANEL_NAME
+    threads: 4
+    resources: mem = '30G'
     shell: """
         mkdir -p results/imputation/refs/{params.panel}/
 
