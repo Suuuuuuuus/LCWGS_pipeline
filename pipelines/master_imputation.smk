@@ -40,6 +40,9 @@ rule filter_vcf_all:
 
 rule imputation_calculation_hc_all:
     input:
+        lifted = expand("results/two-stage-imputation/vanilla/oneKG_hrc/lifted_vcf/chr{chr}.dose.vcf.gz", chr = chromosome),
+        rejected = expand("results/two-stage-imputation/vanilla/oneKG_hrc/lifted_vcf/chr{chr}.rejected.vcf.gz", chr = chromosome),
+
         vcfs_all = expand('{imp_dir}vcf/all_samples/{pair}_vcf/{pair}.chr{chr}.vcf.gz', imp_dir = imputation_dir, chr = chromosome, pair = pair),
         h_report_all = expand("{imp_dir}impacc/all_samples/by_variant/chr{chr}.h.tsv", imp_dir = imputation_dir, chr = chromosome),
         h_impacc_all = expand("{imp_dir}impacc/all_samples/by_variant/chr{chr}.h.impacc.tsv", imp_dir = imputation_dir, chr = chromosome),

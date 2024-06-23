@@ -86,7 +86,7 @@
         "/well/band/users/rbx225/GAMCC/results/imputation/vcfs/oneKG/", 
         "/well/band/users/rbx225/GAMCC/results/chip/imputed/topmed/vcf/",
         "/well/band/users/rbx225/GAMCC/results/two-stage-imputation/vanilla/oneKG_oneKG/vcf/",
-        "/well/band/users/rbx225/GAMCC/results/two-stage-imputation/vanilla/oneKG_hrc/vcf/",
+        "/well/band/users/rbx225/GAMCC/results/two-stage-imputation/vanilla/oneKG_hrc/lifted_vcf/",
         "/well/band/users/rbx225/GAMCC/results/two-stage-imputation/vanilla/oneKG_topmed/vcf/",
         "/well/band/users/rbx225/GAMCC/results/two-stage-imputation/vanilla/oneKG_chip_site_oneKG/vcf/",
         "/well/band/users/rbx225/GAMCC/results/two-stage-imputation/vanilla/oneKG_chip_site_topmed/vcf/",
