@@ -1,5 +1,6 @@
-include: "imputation_calculation.smk"
 include: "filter_vcf.smk"
+include: "post_gw.smk"
+include: "imputation_calculation.smk"
 
 include: "auxiliary.smk"
 include: "software.smk"
@@ -25,6 +26,11 @@ axis = ['h', 'v']
 
 imputation_dir = config['imputation_dir']
 
+rule post_gw_all:
+    input:
+        lifted = expand("results/two-stage-imputation/vanilla/oneKG_hrc/lifted_vcf/chr{chr}.dose.vcf.gz", chr = chromosome),
+        rejected = expand("results/two-stage-imputation/vanilla/oneKG_hrc/lifted_vcf/chr{chr}.rejected.vcf.gz", chr = chromosome)
+
 rule filter_vcf_all:
     input:
         # lc_chip_site_vcf = expand("results/wip_vcfs/{panel_name}/vanilla/chip_sites/lc.chr{chr}.vcf.gz", chr = chromosome, panel_name = panels),
@@ -40,9 +46,6 @@ rule filter_vcf_all:
 
 rule imputation_calculation_hc_all:
     input:
-        lifted = expand("results/two-stage-imputation/vanilla/oneKG_hrc/lifted_vcf/chr{chr}.dose.vcf.gz", chr = chromosome),
-        rejected = expand("results/two-stage-imputation/vanilla/oneKG_hrc/lifted_vcf/chr{chr}.rejected.vcf.gz", chr = chromosome),
-
         vcfs_all = expand('{imp_dir}vcf/all_samples/{pair}_vcf/{pair}.chr{chr}.vcf.gz', imp_dir = imputation_dir, chr = chromosome, pair = pair),
         h_report_all = expand("{imp_dir}impacc/all_samples/by_variant/chr{chr}.h.tsv", imp_dir = imputation_dir, chr = chromosome),
         h_impacc_all = expand("{imp_dir}impacc/all_samples/by_variant/chr{chr}.h.impacc.tsv", imp_dir = imputation_dir, chr = chromosome),
