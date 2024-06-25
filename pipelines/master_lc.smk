@@ -147,7 +147,7 @@ rule imputation_prep_all:
     input:
         bamlist = "results/imputation/bamlist.txt",
         # recomb = expand("results/imputation/" + RECOMB_POP + "/" + RECOMB_POP + "-chr{chr}-final.b38.txt.gz", chr = chromosome),
-        # json = "results/imputation/regions.json",
+        json = "results/imputation/regions.json",
         hap = expand(f"results/imputation/refs/{PANEL_NAME}/{PANEL_NAME}.chr{{chr}}.hap.gz", chr = chromosome),
         legend = expand(f"results/imputation/refs/{PANEL_NAME}/{PANEL_NAME}.chr{{chr}}.legend.gz", chr = chromosome),
         samples = expand(f"results/imputation/refs/{PANEL_NAME}/{PANEL_NAME}.chr{{chr}}.samples", chr = chromosome)

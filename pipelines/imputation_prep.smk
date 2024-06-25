@@ -75,7 +75,7 @@ rule convert_ref:
 
         bcftools convert --haplegendsample results/imputation/refs/{params.panel}/{params.panel}.chr{wildcards.chr} {output.tmp_vcf}
     """
-'''
+
 rule determine_chunks:
     input:
         legend = expand(f"results/imputation/refs/{PANEL_NAME}/{PANEL_NAME}.chr{{chr}}.legend.gz", chr = chromosome),
@@ -86,4 +86,3 @@ rule determine_chunks:
     shell: """
         Rscript {input.code} {ANALYSIS_DIR:q} {WINDOWSIZE} {BUFFER} {PANEL_NAME:q}
     """
-'''
