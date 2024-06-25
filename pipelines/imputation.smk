@@ -123,7 +123,8 @@ rule concat_quilt_vcf:
         mem_mb = 30000
     params:
         threads = 1,
-        input_string=get_input_vcfs_as_string
+        input_string=get_input_vcfs_as_string,
+        samples = "data/sample_tsvs/all_gm_names.tsv"
         # rename_samples = config["rename_samples"],
         # rename_samples_file = config["rename_samples_file"]
     wildcard_constraints:
@@ -146,7 +147,11 @@ rule concat_quilt_vcf:
 
         gunzip -c {output.vcf}.temp1.vcf.gz | grep '#' > {output.vcf}.temp2.vcf
         bcftools query -f '%CHROM\t%POS\t%ID\t%REF\t%ALT\t%QUAL\t%FILTER\t%INFO\tGT:GP:DS\t[%GT:%GP:%DS\t]\n' {output.vcf}.temp1.vcf.gz  >> {output.vcf}.temp2.vcf
-        bcftools sort -Oz -o {output.vcf} {output.vcf}.temp2.vcf
+
+        bcftools reheader -o {output.vcf}.temp3.vcf -s {params.samples} {output.vcf}.temp2.vcf
+
+        bcftools sort -Oz -o {output.vcf} {output.vcf}.temp3.vcf
+        
         tabix {output.vcf}
         rm {output.vcf}.temp*
     """
