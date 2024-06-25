@@ -28,7 +28,7 @@ data <- mclapply(
         if (!dir.exists(path)){
             dir.create(path)
         }
-        file <- file.path(ANALYSIS_DIR, "refs", paste0(PANEL_NAME, ".chr", chr, ".legend.gz"))
+        file <- file.path(ANALYSIS_DIR, "refs", PANEL_NAME, paste0(PANEL_NAME, ".chr", chr, ".legend.gz"))
         data <- fread(
             cmd = paste0("gunzip -c ", file), ##  | grep -v '#' | cut -f2"
             data.table = FALSE
