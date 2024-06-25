@@ -148,9 +148,9 @@ rule concat_quilt_vcf:
         gunzip -c {output.vcf}.temp1.vcf.gz | grep '#' > {output.vcf}.temp2.vcf
         bcftools query -f '%CHROM\t%POS\t%ID\t%REF\t%ALT\t%QUAL\t%FILTER\t%INFO\tGT:GP:DS\t[%GT:%GP:%DS\t]\n' {output.vcf}.temp1.vcf.gz  >> {output.vcf}.temp2.vcf
 
-        bcftools reheader -o {output.vcf}.temp3.vcf -s {params.samples} {output.vcf}.temp2.vcf
+        bcftools reheader -o {output.vcf}.temp3.vcf.gz -s {params.samples} {output.vcf}.temp2.vcf
 
-        bcftools sort -Oz -o {output.vcf} {output.vcf}.temp3.vcf
+        bcftools sort -Oz -o {output.vcf} {output.vcf}.temp3.vcf.gz
         
         tabix {output.vcf}
         rm {output.vcf}.temp*
