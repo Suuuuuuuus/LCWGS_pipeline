@@ -244,7 +244,7 @@ rule merge_1KGmGenv3_per_chunk:
 
         awk -F ' ' 'NR==1 {{print; next}} {{$1 = "chr{wildcards.chr}:"$2"_"$3"_"$4; print $0}}' \
         {params.output_prefix}.tmp.legend > {output.legend}
-        mv {params.output_prefix}.tmp.hap > {output.haps}
+        mv {params.output_prefix}.tmp.hap {output.haps}
 
         bgzip {output.legend}
         bgzip {output.haps}
