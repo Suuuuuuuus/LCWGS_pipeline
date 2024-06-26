@@ -253,7 +253,7 @@ rule merge_1KGmGenv3_per_chunk:
 
         cp {input.sample} {params.output_prefix}.samples
 
-        bcftools convert -H {params.output_prefix} -Oz -o {output.vcf}
+        bcftools convert -H {params.output_prefix} | bcftools sort -Oz -o {output.vcf}
         tabix -f {output.vcf}
     """
 
