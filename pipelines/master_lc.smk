@@ -42,7 +42,6 @@ rule preprocess_all:
         fwd_unpair = expand("data/fastq_cleaned/{id}_unpaired_1.fastq.gz", id = samples_lc),
         rev_unpair = expand("data/fastq_cleaned/{id}_unpaired_2.fastq.gz", id = samples_lc)
 
-to_merge = ['malariaGen_v3_b38_alone', 'oneKG']
 region_file = "data/5Mb_chunks.json"
 in_prefix = "data/ref_panel/malariaGen_v3_b38/regions/chr"
 mGen_chunk_vcfs_to_impute, mGen_chunk_vcfs_to_concat = get_vcf_concat_lst(region_file, in_prefix)
