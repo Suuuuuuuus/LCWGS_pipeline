@@ -179,7 +179,7 @@ rule prepare_merge_1KGmGenv3_vcf:
 
         bcftools norm -m+ {input.vcf} | \
         bcftools view -m2 -M2 -v snps | \
-        bcftools sort \
+        bcftools sort | \
         bcftools convert -h {params.outdir}{wildcards.to_merge}.chr{wildcards.chr}
 
         gunzip {params.outdir}{wildcards.to_merge}.chr{wildcards.chr}.hap.gz
