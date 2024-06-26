@@ -211,10 +211,8 @@ rule prepare_merge_1KGmGenv3_sample:
 
 rule merge_1KGmGenv3_per_chunk:
     input:
-        mGen_haps = "data/ref_panel/malariaGen_v3_b38/tmp/malariaGen_v3_b38_alone.chr{chr}.hap",
-        mGen_legend = "data/ref_panel/malariaGen_v3_b38/tmp/malariaGen_v3_b38_alone.chr{chr}.legend",
-        oneKG_haps = "data/ref_panel/malariaGen_v3_b38/tmp/oneKG.chr{chr}.hap",
-        oneKG_legend = "data/ref_panel/malariaGen_v3_b38/tmp/oneKG.chr{chr}.legend",
+        haps = expand("data/ref_panel/malariaGen_v3_b38/tmp/{to_merge}.chr{chr}.hap", to_merge = to_merge, allow_missing = True),
+        legends = expand("data/ref_panel/malariaGen_v3_b38/tmp/{to_merge}.chr{chr}.legend", to_merge = to_merge, allow_missing = True),
         gen_map = f"data/maps/{RECOMB_POP}-chr{{chr}}-final.b38.txt",
         sample = rules.prepare_merge_1KGmGenv3_sample.output.sample
     output:
@@ -226,17 +224,21 @@ rule merge_1KGmGenv3_per_chunk:
     params: 
         impute2 = tools['impute2'],
         outdir = "data/ref_panel/malariaGen_v3_b38/regions/",
-        output_prefix = "data/ref_panel/malariaGen_v3_b38/regions/chr{chr}.{regionStart}.{regionEnd}"
+        output_prefix = "data/ref_panel/malariaGen_v3_b38/regions/chr{chr}.{regionStart}.{regionEnd}",
+        mGen_haps = "data/ref_panel/malariaGen_v3_b38/tmp/malariaGen_v3_b38_alone.chr{chr}.hap",
+        mGen_legend = "data/ref_panel/malariaGen_v3_b38/tmp/malariaGen_v3_b38_alone.chr{chr}.legend",
+        oneKG_haps = "data/ref_panel/malariaGen_v3_b38/tmp/oneKG.chr{chr}.hap",
+        oneKG_legend = "data/ref_panel/malariaGen_v3_b38/tmp/oneKG.chr{chr}.legend",
     shell: """
         mkdir -p {params.outdir}
 
        {params.impute2} \
         -merge_ref_panels_output_ref {params.output_prefix}.tmp \
         -m {input.gen_map} \
-        -h {input.oneKG_haps} \
-           {input.mGen_haps} \
-        -l {input.oneKG_legend} \
-           {input.mGen_legend} \
+        -h {params.oneKG_haps} \
+           {params.mGen_haps} \
+        -l {params.oneKG_legend} \
+           {params.mGen_legend} \
         -int {regionStart} {regionEnd} \
         -Ne 20000
 
