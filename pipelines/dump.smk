@@ -1173,3 +1173,22 @@ rule vanilla_alignment:
         samtools sort -@6 -m 1G -o {output.bam} {output.tmp1}
         samtools index {output.bam}
     """
+
+rule merge_malariaGen_v3_with_oneKG:
+    input:
+        mg = "data/ref_panel/malariaGen_v3_b38_alone/malariaGen_v3_b38_alone.chr{chr}.vcf.gz",
+        oneKG = "data/ref_panel/oneKG/oneKG.chr{chr}.vcf.gz"
+    output:
+        vcf = "data/ref_panel/malariaGen_v3_b38/malariaGen_v3_b38.chr{chr}.vcf.gz",
+        tbi = "data/ref_panel/malariaGen_v3_b38/malariaGen_v3_b38.chr{chr}.vcf.gz.tbi"
+    resources: mem = '70G'
+    threads: 4
+    shell: """
+        mkdir -p data/ref_panel/malariaGen_v3_b38/
+
+        tabix -f {input.mg}
+        
+        bcftools merge -0 {input.mg} {input.oneKG} -Oz -o {output.vcf}
+
+        tabix -f {output.vcf} 
+    """

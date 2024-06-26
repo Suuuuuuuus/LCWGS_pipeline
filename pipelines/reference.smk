@@ -3,6 +3,7 @@ include: "software.smk"
 include: "auxiliary.smk"
 
 concatenate = config['concatenate']
+RECOMB_POP=config["RECOMB_POP"]
 
 # Borrowed from Annie Froster
 rule concatenate_refs:
@@ -162,21 +163,118 @@ rule lift_over_malariaGen_v3:
         tabix -f {output.lifted}
     """
 
-rule merge_malariaGen_v3_with_oneKG:
+to_merge = ['malariaGen_v3_b38_alone', 'oneKG']
+
+rule prepare_merge_1KGmGenv3_vcf:
     input:
-        mg = "data/ref_panel/malariaGen_v3_b38_alone/malariaGen_v3_b38_alone.chr{chr}.vcf.gz",
-        oneKG = "data/ref_panel/oneKG/oneKG.chr{chr}.vcf.gz"
+        vcf = "data/ref_panel/{to_merge}/{to_merge}.chr{chr}.vcf.gz"
     output:
-        vcf = "data/ref_panel/malariaGen_v3_b38/malariaGen_v3_b38.chr{chr}.vcf.gz",
-        tbi = "data/ref_panel/malariaGen_v3_b38/malariaGen_v3_b38.chr{chr}.vcf.gz.tbi"
+        haps = temp("data/ref_panel/malariaGen_v3_b38/tmp/{to_merge}.chr{chr}.hap"),
+        legend = temp("data/ref_panel/malariaGen_v3_b38/tmp/{to_merge}.chr{chr}.legend")
+    resources: mem = '30G'
+    threads: 4
+    params: outdir = "data/ref_panel/malariaGen_v3_b38/tmp/"
+    shell: """
+        mkdir -p {params.outdir}
+
+        bcftools norm -m+ {input.vcf} | \
+        bcftools view -m2 -M2 -v snps | \
+        bcftools sort \
+        bcftools convert -h {params.outdir}{wildcards.to_merge}.chr{wildcards.chr}
+
+        gunzip {params.outdir}{wildcards.to_merge}.chr{wildcards.chr}.hap.gz
+        gunzip {params.outdir}{wildcards.to_merge}.chr{wildcards.chr}.legend.gz
+    """
+
+rule prepare_merge_1KGmGenv3_sample:
+    input:
+        mg = "data/ref_panel/malariaGen_v3_b38_alone/malariaGen_v3_b38_alone.chr22.vcf.gz",
+        oneKG = "data/ref_panel/oneKG/oneKG.chr22.vcf.gz"
+    output:
+        tmp_sample = temp("data/ref_panel/malariaGen_v3_b38/tmp/tmp.sample"),
+        sample = temp("data/ref_panel/malariaGen_v3_b38/tmp/merged.samples")
+    resources: mem = '30G'
+    threads: 1
+    shell: """
+        mkdir -p {params.outdir}
+
+        echo "sample population group sex" >> {output.sample}
+
+        bcftools query -l {input.oneKG} >> {output.tmp_sample}
+        bcftools query -l {input.mg} >> {output.tmp_sample}
+
+        for i in $(cat {output.tmp_sample}); do
+            echo $i $i $i 2 >> {output.sample}
+        done
+    """
+
+rule merge_1KGmGenv3_per_chunk:
+    input:
+        mGen_haps = "data/ref_panel/malariaGen_v3_b38/tmp/malariaGen_v3_b38_alone.chr{chr}.hap",
+        mGen_legend = "data/ref_panel/malariaGen_v3_b38/tmp/malariaGen_v3_b38_alone.chr{chr}.legend",
+        oneKG_haps = "data/ref_panel/malariaGen_v3_b38/tmp/oneKG.chr{chr}.hap",
+        oneKG_legend = "data/ref_panel/malariaGen_v3_b38/tmp/oneKG.chr{chr}.legend",
+        gen_map = f"data/maps/{RECOMB_POP}-chr{{chr}}-final.b38.txt",
+        sample = rules.prepare_merge_1KGmGenv3_sample.output.sample
+    output:
+        haps = temp("data/ref_panel/malariaGen_v3_b38/regions/chr{chr}.{regionStart}.{regionEnd}.hap"),
+        legend = temp("data/ref_panel/malariaGen_v3_b38/regions/chr{chr}.{regionStart}.{regionEnd}.legend"),
+        vcf = "data/ref_panel/malariaGen_v3_b38/regions/chr{chr}.{regionStart}.{regionEnd}.vcf.gz",
     resources: mem = '70G'
     threads: 4
+    params: 
+        impute2 = tools['impute2'],
+        outdir = "data/ref_panel/malariaGen_v3_b38/regions/",
+        output_prefix = "data/ref_panel/malariaGen_v3_b38/regions/chr{chr}.{regionStart}.{regionEnd}"
     shell: """
-        mkdir -p data/ref_panel/malariaGen_v3_b38/
+        mkdir -p {params.outdir}
 
-        tabix -f {input.mg}
-        
-        bcftools merge -0 {input.mg} {input.oneKG} -Oz -o {output.vcf}
+       {params.impute2} \
+        -merge_ref_panels_output_ref {params.output_prefix}.tmp \
+        -m {input.gen_map} \
+        -h {input.oneKG_haps} \
+           {input.mGen_haps} \
+        -l {input.oneKG_legend} \
+           {input.mGen_legend} \
+        -int {regionStart} {regionEnd} \
+        -Ne 20000
 
-        tabix -f {output.vcf} 
+        awk -F ' ' 'NR==1 {{print; next}} {{$1 = "chr{wildcards.chr}:"$2"_"$3"_"$4; print $0}}' \
+        {params.output_prefix}.tmp.legend > {output.legend}
+        mv {params.output_prefix}.tmp.hap > {output.haps}
+
+        bgzip {output.legend}
+        bgzip {output.haps}
+        touch {output.legend}
+        touch {output.haps}
+
+        cp {input.sample} {params.output_prefix}.samples
+
+        bcftools convert -H {params.output_prefix} -Oz -o {output.vcf}
+        tabix -f {output.vcf}
+    """
+
+region_file = "data/5Mb_chunks.json"
+in_prefix = "data/ref_panel/malariaGen_v3_b38/regions/chr"
+
+mGen_chunk_vcfs_to_impute, mGen_chunk_vcfs_to_concat = get_vcf_concat_lst(region_file, in_prefix)
+
+def get_input_vcfs_as_list(wildcards):
+    return(mGen_chunk_vcfs_to_concat[str(wildcards.chr)])
+
+def get_input_vcfs_as_string(wildcards):
+    return(" ".join(map(str, mGen_chunk_vcfs_to_concat[str(wildcards.chr)])))
+
+rule merge_1KGmGenv3_chunks:
+    input:
+        vcfs = get_input_vcfs_as_list
+    output:
+        vcf = "data/ref_panel/malariaGen_v3_b38/malariaGen_v3_b38.chr{chr}.vcf.gz",
+    resources: mem = '30G'
+    threads: 1
+    params: 
+        input_string = get_input_vcfs_as_string,
+    shell: """
+        bcftools concat --ligate-force -Oz -o {output.vcf} {params.input_string}
+        tabix {output.vcf}
     """

@@ -42,6 +42,11 @@ rule preprocess_all:
         fwd_unpair = expand("data/fastq_cleaned/{id}_unpaired_1.fastq.gz", id = samples_lc),
         rev_unpair = expand("data/fastq_cleaned/{id}_unpaired_2.fastq.gz", id = samples_lc)
 
+to_merge = ['malariaGen_v3_b38_alone', 'oneKG']
+region_file = "data/5Mb_chunks.json"
+in_prefix = "data/ref_panel/malariaGen_v3_b38/regions/chr"
+mGen_chunk_vcfs_to_impute, mGen_chunk_vcfs_to_concat = get_vcf_concat_lst(region_file, in_prefix)
+
 rule reference_all:
     input:
         amb = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta.amb" if concatenate else "data/references/GRCh38.fa.amb",
@@ -53,9 +58,10 @@ rule reference_all:
         v3_b37 = expand("data/ref_panel/malariaGen_v3_b37_alone/malariaGen_v3_b37_alone.chr{chr}.vcf.gz", chr = chromosome),
         v1_b38 = expand("data/ref_panel/malariaGen_v1_b38/malariaGen_v1_b38.chr{chr}.vcf.gz", chr = chromosome),
         v3_b38_alone = expand("data/ref_panel/malariaGen_v3_b38_alone/malariaGen_v3_b38_alone.chr{chr}.vcf.gz", chr = chromosome),
-        v3_b38 = expand("data/ref_panel/malariaGen_v3_b38/malariaGen_v3_b38.chr{chr}.vcf.gz", chr = chromosome),
-        v3_b38_tbi = expand("data/ref_panel/malariaGen_v3_b38/malariaGen_v3_b38.chr{chr}.vcf.gz.tbi", chr = chromosome),
-        dictionary = "data/references/GRCh38_with_alt.dict"
+        dictionary = "data/references/GRCh38_with_alt.dict",
+
+        mGen_chunk_vcfs = [mGen_chunk_vcfs_to_impute],
+        v3_b38 = expand("data/ref_panel/malariaGen_v3_b38/malariaGen_v3_b38.chr{chr}.vcf.gz", chr = chromosome)
 
 rule fastqc_all:
     input:
