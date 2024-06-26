@@ -195,6 +195,7 @@ rule prepare_merge_1KGmGenv3_sample:
         sample = temp("data/ref_panel/malariaGen_v3_b38/tmp/merged.samples")
     resources: mem = '30G'
     threads: 1
+    params: outdir = "data/ref_panel/malariaGen_v3_b38/tmp/"
     shell: """
         mkdir -p {params.outdir}
 
