@@ -255,7 +255,8 @@ rule merge_1KGmGenv3_per_chunk:
         bcftools convert -H {params.output_prefix} | bcftools sort -Oz -o {output.vcf}
         tabix -f {output.vcf}
     """
-
+    
+region_file = "data/5Mb_chunks.json"
 mGen_vcf_prefix = "data/ref_panel/malariaGen_v3_b38/regions/chr"
 mGen_chunk_RData, mGen_chunk_vcf_lst, mGen_chunk_vcf_dict = get_vcf_concat_lst(region_file, '', mGen_vcf_prefix)
 
