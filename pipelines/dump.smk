@@ -1264,3 +1264,266 @@ for chr in chromosome:
         per_chr_vcfs.append(file)
     vcfs_to_concat[str(chr)] = per_chr_vcfs
     return regions_to_prep, vcfs_to_impute, vcfs_to_concat
+
+rule fix_bam:
+    input:
+        bam = "data/bams/{id}.bam"
+    output:
+        tmp1 = temp("data/chunk_bams/tmp/tmp/{id}/{id}.tmp1.bam"),
+        tmp2 = temp("data/chunk_bams/tmp/tmp/{id}/{id}.tmp2.bam")
+    threads: 4
+    resources: mem = '10G'
+    params:
+        verbosity = "ERROR",
+        sample = "{id}".split("_")[0]
+    shell: """
+        mkdir -p data/chunk_bams/tmp/tmp/{wildcards.id}/
+        samtools sort -o {output.tmp1} {input.bam}
+
+        samtools index {output.tmp1}
+
+        picard AddOrReplaceReadGroups \
+        -VERBOSITY {params.verbosity} \
+        -I {output.tmp1} \
+        -O {output.tmp2} \
+        -RGLB OGC \
+        -RGPL ILLUMINA \
+        -RGPU unknown \
+        -RGSM {params.sample}
+
+        picard FixMateInformation -I {output.tmp2}
+    """
+
+REGIONS = {}
+for chr in chromosome:
+    start = [10000001, 15000001]
+    end = [  15000000, 20000000]
+    REGIONS[str(chr)] = {"start":start, "end":end}
+
+chunk_region = "results/imputation/regions.json"
+if os.path.exists(chunk_region):
+    with open(chunk_region) as json_file:
+        REGIONS = json.load(json_file)
+
+region_vcfs = []
+for chr in chromosome:
+    start = REGIONS[str(chr)]["start"]
+    end = REGIONS[str(chr)]["end"]
+    for t in variant_types:
+        for i in range(0, start.__len__()):
+            regionStart = start[i]
+            regionEnd = end[i]
+            file = "results/call/recal_vcf/" + hc_panel + "/regions/" + hc_panel + "." + t +  ".chr" + str(chr) + "." + str(regionStart) + "." + str(regionEnd) + ".vcf.gz"
+            region_vcfs.append(file)
+
+rule variant_calling_all:
+    input:
+        fai = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta.fai" if concatenate else "data/references/GRCh38.fa.fai",
+        dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict" if concatenate else "data/references/GRCh38.dict",
+        bqsr_known_sites = [file + ".tbi" for file in config["bqsr_known_sites"]],
+        gatk_to_index = [file + ".tbi" for file in config["gatk_to_index"]],
+        #bqsr_reports = expand("results/call/BQSR/BQSR_reports/{hc}.BQSR.report", hc = samples_hc),
+        #recal_bams = expand("data/recal_bams/{hc}.recal.bam", hc = samples_hc),
+        #recal_bais = expand("data/recal_bams/{hc}.recal.bam.bai", hc = samples_hc),
+        #bamlist = "results/call/bam.list",
+        regions = [region_vcfs],
+        merge_vcf = expand(f"results/call/merge_vcf/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.vcf.gz", type = variant_types, chr = chromosome),
+        tranches = expand(f"results/call/VQSR/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.tranch", type = variant_types, chr = chromosome),
+        recals = expand(f"results/call/VQSR/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.recal", type = variant_types, chr = chromosome),
+        recal_vcf = expand(f"results/call/recal_vcf/{hc_panel}/{{type}}/{hc_panel}.{{type}}.chr{{chr}}.vcf.gz", type = variant_types, chr = chromosome)
+
+rule GATK_chunk_reference:
+    input:
+        reference = rules.GATK_prepare_reference.input.reference,
+        fai = rules.GATK_prepare_reference.output.fai,
+        dict = rules.GATK_prepare_reference.output.dict,
+        bamlist = rules.prepare_hc_bamlist.output.bamlist,
+        ref_vcf = f"data/ref_panel/{hc_panel}/{hc_panel}.chr{{chr}}.vcf.gz" # Move this to config so that we can test sites at different ref panels
+    output:
+        empty_vcf1 = temp("results/call/tmp/ref/empty1_{type}_{regionStart}.{regionEnd}_chr{chr}.vcf.gz"),
+        empty_vcf2 = temp("results/call/tmp/ref/empty2_{type}_{regionStart}.{regionEnd}_chr{chr}.vcf.gz")
+    resources: mem = '10G'
+    shell: """
+        mkdir -p results/call/tmp/ref/
+        mkdir -p results/call/vcfs/{hc_panel}/
+        file=$(head -n 1 {input.bamlist})
+
+        bcftools view -G -v {wildcards.type} -r chr{wildcards.chr}:{wildcards.regionStart}-{wildcards.regionEnd} -Oz -o {output.empty_vcf1} {input.ref_vcf}
+        
+        gatk IndexFeatureFile -I {output.empty_vcf1}
+
+        gatk UpdateVCFSequenceDictionary \
+        -V {output.empty_vcf1} \
+        --source-dictionary $file \
+        --output {output.empty_vcf2} \
+        --replace true
+    """
+
+rule haplotype_call:
+    input:
+        reference = rules.GATK_prepare_reference.input.reference,
+        bamlist = rules.prepare_hc_bamlist.output.bamlist,
+        empty_vcf2 = rules.GATK_chunk_reference.output.empty_vcf2
+    output:
+        vcf = f"results/call/vcfs/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.{{regionStart}}.{{regionEnd}}.vcf.gz"
+    resources: mem = '20G'
+    params:
+        padding = 300
+    threads: 4
+    shell: """
+        if [[ {wildcards.type} == "indels" ]]
+        then
+            gatk --java-options "-Xmx20G -Xms20G" HaplotypeCaller \
+            -R {input.reference} \
+            -I {input.bamlist} \
+            -O {output.vcf} \
+            -L {input.empty_vcf2} \
+            --alleles {input.empty_vcf2} \
+            --native-pair-hmm-threads 4 \
+            --assembly-region-padding {params.padding} \
+            --output-mode EMIT_VARIANTS_ONLY
+        else
+            gatk --java-options "-Xmx20G -Xms20G" HaplotypeCaller \
+            -R {input.reference} \
+            -I {input.bamlist} \
+            -O {output.vcf} \
+            -L {input.empty_vcf2} \
+            --alleles {input.empty_vcf2} \
+            --native-pair-hmm-threads 4 \
+            --output-mode EMIT_VARIANTS_ONLY
+        fi
+
+        rm "{input.empty_vcf2}.tbi"
+    """
+
+REGIONS = {}
+for chr in chromosome:
+    start = [10000001, 15000001]
+    end = [  15000000, 20000000]
+    REGIONS[str(chr)]={"start":start, "end":end}
+
+chunk_regions = "results/imputation/regions.json"
+if os.path.exists(chunk_regions):
+    with open(chunk_regions) as json_file:
+        REGIONS = json.load(json_file)
+
+vcfs_to_concat = {}
+for chr in chromosome:
+    start = REGIONS[str(chr)]["start"]
+    end = REGIONS[str(chr)]["end"]
+    vcfs_to_concat[str(chr)] = {}
+    for t in variant_types:
+        file_ary = []
+        for i in range(0, start.__len__()):
+            regionStart = start[i]
+            regionEnd = end[i]
+            file = "results/call/vcfs/" + hc_panel + "/" + hc_panel + "." + t +  ".chr" + str(chr) + "." + str(regionStart) + "." + str(regionEnd) + ".vcf.gz"
+            file_ary.append(file)
+        vcfs_to_concat[str(chr)][t] = file_ary
+
+rule concat_hc_vcfs:
+    input:
+        vcfs = lambda wildcards: vcfs_to_concat[str(wildcards.chr)][str(wildcards.type)]
+    output:
+        vcf = f"results/call/merge_vcf/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.vcf.gz"
+    threads: 4
+    resources: mem = '20G'
+    shell: """
+        mkdir -p results/call/merge_vcf/{hc_panel}/
+
+        bcftools concat -Oz -o {output.vcf} -a -d {wildcards.type} {input.vcfs}
+        tabix {output.vcf}
+    """
+
+rule get_vqsr_report:
+    input:
+        reference = rules.GATK_prepare_reference.input.reference,
+        fai = rules.GATK_prepare_reference.output.fai,
+        dict = rules.GATK_prepare_reference.output.dict,
+        vcf = rules.concat_hc_vcfs.output.vcf
+    output:
+        tranch = f"results/call/VQSR/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.tranch",
+        recal = f"results/call/VQSR/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.recal"
+    params:
+        hapmap = "data/GATK_resource_bundle/hapmap_3.3.hg38.vcf.gz",
+        omni = "data/GATK_resource_bundle/1000G_omni2.5.hg38.vcf.gz",
+        oneKG_snps = "data/GATK_resource_bundle/1000G_phase1.snps.high_confidence.hg38.vcf.gz",
+        GRCh38_indels = "data/GATK_resource_bundle/Homo_sapiens_assembly38.known_indels.vcf.gz",
+        oneKG_indels = "data/GATK_resource_bundle/Mills_and_1000G_gold_standard.indels.hg38.vcf.gz",
+        dbsnp = "data/GATK_resource_bundle/dbsnp_146.hg38.vcf.gz"
+    resources:
+        mem = '20G'
+    shell: """
+        mkdir -p results/call/VQSR/{hc_panel}/
+
+        if [[ {wildcards.type} == "snps" ]]
+        then
+            gatk --java-options "-Xms20g -Xmx20g" VariantRecalibrator \
+            -tranche 99.0 \
+            -R {input.reference} \
+            -V {input.vcf} \
+            --resource:hapmap,known=false,training=true,truth=true,prior=15.0 {params.hapmap} \
+            --resource:omni,known=false,training=true,truth=true,prior=12.0 {params.omni} \
+            --resource:1000G,known=false,training=true,truth=false,prior=10.0 {params.oneKG_snps} \
+            --resource:dbsnp,known=true,training=false,truth=false,prior=7 {params.dbsnp} \
+            -an QD -an MQ -an MQRankSum -an ReadPosRankSum -an FS -an SOR \
+            -mode SNP -O {output.recal} --tranches-file {output.tranch}
+        else
+            gatk --java-options "-Xms20g -Xmx20g" VariantRecalibrator \
+            -tranche 99.0 \
+            -R {input.reference} \
+            -V {input.vcf} \
+            --resource:mills,known=false,training=true,truth=true,prior=12.0 {params.oneKG_indels} \
+            --resource:dbsnp,known=true,training=false,truth=false,prior=2 {params.dbsnp} \
+            -an QD -an MQ -an MQRankSum -an ReadPosRankSum -an FS -an SOR \
+            -mode INDEL -O {output.recal} --tranches-file {output.tranch}
+        fi
+    """
+
+rule apply_vqsr:
+    input:
+        reference = rules.GATK_prepare_reference.input.reference,
+        fai = rules.GATK_prepare_reference.output.fai,
+        dict = rules.GATK_prepare_reference.output.dict,
+        vcf = rules.concat_hc_vcfs.output.vcf,
+        tranch = rules.get_vqsr_report.output.tranch,
+        recal = rules.get_vqsr_report.output.recal
+    output:
+        recal_vcf = f"results/call/recal_vcf/{hc_panel}/{{type}}/{hc_panel}.{{type}}.chr{{chr}}.vcf.gz",
+        tmp_vcf = temp(f"results/call/recal_vcf/{hc_panel}/{{type}}/tmp.{hc_panel}.{{type}}.chr{{chr}}.vcf.gz")
+    resources:
+        mem = '20G'
+    params:
+        rename_samples = config['hc_vcf_rename_samples']
+    shell: """
+        mkdir -p results/call/recal_vcf/{hc_panel}/
+
+        if [[ {wildcards.type} == "snps" ]]
+        then
+            gatk --java-options "-Xmx20g -Xms20g" ApplyVQSR \
+            -V {input.vcf} \
+            --recal-file {input.recal} \
+            --tranches-file {input.tranch} \
+            --truth-sensitivity-filter-level 99.0 \
+            --create-output-variant-index true \
+            -mode SNP \
+            -O {output.recal_vcf}
+        else
+            gatk --java-options "-Xmx20g -Xms20g" ApplyVQSR \
+            -V {input.vcf} \
+            --recal-file {input.recal} \
+            --tranches-file {input.tranch} \
+            --truth-sensitivity-filter-level 99.0 \
+            --create-output-variant-index true \
+            -mode INDEL \
+            -O {output.recal_vcf}
+        fi
+        
+        bcftools norm -m-any -Oz -o {output.tmp_vcf} {output.recal_vcf}
+        rm {output.recal_vcf}
+
+        if ! [ -f {params.rename_samples} ]; then
+            bcftools reheader -s {params.rename_samples} -o {output.recal_vcf} {output.tmp_vcf}
+        fi
+
+    """

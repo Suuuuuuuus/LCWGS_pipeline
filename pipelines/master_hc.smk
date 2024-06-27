@@ -20,19 +20,13 @@ sys.path.append("/well/band/users/rbx225/software/lcwgsus/")
 import lcwgsus
 
 samples_hc = read_tsv_as_lst(config['samples_hc'])
-samples_lc = read_tsv_as_lst(config['samples_lc'])
-test_hc = samples_lc[:2]
-
 hc_panel = config["hc_panel"]
-
 chromosome = [i for i in range(1,23)]
 
-# The followings are global parameters:
 clean_fastq = config['clean_fastq']
 reheader = config['reheader']
 concatenate = config['concatenate']
-
-# chunks = read_tsv_as_lst("data/bedgraph/bam_chunks.bed")
+variant_types = ["snps", "indels"]
 
 rule chunk_all:
     input:
@@ -73,48 +67,31 @@ rule alignment_all:
 
 rule merge_all:
     input:
-        bams = expand("data/merge_bams/tmp/{hc}.bam", hc = samples_hc),
-        bais = expand("data/merge_bams/tmp/{hc}.bam.bai", hc = samples_hc)
+        bams = expand("data/merge_bams/{hc}.bam", hc = samples_hc),
+        bais = expand("data/merge_bams/{hc}.bam.bai", hc = samples_hc)
 
-variant_types = ['snps', 'indels']
-
-REGIONS = {}
-for chr in chromosome:
-    start = [10000001, 15000001]
-    end = [  15000000, 20000000]
-    REGIONS[str(chr)] = {"start":start, "end":end}
-
-chunk_region = "results/imputation/regions.json"
-if os.path.exists(chunk_region):
-    with open(chunk_region) as json_file:
-        REGIONS = json.load(json_file)
-
-region_vcfs = []
-for chr in chromosome:
-    start = REGIONS[str(chr)]["start"]
-    end = REGIONS[str(chr)]["end"]
-    for t in variant_types:
-        for i in range(0, start.__len__()):
-            regionStart = start[i]
-            regionEnd = end[i]
-            file = "results/call/recal_vcf/" + hc_panel + "/regions/" + hc_panel + "." + t +  ".chr" + str(chr) + "." + str(regionStart) + "." + str(regionEnd) + ".vcf.gz"
-            region_vcfs.append(file)
+region_file = "data/imputation_accessories/5Mb_chunks.json"
+hc_vcf_prefix = "results/call/recal_vcf/" + hc_panel + "/regions/" + hc_panel + ".chr"
+hc_chunk_RData, hc_chunk_vcf_lst, hc_chunk_vcf_dict = get_vcf_concat_lst(region_file, '', hc_vcf_prefix)
 
 rule variant_calling_all:
     input:
-        # fai = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta.fai" if concatenate else "data/references/GRCh38.fa.fai",
-        # dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict" if concatenate else "data/references/GRCh38.dict",
-        # bqsr_known_sites = [file + ".tbi" for file in config["bqsr_known_sites"]],
-        # gatk_to_index = [file + ".tbi" for file in config["gatk_to_index"]],
-        #bqsr_reports = expand("results/call/BQSR/BQSR_reports/{hc}.BQSR.report", hc = samples_hc),
-        #recal_bams = expand("data/recal_bams/{hc}.recal.bam", hc = samples_hc),
-        #recal_bais = expand("data/recal_bams/{hc}.recal.bam.bai", hc = samples_hc),
-        #bamlist = "results/call/bam.list",
-        regions = [region_vcfs],
-        merge_vcf = expand(f"results/call/merge_vcf/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.vcf.gz", type = variant_types, chr = chromosome),
+        fai = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta.fai" if concatenate else "data/references/GRCh38.fa.fai",
+        dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict" if concatenate else "data/references/GRCh38.dict",
+        bqsr_known_sites = [file + ".tbi" for file in config["bqsr_known_sites"]],
+        gatk_to_index = [file + ".tbi" for file in config["gatk_to_index"]],
+
+        bqsr_reports = expand("results/call/BQSR/BQSR_reports/{hc}.BQSR.report", hc = samples_hc),
+        recal_bams = expand("data/recal_bams/{hc}.recal.bam", hc = samples_hc),
+        recal_bais = expand("data/recal_bams/{hc}.recal.bam.bai", hc = samples_hc),
+        bamlist = "results/call/bam.list",
+
+        regions = [hc_chunk_vcf_lst],
+
+        merge_vcf = expand(f"results/call/merge_vcf/{hc_panel}/{hc_panel}.chr{{chr}}.vcf.gz", chr = chromosome),
         tranches = expand(f"results/call/VQSR/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.tranch", type = variant_types, chr = chromosome),
         recals = expand(f"results/call/VQSR/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.recal", type = variant_types, chr = chromosome),
-        recal_vcf = expand(f"results/call/recal_vcf/{hc_panel}/{{type}}/{hc_panel}.{{type}}.chr{{chr}}.vcf.gz", type = variant_types, chr = chromosome)
+        recal_vcf = expand(f"results/call/recal_vcf/{hc_panel}/{hc_panel}.chr{{chr}}.vcf.gz", chr = chromosome)
 
 
         
