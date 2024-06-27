@@ -41,7 +41,7 @@ lr_oneKG_RData, lr_oneKG_vcf_lst, lr_oneKG_vcf_dict = get_vcf_concat_lst(region,
 
 rule lr_imputation_prep_all:
     input:
-        bamlist = "results/lr_imputation/bamlist.txt"
+        bamlist = "results/lr_imputation/bamlist.txt",
         hap = expand(f"results/lr_imputation/refs/{PANEL_NAME}.chr{{chr}}.hap.gz", chr = chromosome),
         legend = expand(f"results/lr_imputation/refs/{PANEL_NAME}.chr{{chr}}.legend.gz", chr = chromosome),
         samples = expand(f"results/lr_imputation/refs/{PANEL_NAME}.chr{{chr}}.samples", chr = chromosome)
