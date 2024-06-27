@@ -29,7 +29,6 @@ chromosome = [i for i in range(1,23)]
 
 concatenate = config['concatenate']
 RECOMB_POP = config["RECOMB_POP"]
-# PANEL_NAME = config["PANEL_NAME"]
 panels = config['panels']
 
 # panels are a list of panels, whereas PANEL_NAME is the current panel in use
@@ -42,7 +41,7 @@ rule preprocess_all:
         fwd_unpair = expand("data/fastq_cleaned/{id}_unpaired_1.fastq.gz", id = samples_lc),
         rev_unpair = expand("data/fastq_cleaned/{id}_unpaired_2.fastq.gz", id = samples_lc)
 
-region_file = "data/5Mb_chunks.json"
+region_file = "data/imputation_accessories/5Mb_chunks.json"
 mGen_vcf_prefix = "data/ref_panel/malariaGen_v3_b38/regions/chr"
 mGen_chunk_RData, mGen_chunk_vcf_lst, mGen_chunk_vcf_dict = get_vcf_concat_lst(region_file, '', mGen_vcf_prefix)
 
@@ -126,7 +125,7 @@ rule imputation_prep_all:
     input:
         bamlist = "results/imputation/bamlist.txt",
         recomb = expand("results/imputation/" + RECOMB_POP + "/" + RECOMB_POP + "-chr{chr}-final.b38.txt.gz", chr = chromosome),
-        # json = "results/imputation/regions.json",
+        json = expand("results/imputation/refs/{panel}/regions.json", panel = panels),
         hap = expand("results/imputation/refs/{panel}/{panel}.chr{chr}.hap.gz", chr = chromosome, panel = panels),
         legend = expand("results/imputation/refs/{panel}/{panel}.chr{chr}.legend.gz", chr = chromosome, panel = panels),
         samples = expand("results/imputation/refs/{panel}/{panel}.chr{chr}.samples", chr = chromosome, panel = panels)
@@ -135,9 +134,10 @@ all_RData = {}
 all_vcf_lst = {}
 all_vcf_dict = {}
 for p in panels:
+    region = "results/imputation/refs/" + p + "/regions.json"
     ref_prefix = "results/imputation/refs/" + p + "/RData/ref_package.chr"
     vcf_prefix = "results/imputation/vcfs/" + p + "/regions/quilt.chr"
-    all_RData[p], all_vcf_lst[p], all_vcf_dict[p] = get_vcf_concat_lst(region_file, ref_prefix, vcf_prefix)
+    all_RData[p], all_vcf_lst[p], all_vcf_dict[p] = get_vcf_concat_lst(region, ref_prefix, vcf_prefix)
 
 rule imputation_all:
     input:

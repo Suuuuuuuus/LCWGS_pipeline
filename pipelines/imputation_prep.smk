@@ -12,12 +12,10 @@ import lcwgsus
 chromosome = [i for i in range(1,23)]
 
 QUILT_HOME = config["QUILT_HOME"]
-ANALYSIS_DIR = config["ANALYSIS_DIR"]
-RECOMB_POP=config["RECOMB_POP"]
-NGEN=config["NGEN"]
-WINDOWSIZE=config["WINDOWSIZE"]
-BUFFER=config["BUFFER"]
-# PANEL_NAME=config["PANEL_NAME"]
+RECOMB_POP = config["RECOMB_POP"]
+NGEN = config["NGEN"]
+WINDOWSIZE = config["WINDOWSIZE"]
+BUFFER = config["BUFFER"]
 panels = config['panels']
 
 samples_lc = read_tsv_as_lst(config['samples_lc'])
@@ -70,16 +68,16 @@ rule convert_ref:
         bcftools convert -h \
         {params.outdir}{wildcards.panel}.chr{wildcards.chr} {output.tmp_vcf}
     """
-    
-'''
-rule determine_chunks: # modify the Rscript code as well
+
+rule determine_chunks:
     input:
-        legend = expand(f"results/imputation/refs/{PANEL_NAME}/{PANEL_NAME}.chr{{chr}}.legend.gz", chr = chromosome),
-        code = "scripts/quilt_accessories/determine_chunks.R"
+        legend = expand("results/imputation/refs/{panel}/{panel}.chr{chr}.legend.gz", chr = chromosome, allow_missing = True)
     output:
-        json = "results/imputation/regions.json"
+        json = "results/imputation/refs/{panel}/regions.json"
     resources: mem = '10G'
+    params:
+        analysis_dir = "results/imputation/",
+        code = "scripts/quilt_accessories/determine_chunks.R"
     shell: """
-        Rscript {input.code} {ANALYSIS_DIR:q} {WINDOWSIZE} {BUFFER} {PANEL_NAME:q}
+        Rscript {params.code} {params.analysis_dir} {WINDOWSIZE} {BUFFER} {wildcards.panel}
     """
-'''

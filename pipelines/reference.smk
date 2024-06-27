@@ -212,7 +212,7 @@ rule merge_1KGmGenv3_per_chunk:
     input:
         haps = expand("data/ref_panel/malariaGen_v3_b38/tmp/{to_merge}.chr{chr}.hap", to_merge = to_merge, allow_missing = True),
         legends = expand("data/ref_panel/malariaGen_v3_b38/tmp/{to_merge}.chr{chr}.legend", to_merge = to_merge, allow_missing = True),
-        gen_map = f"data/maps/{RECOMB_POP}-chr{{chr}}-final.b38.txt",
+        gen_map = f"data/imputation_accessories/maps/{RECOMB_POP}-chr{{chr}}-final.b38.txt",
         sample = rules.prepare_merge_1KGmGenv3_sample.output.sample
     output:
         haps = temp("data/ref_panel/malariaGen_v3_b38/regions/chr{chr}.{regionStart}.{regionEnd}.hap"),
@@ -255,8 +255,8 @@ rule merge_1KGmGenv3_per_chunk:
         bcftools convert -H {params.output_prefix} | bcftools sort -Oz -o {output.vcf}
         tabix -f {output.vcf}
     """
-    
-region_file = "data/5Mb_chunks.json"
+
+region_file = "data/imputation_accessories/5Mb_chunks.json"
 mGen_vcf_prefix = "data/ref_panel/malariaGen_v3_b38/regions/chr"
 mGen_chunk_RData, mGen_chunk_vcf_lst, mGen_chunk_vcf_dict = get_vcf_concat_lst(region_file, '', mGen_vcf_prefix)
 

@@ -36,12 +36,10 @@
     "hc_vcf_rename_samples": "/well/band/users/rbx225/GAMCC/data/file_lsts/hc_chip_names.tsv",
 
     "QUILT_HOME": "/well/band/users/rbx225/software/QUILT/",
-    "ANALYSIS_DIR": "/well/band/users/rbx225/GAMCC/results/imputation/",
     "RECOMB_POP": "YRI",
     "NGEN": 100,
     "WINDOWSIZE": 5000000,
     "BUFFER": 0,
-    "PANEL_NAME": "malariaGen_v1_b38",
     "bam_batch": "3",
 
     "lr_analysis_dir": "/well/band/users/rbx225/GAMCC/results/lr_imputation/",

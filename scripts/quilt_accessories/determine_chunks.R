@@ -14,17 +14,13 @@ for(package in c("data.table", "rjson")) {
 ## install.packages("https://cran.r-project.org/src/contrib/Archive/rjson/rjson_0.2.20.tar.gz")
 library("parallel")
 
-
-#ANALYSIS_DIR <- "/well/band/users/rbx225/GGVP/results/imputation/"
-#WINDOWSIZE <- 5000000
-#BUFFER <- 1000000
 CHRLIST <- 1:22
 
 data <- mclapply(
     CHRLIST,
     mc.cores = 4,
     function(chr) {
-        path <- paste0(ANALYSIS_DIR, "refs")
+        path <- paste0(ANALYSIS_DIR, "refs/", PANEL_NAME, "/")
         if (!dir.exists(path)){
             dir.create(path)
         }
@@ -52,5 +48,4 @@ print(data)
 
 names(data) <- CHRLIST
 
-
-write(toJSON(data), file.path(ANALYSIS_DIR, "regions.json"))
+write(toJSON(data), file.path(ANALYSIS_DIR, "refs", PANEL_NAME, "regions.json"))
