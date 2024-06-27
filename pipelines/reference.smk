@@ -246,8 +246,8 @@ rule merge_1KGmGenv3_per_chunk:
         {params.output_prefix}.tmp.legend > {output.legend}
         mv {params.output_prefix}.tmp.hap {output.haps}
 
-        bgzip {output.legend}
-        bgzip {output.haps}
+        bgzip -f {output.legend}
+        bgzip -f {output.haps}
         touch {output.legend}
         touch {output.haps}
 
