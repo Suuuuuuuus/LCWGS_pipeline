@@ -13,10 +13,11 @@ from lcwgsus.variables import *
 
 chromosome = [i for i in range(1,23)]
 
-read_lengths = ['500b', '600b', '800b', '1kb', '2kb', '5kb', '10kb', '20kb']
-rls = ['500', '600', '800', '1000', '2000', '5000', '10000', '20000']
-haplotypes = ['mat', 'pat']
-coverage = '0.6'
+read_lengths = config["lr_read_lengths"]
+rls = config["lr_rls"]
+haplotypes = config["lr_haplotypes"]
+method = config["lr_method"]
+coverage = config["lr_sim_coverage"]
 
 RECOMB_POP = config["RECOMB_POP"]
 NGEN = config["NGEN"]

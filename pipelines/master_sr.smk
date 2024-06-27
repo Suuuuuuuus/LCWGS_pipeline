@@ -16,13 +16,13 @@ from lcwgsus.variables import *
 
 chromosome = [i for i in range(1,23)]
 
-read_lengths = ['151-long', '151-optimal', '151-real', '151-short', '300-long', '300-optimal', '300-real', '300-short']
-means = ['500', '500', '329', '329', '1000', '1000', '830', '830']
-stds = ['13', '13', '13', '13', '200', '200', '200', '200']
-error1 = ['0.0024-0.0071', '0', '0.0024-0.0071', '0', '0.0001', '0', '0.0001', '0']
-error2 = ['0.0034-0.0105', '0', '0.0034-0.0105', '0', '0.0001', '0', '0.0001', '0']
-haplotypes = ['mat', 'pat']
-coverage = '0.6'
+read_lengths = config["sr_read_lengths"]
+means = config["sr_means"]
+stds = config["sr_stds"]
+error1 = config["sr_error1"]
+error2 = config["sr_error2"]
+haplotypes = config["sr_haplotypes"]
+coverage = config["sr_sim_coverage"]
 
 RECOMB_POP = config["RECOMB_POP"]
 PANEL_NAME = config["hc_panel"]
