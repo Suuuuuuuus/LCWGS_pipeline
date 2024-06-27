@@ -17,7 +17,6 @@ NGEN = config["NGEN"]
 WINDOWSIZE = config["WINDOWSIZE"]
 BUFFER = config["BUFFER"]
 panels = config['panels']
-# PANEL_NAME = config["PANEL_NAME"]
 
 all_RData = {}
 all_vcf_lst = {}
@@ -36,9 +35,9 @@ rule prepare_ref:
     output:
         RData = "results/imputation/refs/{panel}/RData/ref_package.chr{chr}.{regionStart}.{regionEnd}.RData"
     resources:
-        mem_mb = 30000
+        mem = '30G'
     params:
-        threads = 8
+        threads = 4
     shell: """
         mkdir -p results/imputation/refs/{wildcards.panel}/RData/other/
         R -e 'library("data.table"); library("QUILT"); QUILT_prepare_reference( \

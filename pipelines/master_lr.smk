@@ -21,13 +21,8 @@ haplotypes = ['mat', 'pat']
 method = 'CCS'
 coverage = '0.6'
 
-QUILT_HOME = config["QUILT_HOME"]
-lr_analysis_dir = config["lr_analysis_dir"]
-RECOMB_POP=config["RECOMB_POP"]
-NGEN=config["NGEN"]
-WINDOWSIZE=config["WINDOWSIZE"]
-BUFFER=config["BUFFER"]
-PANEL_NAME=config["hc_panel"]
+RECOMB_POP = config["RECOMB_POP"]
+PANEL_NAME = config["hc_panel"]
 
 rule long_read_all:
     input:
@@ -35,6 +30,13 @@ rule long_read_all:
         bams = expand("data/lr_bams/{rl}.bam", rl = read_lengths),
         bais = expand("data/lr_bams/{rl}.bam.bai", rl = read_lengths),
         fastq = expand("data/lr_simulations/{rl}/{rl}.fastq.gz", rl = read_lengths)
+
+region_file = "data/imputation_accessories/5Mb_chunks.json"
+region = "results/lr_imputation/refs/" + PANEL_NAME + "/regions.json"
+ref_prefix = "results/lr_imputation/refs/" + PANEL_NAME + "/RData/ref_package.chr"
+vcf_prefix = "results/lr_imputation/vcfs/" + PANEL_NAME + "/regions/quilt.chr"
+
+lr_oneKG_RData, lr_oneKG_vcf_lst, lr_oneKG_vcf_dict = get_vcf_concat_lst(region, ref_prefix, vcf_prefix)
 
 REGIONS={}
 for chr in chromosome:

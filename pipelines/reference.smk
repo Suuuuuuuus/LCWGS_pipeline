@@ -240,7 +240,7 @@ rule merge_1KGmGenv3_per_chunk:
         -l {params.oneKG_legend} \
            {params.mGen_legend} \
         -int {wildcards.regionStart} {wildcards.regionEnd} \
-        -k_hap 2018 1510
+        -k_hap 2018 1510 \
         -Ne 20000
 
         awk -F ' ' 'NR==1 {{print; next}} {{$1 = "chr{wildcards.chr}:"$2"_"$3"_"$4; print $0}}' \

@@ -11,9 +11,6 @@ sys.path.append("/well/band/users/rbx225/software/lcwgsus/")
 import lcwgsus
 from lcwgsus.variables import *
 
-samples_hc = read_tsv_as_lst(config['samples_hc'])
-samples_lc = read_tsv_as_lst(config['samples_lc'])
-samples_chip = read_tsv_as_lst(config['samples_chip'])
 sample_linker = pd.read_table(config['sample_linker'], sep = ',')
 chromosome = [i for i in range(1,23)]
 
@@ -53,8 +50,8 @@ rule copy_vcf_in_working_dir:
 
         for i in {{1..22}}
         do
-            cp {input.lc_vcf_dir}/*chr$i.*.gz {wildcards.imp_dir}vcf/all_samples/lc_vcf/lc.chr$i.vcf.gz
-            cp {input.hc_vcf_dir}/*chr$i.*.gz {wildcards.imp_dir}vcf/all_samples/hc_vcf/hc.chr$i.vcf.gz
+            cp -rf {input.lc_vcf_dir}/*chr$i.*.gz {wildcards.imp_dir}vcf/all_samples/lc_vcf/lc.chr$i.vcf.gz
+            cp -rf {input.hc_vcf_dir}/*chr$i.*.gz {wildcards.imp_dir}vcf/all_samples/hc_vcf/hc.chr$i.vcf.gz
         done
     """
 
@@ -69,7 +66,8 @@ rule split_vcf_by_eth:
         mkdir -p {wildcards.imp_dir}vcf/by_eth/lc_vcf/
         mkdir -p {wildcards.imp_dir}vcf/by_eth/hc_vcf/
 
-        bcftools view -S data/file_lsts/samples_subset/by_ethnicity/{wildcards.eth}_samples_{wildcards.pair}.tsv -Oz -o {output.eth_vcf} {input.vcf}
+        bcftools view -S data/file_lsts/samples_subset/by_ethnicity/{wildcards.eth}_samples_{wildcards.pair}.tsv \
+        -Oz -o {output.eth_vcf} {input.vcf}
     """
 
 rule split_vcf_by_cc:
@@ -83,7 +81,8 @@ rule split_vcf_by_cc:
         mkdir -p {wildcards.imp_dir}vcf/by_cc/lc_vcf/
         mkdir -p {wildcards.imp_dir}vcf/by_cc/hc_vcf/
         
-        bcftools view -S data/file_lsts/samples_subset/by_case_control/{wildcards.cc}_samples_{wildcards.pair}.tsv -Oz -o {output.cc_vcf} {input.vcf}
+        bcftools view -S data/file_lsts/samples_subset/by_case_control/{wildcards.cc}_samples_{wildcards.pair}.tsv \
+        -Oz -o {output.cc_vcf} {input.vcf}
     """
 
 rule subset_lc_samples:
