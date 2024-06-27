@@ -208,6 +208,7 @@ rule prepare_merge_1KGmGenv3_sample:
         done
     """
 
+# -k_hap = 2018 (N = 1009) was calculated from this https://www.internationalgenome.org/data-portal/population
 rule merge_1KGmGenv3_per_chunk:
     input:
         haps = expand("data/ref_panel/malariaGen_v3_b38/tmp/{to_merge}.chr{chr}.hap", to_merge = to_merge, allow_missing = True),
@@ -239,6 +240,7 @@ rule merge_1KGmGenv3_per_chunk:
         -l {params.oneKG_legend} \
            {params.mGen_legend} \
         -int {wildcards.regionStart} {wildcards.regionEnd} \
+        -k_hap 2018 1510
         -Ne 20000
 
         awk -F ' ' 'NR==1 {{print; next}} {{$1 = "chr{wildcards.chr}:"$2"_"$3"_"$4; print $0}}' \
