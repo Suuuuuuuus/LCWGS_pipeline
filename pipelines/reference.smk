@@ -256,16 +256,14 @@ rule merge_1KGmGenv3_per_chunk:
         tabix -f {output.vcf}
     """
 
-region_file = "data/5Mb_chunks.json"
-in_prefix = "data/ref_panel/malariaGen_v3_b38/regions/chr"
-
-mGen_chunk_vcfs_to_impute, mGen_chunk_vcfs_to_concat = get_vcf_concat_lst(region_file, in_prefix)
+mGen_vcf_prefix = "data/ref_panel/malariaGen_v3_b38/regions/chr"
+mGen_chunk_RData, mGen_chunk_vcf_lst, mGen_chunk_vcf_dict = get_vcf_concat_lst(region_file, '', mGen_vcf_prefix)
 
 def get_input_vcfs_as_list(wildcards):
-    return(mGen_chunk_vcfs_to_concat[str(wildcards.chr)])
+    return(mGen_chunk_vcf_dict[str(wildcards.chr)])
 
 def get_input_vcfs_as_string(wildcards):
-    return(" ".join(map(str, mGen_chunk_vcfs_to_concat[str(wildcards.chr)])))
+    return(" ".join(map(str, mGen_chunk_vcf_dict[str(wildcards.chr)])))
 
 rule merge_1KGmGenv3_chunks:
     input:

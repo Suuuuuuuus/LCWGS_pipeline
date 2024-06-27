@@ -59,7 +59,7 @@ rule reference_all:
         v3_b38_alone = expand("data/ref_panel/malariaGen_v3_b38_alone/malariaGen_v3_b38_alone.chr{chr}.vcf.gz", chr = chromosome),
         dictionary = "data/references/GRCh38_with_alt.dict",
 
-        mGen_chunk_vcfs = [mGen_chunk_vcfs_to_impute],
+        mGen_chunk_vcfs = [mGen_chunk_vcf_lst],
         v3_b38 = expand("data/ref_panel/malariaGen_v3_b38/malariaGen_v3_b38.chr{chr}.vcf.gz", chr = chromosome)
 
 rule fastqc_all:
