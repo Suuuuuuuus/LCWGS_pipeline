@@ -40,7 +40,7 @@ rule fix_hc_bam:
 
 hc_bam_to_concat_dict = {}
 for s in samples_hc:
-    hc_bam_to_concat_dict[str(s)] = ["data/chunk_bams/tmp/" + k + ".tmp1.bam" for k in hc_dict[str(i)]]
+    hc_bam_to_concat_dict[str(s)] = ["data/chunk_bams/tmp/" + k + ".tmp1.bam" for k in hc_dict[str(s)]]
 
 rule merge:
     input:
