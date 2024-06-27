@@ -38,13 +38,10 @@ rule copy_vcf_in_working_dir:
         hc_vcf_dir = get_hc_vcf_dir
     output:
         vcfs = expand('{imp_dir}vcf/all_samples/{pair}_vcf/{pair}.chr{chr}.vcf.gz', chr = chromosome, pair = pair, allow_missing = True)
-    resources:
-        mem = '30G'
-    threads: 4
+    localrule: True
     shell: """
         mkdir -p {wildcards.imp_dir}vcf/
         mkdir -p {wildcards.imp_dir}impacc/
-        mkdir -p {wildcards.imp_dir}graphs/
         mkdir -p {wildcards.imp_dir}vcf/all_samples/lc_vcf/
         mkdir -p {wildcards.imp_dir}vcf/all_samples/hc_vcf/
 
