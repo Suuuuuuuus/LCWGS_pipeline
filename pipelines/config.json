@@ -37,9 +37,9 @@
 
     "QUILT_HOME": "/well/band/users/rbx225/software/QUILT/",
     "ANALYSIS_DIR": "/well/band/users/rbx225/GAMCC/results/imputation/",
-    "RECOMB_POP": "ACB",
+    "RECOMB_POP": "YRI",
     "NGEN": 100,
-    "WINDOWSIZE": 10000000,
+    "WINDOWSIZE": 5000000,
     "BUFFER": 0,
     "PANEL_NAME": "malariaGen_v1_b38",
     "bam_batch": "3",
@@ -190,13 +190,5 @@
         "results/two-stage-hla/lc_oneKG_strict/",
         "results/two-stage-hla/lc_oneKG/",
         "results/two-stage-hla/lc_oneKG_chip/"
-    ],
-    "three_stage_vcf_indir": [
-        "results/two-stage-imputation/vanilla/oneKG_strict_topmed/vcf/",
-        "results/two-stage-imputation/vanilla/oneKG_topmed/vcf/"
-    ],
-    "three_stage_vcf_outdir": [
-        "results/two-stage-hla/lc_oneKG_strict_topmed/",
-        "results/two-stage-hla/lc_oneKG_topmed/"
     ]
 }

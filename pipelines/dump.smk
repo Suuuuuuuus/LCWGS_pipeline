@@ -17,6 +17,12 @@ subsample_coverage = config['subsample_depth']
 rm_bed_regions = config['rm_bed_regions']
 bed_regions = config['bed_regions']
 
+samples_lc = read_tsv_as_lst(config['samples_lc'])
+panels = config["panels"]
+
+samples_chip = read_tsv_as_lst(config['samples_chip'])
+seq_to_extract = [sample for sample in samples_lc if sample in samples_chip]
+
 rule multiqc_hc:
     input:
         html1 = expand("results/fastqc/{id}_1_fastqc.html",id = samples_hc),
@@ -1192,3 +1198,69 @@ rule merge_malariaGen_v3_with_oneKG:
 
         tabix -f {output.vcf} 
     """
+
+rule subset_lc_samples:
+    input:
+        quilt_vcf = '{imp_dir}vcf/all_samples/lc_vcf/lc.chr{chr}.vcf.gz',
+        chip_vcf = '{imp_dir}vcf/all_samples/hc_vcf/hc.chr{chr}.vcf.gz'
+    output:
+        ss_vcf = temp('{imp_dir}vcf/all_samples/lc_vcf/lc.subset.chr{chr}.vcf.gz'),
+        tmp_names = temp('{imp_dir}vcf/all_samples/samples.chr{chr}.tsv')
+    resources:
+        mem = '10G'
+    run: 
+        hc_names = lcwgsus.bcftools_get_samples(input.chip_vcf)
+        lc_names = lcwgsus.bcftools_get_samples(input.quilt_vcf)
+
+        if lc_names[0].startswith('IDT'):
+            sl = sample_linker.sort_values(by = 'Seq_Name')
+            sl = sl[sl['Seq_Name'].isin(lc_names)]
+            sl = sl[~sl['Sample_Name'].str.contains('mini')]
+            rename_map = {k:v for k,v in zip(sl['Chip_Name'], sl['Seq_Name'])}
+            samples = []
+            for n in hc_names:
+                samples.append(rename_map[n])
+            lcwgsus.save_lst(output.tmp_names, samples)
+
+        elif lc_names[0].startswith('GM'):
+            rename_map = lcwgsus.generate_rename_map()
+            lc = wildcards.imp_dir.split('/')[-2].split('_')[0]
+            samples = lcwgsus.find_matching_samples(hc_names, rename_map, lc = lc)
+            lcwgsus.save_lst(output.tmp_names, samples)
+        else:
+            rename_map = lcwgsus.generate_rename_map()
+            lc = wildcards.imp_dir.split('/')[-2].split('_')[0]
+            samples = lcwgsus.find_matching_samples(hc_names, rename_map, lc = lc)
+            lcwgsus.save_lst(output.tmp_names, samples)
+
+        shell("bcftools view -S {output.tmp_names} -Oz -o {output.ss_vcf} {input.quilt_vcf}")
+
+REGIONS={}
+for chr in chromosome:
+    start=[10000001, 15000001]
+    end=[  15000000, 20000000]
+    REGIONS[str(chr)]={"start":start, "end":end}
+
+file="results/imputation/regions.json"
+if os.path.exists(file):
+    print("Replacing regions to impute with derived file")
+    with open(file) as json_file:
+        REGIONS = json.load(json_file)
+
+regions_to_prep = []
+vcfs_to_impute = []
+vcfs_to_concat = {}
+for chr in chromosome:
+    start = REGIONS[str(chr)]["start"]
+    end = REGIONS[str(chr)]["end"]
+    per_chr_vcfs = []
+    for i in range(0, start.__len__()):
+        regionStart = start[i]
+        regionEnd = end[i]
+        file = "results/imputation/refs/" + PANEL_NAME + "/RData/ref_package.chr" + str(chr) + "." + str(regionStart) + "." + str(regionEnd) + ".RData"
+        regions_to_prep.append(file)
+        file = "results/imputation/vcfs/" + PANEL_NAME + "/regions/quilt.chr" + str(chr) + "." + str(regionStart) + "." + str(regionEnd) + ".vcf.gz"
+        vcfs_to_impute.append(file)
+        per_chr_vcfs.append(file)
+    vcfs_to_concat[str(chr)] = per_chr_vcfs
+    return regions_to_prep, vcfs_to_impute, vcfs_to_concat

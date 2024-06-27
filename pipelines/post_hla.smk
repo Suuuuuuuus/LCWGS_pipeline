@@ -12,33 +12,6 @@ import lcwgsus
 
 chromosome = [i for i in range(1,23)]
 
-three_stage_vcf_indir = config["three_stage_vcf_indir"]
-three_stage_vcf_outdir = config["three_stage_vcf_outdir"]
-
-def get_three_stage_indir_vcf(wildcards):
-    ix = three_stage_vcf_outdir.index(wildcards.three_stage_vcf_outdir)
-    return three_stage_vcf_indir[ix] + "chr6.dose.vcf.gz"
-
-rule filter_three_stage_vcf:
-    input:
-        vcf = get_three_stage_indir_vcf
-    output:
-        vcf = temp("{three_stage_vcf_outdir}chr6.tmp.vcf.gz")
-    resources:
-        mem = '30G'
-    threads: 4
-    shell:"""
-        mkdir -p {wildcards.three_stage_vcf_outdir}
-        tabix -f {input.vcf}
-        
-        bcftools view \
-        -r chr6:25000000-35000000 \
-        -i 'TYPED=1' \
-        -m2 -M2 -v snps \
-        -c1 \
-        -Oz -o {output.vcf} {input.vcf}
-    """
-
 rule convert_chr6_to_chip_form:
     input:
         vcf = "{three_stage_vcf_outdir}chr6.tmp.vcf.gz"

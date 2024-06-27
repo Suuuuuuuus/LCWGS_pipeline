@@ -17,8 +17,8 @@ RECOMB_POP=config["RECOMB_POP"]
 NGEN=config["NGEN"]
 WINDOWSIZE=config["WINDOWSIZE"]
 BUFFER=config["BUFFER"]
-PANEL_NAME=config["PANEL_NAME"]
-rmdup=config["rmdup"]
+# PANEL_NAME=config["PANEL_NAME"]
+panels = config['panels']
 
 samples_lc = read_tsv_as_lst(config['samples_lc'])
 
@@ -28,15 +28,11 @@ rule prepare_bamlist:
     output:
         bamlist = "results/imputation/bamlist.txt"
     shell: """
-        mkdir -p {ANALYSIS_DIR}
-        if [[ {rmdup} == "True" ]]
-        then
-            ls data/dedup_bams/*.bam > {output.bamlist}
-        else
-            ls data/bams/*.bam > {output.bamlist}
-        fi
+        mkdir -p results/imputation/
+
+        ls data/bams/*.bam > {output.bamlist}
     """
-'''
+
 rule convert_recomb:
     input:
         f"results/imputation/{RECOMB_POP}/{RECOMB_POP}-{{chr}}-final.txt.gz"
@@ -47,35 +43,35 @@ rule convert_recomb:
     wildcard_constraints:
         chr='\d{1,2}'
     shell: """
-        #R -f scripts/make_b38_recomb_map.R --args "./" {RECOMB_POP} {wildcards.chr}
         R -f {QUILT_HOME}scripts/make_b38_recomb_map.R \
-        --args {ANALYSIS_DIR} {RECOMB_POP} {wildcards.chr}
+        --args results/imputation/ {RECOMB_POP} {wildcards.chr}
     """
-'''
+
 rule convert_ref:
     input:
-        vcf = f"data/ref_panel/{PANEL_NAME}/{PANEL_NAME}.chr{{chr}}.vcf.gz",
-        tbi = f"data/ref_panel/{PANEL_NAME}/{PANEL_NAME}.chr{{chr}}.vcf.gz.tbi"
+        vcf = "data/ref_panel/{panel}/{panel}.chr{chr}.vcf.gz",
+        tbi = "data/ref_panel/{panel}/{panel}.chr{chr}.vcf.gz.tbi"
     output:
-        tmp_vcf = temp(f"results/imputation/refs/{PANEL_NAME}/tmp.{PANEL_NAME}.chr{{chr}}.vcf.gz"),
-        hap = f"results/imputation/refs/{PANEL_NAME}/{PANEL_NAME}.chr{{chr}}.hap.gz",
-        legend = f"results/imputation/refs/{PANEL_NAME}/{PANEL_NAME}.chr{{chr}}.legend.gz",
-        samples = f"results/imputation/refs/{PANEL_NAME}/{PANEL_NAME}.chr{{chr}}.samples"
+        tmp_vcf = temp("results/imputation/refs/{panel}/tmp.{panel}.chr{chr}.vcf.gz"),
+        hap = "results/imputation/refs/{panel}/{panel}.chr{chr}.hap.gz",
+        legend = "results/imputation/refs/{panel}/{panel}.chr{chr}.legend.gz",
+        samples = "results/imputation/refs/{panel}/{panel}.chr{chr}.samples"
     wildcard_constraints:
         chr='\d{1,2}'
-    params:
-        panel = PANEL_NAME
     threads: 4
     resources: mem = '30G'
+    params: outdir = "results/imputation/refs/{panel}/"
     shell: """
-        mkdir -p results/imputation/refs/{params.panel}/
+        mkdir -p {params.outdir}
 
         bcftools norm -m+ {input.vcf} | bcftools view -m2 -M2 -v snps | bcftools sort -Oz -o {output.tmp_vcf}
         tabix {output.tmp_vcf}
 
-        bcftools convert --haplegendsample results/imputation/refs/{params.panel}/{params.panel}.chr{wildcards.chr} {output.tmp_vcf}
+        bcftools convert -h \
+        {params.outdir}{wildcards.panel}.chr{wildcards.chr} {output.tmp_vcf}
     """
-
+    
+'''
 rule determine_chunks: # modify the Rscript code as well
     input:
         legend = expand(f"results/imputation/refs/{PANEL_NAME}/{PANEL_NAME}.chr{{chr}}.legend.gz", chr = chromosome),
@@ -86,3 +82,4 @@ rule determine_chunks: # modify the Rscript code as well
     shell: """
         Rscript {input.code} {ANALYSIS_DIR:q} {WINDOWSIZE} {BUFFER} {PANEL_NAME:q}
     """
+'''

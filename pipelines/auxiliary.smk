@@ -26,20 +26,23 @@ def read_tsv_as_dict(samples, split_path_prefix, split_path_postfix):
         dict[i] = read_tsv_as_lst(path)
     return dict
 
-def get_vcf_concat_lst(region_json, in_prefix):
-    REGIONS={}
+# This utility extracts all values in a dictionary and combine them in a flattened list
+def convert_dict_to_lst(dictionary):
+    return [item for sublist in dictionary.values() for item in sublist]
+
+def get_vcf_concat_lst(region_json, ref_prefix, vcf_prefix):
+    REGIONS = {}
     for chr in chromosome:
         start = [10000001, 15000001]
         end = [  15000000, 20000000]
-        REGIONS[str(chr)]={"start":start, "end":end}
+        REGIONS[str(chr)] = {"start": start, "end": end}
 
-    file = region_json
-    if os.path.exists(file):
-        with open(file) as json_file:
+    if os.path.exists(region_json):
+        with open(region_json) as json_file:
             REGIONS = json.load(json_file)
 
+    regions_to_prep = []
     vcfs_to_concat = {}
-    vcfs_to_impute = []
     for chr in chromosome:
         start = REGIONS[str(chr)]["start"]
         end = REGIONS[str(chr)]["end"]
@@ -47,8 +50,11 @@ def get_vcf_concat_lst(region_json, in_prefix):
         for i in range(0, start.__len__()):
             regionStart = start[i]
             regionEnd = end[i]
-            file = in_prefix + str(chr) + "." + str(regionStart) + "." + str(regionEnd) + ".vcf.gz"
+            file = ref_prefix + str(chr) + "." + str(regionStart) + "." + str(regionEnd) + ".RData"
+            regions_to_prep.append(file)
+            file = vcf_prefix + str(chr) + "." + str(regionStart) + "." + str(regionEnd) + ".vcf.gz"
             per_chr_vcfs.append(file)
-            vcfs_to_impute.append(file)
         vcfs_to_concat[str(chr)] = per_chr_vcfs
-    return vcfs_to_impute, vcfs_to_concat
+
+    vcfs_to_impute = convert_dict_to_lst(vcfs_to_concat)
+    return regions_to_prep, vcfs_to_impute, vcfs_to_concat

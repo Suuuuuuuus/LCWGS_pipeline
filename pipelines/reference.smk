@@ -3,7 +3,7 @@ include: "software.smk"
 include: "auxiliary.smk"
 
 concatenate = config['concatenate']
-RECOMB_POP=config["RECOMB_POP"]
+RECOMB_POP = config["RECOMB_POP"]
 
 # Borrowed from Annie Froster
 rule concatenate_refs:
@@ -37,7 +37,6 @@ rule index_reference:
         bwa index {input.reference}
     """
 
-# ref_indir = ["malariaGen_v1_b37"]
 ref_outdirs = ["malariaGen_v1_b38"]
 
 rule create_ref_dict:

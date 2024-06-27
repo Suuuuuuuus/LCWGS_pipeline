@@ -99,17 +99,7 @@ rule subset_lc_samples:
         hc_names = lcwgsus.bcftools_get_samples(input.chip_vcf)
         lc_names = lcwgsus.bcftools_get_samples(input.quilt_vcf)
 
-        if lc_names[0].startswith('IDT'):
-            sl = sample_linker.sort_values(by = 'Seq_Name')
-            sl = sl[sl['Seq_Name'].isin(lc_names)]
-            sl = sl[~sl['Sample_Name'].str.contains('mini')]
-            rename_map = {k:v for k,v in zip(sl['Chip_Name'], sl['Seq_Name'])}
-            samples = []
-            for n in hc_names:
-                samples.append(rename_map[n])
-            lcwgsus.save_lst(output.tmp_names, samples)
-
-        elif lc_names[0].startswith('GM'):
+        if lc_names[0].startswith('GM'):
             rename_map = lcwgsus.generate_rename_map()
             lc = wildcards.imp_dir.split('/')[-2].split('_')[0]
             samples = lcwgsus.find_matching_samples(hc_names, rename_map, lc = lc)
@@ -145,10 +135,6 @@ rule calculate_imputation_accuracy_all:
         chrom = "{chr}"
     run:
         mini = False
-        common_cols = ['chr', 'pos', 'ref', 'alt']
-        lc_sample_prefix = 'GM'
-        chip_sample_prefix = 'GAM'
-        seq_sample_prefix = 'IDT'
 
         quilt_vcf = input.quilt_vcf
         chip_vcf = input.chip_vcf
@@ -160,7 +146,7 @@ rule calculate_imputation_accuracy_all:
                                                    save_file = True, 
                                                    outdir = params.common_outdir + "by_variant/", 
                                                    save_name = 'chr' + wildcards.chr +'.h.tsv')
-        h_report = h_report.drop(columns = common_cols)
+        h_report = h_report.drop(columns = COMMON_COLS)
 
         h_impacc = lcwgsus.generate_h_impacc(h_report, 
                                            save_impacc = True, 
