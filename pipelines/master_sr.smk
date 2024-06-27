@@ -12,6 +12,7 @@ import sys
 import os
 sys.path.append("/well/band/users/rbx225/software/lcwgsus/")
 import lcwgsus
+from lcwgsus.variables import *
 
 chromosome = [i for i in range(1,23)]
 
@@ -23,13 +24,8 @@ error2 = ['0.0034-0.0105', '0', '0.0034-0.0105', '0', '0.0001', '0', '0.0001', '
 haplotypes = ['mat', 'pat']
 coverage = '0.6'
 
-QUILT_HOME = config["QUILT_HOME"]
-sr_analysis_dir = config["sr_analysis_dir"]
-RECOMB_POP=config["RECOMB_POP"]
-NGEN=config["NGEN"]
-WINDOWSIZE=config["WINDOWSIZE"]
-BUFFER=config["BUFFER"]
-PANEL_NAME=config["hc_panel"]
+RECOMB_POP = config["RECOMB_POP"]
+PANEL_NAME = config["hc_panel"]
 
 rule short_read_all:
     input:
@@ -38,65 +34,25 @@ rule short_read_all:
         bams = expand("data/sr_bams/{rl}.bam", rl = read_lengths),
         bais = expand("data/sr_bams/{rl}.bam.bai", rl = read_lengths)
 
-REGIONS={}
-for chr in chromosome:
-    start=[10000001, 15000001]
-    end=[  15000000, 20000000]
-    REGIONS[str(chr)]={"start":start, "end":end}
+region_file = "data/imputation_accessories/5Mb_chunks.json"
+region = "results/sr_imputation/refs/" + PANEL_NAME + "/regions.json"
+ref_prefix = "results/sr_imputation/refs/" + PANEL_NAME + "/RData/ref_package.chr"
+vcf_prefix = "results/sr_imputation/vcfs/" + PANEL_NAME + "/regions/quilt.chr"
 
-file="results/sr_imputation/regions.json"
-if os.path.exists(file):
-    print("Replacing regions to impute with derived file")
-    with open(file) as json_file:
-        REGIONS = json.load(json_file)
-
-regions_to_prep=[]
-vcfs_to_impute=[]
-for chr in chromosome:
-    start=REGIONS[str(chr)]["start"]
-    end=REGIONS[str(chr)]["end"]
-    for i in range(0, start.__len__()):
-        regionStart=start[i]
-        regionEnd=end[i]
-        file="results/sr_imputation/refs/RData/ref_package.chr" + str(chr) + "." + str(regionStart) + "." + str(regionEnd) + ".RData"
-        regions_to_prep.append(file)
-        file="results/sr_imputation/vcfs/" + PANEL_NAME + "/regions/quilt.chr" + str(chr) + "." + str(regionStart) + "." + str(regionEnd) + ".vcf.gz"
-        vcfs_to_impute.append(file)
+sr_oneKG_RData, sr_oneKG_vcf_lst, sr_oneKG_vcf_dict = get_vcf_concat_lst(region, ref_prefix, vcf_prefix)
 
 rule sr_imputation_prep_all:
     input:
         bamlist = "results/sr_imputation/bamlist.txt",
-        # recomb = expand("results/sr_imputation/" + RECOMB_POP + "/" + RECOMB_POP + "-chr{chr}-final.b38.txt.gz", chr = chromosome),
-        # json = "results/sr_imputation/regions.json",
-        # hap = expand(f"results/sr_imputation/refs/{PANEL_NAME}.chr{{chr}}.hap.gz", chr = chromosome),
-        # legend = expand(f"results/sr_imputation/refs/{PANEL_NAME}.chr{{chr}}.legend.gz", chr = chromosome),
-        # samples = expand(f"results/sr_imputation/refs/{PANEL_NAME}.chr{{chr}}.samples", chr = chromosome)
-
-vcfs_to_concat={}
-final_vcfs=[]
-for chr in chromosome:
-    start=REGIONS[str(chr)]["start"]
-    end=REGIONS[str(chr)]["end"]
-    per_chr_vcfs=[]
-    for i in range(0, start.__len__()):
-        regionStart=start[i]
-        regionEnd=end[i]
-        file="results/sr_imputation/vcfs/" + PANEL_NAME + "/regions/quilt.chr" + str(chr) + "." + str(regionStart) + "." + str(regionEnd) + ".vcf.gz"
-        per_chr_vcfs.append(file)
-    vcfs_to_concat[str(chr)]=per_chr_vcfs
-    final_vcfs.append("results/sr_imputation/vcfs/" + PANEL_NAME + "/quilt.chr" + str(chr) + ".vcf.gz")
-
-def get_input_vcfs_as_list(wildcards):
-    return(vcfs_to_concat[str(wildcards.chr)])
-
-def get_input_vcfs_as_string(wildcards):
-    return(" ".join(map(str, vcfs_to_concat[str(wildcards.chr)])))
+        hap = expand(f"results/sr_imputation/refs/{PANEL_NAME}.chr{{chr}}.hap.gz", chr = chromosome),
+        legend = expand(f"results/sr_imputation/refs/{PANEL_NAME}.chr{{chr}}.legend.gz", chr = chromosome),
+        samples = expand(f"results/sr_imputation/refs/{PANEL_NAME}.chr{{chr}}.samples", chr = chromosome)
 
 rule sr_imputation_all:
     input:
-        RData = [regions_to_prep],
-        vcf_regions = [vcfs_to_impute],
-        vcfs = [final_vcfs],
+        RData = [sr_oneKG_RData],
+        vcf_regions = [sr_oneKG_vcf_lst],
+        vcfs = expand(f"results/sr_imputation/vcfs/{PANEL_NAME}/quilt.chr{{chr}}.vcf.gz", chr = chromosome),
         truth = expand("results/sr_imputation/truth/short_read_truth.chr{chr}.vcf.gz", chr = chromosome)
 
 pair = ['lc', 'hc']

@@ -12,14 +12,15 @@ import sys
 import os
 sys.path.append("/well/band/users/rbx225/software/lcwgsus/")
 import lcwgsus
+from lcwgsus.variables import *
 
 chromosome = [i for i in range(1,23)]
 
-read_lengths = ['500b', '600b', '800b', '1kb', '2kb', '5kb', '10kb', '20kb']
-rls = ['500', '600', '800', '1000', '2000', '5000', '10000', '20000']
-haplotypes = ['mat', 'pat']
-method = 'CCS'
-coverage = '0.6'
+read_lengths = config["lr_read_lengths"]
+rls = config["lr_rls"]
+haplotypes = config["lr_haplotypes"]
+method = config["lr_method"]
+coverage = config["lr_sim_coverage"]
 
 RECOMB_POP = config["RECOMB_POP"]
 PANEL_NAME = config["hc_panel"]
@@ -38,65 +39,18 @@ vcf_prefix = "results/lr_imputation/vcfs/" + PANEL_NAME + "/regions/quilt.chr"
 
 lr_oneKG_RData, lr_oneKG_vcf_lst, lr_oneKG_vcf_dict = get_vcf_concat_lst(region, ref_prefix, vcf_prefix)
 
-REGIONS={}
-for chr in chromosome:
-    start=[10000001, 15000001]
-    end=[  15000000, 20000000]
-    REGIONS[str(chr)]={"start":start, "end":end}
-
-file="results/lr_imputation/regions.json"
-if os.path.exists(file):
-    print("Replacing regions to impute with derived file")
-    with open(file) as json_file:
-        REGIONS = json.load(json_file)
-
-regions_to_prep=[]
-vcfs_to_impute=[]
-for chr in chromosome:
-    start=REGIONS[str(chr)]["start"]
-    end=REGIONS[str(chr)]["end"]
-    for i in range(0, start.__len__()):
-        regionStart=start[i]
-        regionEnd=end[i]
-        file="results/lr_imputation/refs/RData/ref_package.chr" + str(chr) + "." + str(regionStart) + "." + str(regionEnd) + ".RData"
-        regions_to_prep.append(file)
-        file="results/lr_imputation/vcfs/" + PANEL_NAME + "/regions/quilt.chr" + str(chr) + "." + str(regionStart) + "." + str(regionEnd) + ".vcf.gz"
-        vcfs_to_impute.append(file)
-
 rule lr_imputation_prep_all:
     input:
-        bamlist = "results/lr_imputation/bamlist.txt",
-        # recomb = expand("results/lr_imputation/" + RECOMB_POP + "/" + RECOMB_POP + "-chr{chr}-final.b38.txt.gz", chr = chromosome),
-        # json = "results/lr_imputation/regions.json",
-        # hap = expand(f"results/lr_imputation/refs/{PANEL_NAME}.chr{{chr}}.hap.gz", chr = chromosome),
-        # legend = expand(f"results/lr_imputation/refs/{PANEL_NAME}.chr{{chr}}.legend.gz", chr = chromosome),
-        # samples = expand(f"results/lr_imputation/refs/{PANEL_NAME}.chr{{chr}}.samples", chr = chromosome)
-
-vcfs_to_concat={}
-final_vcfs=[]
-for chr in chromosome:
-    start=REGIONS[str(chr)]["start"]
-    end=REGIONS[str(chr)]["end"]
-    per_chr_vcfs=[]
-    for i in range(0, start.__len__()):
-        regionStart=start[i]
-        regionEnd=end[i]
-        file="results/lr_imputation/vcfs/" + PANEL_NAME + "/regions/quilt.chr" + str(chr) + "." + str(regionStart) + "." + str(regionEnd) + ".vcf.gz"
-        per_chr_vcfs.append(file)
-    vcfs_to_concat[str(chr)]=per_chr_vcfs
-    final_vcfs.append("results/lr_imputation/vcfs/" + PANEL_NAME + "/quilt.chr" + str(chr) + ".vcf.gz")
-
-def get_input_vcfs_as_list(wildcards):
-    return(vcfs_to_concat[str(wildcards.chr)])
-
-def get_input_vcfs_as_string(wildcards):
-    return(" ".join(map(str, vcfs_to_concat[str(wildcards.chr)])))
+        bamlist = "results/lr_imputation/bamlist.txt"
+        hap = expand(f"results/lr_imputation/refs/{PANEL_NAME}.chr{{chr}}.hap.gz", chr = chromosome),
+        legend = expand(f"results/lr_imputation/refs/{PANEL_NAME}.chr{{chr}}.legend.gz", chr = chromosome),
+        samples = expand(f"results/lr_imputation/refs/{PANEL_NAME}.chr{{chr}}.samples", chr = chromosome)
 
 rule lr_imputation_all:
     input:
-        RData = [regions_to_prep],
-        vcf_regions = [vcfs_to_impute],
-        vcfs = [final_vcfs],
+        RData = [lr_oneKG_RData],
+        vcf_regions = [lr_oneKG_vcf_lst],
+        vcfs = expand(f"results/lr_imputation/vcfs/{PANEL_NAME}/quilt.chr{{chr}}.vcf.gz", chr = chromosome),
         truth = expand("results/lr_imputation/truth/long_read_truth.chr{chr}.vcf.gz", chr = chromosome)
 
 pair = ['lc', 'hc']

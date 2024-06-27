@@ -9,6 +9,7 @@ import sys
 import os
 sys.path.append("/well/band/users/rbx225/software/lcwgsus/")
 import lcwgsus
+from lcwgsus.variables import *
 
 chromosome = [i for i in range(1,23)]
 
@@ -17,13 +18,9 @@ rls = ['500', '600', '800', '1000', '2000', '5000', '10000', '20000']
 haplotypes = ['mat', 'pat']
 coverage = '0.6'
 
-QUILT_HOME = config["QUILT_HOME"]
-lr_analysis_dir = config["lr_analysis_dir"]
-RECOMB_POP=config["RECOMB_POP"]
-NGEN=config["NGEN"]
-WINDOWSIZE=config["WINDOWSIZE"]
-BUFFER=config["BUFFER"]
-PANEL_NAME=config["hc_panel"]
+RECOMB_POP = config["RECOMB_POP"]
+NGEN = config["NGEN"]
+PANEL_NAME = config["hc_panel"]
 
 def get_num_mean_length(wildcards):
     ix = read_lengths.index(wildcards.rl)
@@ -147,24 +144,9 @@ rule prepare_bamlist:
         bamlist = "results/lr_imputation/bamlist.txt"
     localrule: True
     shell: """
-        mkdir -p {lr_analysis_dir}
+        mkdir -p results/lr_imputation/
 
         ls data/lr_bams/*.bam > {output.bamlist}
-    """
-
-'''
-rule convert_recomb:
-    input:
-        f"results/lr_imputation/{RECOMB_POP}/{RECOMB_POP}-{{chr}}-final.txt.gz"
-    output:
-        f"results/lr_imputation/{RECOMB_POP}/{RECOMB_POP}-chr{{chr}}-final.b38.txt.gz"
-    params:
-        threads = 1
-    wildcard_constraints:
-        chr='\d{1,2}'
-    shell: """
-        R -f {QUILT_HOME}scripts/make_b38_recomb_map.R \
-        --args {lr_analysis_dir} {RECOMB_POP} {wildcards.chr}
     """
 
 rule convert_ref:
@@ -186,36 +168,25 @@ rule convert_ref:
         mkdir -p results/lr_imputation/refs/
         bcftools norm -m+ {input.vcf} | bcftools view -Oz -o {output.tmp_vcf} -m2 -M2 -v snps
 
-        tabix {output.tmp_vcf}
+        tabix -f {output.tmp_vcf}
 
         bcftools view -s ^HG02886,HG02885,HG02884 -Oz -o {output.tmp_vcf2} {output.tmp_vcf}
-        tabix {output.tmp_vcf2}
+        tabix -f {output.tmp_vcf2}
 
-        bcftools convert --haplegendsample \
+        bcftools convert -h \
         results/lr_imputation/refs/{params.panel}.chr{wildcards.chr} {output.tmp_vcf2}
-    """
-
-rule determine_chunks:
-    input:
-        legend = expand(f"results/lr_imputation/refs/{PANEL_NAME}.chr{{chr}}.legend.gz", chr = chromosome),
-        code = "scripts/quilt_accessories/determine_chunks.R"
-    output:
-        json = "results/lr_imputation/regions.json"
-    resources: mem = '10G'
-    shell: """
-        Rscript {input.code} {lr_analysis_dir:q} {WINDOWSIZE} {BUFFER} {PANEL_NAME:q}
     """
 
 rule prepare_ref:
     input:
-        json = "results/lr_imputation/regions.json",
+        json = "data/imputation_accessories/5Mb_chunks.json",
         hap = f"results/lr_imputation/refs/{PANEL_NAME}.chr{{chr}}.hap.gz",
         legend = f"results/lr_imputation/refs/{PANEL_NAME}.chr{{chr}}.legend.gz",
-        recomb = f"results/lr_imputation/{RECOMB_POP}/{RECOMB_POP}-chr{{chr}}-final.b38.txt.gz"
+        recomb = f"data/imputation_accessories/maps/{RECOMB_POP}-chr{{chr}}-final.b38.txt",
     output:
         RData = f"results/lr_imputation/refs/RData/ref_package.chr{{chr}}.{{regionStart}}.{{regionEnd}}.RData"
     resources:
-        mem_mb = 30000
+        mem = '30G'
     params:
         threads = 8
     shell: """
@@ -232,7 +203,6 @@ rule prepare_ref:
         buffer=0, \
         output_file="{output.RData}")'
     """
-'''
 
 rule quilt_imputation:
     input:
@@ -241,9 +211,7 @@ rule quilt_imputation:
     output:
         vcf = f"results/lr_imputation/vcfs/{PANEL_NAME}/regions/quilt.chr{{chr}}.{{regionStart}}.{{regionEnd}}.vcf.gz"
     resources:
-        mem_mb = 30000
-    resources:
-        mem_mb = 30000
+        mem = '30G'
     wildcard_constraints:
         chr='\w{1,2}',
         regionStart='\d{1,9}',
@@ -266,36 +234,18 @@ rule quilt_imputation:
         seed='${{SEED}}')'
     """
 
-REGIONS={}
-for chr in chromosome:
-    start=[10000001, 15000001]
-    end=[  15000000, 20000000]
-    REGIONS[str(chr)]={"start":start, "end":end}
+region_file = "data/imputation_accessories/5Mb_chunks.json"
+region = "results/lr_imputation/refs/" + PANEL_NAME + "/regions.json"
+ref_prefix = "results/lr_imputation/refs/" + PANEL_NAME + "/RData/ref_package.chr"
+vcf_prefix = "results/lr_imputation/vcfs/" + PANEL_NAME + "/regions/quilt.chr"
 
-file="results/lr_imputation/regions.json"
-if os.path.exists(file):
-    with open(file) as json_file:
-        REGIONS = json.load(json_file)
-
-vcfs_to_concat={}
-final_vcfs=[]
-for chr in chromosome:
-    start=REGIONS[str(chr)]["start"]
-    end=REGIONS[str(chr)]["end"]
-    per_chr_vcfs=[]
-    for i in range(0, start.__len__()):
-        regionStart=start[i]
-        regionEnd=end[i]
-        file="results/lr_imputation/vcfs/" + PANEL_NAME + "/regions/quilt.chr" + str(chr) + "." + str(regionStart) + "." + str(regionEnd) + ".vcf.gz"
-        per_chr_vcfs.append(file)
-    vcfs_to_concat[str(chr)]=per_chr_vcfs
-    final_vcfs.append("results/lr_imputation/vcfs/" + PANEL_NAME + "/quilt.chr" + str(chr) + ".vcf.gz")
+lr_oneKG_RData, lr_oneKG_vcf_lst, lr_oneKG_vcf_dict = get_vcf_concat_lst(region, ref_prefix, vcf_prefix)
 
 def get_input_vcfs_as_list(wildcards):
-    return(vcfs_to_concat[str(wildcards.chr)])
+    return(lr_oneKG_vcf_dict[str(wildcards.chr)])
 
 def get_input_vcfs_as_string(wildcards):
-    return(" ".join(map(str, vcfs_to_concat[str(wildcards.chr)])))
+    return(" ".join(map(str, lr_oneKG_vcf_dict[str(wildcards.chr)])))
 
 rule concat_quilt_vcf:
     input:
@@ -303,14 +253,14 @@ rule concat_quilt_vcf:
     output:
         vcf = f"results/lr_imputation/vcfs/{PANEL_NAME}/quilt.chr{{chr}}.vcf.gz"
     resources:
-        mem_mb = 30000
+        mem = '30G'
     params:
         threads = 1,
-        input_string=get_input_vcfs_as_string
+        input_string = get_input_vcfs_as_string
     wildcard_constraints:
-        chr='\w{1,2}',
-        regionStart='\d{1,9}',
-        regionEnd='\d{1,9}'
+        chr = '\w{1,2}',
+        regionStart = '\d{1,9}',
+        regionEnd = '\d{1,9}'
     shell: """
         if [ -e {output.vcf}.temp1.vcf.gz ]; then
             rm {output.vcf}.temp1.vcf.gz
@@ -319,14 +269,12 @@ rule concat_quilt_vcf:
             rm {output.vcf}.temp2.vcf.gz
         fi
 
-        bcftools concat \
-        --ligate-force \
-        --output-type z \
-        --output {output.vcf}.temp1.vcf.gz \
-        {params.input_string}
+        bcftools concat --ligate-force -Oz -o {output.vcf}.temp1.vcf.gz {params.input_string}
 
         gunzip -c {output.vcf}.temp1.vcf.gz | grep '#' > {output.vcf}.temp2.vcf
-        bcftools query -f '%CHROM\t%POS\t%ID\t%REF\t%ALT\t%QUAL\t%FILTER\t%INFO\tGT:GP:DS\t[%GT:%GP:%DS\t]\n' {output.vcf}.temp1.vcf.gz  >> {output.vcf}.temp2.vcf
+        bcftools query -f '%CHROM\t%POS\t%ID\t%REF\t%ALT\t%QUAL\t%FILTER\t%INFO\tGT:GP:DS\t[%GT:%GP:%DS\t]\n' \
+        {output.vcf}.temp1.vcf.gz  >> {output.vcf}.temp2.vcf
+
         bcftools sort -Oz -o {output.vcf} {output.vcf}.temp2.vcf
         tabix {output.vcf}
         rm {output.vcf}.temp*
@@ -340,7 +288,7 @@ def get_vcf_lst(wildcards):
 
 rule prepare_lr_vcf:
     input:
-        vcf = f"data/ref_panel/{PANEL_NAME}/oneKG.chr{{chr}}.vcf.gz"
+        vcf = f"data/ref_panel/{PANEL_NAME}/{PANEL_NAME}.chr{{chr}}.vcf.gz"
     output:
         truth = "results/lr_imputation/truth/long_read_truth.chr{chr}.vcf.gz",
         rename = temp("results/lr_imputation/truth/name.chr{chr}.txt")
@@ -387,24 +335,17 @@ rule copy_vcf_in_working_dir:
         hc_vcf_dir = get_hc_vcf_dir
     output:
         vcfs = temp(expand('{imp_dir}vcf/all_samples/{pair}_vcf/{pair}.chr{chr}.vcf.gz', chr = chromosome, pair = pair, allow_missing = True))
-    resources:
-        mem = '30G'
-    threads: 4
+    localrule: True
     shell: """
         mkdir -p {wildcards.imp_dir}vcf/
         mkdir -p {wildcards.imp_dir}impacc/
-        mkdir -p {wildcards.imp_dir}graphs/
         mkdir -p {wildcards.imp_dir}vcf/all_samples/lc_vcf/
         mkdir -p {wildcards.imp_dir}vcf/all_samples/hc_vcf/
-        mkdir -p {wildcards.imp_dir}vcf/by_cc/lc_vcf/
-        mkdir -p {wildcards.imp_dir}vcf/by_cc/hc_vcf/
-        mkdir -p {wildcards.imp_dir}vcf/by_eth/lc_vcf/
-        mkdir -p {wildcards.imp_dir}vcf/by_eth/hc_vcf/
 
         for i in {{1..22}}
         do
-            cp {input.lc_vcf_dir}/*chr$i.*.gz {wildcards.imp_dir}vcf/all_samples/lc_vcf/lc.chr$i.vcf.gz
-            cp {input.hc_vcf_dir}/*chr$i.*.gz {wildcards.imp_dir}vcf/all_samples/hc_vcf/hc.chr$i.vcf.gz
+            cp -rf {input.lc_vcf_dir}/*chr$i.*.gz {wildcards.imp_dir}vcf/all_samples/lc_vcf/lc.chr$i.vcf.gz
+            cp -rf {input.hc_vcf_dir}/*chr$i.*.gz {wildcards.imp_dir}vcf/all_samples/hc_vcf/hc.chr$i.vcf.gz
         done
     """
 
@@ -453,10 +394,6 @@ rule calculate_imputation_accuracy_all:
         chrom = "{chr}"
     run:
         mini = False
-        common_cols = ['chr', 'pos', 'ref', 'alt']
-        lc_sample_prefix = 'GM'
-        chip_sample_prefix = 'GAM'
-        seq_sample_prefix = 'IDT'
 
         quilt_vcf = input.quilt_vcf
         chip_vcf = input.chip_vcf
@@ -468,7 +405,7 @@ rule calculate_imputation_accuracy_all:
                                                    save_file = True, 
                                                    outdir = params.common_outdir + "by_variant/", 
                                                    save_name = 'chr' + wildcards.chr +'.h.tsv')
-        h_report = h_report.drop(columns = common_cols)
+        h_report = h_report.drop(columns = COMMON_COLS)
 
         h_impacc = lcwgsus.generate_h_impacc(h_report, 
                                            save_impacc = True, 
