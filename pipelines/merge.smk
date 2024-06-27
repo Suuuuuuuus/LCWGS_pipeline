@@ -8,6 +8,7 @@ import sys
 import os
 sys.path.append("/well/band/users/rbx225/software/lcwgsus/")
 import lcwgsus
+from lcwgsus.variables import *
 
 chromosome = [i for i in range(1,23)]
 

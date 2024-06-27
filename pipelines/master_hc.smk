@@ -5,11 +5,11 @@ include: "reference.smk"
 include: "alignment.smk"
 
 include: "merge.smk"
-
 include: "variant_calling.smk"
 
-include: "test.smk"
+#include: "test.smk"
 include: "auxiliary.smk"
+include: "software.smk"
 
 import json
 import pandas as pd
@@ -18,6 +18,7 @@ import sys
 import os
 sys.path.append("/well/band/users/rbx225/software/lcwgsus/")
 import lcwgsus
+from lcwgsus.variables import *
 
 samples_hc = read_tsv_as_lst(config['samples_hc'])
 hc_panel = config["hc_panel"]

@@ -8,6 +8,7 @@ import numpy as np
 import sys
 sys.path.append("/well/band/users/rbx225/software/lcwgsus/")
 import lcwgsus
+from lcwgsus.variables import *
 
 hc_panel = config["hc_panel"]
 concatenate = config["concatenate"]
