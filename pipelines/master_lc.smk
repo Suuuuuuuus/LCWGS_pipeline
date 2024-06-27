@@ -3,7 +3,6 @@ include: "fastqc.smk"
 include: "reference.smk"
 include: "alignment.smk"
 
-# include: "rmdup.smk"
 #include: "subsample.smk"
 #include: "kmer.smk"
 #include: "dup_rate.smk"
@@ -76,11 +75,6 @@ rule alignment_all:
     input:
         bams = expand("data/bams/{id}.bam", id = samples_lc),
         bais = expand("data/bams/{id}.bam.bai", id = samples_lc)
-
-rule rmdup_all:
-    input:
-        dedup_bams = expand("data/dedup_bams/{id}.bam", id = samples_lc),
-        dedup_bais = expand("data/dedup_bams/{id}.bam.bai", id = samples_lc)
 
 rule subsample_all:
     input:
