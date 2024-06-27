@@ -273,5 +273,8 @@ rule clean_hc_vcf:
         bcftools concat -a -d all {input.vcfs} | \
         bcftools norm -m-any | \
         bcftools view -e 'REF="*" || ALT="*"' | \
-        bcftools reheader -s {params.rename_samples} -o {recal_vcf}
+        bcftools sort | \
+        bcftools reheader -s {params.rename_samples} -o {output.recal_vcf}
+
+        tabix -f {output.recal_vcf}
     """
