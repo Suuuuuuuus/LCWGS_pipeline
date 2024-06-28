@@ -22,13 +22,14 @@ all_RData = {}
 all_vcf_lst = {}
 all_vcf_dict = {}
 for p in panels:
+    region = "results/imputation/refs/" + p + "/regions.json"
     ref_prefix = "results/imputation/refs/" + p + "/RData/ref_package.chr"
     vcf_prefix = "results/imputation/vcfs/" + p + "/regions/quilt.chr"
     all_RData[p], all_vcf_lst[p], all_vcf_dict[p] = get_vcf_concat_lst(region_file, ref_prefix, vcf_prefix)
 
 rule prepare_ref:
     input:
-        json = "results/imputation/regions.json",
+        json = "results/imputation/refs/{panel}/regions.json",
         hap = "results/imputation/refs/{panel}/{panel}.chr{chr}.hap.gz",
         legend = "results/imputation/refs/{panel}/{panel}.chr{chr}.legend.gz",
         recomb =  f"results/imputation/{RECOMB_POP}/{RECOMB_POP}-chr{{chr}}-final.b38.txt.gz"
