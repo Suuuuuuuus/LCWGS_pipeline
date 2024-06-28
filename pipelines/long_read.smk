@@ -185,13 +185,13 @@ rule prepare_ref:
         legend = f"results/lr_imputation/refs/{PANEL_NAME}.chr{{chr}}.legend.gz",
         recomb = f"data/imputation_accessories/maps/{RECOMB_POP}-chr{{chr}}-final.b38.txt",
     output:
-        RData = f"results/lr_imputation/refs/RData/ref_package.chr{{chr}}.{{regionStart}}.{{regionEnd}}.RData"
+        RData = f"results/lr_imputation/refs/{PANEL_NAME}/RData/ref_package.chr{{chr}}.{{regionStart}}.{{regionEnd}}.RData"
     resources:
         mem = '30G'
     params:
         threads = 8
     shell: """
-        mkdir -p results/lr_imputation/refs/RData/other/
+        mkdir -p results/lr_imputation/refs/{PANEL_NAME}/RData/other/
         R -e 'library("data.table"); library("QUILT"); QUILT_prepare_reference( \
         outputdir="results/lr_imputation/refs/RData/other/", \
         chr="chr{wildcards.chr}", \
@@ -208,7 +208,7 @@ rule prepare_ref:
 rule quilt_imputation:
     input:
         bamlist = "results/lr_imputation/bamlist.txt",
-        RData = f"results/lr_imputation/refs/RData/ref_package.chr{{chr}}.{{regionStart}}.{{regionEnd}}.RData"
+        RData = f"results/lr_imputation/refs/{PANEL_NAME}/RData/ref_package.chr{{chr}}.{{regionStart}}.{{regionEnd}}.RData"
     output:
         vcf = f"results/lr_imputation/vcfs/{PANEL_NAME}/regions/quilt.chr{{chr}}.{{regionStart}}.{{regionEnd}}.vcf.gz"
     resources:
@@ -224,7 +224,7 @@ rule quilt_imputation:
         SEED=`echo $RANDOM`
         mkdir -p "results/lr_imputation/vcfs/{params.panel}/regions/"
         R -e 'library("data.table"); library("QUILT"); QUILT( \
-        outputdir="results/lr_imputation/refs/RData/other/", \
+        outputdir="results/lr_imputation/refs/{PANEL_NAME}/RData/other/", \
         chr="chr{wildcards.chr}", \
         regionStart={wildcards.regionStart}, \
         regionEnd={wildcards.regionEnd}, \
