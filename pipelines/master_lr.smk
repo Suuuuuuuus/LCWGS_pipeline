@@ -33,11 +33,9 @@ rule long_read_all:
         fastq = expand("data/lr_simulations/{rl}/{rl}.fastq.gz", rl = read_lengths)
 
 region_file = "data/imputation_accessories/5Mb_chunks.json"
-region = "results/lr_imputation/refs/" + PANEL_NAME + "/regions.json"
 ref_prefix = "results/lr_imputation/refs/" + PANEL_NAME + "/RData/ref_package.chr"
 vcf_prefix = "results/lr_imputation/vcfs/" + PANEL_NAME + "/regions/quilt.chr"
-
-lr_oneKG_RData, lr_oneKG_vcf_lst, lr_oneKG_vcf_dict = get_vcf_concat_lst(region, ref_prefix, vcf_prefix)
+lr_oneKG_RData, lr_oneKG_vcf_lst, lr_oneKG_vcf_dict = get_vcf_concat_lst(region_file, ref_prefix, vcf_prefix)
 
 rule lr_imputation_prep_all:
     input:

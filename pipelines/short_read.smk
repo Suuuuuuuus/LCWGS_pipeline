@@ -255,11 +255,10 @@ rule quilt_imputation:
     """
 
 region_file = "data/imputation_accessories/5Mb_chunks.json"
-region = "results/sr_imputation/refs/" + PANEL_NAME + "/regions.json"
 ref_prefix = "results/sr_imputation/refs/" + PANEL_NAME + "/RData/ref_package.chr"
 vcf_prefix = "results/sr_imputation/vcfs/" + PANEL_NAME + "/regions/quilt.chr"
 
-sr_oneKG_RData, sr_oneKG_vcf_lst, sr_oneKG_vcf_dict = get_vcf_concat_lst(region, ref_prefix, vcf_prefix)
+sr_oneKG_RData, sr_oneKG_vcf_lst, sr_oneKG_vcf_dict = get_vcf_concat_lst(region_file, ref_prefix, vcf_prefix)
 
 def get_input_vcfs_as_list(wildcards):
     return(sr_oneKG_vcf_dict[str(wildcards.chr)])
