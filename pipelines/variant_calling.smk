@@ -137,7 +137,7 @@ rule haplotype_call:
         bamlist = rules.prepare_hc_bamlist.output.bamlist,
         empty_vcf2 = rules.GATK_chunk_reference.output.empty_vcf2
     output:
-        vcf = f"results/call/vcfs/{hc_panel}/{hc_panel}.chr{{chr}}.{{regionStart}}.{{regionEnd}}.vcf.gz"
+        vcf = f"results/call/recal_vcf/{hc_panel}/regions/{hc_panel}.chr{{chr}}.{{regionStart}}.{{regionEnd}}.vcf.gz"
     resources: mem = '20G'
     params:
         padding = 300
