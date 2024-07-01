@@ -271,6 +271,8 @@ rule clean_hc_vcf:
     params:
         rename_samples = config['hc_vcf_rename_samples']
     shell: """
+        mkdir -p results/call/recal_vcf/{hc_panel}/
+        
         bcftools concat -a -d all {input.vcfs} | \
         bcftools norm -m-any | \
         bcftools view -e 'REF="*" || ALT="*"' | \
