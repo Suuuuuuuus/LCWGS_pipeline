@@ -126,7 +126,7 @@ rule filter_lc_maf:
     output:
         filtered_vcf = "results/wip_vcfs/{panel}/vanilla/high_info_high_af/lc.chr{chr}.vcf.gz"
     resources:
-        mem = '60G'
+        mem = '80G'
     threads: 8
     params:
         info = config['info_filter'],
