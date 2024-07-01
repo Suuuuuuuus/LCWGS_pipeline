@@ -264,6 +264,7 @@ rule clean_hc_vcf:
     input:
         vcfs = expand(f"results/call/recal_vcf/{hc_panel}/{{type}}/{hc_panel}.{{type}}.chr{{chr}}.vcf.gz", type = variant_types, allow_missing = True)
     output:
+        tmp_vcf = temp(f"results/call/recal_vcf/{hc_panel}/{hc_panel}.chr{{chr}}.vcf")
         recal_vcf = f"results/call/recal_vcf/{hc_panel}/{hc_panel}.chr{{chr}}.vcf.gz"
     resources:
         mem = '20G'
@@ -276,7 +277,10 @@ rule clean_hc_vcf:
         bcftools norm -m-any | \
         bcftools view -e 'REF="*" || ALT="*"' | \
         bcftools sort | \
-        bcftools reheader -s {params.rename_samples} -o {output.recal_vcf}
+        bcftools reheader -s {params.rename_samples} -o {output.tmp_vcf}
+
+        bgzip -f {output.tmp_vcf}
+        touch {output.tmp_vcf}
 
         tabix -f {output.recal_vcf}
     """
