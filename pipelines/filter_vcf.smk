@@ -49,7 +49,7 @@ rule retain_chip_sites:
         mem = '30G'
     threads: 4
     shell: """
-        mkdir -p results/wip_vcfs/{panel}/vanilla/chip_sites/
+        mkdir -p results/wip_vcfs/{wildcards.panel}/vanilla/chip_sites/
 
         zgrep -v '#' {input.chip_vcf} | cut -f1,2 > {output.site}
         bcftools view -R {output.site} -Oz -o {output.filtered_vcf} {input.lc_vcf}
@@ -147,11 +147,11 @@ rule filter_lc_maf:
         lc_af = lc_af.drop(columns = 'MAF')
 
         lcwgsus.save_vcf(lc_af,
-             metadata,
-             prefix='chr',
-             outdir="results/wip_vcfs/" + wildcards.panel + "/vanilla/high_info_high_af/",
-             save_name="lc.chr" + str(wildcards.chr) + ".vcf.gz"
-             )
+            metadata,
+            prefix='chr',
+            outdir="results/wip_vcfs/" + wildcards.panel + "/vanilla/high_info_high_af/",
+            save_name="lc.chr" + str(wildcards.chr) + ".vcf.gz"
+            )
 
 rule filter_lc_sites:
     input:
