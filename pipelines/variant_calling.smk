@@ -183,7 +183,7 @@ rule get_vqsr_report:
         tranch = f"results/call/VQSR/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.tranch",
         recal = f"results/call/VQSR/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.recal",
 
-        tmp_vcf = temp(f"results/call/merge_vcf/{hc_panel}/{hc_panel}.{{type}}chr{{chr}}.tmp.vcf.gz")
+        tmp_vcf = temp(f"results/call/merge_vcf/{hc_panel}/{hc_panel}.{{type}}.chr{{chr}}.tmp.vcf.gz")
     params:
         hapmap = "data/GATK_resource_bundle/hapmap_3.3.hg38.vcf.gz",
         omni = "data/GATK_resource_bundle/1000G_omni2.5.hg38.vcf.gz",
@@ -197,6 +197,7 @@ rule get_vqsr_report:
         mkdir -p results/call/VQSR/{hc_panel}/
 
         bcftools view -v {wildcards.type} -Oz -o {output.tmp_vcf} {input.vcf}
+        tabix -f {output.tmp_vcf}
 
         if [[ {wildcards.type} == "snps" ]]
         then
