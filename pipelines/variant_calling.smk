@@ -232,8 +232,7 @@ rule apply_vqsr:
         tranch = rules.get_vqsr_report.output.tranch,
         recal = rules.get_vqsr_report.output.recal
     output:
-        recal_vcf = f"results/call/recal_vcf/{hc_panel}/{{type}}/{hc_panel}.{{type}}.chr{{chr}}.vcf.gz",
-        tmp_vcf = temp(f"results/call/recal_vcf/{hc_panel}/{{type}}/tmp.{hc_panel}.{{type}}.chr{{chr}}.vcf.gz")
+        recal_vcf = f"results/call/recal_vcf/{hc_panel}/{{type}}/{hc_panel}.{{type}}.chr{{chr}}.vcf.gz"
     resources:
         mem = '20G'
     shell: """
@@ -272,7 +271,7 @@ rule clean_hc_vcf:
         rename_samples = config['hc_vcf_rename_samples']
     shell: """
         mkdir -p results/call/recal_vcf/{hc_panel}/
-        
+
         bcftools concat -a -d all {input.vcfs} | \
         bcftools norm -m-any | \
         bcftools view -e 'REF="*" || ALT="*"' | \
