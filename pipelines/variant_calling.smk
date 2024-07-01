@@ -263,7 +263,7 @@ rule apply_vqsr:
 
 rule clean_hc_vcf:
     input:
-        vcf = expand(f"results/call/recal_vcf/{hc_panel}/{{type}}/{hc_panel}.{{type}}.chr{{chr}}.vcf.gz", type = variant_types, allow_missing = True)
+        vcfs = expand(f"results/call/recal_vcf/{hc_panel}/{{type}}/{hc_panel}.{{type}}.chr{{chr}}.vcf.gz", type = variant_types, allow_missing = True)
     output:
         recal_vcf = f"results/call/recal_vcf/{hc_panel}/{hc_panel}.chr{{chr}}.vcf.gz"
     resources:
