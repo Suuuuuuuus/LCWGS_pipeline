@@ -264,7 +264,7 @@ rule clean_hc_vcf:
     input:
         vcfs = expand(f"results/call/recal_vcf/{hc_panel}/{{type}}/{hc_panel}.{{type}}.chr{{chr}}.vcf.gz", type = variant_types, allow_missing = True)
     output:
-        tmp_vcf = temp(f"results/call/recal_vcf/{hc_panel}/{hc_panel}.chr{{chr}}.vcf")
+        tmp_vcf = temp(f"results/call/recal_vcf/{hc_panel}/{hc_panel}.chr{{chr}}.vcf"),
         recal_vcf = f"results/call/recal_vcf/{hc_panel}/{hc_panel}.chr{{chr}}.vcf.gz"
     resources:
         mem = '20G'
