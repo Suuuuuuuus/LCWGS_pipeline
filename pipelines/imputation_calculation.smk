@@ -37,7 +37,7 @@ rule copy_vcf_in_working_dir:
         lc_vcf_dir = get_lc_vcf_dir,
         hc_vcf_dir = get_hc_vcf_dir
     output:
-        vcfs = expand('{imp_dir}vcf/all_samples/{pair}_vcf/{pair}.chr{chr}.vcf.gz', chr = chromosome, pair = pair, allow_missing = True)
+        vcfs = temp(expand('{imp_dir}vcf/all_samples/{pair}_vcf/{pair}.chr{chr}.vcf.gz', chr = chromosome, pair = pair, allow_missing = True))
     localrule: True
     shell: """
         mkdir -p {wildcards.imp_dir}vcf/
