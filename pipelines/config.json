@@ -167,14 +167,14 @@
     "mini_hc_vcf_dir": [
         "/well/band/users/rbx225/GAMCC/results/chip/vcf/chip_by_chr/", 
         "/well/band/users/rbx225/GAMCC/results/chip/vcf/chip_by_chr/", 
-        "/well/band/users/rbx225/GAMCC/results/call/recal_vcf/oneKG/snps/",
+        "/well/band/users/rbx225/GAMCC/results/call/recal_vcf/oneKG/",
         "/well/band/users/rbx225/GAMCC/results/chip/vcf/chip_by_chr/", 
         "/well/band/users/rbx225/GAMCC/results/chip/vcf/chip_by_chr/", 
-        "/well/band/users/rbx225/GAMCC/results/call/recal_vcf/oneKG/snps/",
-        "/well/band/users/rbx225/GAMCC/results/call/recal_vcf/oneKG/snps/",
-        "/well/band/users/rbx225/GAMCC/results/call/recal_vcf/oneKG/snps/",
-        "/well/band/users/rbx225/GAMCC/results/call/recal_vcf/oneKG/snps/",
-        "/well/band/users/rbx225/GAMCC/results/call/recal_vcf/oneKG/snps/"
+        "/well/band/users/rbx225/GAMCC/results/call/recal_vcf/oneKG/",
+        "/well/band/users/rbx225/GAMCC/results/call/recal_vcf/oneKG/",
+        "/well/band/users/rbx225/GAMCC/results/call/recal_vcf/oneKG/",
+        "/well/band/users/rbx225/GAMCC/results/call/recal_vcf/oneKG/",
+        "/well/band/users/rbx225/GAMCC/results/call/recal_vcf/oneKG/"
     ],
 
     "lr_imputation_dir": [
