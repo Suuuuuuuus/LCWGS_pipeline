@@ -1,6 +1,6 @@
 include: "filter_vcf.smk"
 include: "post_gw.smk"
-include: "imputation_calculation.smk"
+include: "imputation_comparison.smk"
 
 include: "auxiliary.smk"
 include: "software.smk"
@@ -43,7 +43,7 @@ rule filter_vcf_all:
         # high_info_high_maf_giab_confident_vcf = expand("results/wip_vcfs/{panel}/vanilla/high_info_high_af_giab_high_conf/lc.chr{chr}.vcf.gz", chr = chromosome, panel = panels),
         # high_info_high_maf_giab_confident_chip_format = expand("results/wip_vcfs/{panel}/vanilla/high_info_high_af_giab_high_conf_chip_sites/lc.chr{chr}.vcf.gz", chr = chromosome, panel = panels)
 
-rule imputation_calculation_hc_all:
+rule imputation_comparison_all:
     input:
         # vcfs_all = expand('{imp_dir}vcf/all_samples/{pair}_vcf/{pair}.chr{chr}.vcf.gz', imp_dir = imputation_dir, chr = chromosome, pair = pair),
         h_report_all = expand("{imp_dir}impacc/all_samples/by_variant/chr{chr}.h.tsv", imp_dir = imputation_dir, chr = chromosome),
@@ -65,7 +65,8 @@ rule imputation_calculation_hc_all:
         tsv = expand("{imp_dir}impacc/all_samples/by_variant/all_r2less0.5.tsv", imp_dir = imputation_dir),
         sumstats = expand("{imp_dir}summary_metrics.tsv", imp_dir = imputation_dir)
 
-rule imputation_calculation_all:
+'''
+rule imputation_comparison_all:
     input:
         vcfs_eth = expand('{imp_dir}vcf/by_eth/{pair}_vcf/{eth}.{pair}.chr{chr}.vcf.gz', imp_dir = imputation_dir, chr = chromosome, pair = pair, eth = ethnicities),
         h_report_eth = expand("{imp_dir}impacc/by_eth/by_variant/{eth}.chr{chr}.h.tsv", imp_dir = imputation_dir, eth = ethnicities, chr = chromosome),
@@ -107,3 +108,4 @@ rule imputation_calculation_all:
         # afs = expand("{imp_dir}vcf/all_samples/af/af.chr{chr}.tsv", imp_dir = imputation_dir, chr = chromosome),
         
         sumstats = expand("{imp_dir}summary_metrics_all.tsv", imp_dir = imputation_dir)
+'''
