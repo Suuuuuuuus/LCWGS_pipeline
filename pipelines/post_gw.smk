@@ -42,4 +42,6 @@ rule lift_over_server_vcf:
         bcftools view -r chr{wildcards.chr} {output.tmp1_vcf} | \
         bcftools sort -Oz -o {output.lifted}
         tabix -f {output.lifted}
+
+        rm *rejected* *tmp1*tbi
     """
