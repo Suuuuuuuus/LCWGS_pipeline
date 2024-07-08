@@ -59,7 +59,7 @@
     "mini_analysis_dir": "/well/band/users/rbx225/GAMCC/results/mini_imputation/",
     "mini_bamlist": "/well/band/users/rbx225/GAMCC/results/mini_imputation/bamlist.txt",
 
-    "info_filter": 0.4,
+    "info_filter": 0.6,
     "maf_filter": 0.01,
 
     "imputation_dir": [
