@@ -114,8 +114,6 @@ rule calculate_imputation_accuracy_all:
         h_impacc = "{imp_dir}impacc/all_samples/by_variant/chr{chr}.h.impacc.tsv",
         v_report = "{imp_dir}impacc/all_samples/by_sample/chr{chr}.v.tsv",
         v_impacc = "{imp_dir}impacc/all_samples/by_sample/chr{chr}.v.impacc.tsv",
-        # lc_vcf = "{imp_dir}vcf/all_samples/filtered_vcfs/lc.chr{chr}.vcf.gz",
-        # hc_vcf = "{imp_dir}vcf/all_samples/filtered_vcfs/hc.chr{chr}.vcf.gz",
         af = "{imp_dir}vcf/all_samples/af/af.chr{chr}.tsv"
     resources:
         mem = '100G'
@@ -125,6 +123,8 @@ rule calculate_imputation_accuracy_all:
         common_outdir = "{imp_dir}impacc/all_samples/",
         common_savedir = "{imp_dir}vcf/all_samples/",
         save_filtered_files = False,
+        lc_vcf = "{imp_dir}vcf/all_samples/filtered_vcfs/lc.chr{chr}.vcf.gz",
+        hc_vcf = "{imp_dir}vcf/all_samples/filtered_vcfs/hc.chr{chr}.vcf.gz",
         chrom = "{chr}"
     run:
         mini = False
@@ -156,9 +156,9 @@ rule calculate_imputation_accuracy_all:
                                            outdir = params.common_outdir + "by_sample/", 
                                            save_name = 'chr' + wildcards.chr +'.v.impacc.tsv')
         # Ignore the _BC fields in vertical reports as they are not reliable
-
-        lcwgsus.rezip_vcf(output.lc_vcf)
-        lcwgsus.rezip_vcf(output.hc_vcf)
+        if params.save_filtered_files:
+            lcwgsus.rezip_vcf(params.lc_vcf)
+            lcwgsus.rezip_vcf(params.hc_vcf)
 
 rule get_badly_imputed_variants:
     input:
