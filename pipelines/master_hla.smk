@@ -32,8 +32,9 @@ rule hla_imputation_all:
     input:
         hla_imputed = expand("results/hla/imputation/batches/genes{num}/{hla_gene}/quilt.hla.output.combined.all.txt", hla_gene = hla_genes, num = bam_numbers)
 
-two_stage_vcf_outdir = config["two_stage_vcf_outdir"]
+two_stage_hla_vcf_outdir = config["two_stage_hla_vcf_outdir"]
 
 rule post_hla_all:
     input:
-        two_stage_vcf = expand("{two_stage_vcf_outdir}chr6.vcf.gz", two_stage_vcf_outdir = two_stage_vcf_outdir)
+        lifted = "results/hla/reference/multiEth_sites.b38.vcf.gz",
+        two_stage_vcf = expand("{two_stage_hla_vcf_outdir}chr6.vcf.gz", two_stage_hla_vcf_outdir = two_stage_hla_vcf_outdir)

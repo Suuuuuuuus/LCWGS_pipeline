@@ -112,7 +112,7 @@ rule filter_lc_info:
         mem = '30G'
     threads: 4
     params:
-        info = config['info_filter']
+        info = config['gw_info_filter']
     shell: """
         mkdir -p results/wip_vcfs/{wildcards.panel}/vanilla/high_info/
 

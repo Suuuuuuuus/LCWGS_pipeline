@@ -1547,3 +1547,26 @@ rule index_dedup:
     shell: """
         samtools index {input.dedup_bam}
     """
+
+rule convert_chr6_to_chip_form:
+    input:
+        vcf = "{three_stage_vcf_outdir}chr6.tmp.vcf.gz"
+    output:
+        vcf = "{three_stage_vcf_outdir}chr6.vcf.gz"
+    resources:
+        mem = '30G'
+    threads: 4
+    run:
+        imp_vcf = input.vcf
+        lc = lcwgsus.read_vcf(imp_vcf)
+        metadata = lcwgsus.read_metadata(imp_vcf)
+
+        lc = lc.apply(lcwgsus.convert_to_chip_format, axis = 1)
+
+        lcwgsus.save_vcf(lc,
+             metadata,
+             prefix='chr',
+             outdir=wildcards.three_stage_vcf_outdir,
+             save_name="chr6.vcf.gz"
+             )
+        lcwgsus.rezip_vcf(output.vcf)
