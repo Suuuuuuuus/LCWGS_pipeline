@@ -48,7 +48,7 @@ two_stage_hla_vcf_outdir = config["two_stage_hla_vcf_outdir"]
 
 def get_two_stage_hla_indir(wildcards):
     ix = two_stage_hla_vcf_outdir.index(wildcards.two_stage_hla_vcf_outdir)
-    return two_stage_vcf_indir[ix]
+    return two_stage_hla_vcf_indir[ix]
 
 rule filter_chr6_for_hla_imputation:
     input:
