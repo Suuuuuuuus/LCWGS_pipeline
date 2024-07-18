@@ -60,7 +60,7 @@
     "mini_bamlist": "/well/band/users/rbx225/GAMCC/results/mini_imputation/bamlist.txt",
 
     "gw_info_filter": 0.9,
-    "hla_info_filter": 0.4,
+    "hla_info_filter": 0.7,
     "maf_filter": 0.01,
 
     "imputation_dir": [
