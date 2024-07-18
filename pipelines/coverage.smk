@@ -55,8 +55,8 @@ rule compute_hc_bedgraph_nozero:
     input:
         bam = "data/merge_bams/{hc}.bam"
     output:
-        bedgraph = "results/coverage/bedgraphs/{hc}_bedgraph_nozero.bed"
-    resources: mem_mb = 50000
+        bedgraph = "results/coverage/hc_bedgraphs/{hc}_bedgraph_nozero.bed"
+    resources: mem = '50G'
     shell: """
         bedtools genomecov -ibam {input.bam} -bg | \
         awk '$1 ~ /^chr(1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22)$/' \
@@ -65,10 +65,10 @@ rule compute_hc_bedgraph_nozero:
 
 rule calculate_hc_avg_coverage:
     input:
-        bedgraph = "results/coverage/bedgraphs/{hc}_bedgraph_nozero.bed"
+        bedgraph = "results/coverage/hc_bedgraphs/{hc}_bedgraph_nozero.bed"
     output:
-        access_coverage = temp("results/coverage/tmp/{hc}_access_coverage.txt"),
-        avg_coverage = temp("results/coverage/tmp/{hc}_avg_coverage.txt")
+        access_coverage = temp("results/coverage/hc_tmp/{hc}_access_coverage.txt"),
+        avg_coverage = temp("results/coverage/hc_tmp/{hc}_avg_coverage.txt")
     params:
         access_bed = config['access_bed'],
         access_bed_length = 2526390487
@@ -82,7 +82,7 @@ rule calculate_hc_avg_coverage:
 
 rule aggregate_hc_avg_coverage:
     input:
-        files = expand("results/coverage/tmp/{hc}_avg_coverage.txt", hc = samples_hc)
+        files = expand("results/coverage/hc_tmp/{hc}_avg_coverage.txt", hc = samples_hc)
     output:
         hc_coverage = "results/coverage/hc_coverage.txt"
     shell: """
