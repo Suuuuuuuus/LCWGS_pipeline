@@ -1,7 +1,7 @@
-include: "preprocess.smk"
-include: "fastqc.smk"
-include: "reference.smk"
-include: "alignment.smk"
+#include: "preprocess.smk"
+#include: "fastqc.smk"
+#include: "reference.smk"
+#include: "alignment.smk"
 
 #include: "subsample.smk"
 #include: "kmer.smk"
@@ -94,7 +94,7 @@ rule coverage_all:
     #    uncoverage_rate = "results/coverage/per_chromosome_coverage/uncoverage_rate.txt",
     #    ss_uncoverage_rate = "results/coverage/per_chromosome_ss_coverage/ss_uncoverage_rate.txt"
         # avg_coverage = "results/coverage/per_sample_coverage.txt",
-        hc_bedgraphs = expand("results/coverage/bedgraphs/{hc}_bedgraph_nozero.bed", hc = samples_hc),
+        hc_bedgraphs = expand("results/coverage/hc_bedgraphs/{hc}_bedgraph_nozero.bed", hc = samples_hc),
         hc_coverage = "results/coverage/hc_coverage.txt"
 
 rule dup_rate_all:
