@@ -28,7 +28,7 @@ rule liftover_multiEth_vcf:
         picard = tools["picard"]
     shell: """
         {params.picard} LiftoverVcf \
-        -I {output.input.vcf} \
+        -I {input.vcf} \
         -O {output.tmp_vcf} \
         -CHAIN {input.chain} \
         -REJECT {output.rejected} \
