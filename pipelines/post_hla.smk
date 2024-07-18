@@ -57,6 +57,7 @@ rule filter_chr6_for_hla_imputation:
     output:
         vcf = "{two_stage_hla_vcf_outdir}chr6.vcf.gz",
         tmp_vcf = temp("{two_stage_hla_vcf_outdir}chr6.tmp.vcf.gz"),
+        tmp1_vcf = temp("{two_stage_hla_vcf_outdir}chr6.tmp1.vcf.gz"),
         scaffold = temp("{two_stage_hla_vcf_outdir}multiEth_sites.b38.txt")
     params:
         info = config['hla_info_filter']
@@ -68,7 +69,9 @@ rule filter_chr6_for_hla_imputation:
         cp -f {input.lc_vcf_dir}/*chr6.*.gz {output.tmp_vcf}
         tabix -f {output.tmp_vcf}
 
-        bcftools filter -i 'INFO_SCORE>{params.info}' {output.tmp_vcf} | \
+        bcftools filter -i 'INFO_SCORE>{params.info}' -Oz -o {output.tmp1_vcf} {output.tmp_vcf}
+        tabix -f {output.tmp1_vcf}
+
         bcftools view -R {output.scaffold} -m2 -M2 -v snps \
-        -Oz -o {output.vcf}
+        -Oz -o {output.vcf} {output.tmp1_vcf}
     """

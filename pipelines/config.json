@@ -204,6 +204,6 @@
     ],
     "two_stage_hla_vcf_outdir": [
         "results/two-stage-hla/lc_oneKG/",
-        "results/two-stage-hla/malariaGen_v1_b38/"
+        "results/two-stage-hla/lc_mGenv1/"
     ]
 }
