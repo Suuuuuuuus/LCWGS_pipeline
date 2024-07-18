@@ -69,5 +69,5 @@ rule filter_chr6_for_hla_imputation:
 
         bcftools filter -i 'INFO_SCORE>{params.info}' {output.tmp_vcf} | \
         bcftools view -R {output.scaffold} -m2 -M2 -v snps \
-        -Oz -o {output.vcf} {input.vcf}
+        -Oz -o {output.vcf}
     """
