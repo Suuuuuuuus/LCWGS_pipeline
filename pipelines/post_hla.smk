@@ -66,6 +66,7 @@ rule filter_chr6_for_hla_imputation:
         bcftools query -f '%CHROM\t%POS\n' {input.b38_scaffold} > {output.scaffold}
 
         cp -f {input.lc_vcf_dir}/*chr6.*.gz {output.tmp_vcf}
+        tabix -f {output.tmp_vcf}
 
         bcftools filter -i 'INFO_SCORE>{params.info}' {output.tmp_vcf} | \
         bcftools view -R {output.scaffold} -m2 -M2 -v snps \
