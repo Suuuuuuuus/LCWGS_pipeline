@@ -113,8 +113,7 @@ rule calculate_imputation_accuracy_all:
         h_report = "{imp_dir}impacc/all_samples/by_variant/chr{chr}.h.tsv",
         h_impacc = "{imp_dir}impacc/all_samples/by_variant/chr{chr}.h.impacc.tsv",
         v_report = "{imp_dir}impacc/all_samples/by_sample/chr{chr}.v.tsv",
-        v_impacc = "{imp_dir}impacc/all_samples/by_sample/chr{chr}.v.impacc.tsv",
-        af = "{imp_dir}vcf/all_samples/af/af.chr{chr}.tsv"
+        v_impacc = "{imp_dir}impacc/all_samples/by_sample/chr{chr}.v.impacc.tsv"
     resources:
         mem = '100G'
     threads: 16
@@ -125,6 +124,7 @@ rule calculate_imputation_accuracy_all:
         save_filtered_files = False,
         lc_vcf = "{imp_dir}vcf/all_samples/filtered_vcfs/lc.chr{chr}.vcf.gz",
         hc_vcf = "{imp_dir}vcf/all_samples/filtered_vcfs/hc.chr{chr}.vcf.gz",
+        af = "{imp_dir}vcf/all_samples/af/af.chr{chr}.tsv",
         chrom = "{chr}"
     run:
         mini = False
