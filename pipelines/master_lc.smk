@@ -6,7 +6,7 @@ include: "alignment.smk"
 #include: "subsample.smk"
 #include: "kmer.smk"
 #include: "dup_rate.smk"
-#include: "coverage.smk"
+include: "coverage.smk"
 
 include: "imputation_prep.smk"
 include: "imputation.smk"
