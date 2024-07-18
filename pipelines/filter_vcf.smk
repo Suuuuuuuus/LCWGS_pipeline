@@ -129,7 +129,6 @@ rule filter_lc_maf:
         mem = '80G'
     threads: 8
     params:
-        info = config['info_filter'],
         maf = config['maf_filter'],
         chrom = "{chr}"
     run:
