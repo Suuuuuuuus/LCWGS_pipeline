@@ -200,12 +200,10 @@
     ],
     "two_stage_hla_vcf_indir": [
         "results/imputation/vcfs/oneKG/",
-        "results/imputation/vcfs/malariaGen_v1_b38/",
-        "results/imputation/vcfs/malariaGen_v3_b38/"
+        "results/imputation/vcfs/malariaGen_v1_b38/"
     ],
     "two_stage_hla_vcf_outdir": [
         "results/two-stage-hla/lc_oneKG/",
-        "results/two-stage-hla/malariaGen_v1_b38/",
-        "results/two-stage-hla/malariaGen_v3_b38/"
+        "results/two-stage-hla/malariaGen_v1_b38/"
     ]
 }
