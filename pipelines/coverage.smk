@@ -57,7 +57,7 @@ rule aggregate_hc_avg_coverage:
     output:
         hc_coverage = "results/coverage/hc_coverage.txt"
     shell: """
-        cat {input.files} >> {output.avg_coverage}
+        cat {input.files} >> {output.hc_coverage}
     """
 
 rule compute_subsampled_bedgraph:
