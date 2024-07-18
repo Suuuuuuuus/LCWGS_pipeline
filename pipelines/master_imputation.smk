@@ -58,9 +58,9 @@ rule imputation_comparison_all:
         # r2NRC_v_all = expand("{imp_dir}graphs/all_samples/by_sample/r2_NRC.png", imp_dir = imputation_dir),
         # ccd_v_all = expand("{imp_dir}graphs/all_samples/by_sample/ccd_by_genotype.png", imp_dir = imputation_dir),
 
-        lc_vcfs = expand("{imp_dir}vcf/all_samples/filtered_vcfs/lc.chr{chr}.vcf.gz", imp_dir = imputation_dir, chr = chromosome),
-        hc_vcfs = expand("{imp_dir}vcf/all_samples/filtered_vcfs/hc.chr{chr}.vcf.gz", imp_dir = imputation_dir, chr = chromosome),
-        afs = expand("{imp_dir}vcf/all_samples/af/af.chr{chr}.tsv", imp_dir = imputation_dir, chr = chromosome),
+        # lc_vcfs = expand("{imp_dir}vcf/all_samples/filtered_vcfs/lc.chr{chr}.vcf.gz", imp_dir = imputation_dir, chr = chromosome),
+        # hc_vcfs = expand("{imp_dir}vcf/all_samples/filtered_vcfs/hc.chr{chr}.vcf.gz", imp_dir = imputation_dir, chr = chromosome),
+        # afs = expand("{imp_dir}vcf/all_samples/af/af.chr{chr}.tsv", imp_dir = imputation_dir, chr = chromosome),
         
         tsv = expand("{imp_dir}impacc/all_samples/by_variant/all_r2less0.5.tsv", imp_dir = imputation_dir),
         sumstats = expand("{imp_dir}summary_metrics.tsv", imp_dir = imputation_dir)

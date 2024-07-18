@@ -87,7 +87,8 @@ rule subset_lc_samples:
         quilt_vcf = '{imp_dir}vcf/all_samples/lc_vcf/lc.chr{chr}.vcf.gz',
         chip_vcf = '{imp_dir}vcf/all_samples/hc_vcf/hc.chr{chr}.vcf.gz'
     output:
-        ss_vcf = temp('{imp_dir}vcf/all_samples/lc_vcf/lc.subset.chr{chr}.vcf.gz'),
+        ss_lc_vcf = temp('{imp_dir}vcf/all_samples/lc_vcf/lc.subset.chr{chr}.vcf.gz'),
+        ss_hc_vcf = temp('{imp_dir}vcf/all_samples/hc_vcf/hc.subset.chr{chr}.vcf.gz'),
         tmp_names = temp('{imp_dir}vcf/all_samples/samples.chr{chr}.tsv')
     resources:
         mem = '10G'
@@ -95,31 +96,26 @@ rule subset_lc_samples:
         hc_names = lcwgsus.bcftools_get_samples(input.chip_vcf)
         lc_names = lcwgsus.bcftools_get_samples(input.quilt_vcf)
 
-        if lc_names[0].startswith('GM'):
-            rename_map = lcwgsus.generate_rename_map()
-            lc = wildcards.imp_dir.split('/')[-2].split('_')[0]
-            samples = lcwgsus.find_matching_samples(hc_names, rename_map, lc = lc)
-            lcwgsus.save_lst(output.tmp_names, samples)
-        else:
-            rename_map = lcwgsus.generate_rename_map()
-            lc = wildcards.imp_dir.split('/')[-2].split('_')[0]
-            samples = lcwgsus.find_matching_samples(hc_names, rename_map, lc = lc)
-            lcwgsus.save_lst(output.tmp_names, samples)
+        rename_map = lcwgsus.generate_rename_map()
+        lc = wildcards.imp_dir.split('/')[-2].split('_')[0]
+        samples = lcwgsus.find_matching_samples(hc_names, rename_map, lc = lc)
+        lcwgsus.save_lst(output.tmp_names, samples)
 
-        shell("bcftools view -S {output.tmp_names} -Oz -o {output.ss_vcf} {input.quilt_vcf}")
+        shell("bcftools view -S {output.tmp_names} -Oz -o {output.ss_lc_vcf} {input.quilt_vcf}")
+        shell("cp {input.chip_vcf} {output.ss_hc_vcf}")
 
 rule calculate_imputation_accuracy_all:
     input:
-        quilt_vcf = rules.subset_lc_samples.output.ss_vcf,
-        chip_vcf = '{imp_dir}vcf/all_samples/hc_vcf/hc.chr{chr}.vcf.gz',
+        quilt_vcf = rules.subset_lc_samples.output.ss_lc_vcf,
+        chip_vcf = rules.subset_lc_samples.output.ss_hc_vcf,
         af = "data/gnomAD_MAFs/afr/gnomAD_MAF_afr_chr{chr}.txt"
     output:
         h_report = "{imp_dir}impacc/all_samples/by_variant/chr{chr}.h.tsv",
         h_impacc = "{imp_dir}impacc/all_samples/by_variant/chr{chr}.h.impacc.tsv",
         v_report = "{imp_dir}impacc/all_samples/by_sample/chr{chr}.v.tsv",
         v_impacc = "{imp_dir}impacc/all_samples/by_sample/chr{chr}.v.impacc.tsv",
-        lc_vcf = "{imp_dir}vcf/all_samples/filtered_vcfs/lc.chr{chr}.vcf.gz",
-        hc_vcf = "{imp_dir}vcf/all_samples/filtered_vcfs/hc.chr{chr}.vcf.gz",
+        # lc_vcf = "{imp_dir}vcf/all_samples/filtered_vcfs/lc.chr{chr}.vcf.gz",
+        # hc_vcf = "{imp_dir}vcf/all_samples/filtered_vcfs/hc.chr{chr}.vcf.gz",
         af = "{imp_dir}vcf/all_samples/af/af.chr{chr}.tsv"
     resources:
         mem = '100G'
@@ -128,6 +124,7 @@ rule calculate_imputation_accuracy_all:
         linker = config['sample_linker'],
         common_outdir = "{imp_dir}impacc/all_samples/",
         common_savedir = "{imp_dir}vcf/all_samples/",
+        save_filtered_files = False,
         chrom = "{chr}"
     run:
         mini = False
@@ -136,7 +133,7 @@ rule calculate_imputation_accuracy_all:
         chip_vcf = input.chip_vcf
         af_txt = input.af
 
-        chip, lc, af = lcwgsus.imputation_calculation_preprocess(chip_vcf, quilt_vcf, af_txt, save_vcfs = True, lc_vcf_outdir = params.common_savedir + "filtered_vcfs/", hc_vcf_outdir = params.common_savedir + "filtered_vcfs/", lc_vcf_name = "lc.chr" + wildcards.chr + ".vcf.gz", hc_vcf_name = "hc.chr" + wildcards.chr + ".vcf.gz", af_outdir = params.common_savedir + "af/", af_name = "af.chr" + wildcards.chr + ".tsv")
+        chip, lc, af = lcwgsus.imputation_calculation_preprocess(chip_vcf, quilt_vcf, af_txt, save_vcfs = params.save_filtered_files, lc_vcf_outdir = params.common_savedir + "filtered_vcfs/", hc_vcf_outdir = params.common_savedir + "filtered_vcfs/", lc_vcf_name = "lc.chr" + wildcards.chr + ".vcf.gz", hc_vcf_name = "hc.chr" + wildcards.chr + ".vcf.gz", af_outdir = params.common_savedir + "af/", af_name = "af.chr" + wildcards.chr + ".tsv")
 
         h_report = lcwgsus.calculate_h_imputation_accuracy(chip, lc, af, 
                                                    save_file = True, 
