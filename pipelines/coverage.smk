@@ -25,6 +25,41 @@ rule compute_bedgraph_nozero:
         > {output.bedgraph}
     """
 
+rule calculate_avg_coverage:
+    input:
+        bedgraph = "results/coverage/bedgraphs/{id}_bedgraph_nozero.bed"
+    output:
+        access_coverage = temp("results/coverage/tmp/{id}_access_coverage.txt"),
+        avg_coverage = temp("results/coverage/tmp/{id}_avg_coverage.txt")
+    params:
+        access_bed = config['access_bed'],
+        access_bed_length = 2526390487
+    shell: """
+        bedtools intersect -a {input.bedgraph} -b {params.access_bed} -wb | cut -f1-4 > {output.access_coverage}
+        #total=$
+        sum_product=$(awk '{{ sum += ($3-$2)*$4 }} END {{ print sum }}' {output.access_coverage})
+        result=$(echo "scale=4; ($sum_product/{params.access_bed_length})" | bc)
+        echo "{wildcards.id}\t$result" > {output.avg_coverage}
+    """
+
+rule aggregate_avg_coverage:
+    input:
+        files = expand("results/coverage/tmp/{id}_avg_coverage.txt", id = samples_lc)
+    output:
+        avg_coverage = "results/coverage/per_sample_coverage.txt"
+    shell: """
+        cat {input.files} >> {output.avg_coverage}
+    """
+
+rule aggregate_hc_avg_coverage:
+    input:
+        files = expand("results/coverage/tmp/{id}_avg_coverage.txt", id = samples_hc)
+    output:
+        hc_coverage = "results/coverage/hc_coverage.txt"
+    shell: """
+        cat {input.files} >> {output.avg_coverage}
+    """
+
 rule compute_subsampled_bedgraph:
     input:
         ss_bam = "data/subsampled_bams/{id}_subsampled.bam"
@@ -131,29 +166,4 @@ rule aggregate_ss_uncoverage_rate:
         ss_uncoverage_rate = "results/coverage/per_chromosome_ss_coverage/ss_uncoverage_rate.txt"
     shell: """
         cat {input.files} >> {output.ss_uncoverage_rate}
-    """
-rule calculate_avg_coverage:
-    input:
-        bedgraph = "results/coverage/bedgraphs/{id}_bedgraph_nozero.bed"
-    output:
-        access_coverage = temp("results/coverage/tmp/{id}_access_coverage.txt"),
-        avg_coverage = temp("results/coverage/tmp/{id}_avg_coverage.txt")
-    params:
-        access_bed = config['access_bed'],
-        access_bed_length = 2526390487
-    shell: """
-        bedtools intersect -a {input.bedgraph} -b {params.access_bed} -wb | cut -f1-4 > {output.access_coverage}
-        #total=$
-        sum_product=$(awk '{{ sum += ($3-$2)*$4 }} END {{ print sum }}' {output.access_coverage})
-        result=$(echo "scale=4; ($sum_product/{params.access_bed_length})" | bc)
-        echo "{wildcards.id}\t$result" > {output.avg_coverage}
-    """
-
-rule aggregate_avg_coverage:
-    input:
-        files = expand("results/coverage/tmp/{id}_avg_coverage.txt", id = samples_lc)
-    output:
-        avg_coverage = "results/coverage/per_sample_coverage.txt"
-    shell: """
-        cat {input.files} >> {output.avg_coverage}
     """

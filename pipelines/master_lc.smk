@@ -84,7 +84,7 @@ rule subsample_all:
 
 rule coverage_all:
     input:
-        bedgraphs = expand("results/coverage/bedgraphs/{id}_bedgraph_nozero.bed", id = samples_lc),
+        # bedgraphs = expand("results/coverage/bedgraphs/{id}_bedgraph_nozero.bed", id = samples_lc),
     #    ss_bedgraphs = expand("results/coverage/subsampled_bedgraphs/{id}_subsampled_bedgraph.bed", id = samples_lc),
     #    cumsum_ary = expand("results/coverage/subsampled_bedgraphs/{id}_cumsum_ary.txt", id = samples_lc),
     #    per_bin_coverage_1x_coordinates = expand("results/coverage/per_bin_coverage/1x/{id}_chr{chr}_coordinate.txt", id = samples_lc, chr = chromosome),
@@ -93,7 +93,8 @@ rule coverage_all:
     #    ss_per_chromosome_coverage = expand("results/coverage/per_chromosome_ss_coverage/{id}_per_chromosome_ss_coverage.txt", id = samples_lc),
     #    uncoverage_rate = "results/coverage/per_chromosome_coverage/uncoverage_rate.txt",
     #    ss_uncoverage_rate = "results/coverage/per_chromosome_ss_coverage/ss_uncoverage_rate.txt"
-        avg_coverage = "results/coverage/per_sample_coverage.txt"
+        # avg_coverage = "results/coverage/per_sample_coverage.txt",
+        hc_coverage = "results/coverage/hc_coverage.txt"
 
 rule dup_rate_all:
     input:
