@@ -25,7 +25,7 @@ for p in panels:
     region = "results/imputation/refs/" + p + "/regions.json"
     ref_prefix = "results/imputation/refs/" + p + "/RData/ref_package.chr"
     vcf_prefix = "results/imputation/vcfs/" + p + "/regions/quilt.chr"
-    all_RData[p], all_vcf_lst[p], all_vcf_dict[p] = get_vcf_concat_lst(region_file, ref_prefix, vcf_prefix)
+    all_RData[p], all_vcf_lst[p], all_vcf_dict[p] = get_vcf_concat_lst(region, ref_prefix, vcf_prefix)
 
 rule prepare_ref:
     input:
