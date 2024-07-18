@@ -9,6 +9,7 @@ sys.path.append("/well/band/users/rbx225/software/lcwgsus/")
 import lcwgsus
 
 samples_lc = read_tsv_as_lst(config['samples_lc'])
+samples_hc = read_tsv_as_lst(config['samples_hc'])
 chromosome = [i for i in range(1,23)]
 
 subsample_coverage = config['subsample_depth']
