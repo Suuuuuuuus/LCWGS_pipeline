@@ -38,7 +38,7 @@ rule liftover_multiEth_vcf:
 
         tabix -f {output.tmp1_vcf}
 
-        bcftools view -r chr6 {output.tmp1_vcf} | \
+        bcftools view -r chr6 {output.tmp_vcf} | \
         bcftools sort -Oz -o {output.lifted}
         tabix -f {output.lifted}
     """
