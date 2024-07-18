@@ -19,7 +19,7 @@ rule liftover_multiEth_vcf:
         chain = "data/ref_panel/b37ToHg38.over.chain",
         dictionary = "data/references/GRCh38_with_alt.dict"
     output:
-        tmp_vcf = temp("results/hla/reference/multiEth_sites.b38.tmp.vcf.gz")
+        tmp_vcf = temp("results/hla/reference/multiEth_sites.b38.tmp.vcf.gz"),
         lifted = "results/hla/reference/multiEth_sites.b38.vcf.gz",
         rejected = "results/hla/reference/multiEth_sites.b38.rejected.vcf.gz"
     resources: mem = '30G'
