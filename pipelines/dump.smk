@@ -1570,3 +1570,28 @@ rule convert_chr6_to_chip_form:
              save_name="chr6.vcf.gz"
              )
         lcwgsus.rezip_vcf(output.vcf)
+
+rule fastuniq: # Currently deprecated as we are basically gonna remove in markdup
+    input:
+        fastq1 = "data/fastq/{id}_1.fastq.gz",
+        fastq2 = "data/fastq/{id}_2.fastq.gz"
+    output:
+        fastq1 = temp("data/tmp/{id}_fast_uniq_1.fastq.gz"),
+        fastq2 = temp("data/tmp/{id}_fast_uniq_2.fastq.gz"),
+        filelist = temp("data/tmp/{id}.list"),
+        fastq1_uncompress = temp("data/tmp/input_{id}_fast_uniq_1.fastq.gz"),
+        fastq2_uncompress = temp("data/tmp/input_{id}_fast_uniq_2.fastq.gz"),
+        fastq1_unzip = temp("data/tmp/{id}_fast_uniq_1.fastq"),
+        fastq2_unzip = temp("data/tmp/{id}_fast_uniq_2.fastq")
+    threads: 4
+    resources:
+        mem = '30G'
+    shell: """
+        pigz -p {threads} -dc {input.fastq1} > {output.fastq1_uncompress}
+        pigz -p {threads} -dc {input.fastq2} > {output.fastq2_uncompress}
+        echo {output.fastq1_uncompress} > {output.filelist}
+        echo {output.fastq2_uncompress} >> {output.filelist}
+        fastuniq -i {output.filelist} -o {output.fastq1_unzip} -p {output.fastq2_unzip}
+        gzip -c {output.fastq1_unzip} > {output.fastq1}
+        gzip -c {output.fastq2_unzip} > {output.fastq2}
+    """
