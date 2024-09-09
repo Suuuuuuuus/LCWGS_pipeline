@@ -1,6 +1,10 @@
 configfile: "pipelines/config.json"
 
+include: "software.smk"
+include: "auxiliary.smk"
+
 subsample_depth = int(config['subsample_depth_1x']*config['subsample_depth'])
+clean_fastq = config['clean_fastq']
 
 if config['clean_fastq']:
     ruleorder: ss_fastq_alt > ss_fastq
@@ -15,7 +19,7 @@ rule ss_fastq:
         ss_fastq1 = temp("data/subsampled_fastq/{id}_subsampled_1.fastq"),
         ss_fastq2 = temp("data/subsampled_fastq/{id}_subsampled_2.fastq")
     resources:
-        mem_mb = 30000
+        mem = '30G'
     params:
         n = subsample_depth
     shell: """
@@ -31,7 +35,7 @@ rule ss_fastq_alt:
         ss_fastq1 = temp("data/subsampled_fastq/{id}_subsampled_1.fastq"),
         ss_fastq2 = temp("data/subsampled_fastq/{id}_subsampled_2.fastq")
     resources:
-        mem_mb = 30000
+        mem = '30G'
     params:
         n = subsample_depth
     shell: """
@@ -41,56 +45,46 @@ rule ss_fastq_alt:
 
 rule ss_alignment:
     input:
-        ss_fastq1 = "data/subsampled_fastq/{id}_subsampled_1.fastq",
-        ss_fastq2 = "data/subsampled_fastq/{id}_subsampled_2.fastq",
-        reference = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta" if config['concatenate'] else config["ref38"]
+        ss_fastq1 = temp("data/subsampled_fastq/{id}_subsampled_1.fastq"),
+        ss_fastq2 = temp("data/subsampled_fastq/{id}_subsampled_2.fastq"),
+        reference = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta"
     output:
-        bam = temp("data/subsampled_bams/tmp/{id}_subsampled.bam")
+        bam = "data/subsampled_bams/tmp/{id}_subsampled.bam",
+        bai = "data/subsampled_bams/tmp/{id}_subsampled.bam.bai",
+        tmp1 = temp("data/subsampled_bams/{id}_subsampled.tmp1.bam"),
+        metric = temp("data/subsampled_bams/{id}_subsampled.metrics.txt")
     resources:
-        mem_mb = 30000
-    threads: 8
+        mem = '30G'
+    params: 
+        sample = "{id}",
+        picard = tools["picard_plus"]
+    threads: 6
     shell: """
-        bwa mem -t {threads} {input.reference} {input.ss_fastq1} {input.ss_fastq2} | samtools view -b -o {output.bam}
+        bwa mem -t {threads} {input.reference} {input.ss_fastq1} {input.ss_fastq2} | samtools view -b -o {output.tmp1}
+        
+        samtools sort -@6 -m 1G -o {output.bam} {output.tmp1}
+
+        samtools index {output.bam}
+
+        picard AddOrReplaceReadGroups \
+        -VERBOSITY ERROR \
+        -I {output.bam} \
+        -O {output.tmp1} \
+        -RGLB OGC \
+        -RGPL Illumina \
+        -RGPU unknown \
+        -RGSM {params.sample}
+
+        {params.picard} FixMateInformation -I {output.tmp1}
+
+        samtools sort -@6 -m 1G -o {output.bam} {output.tmp1}
+
+        {params.picard} MarkDuplicates \
+        -I {output.bam} \
+        -O {output.tmp1} \
+        -M {output.metric} \
+        --REMOVE_DUPLICATES
+
+        samtools sort -@6 -m 1G -o {output.bam} {output.tmp1}
+        samtools index {output.bam}
     """
-
-rule ss_fixmate:
-	input:
-		bam = rules.ss_alignment.output.bam
-	output:
-		fixmate = temp("data/subsampled_bams/tmp/{id}_subsampled.fixmate.bam")
-	resources: mem_mb = 30000
-	shell: """
-		samtools fixmate -m {input.bam} {output.fixmate}
-	"""
-
-rule ss_sort:
-	input:
-		fixmate = rules.ss_fixmate.output.fixmate
-	output:
-		sorted = temp("data/subsampled_bams/tmp/{id}_subsampled.sorted.bam")
-	resources: mem_mb = 30000
-	shell: """
-		samtools sort -o {output.sorted} {input.fixmate}
-	"""
-
-rule ss_index:
-	input:
-		sorted = rules.ss_sort.output.sorted
-	output:
-		bai = temp("data/subsampled_bams/tmp/{id}_subsampled.sorted.bam.bai")
-	resources: mem_mb = 30000
-	shell: """
-		samtools index {input.sorted}
-	"""
-
-rule ss_rename_alignment_files:
-	input:
-		bam = rules.ss_index.input.sorted,
-		bai = rules.ss_index.output.bai
-	output:
-		bam = "data/subsampled_bams/{id}_subsampled.bam",
-		bai = "data/subsampled_bams/{id}_subsampled.bam.bai"
-	shell: """
-		mv {input.bam} {output.bam}
-		mv {input.bai} {output.bai}
-	"""

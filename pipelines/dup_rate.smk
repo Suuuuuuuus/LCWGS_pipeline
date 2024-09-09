@@ -8,7 +8,7 @@ rule extract_samtools_dup_rate:
         bam = "data/bams/{id}.bam"
     output:
         txt = temp("results/dup_rate/tmp/{id}.txt")
-    resources: mem_mb = 50000
+    resources: mem = '50G'
     params:
         tmpdir = "results/dup_rate/tmp/"
     shell: """

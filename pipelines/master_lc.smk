@@ -1,11 +1,11 @@
-#include: "preprocess.smk"
+include: "preprocess.smk"
 #include: "fastqc.smk"
 #include: "reference.smk"
 #include: "alignment.smk"
 
-#include: "subsample.smk"
+include: "subsample.smk"
 #include: "kmer.smk"
-#include: "dup_rate.smk"
+include: "dup_rate.smk"
 include: "coverage.smk"
 
 include: "imputation_prep.smk"

@@ -12,6 +12,7 @@ import lcwgsus
 from lcwgsus.variables import *
 
 chromosome = [i for i in range(1,23)]
+panels = config['panels']
 
 # The omni5m manifest has col3,4 to be chr and pos
 rule prepare_chip_manifest:
@@ -57,7 +58,7 @@ rule retain_chip_sites:
 
 rule concat_chip_sites_vcfs:
     input:
-        lc_vcf = expand("results/wip_vcfs/{panel}/vanilla/chip_sites/lc.chr{chr}.vcf.gz", chr = chromosome)
+        lc_vcf = expand("results/wip_vcfs/{panel}/vanilla/chip_sites/lc.chr{chr}.vcf.gz", chr = chromosome, allow_missing = True)
     output:
         concat = "results/wip_vcfs/{panel}/vanilla/chip_sites/lc.vcf.gz"
     resources:
