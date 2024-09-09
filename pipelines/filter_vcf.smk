@@ -54,7 +54,7 @@ rule retain_chip_sites:
         zgrep -v '#' {input.chip_vcf} | cut -f1,2 > {output.site}
         bcftools view -R {output.site} -Oz -o {output.filtered_vcf} {input.lc_vcf}
     """
-'''
+
 rule concat_chip_sites_vcfs:
     input:
         lc_vcf = expand("results/wip_vcfs/{panel}/vanilla/chip_sites/lc.chr{chr}.vcf.gz", chr = chromosome)
@@ -102,7 +102,7 @@ rule calculate_PCA:
         plink --vcf {output.tmp_vcf1} --make-bed --out {params.plink_name}
         plink --bfile {params.plink_name} --pca {params.num_PCs} --out {params.PC_name}
     """
-'''
+
 rule filter_lc_info:
     input:
         lc_vcf = "results/imputation/vcfs/{panel}/quilt.chr{chr}.vcf.gz"
