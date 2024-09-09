@@ -21,7 +21,7 @@ rule compute_bedgraph_nozero:
         bam = "data/bams/{id}.bam"
     output:
         bedgraph = "results/coverage/bedgraphs/{id}_bedgraph_nozero.bed"
-    resources: mem_mb = 50000
+    resources: mem = '50G'
     shell: """
         bedtools genomecov -ibam {input.bam} -bg | \
         awk '$1 ~ /^chr(1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22)$/' \
@@ -97,7 +97,7 @@ rule compute_subsampled_bedgraph:
         ss_bam = "data/subsampled_bams/{id}_subsampled.bam"
     output:
         ss_bedgraph = "results/coverage/subsampled_bedgraphs/{id}_subsampled_bedgraph.bed"
-    resources: mem_mb = 50000
+    resources: mem = '50G'
     shell: """
         bedtools genomecov -ibam {input.ss_bam} -bga | \
         awk '$1 ~ /^chr(1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22)$/' \
@@ -114,7 +114,7 @@ rule calculate_ss_cumsum_coverage:
         rm_bed_regions = config["rm_bed_regions"],
         bed_regions = config["bed_regions"]
     resources:
-        mem_mb = 20000
+        mem = '20G'
     threads: 11
     run:
         chromosomes = [i for i in range(1,23)]
@@ -138,7 +138,7 @@ rule plot_sequencing_skew:
         cumsum_ary = expand("results/coverage/subsampled_bedgraphs/{id}_cumsum_ary.txt", id = samples_lc)
     output:
         graph_seq_skew = "graphs/prop_genome_at_least_coverage.png"
-    resources: mem_mb = 5000
+    resources: mem = '5G'
     params:
         num_coverage = config["num_coverage"], # Specify the length of the x-axis
         avg_coverage = config["subsample_depth"] # Specify the Poisson expectation loc parameter
@@ -158,7 +158,7 @@ rule calculate_uncoverage_rate:
     params:
         access_bed = config['access_bed']
     resources:
-        mem_mb = 30000
+        mem = '30G'
     shell: """
         result=$(bedtools coverage -a {params.access_bed} -b {input.bedgraph} -hist | grep all | head -n 1 | cut -f5)
         echo "{wildcards.id}\t$result" > {output.uncoverage_rate}
@@ -182,7 +182,7 @@ rule calculate_ss_uncoverage_rate:
     params:
         access_bed = config['access_bed']
     resources:
-        mem_mb = 30000
+        mem = '30G'
     shell: """
         bedtools genomecov -ibam {input.ss_bam} -bg | \
         awk '$1 ~ /^chr(1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22)$/' \
