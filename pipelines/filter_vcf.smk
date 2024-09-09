@@ -92,7 +92,8 @@ rule calculate_PCA:
         num_PCs = 10,
         plink_name = "results/wip_vcfs/{panel}/vanilla/chip_sites/lc_pca",
         PC_name = "results/wip_vcfs/{panel}/vanilla/chip_sites/PCs",
-        chip_gm_names = "data/sample_tsvs/chip_gm_names.tsv"
+        chip_gm_names = "data/sample_tsvs/chip_gm_names.tsv",
+        gm_to_exclude = "data/sample_tsvs/PC_exclude/gm_to_exclude.tsv"
     resources:
         mem = '10G'
     shell: """
