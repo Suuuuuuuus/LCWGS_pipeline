@@ -80,7 +80,8 @@ rule alignment_all:
 rule subsample_all:
     input:
         ss_bams = expand("data/subsampled_bams/{id}_subsampled.bam", id = samples_lc),
-        ss_bais = expand("data/subsampled_bams/{id}_subsampled.bam.bai", id = samples_lc)
+        ss_bais = expand("data/subsampled_bams/{id}_subsampled.bam.bai", id = samples_lc),
+        metrics = expand("data/bams/{id}.metrics.txt", id = samples_lc)
 
 rule coverage_all:
     input:

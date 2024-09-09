@@ -16,7 +16,7 @@ rule vanilla_alignment:
         bam = "data/bams/{id}.bam",
         bai = "data/bams/{id}.bam.bai",
         tmp1 = temp("data/bams/{id}.tmp1.bam"),
-        metric = temp("data/bams/{id}.metrics.txt")
+        metric = "data/bams/{id}.metrics.txt"
     resources:
         mem = '30G'
     params: 

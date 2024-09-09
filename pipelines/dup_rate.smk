@@ -3,6 +3,8 @@ configfile: "pipelines/config.json"
 import pandas as pd
 samples_lc = read_tsv_as_lst(config['samples_lc'])
 
+
+# Remove this with picard metric file maybe
 rule extract_samtools_dup_rate:
     input:
         bam = "data/bams/{id}.bam"
