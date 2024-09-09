@@ -49,8 +49,8 @@ rule ss_alignment:
         ss_fastq2 = temp("data/subsampled_fastq/{id}_subsampled_2.fastq"),
         reference = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta"
     output:
-        bam = "data/subsampled_bams/tmp/{id}_subsampled.bam",
-        bai = "data/subsampled_bams/tmp/{id}_subsampled.bam.bai",
+        bam = "data/subsampled_bams/{id}_subsampled.bam",
+        bai = "data/subsampled_bams/{id}_subsampled.bam.bai",
         tmp1 = temp("data/subsampled_bams/{id}_subsampled.tmp1.bam"),
         metric = temp("data/subsampled_bams/{id}_subsampled.metrics.txt")
     resources:
