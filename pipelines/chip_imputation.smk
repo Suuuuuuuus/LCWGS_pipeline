@@ -17,7 +17,7 @@ azim_dir = '/well/band/users/rbx225/Azim_chip/'
 
 rule all:
     input:
-        gtc_folder = f"{azim_dir}results/gtcs/",
+        gtc_folder = directory(f"{azim_dir}results/gtcs/"),
         tsv = f"{azim_dir}results/chip.tsv",
         vcf = f"{azim_dir}results/chip.vcf.gz",
         lifted = f"{azim_dir}results/chip.b38.vcf.gz",
@@ -55,6 +55,7 @@ rule gtc2vcf:
         mkdir -p {azim_dir}results/tmp/
         
         bcftools +gtc2vcf \
+        --do-not-check-bpm \
         --no-version -Ou \
         --csv {input.manifest} \
         --gtcs {input.gtc_folder} \
@@ -68,7 +69,7 @@ rule gtc2vcf:
         tabix -f {output.vcf}
     """	
 
-rule lift_over_malariaGen_v3:
+rule liftover_chip_vcf:
     input:
         vcf = f"{azim_dir}results/chip.vcf.gz",
         reference = "data/references/GRCh38_with_alt.fa",
