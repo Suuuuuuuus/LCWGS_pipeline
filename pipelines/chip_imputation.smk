@@ -51,6 +51,7 @@ rule gtc2vcf:
     output:
         tsv = f"{azim_dir}results/chip.tsv",
         vcf = f"{azim_dir}results/chip.vcf.gz"
+    resources: mem = '50G'
     shell: """
         mkdir -p {azim_dir}results/tmp/
         
