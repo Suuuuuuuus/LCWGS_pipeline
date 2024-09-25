@@ -1,5 +1,5 @@
 include: "hla.smk"
-include: "alignment.smk"
+#include: "alignment.smk"
 include: "post_hla.smk"
 
 include: "auxiliary.smk"
@@ -17,8 +17,7 @@ import lcwgsus
 samples_lc = read_tsv_as_lst(config['samples_lc'])
 chromosome = [i for i in range(1,23)]
 hla_genes = ['A', 'B', 'C', 'DRB1', 'DQB1']
-
-hla_ref_panel_outdir = "results/hla/imputation/ref_panel/QUILT_ref_files/"
+IPD_IMGT_versions = ['3390', '3570']
 
 bam_batches = config['bam_batch']
 bam_numbers = [str(i) for i in range(1, int(bam_batches) + 1)]
@@ -26,7 +25,7 @@ bam_numbers = [str(i) for i in range(1, int(bam_batches) + 1)]
 rule hla_imputation_prep_all:
     input:
         bamlist = expand("results/hla/imputation/bamlists/bamlist{num}.txt", num = bam_numbers),
-        # ref_panel = expand(f"{hla_ref_panel_outdir}HLA{{gene}}fullallelesfilledin.RData", gene = hla_genes)
+        ref_panel = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_v{IPD_IMGT_version}/HLA{gene}fullallelesfilledin.RData", gene = hla_genes, IPD_IMGT_version = IPD_IMGT_versions)
 
 rule hla_imputation_all:
     input:

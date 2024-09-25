@@ -16,9 +16,41 @@ samples_lc = read_tsv_as_lst(config['samples_lc'])
 chromosome = [i for i in range(1,23)]
 QUILT_HOME = config["QUILT_HOME"]
 
-bam_batches = config['bam_batch']
-bam_numbers = [str(i) for i in range(1, int(bam_batches) + 1)]
+rule all:
+    input:
+        hap = "results/hla_tests/gamcc_vcf/fv.chr6.hap.gz",
+        legend = "results/hla_tests/gamcc_vcf/fv.chr6.legend.gz",
+        samples = "results/hla_tests/gamcc_vcf/fv.chr6.samples"
 
+rule subset_vcf_to_chr6:
+    input:
+        vcf = "results/wip_vcfs/oneKG/vanilla/high_info_high_af_high_conf/lc.chr6.vcf.gz"
+    output:
+        tmp_vcf = temp("results/hla_tests/gamcc_vcf/fv.chr6.vcf.gz"),
+        hap = "results/hla_tests/gamcc_vcf/fv.chr6.hap.gz",
+        legend = "results/hla_tests/gamcc_vcf/fv.chr6.legend.gz",
+        samples = "results/hla_tests/gamcc_vcf/fv.chr6.samples"
+    threads: 4
+    resources: mem = '30G'
+    params: 
+        outdir = "results/hla_tests/gamcc_vcf/",
+        fv = "data/sample_tsvs/fv_gm_names.tsv"
+    shell: """
+        mkdir -p {params.outdir}
+
+        bcftools view -S {params.fv} {input.vcf}| \
+        bcftools norm -m+ | \
+        bcftools view -m2 -M2 -v snps | \
+        
+        bcftools sort -Oz -o {output.tmp_vcf}
+        tabix {output.tmp_vcf}
+
+        bcftools convert -h \
+        {params.outdir}fv.chr6 {output.tmp_vcf}
+
+        sed -i 's/sample population group sex/SAMPLE POP GROUP SEX/g' {output.samples}
+    """
+'''
 rule prepare_hla_bamlist:
     input:
         bams = expand("data/bams/{id}.bam", id = samples_lc)
@@ -110,3 +142,4 @@ rule hla_imputation:
         --quilt_hla_haplotype_panelfile={input.ref_dir}/quilt.hrc.hla.{wildcards.hla_gene}.haplotypes.RData \
         --dict_file={params.fa_dict}
     """
+'''
