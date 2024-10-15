@@ -10,21 +10,27 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import sys
 sys.path.append("/well/band/users/rbx225/software/lcwgsus/")
+sys.path.append("/well/band/users/rbx225/software/QUILT_sus/QUILT/Python/")
 import lcwgsus
+from lcwgsus.variables import *
+from hla_phase import *
 
 samples_lc = read_tsv_as_lst(config['samples_lc'])
 samples_fv = read_tsv_as_lst("data/sample_tsvs/fv_idt_names.tsv")
 chromosome = [i for i in range(1,23)]
 QUILT_HOME = config["QUILT_HOME"]
 NGEN = config["NGEN"]
+studies = ['1KG', 'GAMCC']
 
 rule all:
     input:
-        hap = "results/hla_tests/gamcc_vcf/fv.chr6.hap.gz",
-        legend = "results/hla_tests/gamcc_vcf/fv.chr6.legend.gz",
-        samples = "results/hla_tests/gamcc_vcf/fv.chr6.samples",
-        RData = "results/hla_tests/quilt.hrc.hla.all.haplotypes.RData",
-        bam_all = "results/hla_tests/bamlist.txt"
+        # hap = "results/hla_tests/gamcc_vcf/fv.chr6.hap.gz",
+        # legend = "results/hla_tests/gamcc_vcf/fv.chr6.legend.gz",
+        # samples = "results/hla_tests/gamcc_vcf/fv.chr6.samples",
+        # RData = "results/hla_tests/quilt.hrc.hla.all.haplotypes.RData",
+        # bam_all = "results/hla_tests/bamlist.txt",
+        html = expand("results/hla_tests/phasing/html/{study}-{gene}.html", gene = HLA_GENES, study = studies),
+        phase_df = expand("results/hla_tests/phasing/phased_dfs/{study}-{gene}.tsv", gene = HLA_GENES, study = studies)
 
 rule subset_vcf_to_chr6:
     input:
@@ -101,6 +107,116 @@ rule prepare_ref:
         reference_exclude_samplelist_file = "",
         output_file = "{output.RData}")'
     """
+
+rule phase_GAMCC_alleles:
+    input:
+        phased_vcf = "/well/band/users/rbx225/recyclable_files/ref_panels/oneKG/oneKG.chr6.vcf.gz"
+    output:
+        html = "results/hla_tests/phasing/html/GAMCC-{gene}.html",
+        phase_df = "results/hla_tests/phasing/phased_dfs/GAMCC-{gene}.tsv"
+    resources:
+        mem = '30G'
+    threads: 4
+    params:
+        ipd_gen_file_dir = '/well/band/users/rbx225/recyclable_files/hla_reference_files/alignments/',
+        hla_gene_information = '/well/band/users/rbx225/software/QUILT_sus/hla_ancillary_files/hla_gene_information.tsv',
+        reference_allele_file = '/well/band/users/rbx225/recyclable_files/hla/b38_reference_alleles.tsv',
+        gm_tsv_names = 'data/sample_tsvs/fv_gm_names.tsv'
+    run:
+        gene = wildcards.gene
+        hla_gene_information = pd.read_csv(params.hla_gene_information, sep = ' ')
+
+        gamcc_hla = lcwgsus.read_hla_direct_sequencing(retain = 'fv', unique_two_field = False)
+        gamcc_hla = gamcc_hla[['SampleID', 'Locus', 'Two field1', 'Two field2']].reset_index(drop = True)
+
+        colnames = ['Sample ID'] + [label for g in HLA_GENES for label in [f'HLA-{g} 1', f'HLA-{g} 2']]
+        hlatypes = pd.DataFrame(columns = colnames)
+        for s in gamcc_hla['SampleID'].unique():
+            tmp = gamcc_hla[gamcc_hla['SampleID'] == s]
+            row = [s] + tmp[['Two field1', 'Two field2']].values.ravel().tolist()
+            hlatypes.loc[len(hlatypes)] = row
+    
+        reference_allele_ary = np.array(lcwgsus.read_tsv_as_lst(params.reference_allele_file))
+
+        subset_vcf_samples = lcwgsus.read_tsv_as_lst(params.gm_tsv_names)
+        subset_vcf_samples = ','.join(subset_vcf_samples)
+
+        sample_linker = pd.read_csv(SAMPLE_LINKER_FILE)
+        sample_linker = {k:v for k, v in zip(sample_linker['Sample_Name'], sample_linker['Chip_Name'])}
+
+        return_dict = phase_hla_on_haplotypes(gene = gene, 
+                            ipd_gen_file_dir = params.ipd_gen_file_dir, 
+                            hla_gene_information = params.hla_gene_information, 
+                            hlatypes = hlatypes,
+                            phased_vcf = input.phased_vcf, 
+                            reference_allele_ary = reference_allele_ary, 
+                            strict_snp_filter = False,
+                            read_from_QUILT = True, 
+                            subset_vcf_samples = subset_vcf_samples,
+                            sample_linker = sample_linker)
+        hlatypes = return_dict['hlatypes']
+
+        individual = 'GAM951638'
+        ix = hlatypes.index[hlatypes['Sample ID'] == individual][0]
+        display_indices = np.arange(10)
+
+        res = visualise_phase(gene, ix, hlatypes, return_dict, both_het = True)
+        compare_phase(display_indices, res, save_html = True, save_name = output.html)
+        df = return_dict['phase_df'][['Sample', 'allele1', 'allele2']]
+        df.columns = ['Sample ID', f'HLA-{gene} 1', f'HLA-{gene} 2']
+        df.to_csv(output.phase_df, sep = '\t', index = False, header = True)
+
+rule phase_1KG_alleles:
+    input:
+        samples = "/well/band/users/rbx225/GAMCC/results/hla/imputation/ref_panel/auxiliary_files/oneKG.samples",
+        hlatypes = "/well/band/users/rbx225/GAMCC/results/hla/imputation/ref_panel/auxiliary_files/20181129_HLA_types_full_1000_Genomes_Project_panel.txt",
+        phased_vcf = "/well/band/users/rbx225/recyclable_files/ref_panels/oneKG/oneKG.chr6.vcf.gz"
+    output:
+        html = "results/hla_tests/phasing/html/1KG-{gene}.html",
+        phase_df = "results/hla_tests/phasing/phased_dfs/1KG-{gene}.tsv"
+    resources:
+        mem = '30G'
+    threads: 4
+    params:
+        ipd_gen_file_dir = '/well/band/users/rbx225/recyclable_files/hla_reference_files/alignments/',
+        hla_gene_information = '/well/band/users/rbx225/software/QUILT_sus/hla_ancillary_files/hla_gene_information.tsv',
+        reference_allele_file = '/well/band/users/rbx225/recyclable_files/hla/b38_reference_alleles.tsv'
+    run:
+        gene = wildcards.gene
+        hla_gene_information = pd.read_csv(params.hla_gene_information, sep = ' ')
+        ref_samples = pd.read_csv(input.samples, sep = ' ')
+        hlatypes = pd.read_csv(input.hlatypes, sep = '\t')
+
+        ref_samples_removed = ref_samples[~ref_samples['SAMPLE'].isin(hlatypes['Sample ID'].tolist())]
+        samples_to_remove = ref_samples_removed['SAMPLE'].tolist()
+        hlatypes = hlatypes[~hlatypes['Sample ID'].isin(samples_to_remove)].sort_values(by = 'Sample ID').reset_index(drop = True)
+
+        reference_allele_ary = np.array(lcwgsus.read_tsv_as_lst(params.reference_allele_file))
+
+        return_dict = phase_hla_on_haplotypes(gene = gene, 
+                                    ipd_gen_file_dir = params.ipd_gen_file_dir, 
+                                    hla_gene_information = hla_gene_information,
+                                    hlatypes = hlatypes,
+                                    phased_vcf = params.phased_vcf, 
+                                    reference_allele_ary = reference_allele_ary, 
+                                    strict_snp_filter = True,
+                                    read_from_QUILT = False, 
+                                    subset_vcf_samples = None,
+                                    sample_linker = None)
+        hlatypes = return_dict['hlatypes']
+
+        individual = 'NA12878'
+        ix = hlatypes.index[hlatypes['Sample ID'] == individual][0]
+        display_indices = np.arange(10)
+
+        res = visualise_phase(gene, ix, hlatypes, return_dict, both_het = True)
+        compare_phase(display_indices, res, save_html = True, save_name = output.html)
+        df = return_dict['phase_df'][['Sample', 'allele1', 'allele2']]
+        df.columns = ['Sample ID', f'HLA-{gene} 1', f'HLA-{gene} 2']
+        df.to_csv(output.phase_df, sep = '\t', index = False, header = True)
+
+
+
 
 '''
 rule hla_imputation:
