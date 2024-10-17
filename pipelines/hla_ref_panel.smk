@@ -22,16 +22,6 @@ QUILT_HOME = config["QUILT_HOME"]
 NGEN = config["NGEN"]
 studies = ['1KG', 'GAMCC']
 
-rule all:
-    input:
-        # hap = "results/hla_tests/gamcc_vcf/fv.chr6.hap.gz",
-        # legend = "results/hla_tests/gamcc_vcf/fv.chr6.legend.gz",
-        # samples = "results/hla_tests/gamcc_vcf/fv.chr6.samples",
-        # RData = "results/hla_tests/quilt.hrc.hla.all.haplotypes.RData",
-        # bam_all = "results/hla_tests/bamlist.txt",
-        html = expand("results/hla_tests/phasing/html/{study}-{gene}.html", gene = HLA_GENES, study = studies),
-        phase_df = expand("results/hla_tests/phasing/phased_dfs/{study}-{gene}.tsv", gene = HLA_GENES, study = studies)
-
 rule subset_vcf_to_chr6:
     input:
         vcf = "results/wip_vcfs/oneKG/vanilla/high_info_high_af_high_conf/lc.chr6.vcf.gz"
@@ -110,7 +100,7 @@ rule prepare_ref:
 
 rule phase_GAMCC_alleles:
     input:
-        phased_vcf = "/well/band/users/rbx225/recyclable_files/ref_panels/oneKG/oneKG.chr6.vcf.gz"
+        phased_vcf_file = "/well/band/users/rbx225/recyclable_files/ref_panels/oneKG/oneKG.chr6.vcf.gz"
     output:
         html = "results/hla_tests/phasing/html/GAMCC-{gene}.html",
         phase_df = "results/hla_tests/phasing/phased_dfs/GAMCC-{gene}.tsv"
@@ -119,12 +109,12 @@ rule phase_GAMCC_alleles:
     threads: 4
     params:
         ipd_gen_file_dir = '/well/band/users/rbx225/recyclable_files/hla_reference_files/alignments/',
-        hla_gene_information = '/well/band/users/rbx225/software/QUILT_sus/hla_ancillary_files/hla_gene_information.tsv',
+        hla_gene_information_file = '/well/band/users/rbx225/software/QUILT_sus/hla_ancillary_files/hla_gene_information.tsv',
         reference_allele_file = '/well/band/users/rbx225/recyclable_files/hla/b38_reference_alleles.tsv',
         gm_tsv_names = 'data/sample_tsvs/fv_gm_names.tsv'
     run:
         gene = wildcards.gene
-        hla_gene_information = pd.read_csv(params.hla_gene_information, sep = ' ')
+        hla_gene_information_file = pd.read_csv(params.hla_gene_information, sep = ' ')
 
         gamcc_hla = lcwgsus.read_hla_direct_sequencing(retain = 'fv', unique_two_field = False)
         gamcc_hla = gamcc_hla[['SampleID', 'Locus', 'Two field1', 'Two field2']].reset_index(drop = True)
@@ -168,9 +158,9 @@ rule phase_GAMCC_alleles:
 
 rule phase_1KG_alleles:
     input:
-        samples = "/well/band/users/rbx225/GAMCC/results/hla/imputation/ref_panel/auxiliary_files/oneKG.samples",
-        hlatypes = "/well/band/users/rbx225/GAMCC/results/hla/imputation/ref_panel/auxiliary_files/20181129_HLA_types_full_1000_Genomes_Project_panel.txt",
-        phased_vcf = "/well/band/users/rbx225/recyclable_files/ref_panels/oneKG/oneKG.chr6.vcf.gz"
+        samples_file = "/well/band/users/rbx225/GAMCC/results/hla/imputation/ref_panel/auxiliary_files/oneKG.samples",
+        hlatypes_file = "/well/band/users/rbx225/GAMCC/results/hla/imputation/ref_panel/auxiliary_files/20181129_HLA_types_full_1000_Genomes_Project_panel.txt",
+        phased_vc_file = "/well/band/users/rbx225/recyclable_files/ref_panels/oneKG/oneKG.chr6.vcf.gz"
     output:
         html = "results/hla_tests/phasing/html/1KG-{gene}.html",
         phase_df = "results/hla_tests/phasing/phased_dfs/1KG-{gene}.tsv"
@@ -179,13 +169,12 @@ rule phase_1KG_alleles:
     threads: 4
     params:
         ipd_gen_file_dir = '/well/band/users/rbx225/recyclable_files/hla_reference_files/alignments/',
-        hla_gene_information = '/well/band/users/rbx225/software/QUILT_sus/hla_ancillary_files/hla_gene_information.tsv',
+        hla_gene_information_file = '/well/band/users/rbx225/software/QUILT_sus/hla_ancillary_files/hla_gene_information.tsv',
         reference_allele_file = '/well/band/users/rbx225/recyclable_files/hla/b38_reference_alleles.tsv'
     run:
-        gene = wildcards.gene
-        hla_gene_information = pd.read_csv(params.hla_gene_information, sep = ' ')
-        ref_samples = pd.read_csv(input.samples, sep = ' ')
-        hlatypes = pd.read_csv(input.hlatypes, sep = '\t')
+        hla_gene_information = pd.read_csv(params.hla_gene_information_file, sep = ' ')
+        ref_samples = pd.read_csv(input.samples_file, sep = ' ')
+        hlatypes = pd.read_csv(input.hlatypes_file, sep = '\t')
 
         ref_samples_removed = ref_samples[~ref_samples['SAMPLE'].isin(hlatypes['Sample ID'].tolist())]
         samples_to_remove = ref_samples_removed['SAMPLE'].tolist()
@@ -193,11 +182,11 @@ rule phase_1KG_alleles:
 
         reference_allele_ary = np.array(lcwgsus.read_tsv_as_lst(params.reference_allele_file))
 
-        return_dict = phase_hla_on_haplotypes(gene = gene, 
+        return_dict = phase_hla_on_haplotypes(gene = wildcards.gene, 
                                     ipd_gen_file_dir = params.ipd_gen_file_dir, 
                                     hla_gene_information = hla_gene_information,
                                     hlatypes = hlatypes,
-                                    phased_vcf = params.phased_vcf, 
+                                    phased_vcf = params.phased_vc_file, 
                                     reference_allele_ary = reference_allele_ary, 
                                     strict_snp_filter = True,
                                     read_from_QUILT = False, 

@@ -1,6 +1,7 @@
 include: "hla.smk"
 #include: "alignment.smk"
 include: "post_hla.smk"
+include: "hla_ref_panel.smk"
 
 include: "auxiliary.smk"
 include: "software.smk"
@@ -12,7 +13,10 @@ import numpy as np
 import sys
 import os
 sys.path.append("/well/band/users/rbx225/software/lcwgsus/")
+sys.path.append("/well/band/users/rbx225/software/QUILT_sus/QUILT/Python/")
 import lcwgsus
+from lcwgsus.variables import *
+from hla_phase import *
 
 samples_lc = read_tsv_as_lst(config['samples_lc'])
 chromosome = [i for i in range(1,23)]
@@ -37,3 +41,13 @@ rule post_hla_all:
     input:
         lifted = "results/hla/reference/multiEth_sites.b38.vcf.gz",
         two_stage_vcf = expand("{two_stage_hla_vcf_outdir}chr6.vcf.gz", two_stage_hla_vcf_outdir = two_stage_hla_vcf_outdir)
+
+rule hla_ref_panel_all:
+    input:
+        # hap = "results/hla_tests/gamcc_vcf/fv.chr6.hap.gz",
+        # legend = "results/hla_tests/gamcc_vcf/fv.chr6.legend.gz",
+        # samples = "results/hla_tests/gamcc_vcf/fv.chr6.samples",
+        # RData = "results/hla_tests/quilt.hrc.hla.all.haplotypes.RData",
+        # bam_all = "results/hla_tests/bamlist.txt",
+        html = expand("results/hla_tests/phasing/html/{study}-{gene}.html", gene = HLA_GENES, study = studies),
+        phase_df = expand("results/hla_tests/phasing/phased_dfs/{study}-{gene}.tsv", gene = HLA_GENES, study = studies)
