@@ -98,6 +98,30 @@ rule prepare_ref:
         reference_exclude_samplelist_file = "",
         output_file = "{output.RData}")'
     """
+
+rule hla_imputation:
+    input:
+        bamlist = "results/hla/imputation/bamlists/bamlist{num}.txt",
+        ref_dir = "results/hla/imputation/ref_panel/QUILT_prepared_reference_v{IPD_IMGT_version}/"
+    output:
+        imputed = "results/hla/imputation/QUILT_HLA_result_v{IPD_IMGT_version}/genes{num}/{hla_gene}/quilt.hla.output.combined.all.txt"
+    resources:
+        mem = '50G'
+    threads: 6
+    params:
+        quilt_hla = tools['quilt_hla'],
+        fa_dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict"
+    shell: """
+        mkdir -p results/hla/imputation/QUILT_HLA_result_v{IPD_IMGT_version}/genes{wildcards.num}/{wildcards.hla_gene}/
+
+        {params.quilt_hla} \
+        --outputdir="results/hla/imputation/QUILT_HLA_result_v{wildcards.IPD_IMGT_version}/genes{wildcards.num}/{wildcards.hla_gene}/" \
+        --bamlist={input.bamlist} \
+        --region={wildcards.hla_gene} \
+        --prepared_hla_reference_dir={input.ref_dir} \
+        --quilt_hla_haplotype_panelfile={input.ref_dir}/quilt.hrc.hla.{wildcards.hla_gene}.haplotypes.RData \
+        --dict_file={params.fa_dict}
+    """
 '''
 
 rule phase_GAMCC_alleles:
@@ -116,7 +140,7 @@ rule phase_GAMCC_alleles:
         gm_tsv_names = 'data/sample_tsvs/fv_gm_names.tsv'
     run:
         gene = wildcards.gene
-        hla_gene_information_file = pd.read_csv(params.hla_gene_information, sep = ' ')
+        hla_gene_information_file = pd.read_csv(params.hla_gene_information_file, sep = ' ')
 
         gamcc_hla = lcwgsus.read_hla_direct_sequencing(retain = 'fv', unique_two_field = False)
         gamcc_hla = gamcc_hla[['SampleID', 'Locus', 'Two field1', 'Two field2']].reset_index(drop = True)
@@ -205,32 +229,3 @@ rule phase_1KG_alleles:
         df = return_dict['phase_df'][['Sample', 'allele1', 'allele2']]
         df.columns = ['Sample ID', f'HLA-{gene} 1', f'HLA-{gene} 2']
         df.to_csv(output.phase_df, sep = '\t', index = False, header = True)
-
-
-
-
-'''
-rule hla_imputation:
-    input:
-        bamlist = "results/hla/imputation/bamlists/bamlist{num}.txt",
-        ref_dir = "results/hla/imputation/ref_panel/QUILT_prepared_reference_v{IPD_IMGT_version}/"
-    output:
-        imputed = "results/hla/imputation/QUILT_HLA_result_v{IPD_IMGT_version}/genes{num}/{hla_gene}/quilt.hla.output.combined.all.txt"
-    resources:
-        mem = '50G'
-    threads: 6
-    params:
-        quilt_hla = tools['quilt_hla'],
-        fa_dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict"
-    shell: """
-        mkdir -p results/hla/imputation/QUILT_HLA_result_v{IPD_IMGT_version}/genes{wildcards.num}/{wildcards.hla_gene}/
-
-        {params.quilt_hla} \
-        --outputdir="results/hla/imputation/QUILT_HLA_result_v{wildcards.IPD_IMGT_version}/genes{wildcards.num}/{wildcards.hla_gene}/" \
-        --bamlist={input.bamlist} \
-        --region={wildcards.hla_gene} \
-        --prepared_hla_reference_dir={input.ref_dir} \
-        --quilt_hla_haplotype_panelfile={input.ref_dir}/quilt.hrc.hla.{wildcards.hla_gene}.haplotypes.RData \
-        --dict_file={params.fa_dict}
-    """
-'''
