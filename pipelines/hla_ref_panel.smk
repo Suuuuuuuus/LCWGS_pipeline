@@ -20,7 +20,7 @@ samples_fv = read_tsv_as_lst("data/sample_tsvs/fv_idt_names.tsv")
 chromosome = [i for i in range(1,23)]
 QUILT_HOME = config["QUILT_HOME"]
 NGEN = config["NGEN"]
-RECOMB_POP = config["NGEN"]
+RECOMB_POP = config["RECOMB_POP"]
 studies = ['1KG', 'GAMCC']
 
 '''
@@ -232,7 +232,7 @@ rule phase_1KG_alleles:
         df.to_csv(output.phase_df, sep = '\t', index = False, header = True)
 
 
-
+'''
 to_merge = ['gamcc', 'oneKG']
 
 rule pre_prepare_merge_GAMCC_vcf:
@@ -381,3 +381,4 @@ rule merge_1KG_GAMCC_chunks:
         bcftools concat --ligate-force -Oz -o {output.vcf} {params.input_string}
         tabix {output.vcf}
     """
+'''

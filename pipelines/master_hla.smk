@@ -54,8 +54,8 @@ rule hla_ref_panel_all:
         # RData = "results/hla_tests/quilt.hrc.hla.all.haplotypes.RData",
         # bam_all = "results/hla_tests/bamlist.txt",
         html = expand("results/hla_tests/phasing/html/{study}-{gene}.html", gene = HLA_GENES, study = studies),
-        phase_df = expand("results/hla_tests/phasing/phased_dfs/{study}-{gene}.tsv", gene = HLA_GENES, study = studies),
+        phase_df = expand("results/hla_tests/phasing/phased_dfs/{study}-{gene}.tsv", gene = HLA_GENES, study = studies)
 
-        fv_vcf = expand("results/hla_ref_panel/oneKG_mGenv1/fv_gamcc_vcf/gamcc.chr{chr}.vcf.gz", chr = chromosome),
-        mGen_chunk_vcfs = [mGen_chunk_vcf_lst],
-        oneKG_gamcc = expand("results/hla_ref_panel/oneKG_mGenv1/merged/oneKG_GAMCC.chr{chr}.vcf.gz", chr = chromosome)
+        # fv_vcf = expand("results/hla_ref_panel/oneKG_mGenv1/fv_gamcc_vcf/gamcc.chr{chr}.vcf.gz", chr = chromosome),
+        # mGen_chunk_vcfs = [mGen_chunk_vcf_lst],
+        # oneKG_gamcc = expand("results/hla_ref_panel/oneKG_mGenv1/merged/oneKG_GAMCC.chr{chr}.vcf.gz", chr = chromosome)
