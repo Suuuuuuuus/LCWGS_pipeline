@@ -163,9 +163,9 @@ rule phase_GAMCC_alleles:
 
         return_dict = phase_hla_on_haplotypes(gene = gene, 
                             ipd_gen_file_dir = params.ipd_gen_file_dir, 
-                            hla_gene_information = params.hla_gene_information, 
+                            hla_gene_information = hla_gene_information, 
                             hlatypes = hlatypes,
-                            phased_vcf = input.phased_vcf, 
+                            phased_vcf = input.phased_vcf_file, 
                             reference_allele_ary = reference_allele_ary, 
                             strict_snp_filter = False,
                             read_from_QUILT = True, 
@@ -187,7 +187,7 @@ rule phase_1KG_alleles:
     input:
         samples_file = "/well/band/users/rbx225/GAMCC/results/hla/imputation/ref_panel/auxiliary_files/oneKG.samples",
         hlatypes_file = "/well/band/users/rbx225/GAMCC/results/hla/imputation/ref_panel/auxiliary_files/20181129_HLA_types_full_1000_Genomes_Project_panel.txt",
-        phased_vc_file = "/well/band/users/rbx225/recyclable_files/ref_panels/oneKG/oneKG.chr6.vcf.gz"
+        phased_vcf_file = "/well/band/users/rbx225/recyclable_files/ref_panels/oneKG/oneKG.chr6.vcf.gz"
     output:
         html = "results/hla_tests/phasing/html/1KG-{gene}.html",
         phase_df = "results/hla_tests/phasing/phased_dfs/1KG-{gene}.tsv"
@@ -213,7 +213,7 @@ rule phase_1KG_alleles:
                                     ipd_gen_file_dir = params.ipd_gen_file_dir, 
                                     hla_gene_information = hla_gene_information,
                                     hlatypes = hlatypes,
-                                    phased_vcf = params.phased_vc_file, 
+                                    phased_vcf = input.phased_vcf_file, 
                                     reference_allele_ary = reference_allele_ary, 
                                     strict_snp_filter = True,
                                     read_from_QUILT = False, 
@@ -232,15 +232,35 @@ rule phase_1KG_alleles:
         df.to_csv(output.phase_df, sep = '\t', index = False, header = True)
 
 
-'''
 
-to_merge = ['malariaGen_v1_b38_topmed', 'oneKG']
+to_merge = ['gamcc', 'oneKG']
+
+rule pre_prepare_merge_GAMCC_vcf:
+    input:
+        vcf = "results/two-stage-imputation/vanilla/malariaGen_v1_b38_topmed/vcf/chr{chr}.dose.vcf.gz"
+    output:
+        fv_vcf = "results/hla_ref_panel/oneKG_mGenv1/fv_gamcc_vcf/gamcc.chr{chr}.vcf.gz",
+        tmp_vcf = temp("results/hla_ref_panel/oneKG_mGenv1/fv_gamcc_vcf/gamcc.chr{chr}.vcf")
+    resources: mem = '30G'
+    threads: 4
+    params: 
+        outdir = "results/hla_ref_panel/oneKG_mGenv1/fv_gamcc_vcf/",
+        fv_gm_names = "data/sample_tsvs/fv_gm_names.tsv",
+        gm_to_gam = "data/rename_tsvs/fv_gm_to_gam.ssv"
+    shell: """
+        mkdir -p {params.outdir}
+
+        bcftools view -S {params.fv_gm_names} {input.vcf} | \
+        bcftools reheader -s {params.gm_to_gam} -o {output.tmp_vcf}
+
+        bgzip {output.tmp_vcf}
+    """
 
 def get_vcf_from_to_merge(wildcards):
     if wildcards.to_merge == 'oneKG':
         return "data/ref_panel/oneKG/oneKG.chr" + wildcards.chr + ".vcf.gz"
-    elif wildcards.to_merge == 'malariaGen_v1_b38_topmed':
-        return "results/two-stage-imputation/vanilla/malariaGen_v1_b38_topmed/vcf/chr" + wildcards.chr + ".dose.vcf.gz"
+    elif wildcards.to_merge == 'gamcc':
+        return "results/hla_ref_panel/oneKG_mGenv1/fv_gamcc_vcf/gamcc.chr" + wildcards.chr + ".vcf.gz"
     else:
         return ""
 
@@ -267,7 +287,7 @@ rule prepare_merge_1KG_GAMCC_vcf:
 
 rule prepare_merge_1KG_GAMCC_sample:
     input:
-        mg = "results/two-stage-imputation/vanilla/malariaGen_v1_b38_topmed/vcf/chr22.dose.vcf.gz",
+        mg = "results/hla_ref_panel/oneKG_mGenv1/fv_gamcc_vcf/gamcc.chr22.vcf.gz",
         oneKG = "data/ref_panel/oneKG/oneKG.chr22.vcf.gz"
     output:
         tmp_sample = temp("results/hla_ref_panel/oneKG_mGenv1/tmp/tmp.sample"),
@@ -288,24 +308,25 @@ rule prepare_merge_1KG_GAMCC_sample:
         done
     """
 
-rule merge_1KGmGenv3_per_chunk:
+# Maybe instead of per_chunk use only the HLA region?
+rule merge_1KG_GAMCC_per_chunk:
     input:
         haps = expand("results/hla_ref_panel/oneKG_mGenv1/tmp/{to_merge}.chr{chr}.hap", to_merge = to_merge, allow_missing = True),
         legends = expand("results/hla_ref_panel/oneKG_mGenv1/tmp/{to_merge}.chr{chr}.legend", to_merge = to_merge, allow_missing = True),
         gen_map = f"data/imputation_accessories/maps/{RECOMB_POP}-chr{{chr}}-final.b38.txt",
-        sample = rules.prepare_merge_1KGmGenv3_sample.output.sample
+        sample = rules.prepare_merge_1KG_GAMCC_sample.output.sample
     output:
-        haps = temp("data/ref_panel/malariaGen_v3_b38/regions/chr{chr}.{regionStart}.{regionEnd}.hap"),
-        legend = temp("data/ref_panel/malariaGen_v3_b38/regions/chr{chr}.{regionStart}.{regionEnd}.legend"),
-        vcf = "data/ref_panel/malariaGen_v3_b38/regions/chr{chr}.{regionStart}.{regionEnd}.vcf.gz",
+        haps = temp("results/hla_ref_panel/oneKG_mGenv1/merged/regions/chr{chr}.{regionStart}.{regionEnd}.hap"),
+        legend = temp("results/hla_ref_panel/oneKG_mGenv1/merged/regions/chr{chr}.{regionStart}.{regionEnd}.legend"),
+        vcf = "results/hla_ref_panel/oneKG_mGenv1/merged/regions/chr{chr}.{regionStart}.{regionEnd}.vcf.gz",
     resources: mem = '70G'
     threads: 4
     params: 
         impute2 = tools['impute2'],
-        outdir = "data/ref_panel/malariaGen_v3_b38/regions/",
-        output_prefix = "data/ref_panel/malariaGen_v3_b38/regions/chr{chr}.{regionStart}.{regionEnd}",
-        mGen_haps = "results/hla_ref_panel/oneKG_mGenv1/tmp/malariaGen_v3_b38_alone.chr{chr}.hap",
-        mGen_legend = "results/hla_ref_panel/oneKG_mGenv1/tmp/malariaGen_v3_b38_alone.chr{chr}.legend",
+        outdir = "results/hla_ref_panel/oneKG_mGenv1/merged/regions/",
+        output_prefix = "results/hla_ref_panel/oneKG_mGenv1/merged/regions/chr{chr}.{regionStart}.{regionEnd}",
+        mGen_haps = "results/hla_ref_panel/oneKG_mGenv1/tmp/gamcc.chr{chr}.hap",
+        mGen_legend = "results/hla_ref_panel/oneKG_mGenv1/tmp/gamcc.chr{chr}.legend",
         oneKG_haps = "results/hla_ref_panel/oneKG_mGenv1/tmp/oneKG.chr{chr}.hap",
         oneKG_legend = "results/hla_ref_panel/oneKG_mGenv1/tmp/oneKG.chr{chr}.legend",
     shell: """
@@ -319,7 +340,7 @@ rule merge_1KGmGenv3_per_chunk:
         -l {params.oneKG_legend} \
            {params.mGen_legend} \
         -int {wildcards.regionStart} {wildcards.regionEnd} \
-        -k_hap 2018 1510 \
+        -k_hap 2018 420 \
         -Ne 20000
 
         awk -F ' ' 'NR==1 {{print; next}} {{$1 = "chr{wildcards.chr}:"$2"_"$3"_"$4; print $0}}' \
@@ -338,7 +359,7 @@ rule merge_1KGmGenv3_per_chunk:
     """
 
 region_file = "data/imputation_accessories/5Mb_chunks.json"
-mGen_vcf_prefix = "data/ref_panel/malariaGen_v3_b38/regions/chr"
+mGen_vcf_prefix = "results/hla_ref_panel/oneKG_mGenv1/merged/regions/chr"
 mGen_chunk_RData, mGen_chunk_vcf_lst, mGen_chunk_vcf_dict = get_vcf_concat_lst(region_file, '', mGen_vcf_prefix)
 
 def get_input_vcfs_as_list(wildcards):
@@ -347,18 +368,16 @@ def get_input_vcfs_as_list(wildcards):
 def get_input_vcfs_as_string(wildcards):
     return(" ".join(map(str, mGen_chunk_vcf_dict[str(wildcards.chr)])))
 
-rule merge_1KGmGenv3_chunks:
+rule merge_1KG_GAMCC_chunks:
     input:
         vcfs = get_input_vcfs_as_list
     output:
-        vcf = "data/ref_panel/malariaGen_v3_b38/malariaGen_v3_b38.chr{chr}.vcf.gz",
+        vcf = "results/hla_ref_panel/oneKG_mGenv1/merged/oneKG_GAMCC.chr{chr}.vcf.gz",
     resources: mem = '30G'
-    threads: 1
+    threads: 4
     params: 
         input_string = get_input_vcfs_as_string,
     shell: """
         bcftools concat --ligate-force -Oz -o {output.vcf} {params.input_string}
         tabix {output.vcf}
     """
-
-'''
