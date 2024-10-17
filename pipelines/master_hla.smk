@@ -1,6 +1,6 @@
 include: "hla.smk"
 #include: "alignment.smk"
-include: "post_hla.smk"
+#include: "post_hla.smk"
 include: "hla_ref_panel.smk"
 
 include: "auxiliary.smk"
