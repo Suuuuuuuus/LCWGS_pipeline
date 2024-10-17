@@ -22,6 +22,7 @@ QUILT_HOME = config["QUILT_HOME"]
 NGEN = config["NGEN"]
 studies = ['1KG', 'GAMCC']
 
+'''
 rule subset_vcf_to_chr6:
     input:
         vcf = "results/wip_vcfs/oneKG/vanilla/high_info_high_af_high_conf/lc.chr6.vcf.gz"
@@ -97,6 +98,7 @@ rule prepare_ref:
         reference_exclude_samplelist_file = "",
         output_file = "{output.RData}")'
     """
+'''
 
 rule phase_GAMCC_alleles:
     input:
