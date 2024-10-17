@@ -225,6 +225,7 @@ rule phase_1KG_alleles:
         display_indices = np.arange(10)
 
         res = visualise_phase(wildcards.gene, ix, hlatypes, return_dict, both_het = True)
+        print(res['het_variants'].shape)
         compare_phase(display_indices, res, save_html = True, save_name = output.html)
         df = return_dict['phase_df'][['Sample', 'allele1', 'allele2']]
         df.columns = ['Sample ID', f'HLA-{wildcards.gene} 1', f'HLA-{wildcards.gene} 2']
