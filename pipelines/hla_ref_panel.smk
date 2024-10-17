@@ -140,7 +140,6 @@ rule phase_GAMCC_alleles:
         reference_allele_file = '/well/band/users/rbx225/recyclable_files/hla/b38_reference_alleles.tsv',
         gm_tsv_names = 'data/sample_tsvs/fv_gm_names.tsv'
     run:
-        gene = wildcards.gene
         hla_gene_information = pd.read_csv(params.hla_gene_information_file, sep = ' ')
 
         gamcc_hla = lcwgsus.read_hla_direct_sequencing(retain = 'fv', unique_two_field = False)
@@ -161,7 +160,7 @@ rule phase_GAMCC_alleles:
         sample_linker = pd.read_csv(SAMPLE_LINKER_FILE)
         sample_linker = {k:v for k, v in zip(sample_linker['Sample_Name'], sample_linker['Chip_Name'])}
 
-        return_dict = phase_hla_on_haplotypes(gene = gene, 
+        return_dict = phase_hla_on_haplotypes(gene = wildcards.gene, 
                             ipd_gen_file_dir = params.ipd_gen_file_dir, 
                             hla_gene_information = hla_gene_information, 
                             hlatypes = hlatypes,
@@ -177,10 +176,10 @@ rule phase_GAMCC_alleles:
         ix = hlatypes.index[hlatypes['Sample ID'] == individual][0]
         display_indices = np.arange(10)
 
-        res = visualise_phase(gene, ix, hlatypes, return_dict, both_het = True)
+        res = visualise_phase(wildcards.gene, ix, hlatypes, return_dict, both_het = True)
         compare_phase(display_indices, res, save_html = True, save_name = output.html)
         df = return_dict['phase_df'][['Sample', 'allele1', 'allele2']]
-        df.columns = ['Sample ID', f'HLA-{gene} 1', f'HLA-{gene} 2']
+        df.columns = ['Sample ID', f'HLA-{wildcards.gene} 1', f'HLA-{wildcards.gene} 2']
         df.to_csv(output.phase_df, sep = '\t', index = False, header = True)
 
 rule phase_1KG_alleles:
@@ -225,10 +224,10 @@ rule phase_1KG_alleles:
         ix = hlatypes.index[hlatypes['Sample ID'] == individual][0]
         display_indices = np.arange(10)
 
-        res = visualise_phase(gene, ix, hlatypes, return_dict, both_het = True)
+        res = visualise_phase(wildcards.gene, ix, hlatypes, return_dict, both_het = True)
         compare_phase(display_indices, res, save_html = True, save_name = output.html)
         df = return_dict['phase_df'][['Sample', 'allele1', 'allele2']]
-        df.columns = ['Sample ID', f'HLA-{gene} 1', f'HLA-{gene} 2']
+        df.columns = ['Sample ID', f'HLA-{wildcards.gene} 1', f'HLA-{wildcards.gene} 2']
         df.to_csv(output.phase_df, sep = '\t', index = False, header = True)
 
 
