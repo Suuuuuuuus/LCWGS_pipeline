@@ -200,9 +200,9 @@ rule phase_1KG_alleles:
         reference_allele_file = '/well/band/users/rbx225/recyclable_files/hla/b38_reference_alleles.tsv'
     run:
         hla_gene_information = pd.read_csv(params.hla_gene_information_file, sep = ' ')
-        ref_samples = pd.read_csv(input.samples_file, sep = ' ')
         hlatypes = pd.read_csv(input.hlatypes_file, sep = '\t')
 
+        ref_samples = pd.read_csv(input.samples_file, sep = ' ')
         ref_samples_removed = ref_samples[~ref_samples['SAMPLE'].isin(hlatypes['Sample ID'].tolist())]
         samples_to_remove = ref_samples_removed['SAMPLE'].tolist()
         hlatypes = hlatypes[~hlatypes['Sample ID'].isin(samples_to_remove)].sort_values(by = 'Sample ID').reset_index(drop = True)
