@@ -140,7 +140,7 @@ rule phase_GAMCC_alleles:
         gm_tsv_names = 'data/sample_tsvs/fv_gm_names.tsv'
     run:
         gene = wildcards.gene
-        hla_gene_information_file = pd.read_csv(params.hla_gene_information_file, sep = ' ')
+        hla_gene_information = pd.read_csv(params.hla_gene_information_file, sep = ' ')
 
         gamcc_hla = lcwgsus.read_hla_direct_sequencing(retain = 'fv', unique_two_field = False)
         gamcc_hla = gamcc_hla[['SampleID', 'Locus', 'Two field1', 'Two field2']].reset_index(drop = True)
@@ -229,3 +229,122 @@ rule phase_1KG_alleles:
         df = return_dict['phase_df'][['Sample', 'allele1', 'allele2']]
         df.columns = ['Sample ID', f'HLA-{gene} 1', f'HLA-{gene} 2']
         df.to_csv(output.phase_df, sep = '\t', index = False, header = True)
+
+to_merge = ['malariaGen_v3_b38_alone', 'oneKG']
+
+rule prepare_merge_1KGmGenv3_vcf:
+    input:
+        vcf = "data/ref_panel/{to_merge}/{to_merge}.chr{chr}.vcf.gz"
+    output:
+        haps = temp("data/ref_panel/malariaGen_v3_b38/tmp/{to_merge}.chr{chr}.hap"),
+        legend = temp("data/ref_panel/malariaGen_v3_b38/tmp/{to_merge}.chr{chr}.legend")
+    resources: mem = '30G'
+    threads: 4
+    params: outdir = "data/ref_panel/malariaGen_v3_b38/tmp/"
+    shell: """
+        mkdir -p {params.outdir}
+
+        bcftools norm -m+ {input.vcf} | \
+        bcftools view -m2 -M2 -v snps | \
+        bcftools sort | \
+        bcftools convert -h {params.outdir}{wildcards.to_merge}.chr{wildcards.chr}
+
+        gunzip {params.outdir}{wildcards.to_merge}.chr{wildcards.chr}.hap.gz
+        gunzip {params.outdir}{wildcards.to_merge}.chr{wildcards.chr}.legend.gz
+    """
+
+rule prepare_merge_1KGmGenv3_sample:
+    input:
+        mg = "data/ref_panel/malariaGen_v3_b38_alone/malariaGen_v3_b38_alone.chr22.vcf.gz",
+        oneKG = "data/ref_panel/oneKG/oneKG.chr22.vcf.gz"
+    output:
+        tmp_sample = temp("data/ref_panel/malariaGen_v3_b38/tmp/tmp.sample"),
+        sample = temp("data/ref_panel/malariaGen_v3_b38/tmp/merged.samples")
+    resources: mem = '30G'
+    threads: 1
+    params: outdir = "data/ref_panel/malariaGen_v3_b38/tmp/"
+    shell: """
+        mkdir -p {params.outdir}
+
+        echo "sample population group sex" >> {output.sample}
+
+        bcftools query -l {input.oneKG} >> {output.tmp_sample}
+        bcftools query -l {input.mg} >> {output.tmp_sample}
+
+        for i in $(cat {output.tmp_sample}); do
+            echo $i $i $i 2 >> {output.sample}
+        done
+    """
+
+rule merge_1KGmGenv3_per_chunk:
+    input:
+        haps = expand("data/ref_panel/malariaGen_v3_b38/tmp/{to_merge}.chr{chr}.hap", to_merge = to_merge, allow_missing = True),
+        legends = expand("data/ref_panel/malariaGen_v3_b38/tmp/{to_merge}.chr{chr}.legend", to_merge = to_merge, allow_missing = True),
+        gen_map = f"data/imputation_accessories/maps/{RECOMB_POP}-chr{{chr}}-final.b38.txt",
+        sample = rules.prepare_merge_1KGmGenv3_sample.output.sample
+    output:
+        haps = temp("data/ref_panel/malariaGen_v3_b38/regions/chr{chr}.{regionStart}.{regionEnd}.hap"),
+        legend = temp("data/ref_panel/malariaGen_v3_b38/regions/chr{chr}.{regionStart}.{regionEnd}.legend"),
+        vcf = "data/ref_panel/malariaGen_v3_b38/regions/chr{chr}.{regionStart}.{regionEnd}.vcf.gz",
+    resources: mem = '70G'
+    threads: 4
+    params: 
+        impute2 = tools['impute2'],
+        outdir = "data/ref_panel/malariaGen_v3_b38/regions/",
+        output_prefix = "data/ref_panel/malariaGen_v3_b38/regions/chr{chr}.{regionStart}.{regionEnd}",
+        mGen_haps = "data/ref_panel/malariaGen_v3_b38/tmp/malariaGen_v3_b38_alone.chr{chr}.hap",
+        mGen_legend = "data/ref_panel/malariaGen_v3_b38/tmp/malariaGen_v3_b38_alone.chr{chr}.legend",
+        oneKG_haps = "data/ref_panel/malariaGen_v3_b38/tmp/oneKG.chr{chr}.hap",
+        oneKG_legend = "data/ref_panel/malariaGen_v3_b38/tmp/oneKG.chr{chr}.legend",
+    shell: """
+        mkdir -p {params.outdir}
+
+       {params.impute2} \
+        -merge_ref_panels_output_ref {params.output_prefix}.tmp \
+        -m {input.gen_map} \
+        -h {params.oneKG_haps} \
+           {params.mGen_haps} \
+        -l {params.oneKG_legend} \
+           {params.mGen_legend} \
+        -int {wildcards.regionStart} {wildcards.regionEnd} \
+        -k_hap 2018 1510 \
+        -Ne 20000
+
+        awk -F ' ' 'NR==1 {{print; next}} {{$1 = "chr{wildcards.chr}:"$2"_"$3"_"$4; print $0}}' \
+        {params.output_prefix}.tmp.legend > {output.legend}
+        mv {params.output_prefix}.tmp.hap {output.haps}
+
+        bgzip -f {output.legend}
+        bgzip -f {output.haps}
+        touch {output.legend}
+        touch {output.haps}
+
+        cp {input.sample} {params.output_prefix}.samples
+
+        bcftools convert -H {params.output_prefix} | bcftools sort -Oz -o {output.vcf}
+        tabix -f {output.vcf}
+    """
+
+region_file = "data/imputation_accessories/5Mb_chunks.json"
+mGen_vcf_prefix = "data/ref_panel/malariaGen_v3_b38/regions/chr"
+mGen_chunk_RData, mGen_chunk_vcf_lst, mGen_chunk_vcf_dict = get_vcf_concat_lst(region_file, '', mGen_vcf_prefix)
+
+def get_input_vcfs_as_list(wildcards):
+    return(mGen_chunk_vcf_dict[str(wildcards.chr)])
+
+def get_input_vcfs_as_string(wildcards):
+    return(" ".join(map(str, mGen_chunk_vcf_dict[str(wildcards.chr)])))
+
+rule merge_1KGmGenv3_chunks:
+    input:
+        vcfs = get_input_vcfs_as_list
+    output:
+        vcf = "data/ref_panel/malariaGen_v3_b38/malariaGen_v3_b38.chr{chr}.vcf.gz",
+    resources: mem = '30G'
+    threads: 1
+    params: 
+        input_string = get_input_vcfs_as_string,
+    shell: """
+        bcftools concat --ligate-force -Oz -o {output.vcf} {params.input_string}
+        tabix {output.vcf}
+    """
