@@ -10,7 +10,9 @@ cluster:
     --output=logs/{rule}/{rule}-%j.out
 default-resources:
   - partition=short
-  - mem_mb=1000
+  - account=band.prj
+  - mem_mb=15*threads
+  - disk_mb=15*threads
 restart-times: 1
 max-jobs-per-second: 0.01
 max-status-checks-per-second: 1
