@@ -11,8 +11,8 @@ cluster:
 default-resources:
   - partition=short
   - account=band.prj
-  - mem_mb=15*threads
-  - disk_mb=15*threads
+  - mem_mb=5000*threads
+  - disk_mb=5000*threads
 restart-times: 1
 max-jobs-per-second: 0.01
 max-status-checks-per-second: 1
