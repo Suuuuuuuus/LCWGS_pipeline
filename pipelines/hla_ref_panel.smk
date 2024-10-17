@@ -127,7 +127,7 @@ rule hla_imputation:
 
 rule phase_GAMCC_alleles:
     input:
-        phased_vcf_file = "/well/band/users/rbx225/recyclable_files/ref_panels/oneKG/oneKG.chr6.vcf.gz"
+        phased_vcf_file = "results/imputation/vcfs/malariaGen_v1_b38/quilt.chr6.vcf.gz"
     output:
         html = "results/hla_tests/phasing/html/GAMCC-{gene}.html",
         phase_df = "results/hla_tests/phasing/phased_dfs/GAMCC-{gene}.tsv"
@@ -185,8 +185,8 @@ rule phase_GAMCC_alleles:
 
 rule phase_1KG_alleles:
     input:
-        samples_file = "/well/band/users/rbx225/GAMCC/results/hla/imputation/ref_panel/auxiliary_files/oneKG.samples",
-        hlatypes_file = "/well/band/users/rbx225/GAMCC/results/hla/imputation/ref_panel/auxiliary_files/20181129_HLA_types_full_1000_Genomes_Project_panel.txt",
+        samples_file = "results/hla/imputation/ref_panel/auxiliary_files/oneKG.samples",
+        hlatypes_file = "results/hla/imputation/ref_panel/auxiliary_files/20181129_HLA_types_full_1000_Genomes_Project_panel.txt",
         phased_vcf_file = "/well/band/users/rbx225/recyclable_files/ref_panels/oneKG/oneKG.chr6.vcf.gz"
     output:
         html = "results/hla_tests/phasing/html/1KG-{gene}.html",
@@ -232,7 +232,6 @@ rule phase_1KG_alleles:
         df.to_csv(output.phase_df, sep = '\t', index = False, header = True)
 
 
-'''
 to_merge = ['gamcc', 'oneKG']
 
 rule pre_prepare_merge_GAMCC_vcf:
@@ -381,4 +380,55 @@ rule merge_1KG_GAMCC_chunks:
         bcftools concat --ligate-force -Oz -o {output.vcf} {params.input_string}
         tabix {output.vcf}
     """
-'''
+
+hla_ref_panel_start = config["hla_b38_start_extra"]
+hla_ref_panel_end = config["hla_b38_end_extra"]
+
+rule merge_1KG_GAMCC_hla_only:
+    input:
+        haps = expand("results/hla_ref_panel/oneKG_mGenv1/tmp/{to_merge}.chr6.hap", to_merge = to_merge),
+        legends = expand("results/hla_ref_panel/oneKG_mGenv1/tmp/{to_merge}.chr6.legend", to_merge = to_merge),
+        gen_map = f"data/imputation_accessories/maps/{RECOMB_POP}-chr{{chr}}-final.b38.txt",
+        sample = rules.prepare_merge_1KG_GAMCC_sample.output.sample
+    output:
+        haps = temp(f"results/hla_ref_panel/oneKG_mGenv1/merged/regions/chr6.{hla_ref_panel_start}.{hla_ref_panel_end}.hap"),
+        legend = temp(f"results/hla_ref_panel/oneKG_mGenv1/merged/regions/chr6.{hla_ref_panel_start}.{hla_ref_panel_end}.legend"),
+        vcf = "results/hla_ref_panel/oneKG_mGenv1/merged/hla/chr6.hla.vcf.gz",
+    resources: mem = '60G'
+    threads: 4
+    params: 
+        impute2 = tools['impute2'],
+        outdir = "results/hla_ref_panel/oneKG_mGenv1/merged/regions/",
+        output_prefix = f"results/hla_ref_panel/oneKG_mGenv1/merged/regions/chr6.{hla_ref_panel_start}.{hla_ref_panel_end}",
+        mGen_haps = "results/hla_ref_panel/oneKG_mGenv1/tmp/gamcc.chr6.hap",
+        mGen_legend = "results/hla_ref_panel/oneKG_mGenv1/tmp/gamcc.chr6.legend",
+        oneKG_haps = "results/hla_ref_panel/oneKG_mGenv1/tmp/oneKG.chr6.hap",
+        oneKG_legend = "results/hla_ref_panel/oneKG_mGenv1/tmp/oneKG.chr6.legend",
+    shell: """
+        mkdir -p {params.outdir}
+
+       {params.impute2} \
+        -merge_ref_panels_output_ref {params.output_prefix}.tmp \
+        -m {input.gen_map} \
+        -h {params.oneKG_haps} \
+           {params.mGen_haps} \
+        -l {params.oneKG_legend} \
+           {params.mGen_legend} \
+        -int {hla_ref_panel_start} {hla_ref_panel_end} \
+        -k_hap 2018 420 \
+        -Ne 20000
+
+        awk -F ' ' 'NR==1 {{print; next}} {{$1 = "chr6:"$2"_"$3"_"$4; print $0}}' \
+        {params.output_prefix}.tmp.legend > {output.legend}
+        mv {params.output_prefix}.tmp.hap {output.haps}
+
+        bgzip -f {output.legend}
+        bgzip -f {output.haps}
+        touch {output.legend}
+        touch {output.haps}
+
+        cp {input.sample} {params.output_prefix}.samples
+
+        bcftools convert -H {params.output_prefix} | bcftools sort -Oz -o {output.vcf}
+        tabix -f {output.vcf}
+    """

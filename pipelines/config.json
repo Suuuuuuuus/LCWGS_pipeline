@@ -63,6 +63,11 @@
     "hla_info_filter": 0.7,
     "maf_filter": 0.01,
 
+    "hla_b38_start": 25587319,
+    "hla_b38_end": 33629686,
+    "hla_b38_start_extra": 25000000,
+    "hla_b38_end_extra": 34000000,
+
     "imputation_dir": [
         "/well/band/users/rbx225/GAMCC/results/imputation_comparison/vanilla/lc_oneKG--chip--typed/", 
         "/well/band/users/rbx225/GAMCC/results/imputation_comparison/vanilla/lc_oneKG--chip--typed_high_info/", 
