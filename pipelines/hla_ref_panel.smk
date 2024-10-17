@@ -232,6 +232,10 @@ rule phase_1KG_alleles:
         df.to_csv(output.phase_df, sep = '\t', index = False, header = True)
 
 
+
+
+'''
+
 to_merge = ['gamcc', 'oneKG']
 
 rule pre_prepare_merge_GAMCC_vcf:
@@ -307,7 +311,6 @@ rule prepare_merge_1KG_GAMCC_sample:
         done
     """
 
-# Maybe instead of per_chunk use only the HLA region?
 rule merge_1KG_GAMCC_per_chunk:
     input:
         haps = expand("results/hla_ref_panel/oneKG_mGenv1/tmp/{to_merge}.chr{chr}.hap", to_merge = to_merge, allow_missing = True),
@@ -432,3 +435,5 @@ rule merge_1KG_GAMCC_hla_only:
         bcftools convert -H {params.output_prefix} | bcftools sort -Oz -o {output.vcf}
         tabix -f {output.vcf}
     """
+
+'''
