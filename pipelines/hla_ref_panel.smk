@@ -129,8 +129,8 @@ rule phase_GAMCC_alleles:
     input:
         phased_vcf_file = "results/imputation/vcfs/malariaGen_v1_b38/quilt.chr6.vcf.gz"
     output:
-        html = "results/hla_tests/phasing/html/GAMCC-{gene}.html",
-        phase_df = "results/hla_tests/phasing/phased_dfs/GAMCC-{gene}.tsv"
+        html = "results/phasing/html/GAMCC-{gene}.html",
+        phase_df = "results/phasing/phased_dfs/GAMCC-{gene}.tsv"
     resources:
         mem = '30G'
     threads: 4
@@ -188,8 +188,8 @@ rule phase_1KG_alleles:
         hlatypes_file = "results/hla/imputation/ref_panel/auxiliary_files/20181129_HLA_types_full_1000_Genomes_Project_panel.txt",
         phased_vcf_file = "/well/band/users/rbx225/recyclable_files/ref_panels/oneKG/oneKG.chr6.vcf.gz"
     output:
-        html = "results/hla_tests/phasing/html/1KG-{gene}.html",
-        phase_df = "results/hla_tests/phasing/phased_dfs/1KG-{gene}.tsv"
+        html = "results/phasing/html/1KG-{gene}.html",
+        phase_df = "results/phasing/phased_dfs/1KG-{gene}.tsv"
     resources:
         mem = '30G'
     threads: 4
