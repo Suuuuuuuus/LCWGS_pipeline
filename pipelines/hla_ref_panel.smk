@@ -20,6 +20,7 @@ samples_fv = read_tsv_as_lst("data/sample_tsvs/fv_idt_names.tsv")
 chromosome = [i for i in range(1,23)]
 QUILT_HOME = config["QUILT_HOME"]
 NGEN = config["NGEN"]
+RECOMB_POP = config["NGEN"]
 studies = ['1KG', 'GAMCC']
 
 '''
@@ -230,17 +231,28 @@ rule phase_1KG_alleles:
         df.columns = ['Sample ID', f'HLA-{gene} 1', f'HLA-{gene} 2']
         df.to_csv(output.phase_df, sep = '\t', index = False, header = True)
 
-to_merge = ['malariaGen_v3_b38_alone', 'oneKG']
 
-rule prepare_merge_1KGmGenv3_vcf:
+'''
+
+to_merge = ['malariaGen_v1_b38_topmed', 'oneKG']
+
+def get_vcf_from_to_merge(wildcards):
+    if wildcards.to_merge == 'oneKG':
+        return "data/ref_panel/oneKG/oneKG.chr" + wildcards.chr + ".vcf.gz"
+    elif wildcards.to_merge == 'malariaGen_v1_b38_topmed':
+        return "results/two-stage-imputation/vanilla/malariaGen_v1_b38_topmed/vcf/chr" + wildcards.chr + ".dose.vcf.gz"
+    else:
+        return ""
+
+rule prepare_merge_1KG_GAMCC_vcf:
     input:
-        vcf = "data/ref_panel/{to_merge}/{to_merge}.chr{chr}.vcf.gz"
+        vcf = get_vcf_from_to_merge
     output:
-        haps = temp("data/ref_panel/malariaGen_v3_b38/tmp/{to_merge}.chr{chr}.hap"),
-        legend = temp("data/ref_panel/malariaGen_v3_b38/tmp/{to_merge}.chr{chr}.legend")
+        haps = temp("results/hla_ref_panel/oneKG_mGenv1/tmp/{to_merge}.chr{chr}.hap"),
+        legend = temp("results/hla_ref_panel/oneKG_mGenv1/tmp/{to_merge}.chr{chr}.legend")
     resources: mem = '30G'
     threads: 4
-    params: outdir = "data/ref_panel/malariaGen_v3_b38/tmp/"
+    params: outdir = "results/hla_ref_panel/oneKG_mGenv1/tmp/"
     shell: """
         mkdir -p {params.outdir}
 
@@ -253,16 +265,16 @@ rule prepare_merge_1KGmGenv3_vcf:
         gunzip {params.outdir}{wildcards.to_merge}.chr{wildcards.chr}.legend.gz
     """
 
-rule prepare_merge_1KGmGenv3_sample:
+rule prepare_merge_1KG_GAMCC_sample:
     input:
-        mg = "data/ref_panel/malariaGen_v3_b38_alone/malariaGen_v3_b38_alone.chr22.vcf.gz",
+        mg = "results/two-stage-imputation/vanilla/malariaGen_v1_b38_topmed/vcf/chr22.dose.vcf.gz",
         oneKG = "data/ref_panel/oneKG/oneKG.chr22.vcf.gz"
     output:
-        tmp_sample = temp("data/ref_panel/malariaGen_v3_b38/tmp/tmp.sample"),
-        sample = temp("data/ref_panel/malariaGen_v3_b38/tmp/merged.samples")
+        tmp_sample = temp("results/hla_ref_panel/oneKG_mGenv1/tmp/tmp.sample"),
+        sample = temp("results/hla_ref_panel/oneKG_mGenv1/tmp/merged.samples")
     resources: mem = '30G'
     threads: 1
-    params: outdir = "data/ref_panel/malariaGen_v3_b38/tmp/"
+    params: outdir = "results/hla_ref_panel/oneKG_mGenv1/tmp/"
     shell: """
         mkdir -p {params.outdir}
 
@@ -278,8 +290,8 @@ rule prepare_merge_1KGmGenv3_sample:
 
 rule merge_1KGmGenv3_per_chunk:
     input:
-        haps = expand("data/ref_panel/malariaGen_v3_b38/tmp/{to_merge}.chr{chr}.hap", to_merge = to_merge, allow_missing = True),
-        legends = expand("data/ref_panel/malariaGen_v3_b38/tmp/{to_merge}.chr{chr}.legend", to_merge = to_merge, allow_missing = True),
+        haps = expand("results/hla_ref_panel/oneKG_mGenv1/tmp/{to_merge}.chr{chr}.hap", to_merge = to_merge, allow_missing = True),
+        legends = expand("results/hla_ref_panel/oneKG_mGenv1/tmp/{to_merge}.chr{chr}.legend", to_merge = to_merge, allow_missing = True),
         gen_map = f"data/imputation_accessories/maps/{RECOMB_POP}-chr{{chr}}-final.b38.txt",
         sample = rules.prepare_merge_1KGmGenv3_sample.output.sample
     output:
@@ -292,10 +304,10 @@ rule merge_1KGmGenv3_per_chunk:
         impute2 = tools['impute2'],
         outdir = "data/ref_panel/malariaGen_v3_b38/regions/",
         output_prefix = "data/ref_panel/malariaGen_v3_b38/regions/chr{chr}.{regionStart}.{regionEnd}",
-        mGen_haps = "data/ref_panel/malariaGen_v3_b38/tmp/malariaGen_v3_b38_alone.chr{chr}.hap",
-        mGen_legend = "data/ref_panel/malariaGen_v3_b38/tmp/malariaGen_v3_b38_alone.chr{chr}.legend",
-        oneKG_haps = "data/ref_panel/malariaGen_v3_b38/tmp/oneKG.chr{chr}.hap",
-        oneKG_legend = "data/ref_panel/malariaGen_v3_b38/tmp/oneKG.chr{chr}.legend",
+        mGen_haps = "results/hla_ref_panel/oneKG_mGenv1/tmp/malariaGen_v3_b38_alone.chr{chr}.hap",
+        mGen_legend = "results/hla_ref_panel/oneKG_mGenv1/tmp/malariaGen_v3_b38_alone.chr{chr}.legend",
+        oneKG_haps = "results/hla_ref_panel/oneKG_mGenv1/tmp/oneKG.chr{chr}.hap",
+        oneKG_legend = "results/hla_ref_panel/oneKG_mGenv1/tmp/oneKG.chr{chr}.legend",
     shell: """
         mkdir -p {params.outdir}
 
@@ -348,3 +360,5 @@ rule merge_1KGmGenv3_chunks:
         bcftools concat --ligate-force -Oz -o {output.vcf} {params.input_string}
         tabix {output.vcf}
     """
+
+'''
