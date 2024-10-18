@@ -172,12 +172,12 @@ rule phase_GAMCC_alleles:
                             sample_linker = sample_linker)
         hlatypes = return_dict['hlatypes']
 
-        individual = 'GAM951638'
-        ix = hlatypes.index[hlatypes['Sample ID'] == individual][0]
-        display_indices = np.arange(10)
+        # individual = 'GAM951638'
+        # ix = hlatypes.index[hlatypes['Sample ID'] == individual][0]
+        # display_indices = np.arange(10)
 
-        res = visualise_phase(wildcards.gene, ix, hlatypes, return_dict, both_het = True)
-        compare_phase(display_indices, res, save_html = True, save_name = output.html)
+        # res = visualise_phase(wildcards.gene, ix, hlatypes, return_dict, both_het = True)
+        # compare_phase(display_indices, res, save_html = True, save_name = output.html)
         df = return_dict['phase_df'][['Sample', 'allele1', 'allele2']]
         df.columns = ['Sample ID', f'HLA-{wildcards.gene} 1', f'HLA-{wildcards.gene} 2']
         df.to_csv(output.phase_df, sep = '\t', index = False, header = True)
@@ -220,13 +220,12 @@ rule phase_1KG_alleles:
                                     sample_linker = None)
         hlatypes = return_dict['hlatypes']
 
-        individual = 'NA12878'
-        ix = hlatypes.index[hlatypes['Sample ID'] == individual][0]
-        display_indices = np.arange(10)
+        # individual = 'NA12878'
+        # ix = hlatypes.index[hlatypes['Sample ID'] == individual][0]
+        # display_indices = np.arange(10)
 
-        res = visualise_phase(wildcards.gene, ix, hlatypes, return_dict, both_het = True)
-        print(res['het_variants'].shape)
-        compare_phase(display_indices, res, save_html = True, save_name = output.html)
+        # res = visualise_phase(wildcards.gene, ix, hlatypes, return_dict, both_het = True)
+        # compare_phase(display_indices, res, save_html = True, save_name = output.html)
         df = return_dict['phase_df'][['Sample', 'allele1', 'allele2']]
         df.columns = ['Sample ID', f'HLA-{wildcards.gene} 1', f'HLA-{wildcards.gene} 2']
         df.to_csv(output.phase_df, sep = '\t', index = False, header = True)
