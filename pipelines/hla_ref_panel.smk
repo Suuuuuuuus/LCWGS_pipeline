@@ -389,7 +389,7 @@ rule merge_1KG_GAMCC_hla_only:
     input:
         haps = expand("results/hla_ref_panel/oneKG_mGenv1/tmp/{to_merge}.chr6.hap", to_merge = to_merge),
         legends = expand("results/hla_ref_panel/oneKG_mGenv1/tmp/{to_merge}.chr6.legend", to_merge = to_merge),
-        gen_map = f"data/imputation_accessories/maps/{RECOMB_POP}-chr{{chr}}-final.b38.txt",
+        gen_map = f"data/imputation_accessories/maps/{RECOMB_POP}-chr6-final.b38.txt",
         sample = rules.prepare_merge_1KG_GAMCC_sample.output.sample
     output:
         haps = temp(f"results/hla_ref_panel/oneKG_mGenv1/merged/regions/chr6.{hla_ref_panel_start}.{hla_ref_panel_end}.hap"),
