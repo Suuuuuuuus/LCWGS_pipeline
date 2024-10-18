@@ -56,7 +56,7 @@ rule hla_ref_panel_all:
         # html = expand("results/phasing/html/{study}-{gene}.html", gene = HLA_GENES, study = studies),
         phase_df = expand("results/phasing/phased_dfs/{study}-{gene}.tsv", gene = HLA_GENES, study = studies)
 
-        # fv_vcf = expand("results/hla_ref_panel/oneKG_mGenv1/fv_gamcc_vcf/gamcc.chr{chr}.vcf.gz", chr = chromosome),
-        # mGen_chunk_vcfs = [mGen_chunk_vcf_lst],
-        # oneKG_gamcc = expand("results/hla_ref_panel/oneKG_mGenv1/merged/oneKG_GAMCC.chr{chr}.vcf.gz", chr = chromosome),
-        # vcf = "results/hla_ref_panel/oneKG_mGenv1/merged/hla/chr6.hla.vcf.gz"
+        fv_vcf = expand("results/hla_ref_panel/oneKG_mGenv1/fv_gamcc_vcf/gamcc.chr{chr}.vcf.gz", chr = chromosome),
+        mGen_chunk_vcfs = [mGen_chunk_vcf_lst],
+        oneKG_gamcc = expand("results/hla_ref_panel/oneKG_mGenv1/merged/oneKG_GAMCC.chr{chr}.vcf.gz", chr = chromosome),
+        vcf = "results/hla_ref_panel/oneKG_mGenv1/merged/hla/chr6.hla.vcf.gz"

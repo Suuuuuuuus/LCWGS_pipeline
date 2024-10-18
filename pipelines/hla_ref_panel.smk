@@ -233,7 +233,6 @@ rule phase_1KG_alleles:
 
 
 
-'''
 
 to_merge = ['gamcc', 'oneKG']
 
@@ -434,5 +433,3 @@ rule merge_1KG_GAMCC_hla_only:
         bcftools convert -H {params.output_prefix} | bcftools sort -Oz -o {output.vcf}
         tabix -f {output.vcf}
     """
-
-'''
