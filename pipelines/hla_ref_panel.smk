@@ -255,6 +255,7 @@ rule pre_prepare_merge_GAMCC_vcf:
         bcftools reheader -s {params.gm_to_gam} -o {output.tmp_vcf}
 
         bgzip {output.tmp_vcf}
+        touch {output.tmp_vcf}
     """
 
 def get_vcf_from_to_merge(wildcards):
@@ -319,8 +320,8 @@ rule merge_1KG_GAMCC_per_chunk:
         haps = temp("results/hla_ref_panel/oneKG_mGenv1/merged/regions/chr{chr}.{regionStart}.{regionEnd}.hap"),
         legend = temp("results/hla_ref_panel/oneKG_mGenv1/merged/regions/chr{chr}.{regionStart}.{regionEnd}.legend"),
         vcf = "results/hla_ref_panel/oneKG_mGenv1/merged/regions/chr{chr}.{regionStart}.{regionEnd}.vcf.gz",
-    resources: mem = '70G'
-    threads: 4
+    resources: mem = '100G'
+    threads: 8
     params: 
         impute2 = tools['impute2'],
         outdir = "results/hla_ref_panel/oneKG_mGenv1/merged/regions/",
