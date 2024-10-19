@@ -1,3 +1,4 @@
+*impute2*
 *.out
 .snakemake/
 .DS_Store
