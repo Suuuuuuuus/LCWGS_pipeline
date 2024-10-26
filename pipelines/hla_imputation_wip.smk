@@ -1,0 +1,348 @@
+configfile: "pipelines/config.json"
+include: "auxiliary.smk"
+include: "software.smk"
+
+import os
+import json
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import sys
+sys.path.append("/well/band/users/rbx225/software/lcwgsus/")
+import lcwgsus
+
+samples_lc = read_tsv_as_lst(config['samples_lc'])
+chromosome = [i for i in range(1,23)]
+QUILT_HOME = config["QUILT_HOME"]
+
+bam_batches = config['bam_batch']
+bam_numbers = [str(i) for i in range(1, int(bam_batches) + 1)]
+
+rule prepare_hla_bamlist:
+    input:
+        bams = expand("data/bams/{id}.bam", id = samples_lc)
+    output:
+        bamlist = expand("results/hla/imputation/bamlists/bamlist{num}.txt", num = bam_numbers),
+        bam_all = temp("results/hla/imputation/bamlists/bamlist.txt")
+    localrule: True
+    params:
+        batch = bam_batches
+    shell: """
+        mkdir -p results/hla/imputation/
+        ls data/bams/*.bam > {output.bam_all}
+
+        total_lines=$(wc -l < {output.bam_all})
+        lines_per_file=$(( (total_lines + 2) / 3 ))
+        split -l $lines_per_file {output.bam_all} results/hla/imputation/prefix_
+
+        i=1
+        for file in results/hla/imputation/prefix_*
+        do
+            mv "$file" "results/hla/imputation/bamlists/bamlist${{i}}.txt"
+            i=$((i + 1))
+        done
+    """
+
+hla_ref_panel_indir = "results/hla/imputation/ref_panel/auxiliary_files/"
+hla_genes = ['A', 'B', 'C', 'DRB1', 'DQB1']
+
+###### Testing db ######
+
+rule prepare_hla_reference_panel_db:
+    input:
+        hla_types_panel = f"{hla_ref_panel_indir}20181129_HLA_types_full_1000_Genomes_Project_panel.txt",
+        ipd_igmt = f"{hla_ref_panel_indir}IPD-IMGT-HLA_v3570.zip",
+        fasta = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta",
+        genetic_map = f"{hla_ref_panel_indir}YRI/YRI-chr6-final.b38.txt.gz",
+        hap = f"{hla_ref_panel_indir}oneKG.hap.gz",
+        legend = f"{hla_ref_panel_indir}oneKG.legend.gz",
+        sample = f"{hla_ref_panel_indir}oneKG.samples"
+    output:
+        ref_panel = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_db/HLA{gene}fullallelesfilledin.RData", gene = hla_genes)
+    resources:
+        mem = '30G'
+    threads: 4
+    params:
+        quilt_hla_prep = tools['quilt_hla_prep'],
+        refseq = "/well/band/users/rbx225/software/QUILT/hla_ancillary_files/refseq.hg38.chr6.26000000.34000000.txt.gz",
+        region_exclude_file = "/well/band/users/rbx225/software/QUILT/hla_ancillary_files/hlagenes.txt",
+        hla_ref_panel_outdir = "results/hla/imputation/ref_panel/QUILT_prepared_reference_db/"
+    shell: """
+        {params.quilt_hla_prep} \
+        --outputdir={params.hla_ref_panel_outdir} \
+        --nGen=100 \
+        --hla_types_panel={input.hla_types_panel} \
+        --ipd_igmt_alignments_zip_file={input.ipd_igmt} \
+        --ref_fasta={input.fasta} \
+        --refseq_table_file={params.refseq} \
+        --full_regionStart=25587319 \
+        --full_regionEnd=33629686 \
+        --buffer=500000 \
+        --region_exclude_file={params.region_exclude_file} \
+        --genetic_map_file={input.genetic_map} \
+        --reference_haplotype_file={input.hap} \
+        --reference_legend_file={input.legend} \
+        --reference_sample_file={input.sample} \
+        --hla_regions_to_prepare="c('A','B','C','DQB1','DRB1')" \
+        --nCores=6
+    """
+
+rule hla_imputation_db:
+    input:
+        bamlist = "results/hla/imputation/bamlists/bamlist{num}.txt",
+        ref_dir = "results/hla/imputation/ref_panel/QUILT_prepared_reference_db/"
+    output:
+        imputed = "results/hla/imputation/QUILT_HLA_result_db/genes{num}/{hla_gene}/quilt.hla.output.combined.all.txt"
+    resources:
+        mem = '50G'
+    threads: 6
+    params:
+        quilt_hla = tools['quilt_hla'],
+        fa_dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict"
+    shell: """
+        mkdir -p results/hla/imputation/QUILT_HLA_result_db/genes{wildcards.num}/{wildcards.hla_gene}/
+
+        {params.quilt_hla} \
+        --outputdir="results/hla/imputation/QUILT_HLA_result_db/genes{wildcards.num}/{wildcards.hla_gene}/" \
+        --bamlist={input.bamlist} \
+        --region={wildcards.hla_gene} \
+        --prepared_hla_reference_dir={input.ref_dir} \
+        --quilt_hla_haplotype_panelfile={input.ref_dir}/quilt.hrc.hla.{wildcards.hla_gene}.haplotypes.RData \
+        --dict_file={params.fa_dict}
+    """
+
+###### Testing reference panel ######
+
+rule prepare_hla_vcf_merged_ref:
+    input:
+        vcf = "results/hla_ref_panel/oneKG_mGenv1/merged/oneKG_GAMCC.chr6.vcf.gz",
+        tbi = "results/hla_ref_panel/oneKG_mGenv1/merged/oneKG_GAMCC.chr6.vcf.gz.tbi"
+    output:
+        tmp_vcf = temp("results/hla_ref_panel/oneKG_mGenv1/hla_prepare_ref/tmp.chr6.vcf.gz"),
+        hap = "results/hla_ref_panel/oneKG_mGenv1/hla_prepare_ref/oneKG_GAMCC.chr6.hap.gz",
+        legend = "results/hla_ref_panel/oneKG_mGenv1/hla_prepare_ref/oneKG_GAMCC.chr6.legend.gz",
+        sample = "results/hla_ref_panel/oneKG_mGenv1/hla_prepare_ref/oneKG_GAMCC.chr6.samples"
+    wildcard_constraints:
+        chr='\d{1,2}'
+    threads: 4
+    resources: mem = '30G'
+    params: outdir = "results/hla_ref_panel/oneKG_mGenv1/hla_prepare_ref/"
+    shell: """
+        mkdir -p {params.outdir}
+
+        bcftools norm -m+ {input.vcf} | \
+        bcftools view -m2 -M2 -v snps | \
+        bcftools sort -Oz -o {output.tmp_vcf}
+        tabix {output.tmp_vcf}
+
+        bcftools convert -h \
+        results/hla_ref_panel/oneKG_mGenv1/hla_prepare_ref/oneKG_GAMCC.chr6 {output.tmp_vcf}
+    """
+
+rule prepare_hla_reference_panel_merged_ref:
+    input:
+        hla_types_panel = f"results/hla_ref_panel/oneKG_mGenv1/oneKG_mGenv1_HLA_calls.tsv",
+        ipd_igmt = f"{hla_ref_panel_indir}IPD-IMGT-HLA_v3390.zip",
+        fasta = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta",
+        genetic_map = f"{hla_ref_panel_indir}YRI/YRI-chr6-final.b38.txt.gz",
+        hap = "results/hla_ref_panel/oneKG_mGenv1/hla_prepare_ref/oneKG_GAMCC.chr6.hap.gz",
+        legend = "results/hla_ref_panel/oneKG_mGenv1/hla_prepare_ref/oneKG_GAMCC.chr6.legend.gz",
+        sample = "results/hla_ref_panel/oneKG_mGenv1/hla_prepare_ref/oneKG_GAMCC.chr6.samples"
+    output:
+        ref_panel = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_merged_ref/no_{id}/HLA{gene}fullallelesfilledin.RData", gene = hla_genes, allow_missing = True),
+        exclude_sample_file = temp("results/hla/imputation/ref_panel/QUILT_prepared_reference_merged_ref/no_{id}/{exclude_sample}.tsv")
+    resources:
+        mem = '30G'
+    threads: 4
+    params:
+        quilt_hla_prep = tools['quilt_hla_prep'],
+        refseq = "/well/band/users/rbx225/software/QUILT/hla_ancillary_files/refseq.hg38.chr6.26000000.34000000.txt.gz",
+        region_exclude_file = "/well/band/users/rbx225/software/QUILT/hla_ancillary_files/hlagenes.txt",
+        hla_ref_panel_outdir = "results/hla/imputation/ref_panel/QUILT_prepared_reference_merged_ref/"
+    shell: """
+        echo {params.exclude_sample} >> {output.exclude_sample_file}
+
+        {params.quilt_hla_prep} \
+        --outputdir={params.hla_ref_panel_outdir} \
+        --nGen=100 \
+        --hla_types_panel={input.hla_types_panel} \
+        --ipd_igmt_alignments_zip_file={input.ipd_igmt} \
+        --ref_fasta={input.fasta} \
+        --refseq_table_file={params.refseq} \
+        --full_regionStart=25587319 \
+        --full_regionEnd=33629686 \
+        --buffer=500000 \
+        --region_exclude_file={params.region_exclude_file} \
+        --genetic_map_file={input.genetic_map} \
+        --reference_haplotype_file={input.hap} \
+        --reference_legend_file={input.legend} \
+        --reference_sample_file={input.sample} \
+        --reference_exclude_samplelist_file={output.exclude_sample_file} \
+        --hla_regions_to_prepare="c('A','B','C','DQB1','DRB1')" \
+        --nCores=6
+    """
+
+rule hla_imputation_merged_ref:
+    input:
+        bam = "data/bams/{id}.bam",
+        ref_dir = "results/hla/imputation/ref_panel/QUILT_prepared_reference_merged_ref/no_{id}/"
+    output:
+        bamfile = temp("results/hla/imputation/QUILT_HLA_result_merged_ref/{id}/{id}.tsv")
+        imputed = "results/hla/imputation/QUILT_HLA_result_merged_ref/{id}/{hla_gene}/quilt.hla.output.combined.all.txt"
+    resources:
+        mem = '50G'
+    threads: 6
+    params:
+        quilt_hla = tools['quilt_hla'],
+        fa_dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict"
+    shell: """
+        mkdir -p results/hla/imputation/QUILT_HLA_result_merged_ref/{wildcards.id}/{wildcards.hla_gene}/
+
+        echo {input.bam} > {output.bamfile}
+
+        {params.quilt_hla} \
+        --outputdir="results/hla/imputation/QUILT_HLA_result_merged_ref/{wildcards.hla_gene}/" \
+        --bamlist={output.bamfile} \
+        --region={wildcards.hla_gene} \
+        --prepared_hla_reference_dir={input.ref_dir} \
+        --quilt_hla_haplotype_panelfile={input.ref_dir}/quilt.hrc.hla.{wildcards.hla_gene}.haplotypes.RData \
+        --dict_file={params.fa_dict}
+    """
+
+###### Testing imputation ######
+
+rule prepare_hla_reference_panel_method:
+    input:
+        hla_types_panel = f"{hla_ref_panel_indir}20181129_HLA_types_full_1000_Genomes_Project_panel.txt",
+        ipd_igmt = f"{hla_ref_panel_indir}IPD-IMGT-HLA_v3390.zip",
+        fasta = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta",
+        genetic_map = f"{hla_ref_panel_indir}YRI/YRI-chr6-final.b38.txt.gz",
+        hap = f"{hla_ref_panel_indir}oneKG.hap.gz",
+        legend = f"{hla_ref_panel_indir}oneKG.legend.gz",
+        sample = f"{hla_ref_panel_indir}oneKG.samples"
+    output:
+        ref_panel = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_method/HLA{gene}fullallelesfilledin.RData", gene = hla_genes)
+    resources:
+        mem = '30G'
+    threads: 4
+    params:
+        quilt_hla_prep = tools['quilt_hla_prep'],
+        refseq = "/well/band/users/rbx225/software/QUILT/hla_ancillary_files/refseq.hg38.chr6.26000000.34000000.txt.gz",
+        region_exclude_file = "/well/band/users/rbx225/software/QUILT/hla_ancillary_files/hlagenes.txt",
+        hla_ref_panel_outdir = "results/hla/imputation/ref_panel/QUILT_prepared_reference_method/"
+    shell: """
+        {params.quilt_hla_prep} \
+        --outputdir={params.hla_ref_panel_outdir} \
+        --nGen=100 \
+        --hla_types_panel={input.hla_types_panel} \
+        --ipd_igmt_alignments_zip_file={input.ipd_igmt} \
+        --ref_fasta={input.fasta} \
+        --refseq_table_file={params.refseq} \
+        --full_regionStart=25587319 \
+        --full_regionEnd=33629686 \
+        --buffer=500000 \
+        --region_exclude_file={params.region_exclude_file} \
+        --genetic_map_file={input.genetic_map} \
+        --reference_haplotype_file={input.hap} \
+        --reference_legend_file={input.legend} \
+        --reference_sample_file={input.sample} \
+        --hla_regions_to_prepare="c('A','B','C','DQB1','DRB1')" \
+        --nCores=6
+    """
+
+rule hla_imputation_method:
+    input:
+        bamlist = "results/hla/imputation/bamlists/bamlist{num}.txt",
+        ref_dir = "results/hla/imputation/ref_panel/QUILT_prepared_reference_method/"
+    output:
+        imputed = "results/hla/imputation/QUILT_HLA_result_method/genes{num}/{hla_gene}/quilt.hla.output.combined.all.txt"
+    resources:
+        mem = '50G'
+    threads: 6
+    params:
+        quilt_sus_hla = tools['quilt_sus_hla'],
+        fa_dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict"
+    shell: """
+        mkdir -p results/hla/imputation/QUILT_HLA_result_method/genes{wildcards.num}/{wildcards.hla_gene}/
+
+        {params.quilt_sus_hla} \
+        --outputdir="results/hla/imputation/QUILT_HLA_result_method/genes{wildcards.num}/{wildcards.hla_gene}/" \
+        --bamlist={input.bamlist} \
+        --region={wildcards.hla_gene} \
+        --prepared_hla_reference_dir={input.ref_dir} \
+        --quilt_hla_haplotype_panelfile={input.ref_dir}/quilt.hrc.hla.{wildcards.hla_gene}.haplotypes.RData \
+        --dict_file={params.fa_dict}
+    """
+
+###### Optimal run in theory ######
+
+rule prepare_hla_reference_panel_optimal:
+    input:
+        hla_types_panel = f"results/hla_ref_panel/oneKG_mGenv1/oneKG_mGenv1_HLA_calls.tsv",
+        ipd_igmt = f"{hla_ref_panel_indir}IPD-IMGT-HLA_v3570.zip",
+        fasta = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta",
+        genetic_map = f"{hla_ref_panel_indir}YRI/YRI-chr6-final.b38.txt.gz",
+        hap = "results/hla_ref_panel/oneKG_mGenv1/hla_prepare_ref/oneKG_GAMCC.chr6.hap.gz",
+        legend = "results/hla_ref_panel/oneKG_mGenv1/hla_prepare_ref/oneKG_GAMCC.chr6.legend.gz",
+        sample = "results/hla_ref_panel/oneKG_mGenv1/hla_prepare_ref/oneKG_GAMCC.chr6.samples"
+    output:
+        ref_panel = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_optimal/no_{id}/HLA{gene}fullallelesfilledin.RData", gene = hla_genes, allow_missing = True),
+        exclude_sample_file = temp("results/hla/imputation/ref_panel/QUILT_prepared_reference_optimal/no_{id}/{exclude_sample}.tsv")
+    resources:
+        mem = '30G'
+    threads: 4
+    params:
+        quilt_hla_prep = tools['quilt_hla_prep'],
+        refseq = "/well/band/users/rbx225/software/QUILT/hla_ancillary_files/refseq.hg38.chr6.26000000.34000000.txt.gz",
+        region_exclude_file = "/well/band/users/rbx225/software/QUILT/hla_ancillary_files/hlagenes.txt",
+        hla_ref_panel_outdir = "results/hla/imputation/ref_panel/QUILT_prepared_reference_optimal/"
+    shell: """
+        echo {params.exclude_sample} >> {output.exclude_sample_file}
+
+        {params.quilt_hla_prep} \
+        --outputdir={params.hla_ref_panel_outdir} \
+        --nGen=100 \
+        --hla_types_panel={input.hla_types_panel} \
+        --ipd_igmt_alignments_zip_file={input.ipd_igmt} \
+        --ref_fasta={input.fasta} \
+        --refseq_table_file={params.refseq} \
+        --full_regionStart=25587319 \
+        --full_regionEnd=33629686 \
+        --buffer=500000 \
+        --region_exclude_file={params.region_exclude_file} \
+        --genetic_map_file={input.genetic_map} \
+        --reference_haplotype_file={input.hap} \
+        --reference_legend_file={input.legend} \
+        --reference_sample_file={input.sample} \
+        --reference_exclude_samplelist_file={output.exclude_sample_file} \
+        --hla_regions_to_prepare="c('A','B','C','DQB1','DRB1')" \
+        --nCores=6
+    """
+
+rule hla_imputation_optimal:
+    input:
+        bam = "data/bams/{id}.bam",
+        ref_dir = "results/hla/imputation/ref_panel/QUILT_prepared_reference_optimal/no_{id}/"
+    output:
+        bamfile = temp("results/hla/imputation/QUILT_HLA_result_optimal/{id}/{id}.tsv")
+        imputed = "results/hla/imputation/QUILT_HLA_result_optimal/{id}/{hla_gene}/quilt.hla.output.combined.all.txt"
+    resources:
+        mem = '50G'
+    threads: 6
+    params:
+        quilt_sus_hla = tools['quilt_sus_hla'],
+        fa_dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict"
+    shell: """
+        mkdir -p results/hla/imputation/QUILT_HLA_result_optimal/{wildcards.id}/{wildcards.hla_gene}/
+
+        echo {input.bam} > {output.bamfile}
+
+        {params.quilt_sus_hla} \
+        --outputdir="results/hla/imputation/QUILT_HLA_result_optimal/{wildcards.hla_gene}/" \
+        --bamlist={output.bamfile} \
+        --region={wildcards.hla_gene} \
+        --prepared_hla_reference_dir={input.ref_dir} \
+        --quilt_hla_haplotype_panelfile={input.ref_dir}/quilt.hrc.hla.{wildcards.hla_gene}.haplotypes.RData \
+        --dict_file={params.fa_dict}
+    """

@@ -2,6 +2,7 @@ include: "hla.smk"
 #include: "alignment.smk"
 #include: "post_hla.smk"
 include: "hla_ref_panel.smk"
+include: "hla_imputation_wip.smk"
 
 include: "auxiliary.smk"
 include: "software.smk"
@@ -58,5 +59,22 @@ rule hla_ref_panel_all:
 
         fv_vcf = expand("results/hla_ref_panel/oneKG_mGenv1/fv_gamcc_vcf/gamcc.chr{chr}.vcf.gz", chr = chromosome),
         mGen_chunk_vcfs = [mGen_chunk_vcf_lst],
-        oneKG_gamcc = expand("results/hla_ref_panel/oneKG_mGenv1/merged/oneKG_GAMCC.chr{chr}.vcf.gz", chr = chromosome),
-        vcf = "results/hla_ref_panel/oneKG_mGenv1/merged/hla/chr6.hla.vcf.gz"
+        oneKG_gamcc = expand("results/hla_ref_panel/oneKG_mGenv1/merged/oneKG_GAMCC.chr{chr}.vcf.gz", chr = chromosome)
+
+rule hla_imputation_wip_all:
+    input:
+        bamlist = expand("results/hla/imputation/bamlists/bamlist{num}.txt", num = bam_numbers),
+        merged_ref_hap = "results/hla_ref_panel/oneKG_mGenv1/hla_prepare_ref/oneKG_GAMCC.chr6.hap.gz",
+        merged_ref_legend = "results/hla_ref_panel/oneKG_mGenv1/hla_prepare_ref/oneKG_GAMCC.chr6.legend.gz",
+        merged_ref_sample = "results/hla_ref_panel/oneKG_mGenv1/hla_prepare_ref/oneKG_GAMCC.chr6.samples",
+
+        ref_panel_db = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_db/HLA{gene}fullallelesfilledin.RData", gene = hla_genes),
+        ref_panel_merged_ref = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_merged_ref/no_{id}/HLA{gene}fullallelesfilledin.RData", gene = hla_genes, id = samples_lc),
+        ref_panel_method = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_method/HLA{gene}fullallelesfilledin.RData", gene = hla_genes),
+        ref_panel_optimal = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_optimal/no_{id}/HLA{gene}fullallelesfilledin.RData", gene = hla_genes, id = samples_lc),
+
+        imputed_db = expand("results/hla/imputation/QUILT_HLA_result_db/genes{num}/{hla_gene}/quilt.hla.output.combined.all.txt", hla_gene = hla_genes, num = bam_numbers),
+        imputed_merged_ref = expand("results/hla/imputation/QUILT_HLA_result_merged_ref/{id}/{hla_gene}/quilt.hla.output.combined.all.txt", gene = hla_genes, id = samples_lc),
+        imputed_method = expand("results/hla/imputation/QUILT_HLA_result_method/genes{num}/{hla_gene}/quilt.hla.output.combined.all.txt", hla_gene = hla_genes, num = bam_numbers),
+        imputed_optimal = expand("results/hla/imputation/QUILT_HLA_result_optimal/{id}/{hla_gene}/quilt.hla.output.combined.all.txt", gene = hla_genes, id = samples_lc),
+
