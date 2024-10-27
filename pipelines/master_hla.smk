@@ -1,6 +1,6 @@
 include: "hla.smk"
 #include: "alignment.smk"
-#include: "post_hla.smk"
+include: "post_hla.smk"
 include: "hla_ref_panel.smk"
 include: "hla_imputation_wip.smk"
 
@@ -23,9 +23,10 @@ samples_lc = read_tsv_as_lst(config['samples_lc'])
 chromosome = [i for i in range(1,23)]
 hla_genes = ['A', 'B', 'C', 'DRB1', 'DQB1']
 IPD_IMGT_versions = ['3390', '3570']
-
+samples_fv = read_tsv_as_lst('data/sample_tsvs/fv_idt_names.tsv')
 bam_batches = config['bam_batch']
 bam_numbers = [str(i) for i in range(1, int(bam_batches) + 1)]
+studies = ['1KG', 'GAMCC']
 
 rule hla_imputation_prep_all:
     input:
@@ -63,18 +64,18 @@ rule hla_ref_panel_all:
 
 rule hla_imputation_wip_all:
     input:
-        bamlist = expand("results/hla/imputation/bamlists/bamlist{num}.txt", num = bam_numbers),
+        bamlist = expand("results/hla/imputation/bamlists_fv/bamlist{num}.txt", num = bam_numbers),
         merged_ref_hap = "results/hla_ref_panel/oneKG_mGenv1/hla_prepare_ref/oneKG_GAMCC.chr6.hap.gz",
         merged_ref_legend = "results/hla_ref_panel/oneKG_mGenv1/hla_prepare_ref/oneKG_GAMCC.chr6.legend.gz",
         merged_ref_sample = "results/hla_ref_panel/oneKG_mGenv1/hla_prepare_ref/oneKG_GAMCC.chr6.samples",
 
-        ref_panel_db = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_db/HLA{gene}fullallelesfilledin.RData", gene = hla_genes),
-        ref_panel_merged_ref = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_merged_ref/no_{id}/HLA{gene}fullallelesfilledin.RData", gene = hla_genes, id = samples_lc),
-        ref_panel_method = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_method/HLA{gene}fullallelesfilledin.RData", gene = hla_genes),
-        ref_panel_optimal = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_optimal/no_{id}/HLA{gene}fullallelesfilledin.RData", gene = hla_genes, id = samples_lc),
+        ref_panel_db = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_db/HLA{hla_gene}fullallelesfilledin.RData", hla_gene = hla_genes),
+        #ref_panel_merged_ref = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_merged_ref/no_{id}/HLA{hla_gene}fullallelesfilledin.RData", hla_gene = hla_genes, id = samples_fv),
+        ref_panel_method = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_method/HLA{hla_gene}fullallelesfilledin.RData", hla_gene = hla_genes),
+        #ref_panel_optimal = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_optimal/no_{id}/HLA{hla_gene}fullallelesfilledin.RData", hla_gene = hla_genes, id = samples_fv),
 
         imputed_db = expand("results/hla/imputation/QUILT_HLA_result_db/genes{num}/{hla_gene}/quilt.hla.output.combined.all.txt", hla_gene = hla_genes, num = bam_numbers),
-        imputed_merged_ref = expand("results/hla/imputation/QUILT_HLA_result_merged_ref/{id}/{hla_gene}/quilt.hla.output.combined.all.txt", gene = hla_genes, id = samples_lc),
+        #imputed_merged_ref = expand("results/hla/imputation/QUILT_HLA_result_merged_ref/{id}/{hla_gene}/quilt.hla.output.combined.all.txt", hla_gene = hla_genes, id = samples_fv),
         imputed_method = expand("results/hla/imputation/QUILT_HLA_result_method/genes{num}/{hla_gene}/quilt.hla.output.combined.all.txt", hla_gene = hla_genes, num = bam_numbers),
-        imputed_optimal = expand("results/hla/imputation/QUILT_HLA_result_optimal/{id}/{hla_gene}/quilt.hla.output.combined.all.txt", gene = hla_genes, id = samples_lc),
+        #imputed_optimal = expand("results/hla/imputation/QUILT_HLA_result_optimal/{id}/{hla_gene}/quilt.hla.output.combined.all.txt", hla_gene = hla_genes, id = samples_fv),
 
