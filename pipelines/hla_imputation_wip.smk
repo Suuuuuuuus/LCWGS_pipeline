@@ -59,7 +59,7 @@ rule prepare_hla_reference_panel_db:
     output:
         ref_panel = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_db/HLA{hla_gene}fullallelesfilledin.RData", hla_gene = hla_genes)
     resources:
-        mem = '30G'
+        mem = '60G'
     threads: 4
     params:
         quilt_hla_prep = tools['quilt_hla_prep'],
@@ -93,7 +93,7 @@ rule hla_imputation_db:
     output:
         imputed = "results/hla/imputation/QUILT_HLA_result_db/genes{num}/{hla_gene}/quilt.hla.output.combined.all.txt"
     resources:
-        mem = '50G'
+        mem = '80G'
     threads: 6
     params:
         quilt_hla = tools['quilt_hla'],
@@ -124,8 +124,8 @@ rule prepare_hla_vcf_merged_ref:
         sample = "results/hla_ref_panel/oneKG_mGenv1/hla_prepare_ref/oneKG_GAMCC.chr6.samples"
     wildcard_constraints:
         chr='\d{1,2}'
-    threads: 4
-    resources: mem = '30G'
+    threads: 6
+    resources: mem = '80G'
     params: outdir = "results/hla_ref_panel/oneKG_mGenv1/hla_prepare_ref/"
     shell: """
         mkdir -p {params.outdir}
@@ -229,7 +229,7 @@ rule prepare_hla_reference_panel_method:
     output:
         ref_panel = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_method/HLA{hla_gene}fullallelesfilledin.RData", hla_gene = hla_genes)
     resources:
-        mem = '30G'
+        mem = '60G'
     threads: 4
     params:
         quilt_hla_prep = tools['quilt_hla_prep'],
@@ -263,8 +263,8 @@ rule hla_imputation_method:
     output:
         imputed = "results/hla/imputation/QUILT_HLA_result_method/genes{num}/{hla_gene}/quilt.hla.output.combined.all.txt"
     resources:
-        mem = '50G'
-    threads: 6
+        mem = '80G'
+    threads: 8
     params:
         quilt_sus_hla = tools['quilt_sus_hla'],
         fa_dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict",
@@ -296,8 +296,8 @@ rule prepare_hla_reference_panel_optimal:
         ref_panel = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_optimal/no_{id}/HLA{hla_gene}fullallelesfilledin.RData", hla_gene = hla_genes, allow_missing = True),
         exclude_sample_file = temp("results/hla/imputation/ref_panel/QUILT_prepared_reference_optimal/no_{id}/{id}.tsv")
     resources:
-        mem = '30G'
-    threads: 4
+        mem = '80G'
+    threads: 8
     params:
         quilt_hla_prep = tools['quilt_hla_prep'],
         refseq = "/well/band/users/rbx225/software/QUILT/hla_ancillary_files/refseq.hg38.chr6.26000000.34000000.txt.gz",
@@ -335,8 +335,8 @@ rule hla_imputation_optimal:
         bamfile = temp("results/hla/imputation/QUILT_HLA_result_optimal/{id}/{id}.{hla_gene}.tsv"),
         imputed = "results/hla/imputation/QUILT_HLA_result_optimal/{id}/{hla_gene}/quilt.hla.output.combined.all.txt"
     resources:
-        mem = '50G'
-    threads: 6
+        mem = '80G'
+    threads: 8
     params:
         quilt_sus_hla = tools['quilt_sus_hla'],
         fa_dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict",
