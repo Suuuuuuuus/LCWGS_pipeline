@@ -93,8 +93,8 @@ rule hla_imputation_db:
     output:
         imputed = "results/hla/imputation/QUILT_HLA_result_db/genes{num}/{hla_gene}/quilt.hla.output.combined.all.txt"
     resources:
-        mem = '80G'
-    threads: 6
+        mem = '120G'
+    threads: 8
     params:
         quilt_hla = tools['quilt_hla'],
         fa_dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict",
@@ -263,13 +263,14 @@ rule hla_imputation_method:
     output:
         imputed = "results/hla/imputation/QUILT_HLA_result_method/genes{num}/{hla_gene}/quilt.hla.output.combined.all.txt"
     resources:
-        mem = '80G'
+        mem = '120G'
     threads: 8
     params:
         quilt_sus_hla = tools['quilt_sus_hla'],
         fa_dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict",
         ref_dir = "results/hla/imputation/ref_panel/QUILT_prepared_reference_method/"
     shell: """
+        conda activate sus1
         mkdir -p results/hla/imputation/QUILT_HLA_result_method/genes{wildcards.num}/{wildcards.hla_gene}/
 
         {params.quilt_sus_hla} \
@@ -342,6 +343,7 @@ rule hla_imputation_optimal:
         fa_dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict",
         ref_dir = "results/hla/imputation/ref_panel/QUILT_prepared_reference_optimal/no_{id}/"
     shell: """
+        conda activate sus1
         mkdir -p results/hla/imputation/QUILT_HLA_result_optimal/{wildcards.id}/{wildcards.hla_gene}/
 
         echo {input.bam} > {output.bamfile}

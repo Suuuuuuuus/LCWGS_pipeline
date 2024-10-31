@@ -3,6 +3,7 @@ include: "hla.smk"
 include: "post_hla.smk"
 include: "hla_ref_panel.smk"
 include: "hla_imputation_wip.smk"
+include: "phasing.smk"
 
 include: "auxiliary.smk"
 include: "software.smk"
@@ -47,6 +48,10 @@ rule post_hla_all:
 region_file = "data/imputation_accessories/5Mb_chunks.json"
 mGen_vcf_prefix = "results/hla_ref_panel/oneKG_mGenv1/merged/regions/chr"
 mGen_chunk_RData, mGen_chunk_vcf_lst, mGen_chunk_vcf_dict = get_vcf_concat_lst(region_file, '', mGen_vcf_prefix)
+
+rule phasing_all:
+    input:
+        phased_vcf = "results/phasing/HLA_1KG_BEAGLE/phased.1KG.chr6.vcf.gz"
 
 rule hla_ref_panel_all:
     input:
