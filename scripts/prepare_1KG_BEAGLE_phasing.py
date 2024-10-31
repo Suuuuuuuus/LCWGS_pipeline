@@ -49,7 +49,7 @@ for g in HLA_GENES:
         else:
             twofield = distinct_alleles[g][n_alleles]
             common_cols = ['chr6', position, f'HLA_{g}*{twofield}', 'T', 'A', '.', 'PASS', '.', 'GT']
-            allele1 = (hlatypes[f'HLA-{g} 1'] == twofield.astype(int).values
+            allele1 = (hlatypes[f'HLA-{g} 1'] == twofield).astype(int).values
             allele2 = (hlatypes[f'HLA-{g} 2'] == twofield).astype(int).values
 
             gts = [f'{a1}/{a2}' for a1, a2 in zip(allele1, allele2)]
