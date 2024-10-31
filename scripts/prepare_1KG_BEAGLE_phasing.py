@@ -43,6 +43,7 @@ for g in HLA_GENES:
     start = r['Start'].values[0]
     all_snp_pos = vcf['POS'].tolist()
     position = start
+    n_alleles = 0
 
     while n_alleles < len(distinct_alleles[g]):
         if position in all_snp_pos:
