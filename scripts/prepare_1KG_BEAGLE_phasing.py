@@ -14,6 +14,7 @@ import lcwgsus
 from lcwgsus.variables import *
 
 hla_gene_information = pd.read_csv('/well/band/users/rbx225/software/QUILT_sus/hla_ancillary_files/hla_gene_information.tsv', sep = ' ')
+samples = lcwgsus.read_tsv_as_lst('/well/band/users/rbx225/recyclable_files/ref_panels/oneKG_30x/samples_to_phase.tsv')
 hlatypes = pd.read_csv('/well/band/users/rbx225/GAMCC/results/hla/imputation/ref_panel/auxiliary_files/HLA_types_2568_for_phasing.txt', sep = '\t')
 phased_vcf = "/well/band/users/rbx225/recyclable_files/ref_panels/oneKG_30x/oneKG.chr6.vcf.gz"
 
