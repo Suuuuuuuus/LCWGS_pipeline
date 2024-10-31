@@ -269,8 +269,8 @@ rule hla_imputation_method:
         quilt_sus_hla = tools['quilt_sus_hla'],
         fa_dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict",
         ref_dir = "results/hla/imputation/ref_panel/QUILT_prepared_reference_method/"
+    conda: "sus1"
     shell: """
-        conda activate sus1
         mkdir -p results/hla/imputation/QUILT_HLA_result_method/genes{wildcards.num}/{wildcards.hla_gene}/
 
         {params.quilt_sus_hla} \
@@ -342,8 +342,8 @@ rule hla_imputation_optimal:
         quilt_sus_hla = tools['quilt_sus_hla'],
         fa_dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict",
         ref_dir = "results/hla/imputation/ref_panel/QUILT_prepared_reference_optimal/no_{id}/"
+    conda: "sus1"
     shell: """
-        conda activate sus1
         mkdir -p results/hla/imputation/QUILT_HLA_result_optimal/{wildcards.id}/{wildcards.hla_gene}/
 
         echo {input.bam} > {output.bamfile}
