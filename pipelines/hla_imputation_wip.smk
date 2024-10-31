@@ -95,6 +95,7 @@ rule hla_imputation_db:
     resources:
         mem = '120G'
     threads: 8
+    conda: "sus"
     params:
         quilt_hla = tools['quilt_hla'],
         fa_dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict",
@@ -201,6 +202,7 @@ rule hla_imputation_merged_ref:
         quilt_hla = tools['quilt_hla'],
         fa_dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict",
         ref_dir = "results/hla/imputation/ref_panel/QUILT_prepared_reference_merged_ref/no_{id}/"
+    conda: "sus"
     shell: """
         mkdir -p results/hla/imputation/QUILT_HLA_result_merged_ref/{wildcards.id}/{wildcards.hla_gene}/
 
