@@ -243,7 +243,7 @@ rule prepare_hla_db:
     run:
         hla_gene_information = pd.read_csv(params.hla_gene_information_file, sep = ' ')
 
-        db = process_db_genfile(wildcards.hla_gene, input.ipd_gen_file_dir, hla_gene_information)
+        db = process_db_genfile(wildcards.hla_gene, params.ipd_gen_file_dir, hla_gene_information)
         db.to_csv(output.output_db, sep = ' ', index = False, header = True)
 
 rule prepare_hla_reference_panel_method:
