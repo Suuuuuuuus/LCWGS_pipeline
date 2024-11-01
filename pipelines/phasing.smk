@@ -15,6 +15,18 @@ import lcwgsus
 samples_lc = read_tsv_as_lst(config['samples_lc'])
 chromosome = [i for i in range(1,23)]
 
+rule prepare_1kg_HLA_vcf:
+    input:
+        hlatypes = "/well/band/users/rbx225/GAMCC/results/hla/imputation/ref_panel/auxiliary_files/HLA_types_2568_for_phasing.txt",
+        phased_vcf = "/well/band/users/rbx225/recyclable_files/ref_panels/oneKG_30x/oneKG.chr6.vcf.gz"
+    output:
+        vcf = "results/phasing/HLA_1KG_BEAGLE/unphased.1KG.chr6.vcf.gz"
+    resources: mem = '80G'
+    threads: 8
+    shell: """
+        python scripts/prepare_1KG_BEAGLE_phasing.py
+    """
+
 rule beagle_phase_1kg:
     input:
         vcf = "results/phasing/HLA_1KG_BEAGLE/unphased.1KG.chr6.vcf.gz"
