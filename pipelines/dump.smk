@@ -1596,6 +1596,9 @@ rule fastuniq: # Currently deprecated as we are basically gonna remove in markdu
         gzip -c {output.fastq2_unzip} > {output.fastq2}
     """
 
+hla_ref_panel_start = config["hla_b38_start_extra"]
+hla_ref_panel_end = config["hla_b38_end_extra"]
+
 rule merge_1KG_GAMCC_hla_only:
     input:
         haps = expand("results/hla_ref_panel/oneKG_mGenv1/tmp/{to_merge}.chr6.hap", to_merge = to_merge),
@@ -1606,8 +1609,8 @@ rule merge_1KG_GAMCC_hla_only:
         haps = temp(f"results/hla_ref_panel/oneKG_mGenv1/merged/regions/chr6.{hla_ref_panel_start}.{hla_ref_panel_end}.hap"),
         legend = temp(f"results/hla_ref_panel/oneKG_mGenv1/merged/regions/chr6.{hla_ref_panel_start}.{hla_ref_panel_end}.legend"),
         vcf = "results/hla_ref_panel/oneKG_mGenv1/merged/hla/chr6.hla.vcf.gz",
-    resources: mem = '120G'
-    threads: 16
+    resources: mem = '60G'
+    threads: 4
     params: 
         impute2 = tools['impute2'],
         outdir = "results/hla_ref_panel/oneKG_mGenv1/merged/regions/",

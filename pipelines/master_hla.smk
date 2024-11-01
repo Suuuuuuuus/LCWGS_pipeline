@@ -36,6 +36,7 @@ samples_fv = read_tsv_as_lst('data/sample_tsvs/fv_idt_names.tsv')
 bam_batches = config['bam_batch']
 bam_numbers = [str(i) for i in range(1, int(bam_batches) + 1)]
 studies = ['1KG', 'GAMCC']
+filters = ['strict', 'loose']
 
 rule hla_imputation_prep_all:
     input:
@@ -60,7 +61,11 @@ mGen_chunk_RData, mGen_chunk_vcf_lst, mGen_chunk_vcf_dict = get_vcf_concat_lst(r
 rule phasing_all:
     input:
         vcf = "results/phasing/HLA_1KG_BEAGLE/unphased.1KG.chr6.vcf.gz",
-        phased_vcf = "results/phasing/HLA_1KG_BEAGLE/phased.1KG.chr6.vcf.gz"
+        phased_vcf = "results/phasing/HLA_1KG_BEAGLE/phased.1KG.chr6.vcf.gz",
+        # oneKG_html = expand("results/phasing/html/oneKG-{filter}-{gene}.html", gene = HLA_GENES, filter = filters), 
+        oneKG_phase_df = expand("results/phasing/phased_dfs/oneKG-{filter}-{gene}.tsv", gene = HLA_GENES, filter = filters),
+        # GAMCC_html = expand("results/phasing/html/GAMCC-{gene}.html", gene = HLA_GENES), 
+        GAMCC_phase_df = expand("results/phasing/phased_dfs/GAMCC-{gene}.tsv", gene = HLA_GENES)
 
 rule hla_ref_panel_all:
     input:
@@ -69,9 +74,6 @@ rule hla_ref_panel_all:
         # samples = "results/hla_tests/gamcc_vcf/fv.chr6.samples",
         # RData = "results/hla_tests/quilt.hrc.hla.all.haplotypes.RData",
         # bam_all = "results/hla_tests/bamlist.txt",
-        # html = expand("results/phasing/html/{study}-{gene}.html", gene = HLA_GENES, study = studies),
-        phase_df = expand("results/phasing/phased_dfs/{study}-{gene}.tsv", gene = HLA_GENES, study = studies),
-
         fv_vcf = expand("results/hla_ref_panel/oneKG_mGenv1/fv_gamcc_vcf/gamcc.chr{chr}.vcf.gz", chr = chromosome),
         mGen_chunk_vcfs = [mGen_chunk_vcf_lst],
         oneKG_gamcc = expand("results/hla_ref_panel/oneKG_mGenv1/merged/oneKG_GAMCC.chr{chr}.vcf.gz", chr = chromosome)
