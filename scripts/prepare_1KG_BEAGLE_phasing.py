@@ -62,11 +62,11 @@ for g in HLA_GENES:
 vcf = vcf.sort_values(by = 'POS', ascending = True).reset_index(drop = True)
 
 metadata = lcwgsus.read_metadata(phased_vcf, filetype = 'gzip', comment = '#', new_cols = None)
-metadata[-1] = '\t'.join(vcf.columns)
+metadata[-1] = '\t'.join(vcf.columns) + '\n'
 lcwgsus.save_vcf(vcf,
              metadata,
              rezip = True,
-             prefix='chr',
+             prefix='',
              outdir='/well/band/users/rbx225/GAMCC/results/phasing/HLA_1KG_BEAGLE/',
              save_name='unphased.1KG.chr6.vcf.gz'
              )

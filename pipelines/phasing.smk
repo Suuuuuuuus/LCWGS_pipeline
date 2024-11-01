@@ -22,8 +22,9 @@ rule beagle_phase_1kg:
         phased_vcf = "results/phasing/HLA_1KG_BEAGLE/phased.1KG.chr6.vcf.gz"
     params:
         beagle = tools['beagle'],
+        recomb_map = "/well/band/users/rbx225/recyclable_files/plink.chr6.GRCh38.map"
         output_prefix = "results/phasing/HLA_1KG_BEAGLE/phased.1KG.chr6"
     shell: """
         mkdir -p results/phasing/HLA_1KG_BEAGLE/
-        {params.beagle} gt={input.vcf} out={params.output_prefix}
+        {params.beagle} gt={input.vcf} map={params.recomb_map} out={params.output_prefix}
     """
