@@ -2,15 +2,25 @@ configfile: "pipelines/config.json"
 include: "auxiliary.smk"
 include: "software.smk"
 
+import io
 import os
+import re
 import json
 import pandas as pd
 import numpy as np
+import math
+import subprocess
 import matplotlib.pyplot as plt
 import seaborn as sns
 import sys
 sys.path.append("/well/band/users/rbx225/software/lcwgsus/")
+sys.path.append('/well/band/users/rbx225/software/QUILT_sus/QUILT/Python/')
 import lcwgsus
+
+from lcwgsus.variables import *
+from hla_phase import *
+from hla_align_functions import *
+from hla_align import *
 
 samples_fv = read_tsv_as_lst('data/sample_tsvs/fv_idt_names.tsv')
 samples_fv_gam = read_tsv_as_lst('data/sample_tsvs/fv_gam_names.tsv')
@@ -217,7 +227,24 @@ rule hla_imputation_merged_ref:
         --dict_file={params.fa_dict}
     """
 
-###### Testing imputation ######
+###### Testing imputation method ######
+
+rule prepare_hla_db:
+    input:
+        ipd_gen_files = '/well/band/users/rbx225/recyclable_files/hla_reference_files/alignments/{hla_gene}_gen.txt'
+    output:
+        output_db = '/well/band/users/rbx225/recyclable_files/hla_reference_files/v3570_aligners/{hla_gene}.ssv'
+    resources:
+        mem = '80G'
+    threads: 4
+    params:
+        ipd_gen_file_dir = '/well/band/users/rbx225/recyclable_files/hla_reference_files/alignments/',
+        hla_gene_information_file = '/well/band/users/rbx225/software/QUILT_sus/hla_ancillary_files/hla_gene_information.tsv'
+    run:
+        hla_gene_information = pd.read_csv(params.hla_gene_information_file, sep = ' ')
+
+        db = process_db_genfile(wildcards.g, input.ipd_gen_file_dir, hla_gene_information)
+        db.to_csv(output.output_db, sep = ' ', index = False, header = True)
 
 rule prepare_hla_reference_panel_method:
     input:
@@ -261,7 +288,8 @@ rule prepare_hla_reference_panel_method:
 rule hla_imputation_method:
     input:
         bamlist = "results/hla/imputation/bamlists_fv/bamlist{num}.txt",
-        ref_panel = "results/hla/imputation/ref_panel/QUILT_prepared_reference_method/HLA{hla_gene}fullallelesfilledin.RData"
+        ref_panel = "results/hla/imputation/ref_panel/QUILT_prepared_reference_method/HLA{hla_gene}fullallelesfilledin.RData",
+        prepared_db = '/well/band/users/rbx225/recyclable_files/hla_reference_files/v3570_aligners/{hla_gene}.ssv'
     output:
         imputed = "results/hla/imputation/QUILT_HLA_result_method/genes{num}/{hla_gene}/quilt.hla.output.combined.all.txt"
     resources:
@@ -333,7 +361,8 @@ rule prepare_hla_reference_panel_optimal:
 rule hla_imputation_optimal:
     input:
         bam = "data/bams/{id}.bam",
-        ref_panel = "results/hla/imputation/ref_panel/QUILT_prepared_reference_optimal/no_{id}/HLA{hla_gene}fullallelesfilledin.RData"
+        ref_panel = "results/hla/imputation/ref_panel/QUILT_prepared_reference_optimal/no_{id}/HLA{hla_gene}fullallelesfilledin.RData",
+        prepared_db = '/well/band/users/rbx225/recyclable_files/hla_reference_files/v3570_aligners/{hla_gene}.ssv'
     output:
         bamfile = temp("results/hla/imputation/QUILT_HLA_result_optimal/{id}/{id}.{hla_gene}.tsv"),
         imputed = "results/hla/imputation/QUILT_HLA_result_optimal/{id}/{hla_gene}/quilt.hla.output.combined.all.txt"

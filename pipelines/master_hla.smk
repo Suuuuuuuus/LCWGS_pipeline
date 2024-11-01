@@ -9,16 +9,25 @@ include: "auxiliary.smk"
 include: "software.smk"
 configfile: "pipelines/config.json"
 
+import io
+import os
+import re
 import json
 import pandas as pd
 import numpy as np
+import math
+import subprocess
+import matplotlib.pyplot as plt
+import seaborn as sns
 import sys
-import os
 sys.path.append("/well/band/users/rbx225/software/lcwgsus/")
-sys.path.append("/well/band/users/rbx225/software/QUILT_sus/QUILT/Python/")
+sys.path.append('/well/band/users/rbx225/software/QUILT_sus/QUILT/Python/')
 import lcwgsus
+
 from lcwgsus.variables import *
 from hla_phase import *
+from hla_align_functions import *
+from hla_align import *
 
 samples_lc = read_tsv_as_lst(config['samples_lc'])
 chromosome = [i for i in range(1,23)]
@@ -69,6 +78,7 @@ rule hla_ref_panel_all:
 
 rule hla_imputation_wip_all:
     input:
+        output_db = '/well/band/users/rbx225/recyclable_files/hla_reference_files/v3570_aligners/{hla_gene}.ssv',
         bamlist = expand("results/hla/imputation/bamlists_fv/bamlist{num}.txt", num = bam_numbers),
         merged_ref_hap = "results/hla_ref_panel/oneKG_mGenv1/hla_prepare_ref/oneKG_GAMCC.chr6.hap.gz",
         merged_ref_legend = "results/hla_ref_panel/oneKG_mGenv1/hla_prepare_ref/oneKG_GAMCC.chr6.legend.gz",
