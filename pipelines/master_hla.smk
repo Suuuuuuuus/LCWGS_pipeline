@@ -4,7 +4,6 @@ include: "hla.smk"
 include: "hla_ref_panel.smk"
 include: "hla_imputation_wip.smk"
 include: "phasing.smk"
-
 include: "auxiliary.smk"
 include: "software.smk"
 configfile: "pipelines/config.json"
