@@ -21,8 +21,7 @@ rule phase_GAMCC_alleles:
     output:
         # html = "results/phasing/html/GAMCC-{gene}.html",
         phase_df = "results/phasing/phased_dfs/GAMCC-{gene}.tsv"
-    resources:3
-        mem = '30G'
+    resources: mem = '30G'
     threads: 4
     params:
         ipd_gen_file_dir = '/well/band/users/rbx225/recyclable_files/hla_reference_files/alignments/',
@@ -76,7 +75,7 @@ rule phase_1KG_alleles:
     input:
         samples_file = "results/hla/imputation/ref_panel/auxiliary_files/oneKG.samples",
         hlatypes_file = "results/hla/imputation/ref_panel/auxiliary_files/20181129_HLA_types_full_1000_Genomes_Project_panel.txt",
-        phased_vcf_file = "/well/band/users/rbx225/recyclable_files/ref_panels/oneKG/oneKG.chr6.vcf.gz"
+        phased_vcf_file = "/well/band/users/rbx225/recyclable_files/ref_panels/oneKG_30x/oneKG.chr6.vcf.gz"
     output:
         # html = "results/phasing/html/oneKG-{filter}-{gene}.html",
         phase_df = "results/phasing/phased_dfs/oneKG-{filter}-{gene}.tsv"
