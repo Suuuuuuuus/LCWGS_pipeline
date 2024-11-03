@@ -293,8 +293,9 @@ rule hla_imputation_method:
     output:
         imputed = "results/hla/imputation/QUILT_HLA_result_method/genes{num}/{hla_gene}/quilt.hla.output.combined.all.txt"
     resources:
-        mem = '120G'
-    threads: 8
+        mem = '120G',
+        partition = 'long'
+    threads: 16
     params:
         quilt_sus_hla = tools['quilt_sus_hla'],
         fa_dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict",
@@ -367,7 +368,8 @@ rule hla_imputation_optimal:
         bamfile = temp("results/hla/imputation/QUILT_HLA_result_optimal/{id}/{id}.{hla_gene}.tsv"),
         imputed = "results/hla/imputation/QUILT_HLA_result_optimal/{id}/{hla_gene}/quilt.hla.output.combined.all.txt"
     resources:
-        mem = '80G'
+        mem = '80G',
+        partition = 'long'
     threads: 8
     params:
         quilt_sus_hla = tools['quilt_sus_hla'],
