@@ -10,7 +10,10 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import sys
 sys.path.append("/well/band/users/rbx225/software/lcwgsus/")
+sys.path.append('/well/band/users/rbx225/software/QUILT_sus/QUILT/Python/')
 import lcwgsus
+from lcwgsus.variables import *
+from hla_phase import *
 
 samples_lc = read_tsv_as_lst(config['samples_lc'])
 chromosome = [i for i in range(1,23)]
@@ -147,3 +150,70 @@ rule beagle_phase_1kg:
         mkdir -p results/phasing/HLA_1KG_BEAGLE/
         {params.beagle} gt={input.vcf} map={params.recomb_map} out={params.output_prefix}
     """
+
+rule calculate_phasing_concordance:
+    input:
+        unphased_vcf = "results/phasing/HLA_1KG_BEAGLE/unphased.1KG.chr6.vcf.gz",
+        phased_vcf = "results/phasing/HLA_1KG_BEAGLE/phased.1KG.chr6.vcf.gz",
+        phase_df = expand("results/phasing/phased_dfs/oneKG-{filter}-{gene}.tsv", gene = HLA_GENES, allow_missing = True)
+    output:
+        concordance_df = "results/phasing/1KG-phasing-concordance-{filter}.tsv"
+    params:
+        hla_gene_information_file = '/well/band/users/rbx225/software/QUILT_sus/hla_ancillary_files/hla_gene_information.tsv'
+    resources: mem = '80G'
+    threads: 6
+    run: 
+        hla_gene_information = pd.read_csv(params.hla_gene_information_file, sep = ' ')
+        for i, g in enumerate(HLA_GENES):
+            file = f"results/phasing/phased_dfs/oneKG-{wildcards.filter}-{g}.tsv"
+            tmp = pd.read_csv(file, sep = '\t')
+            if i == 0:
+                our_hla = tmp
+            else:
+                our_hla = pd.merge(our_hla, tmp, on = 'Sample ID')
+
+        vcf = lcwgsus.read_vcf(input.phased_vcf)
+        vcf = vcf[vcf['ID'].str.contains('HLA')]
+        vcf = vcf.drop(columns = ['chr', 'pos', 'ref', 'alt', 'QUAL', 'FILTER', 'INFO', 'FORMAT']).reset_index(drop = True).T
+
+        beagle_hla = our_hla.copy()
+        beagle_hla.iloc[:, 1:] = 'N/A'
+
+        for i,s in enumerate(our_hla['Sample ID']):
+            vcf_row = vcf.loc[s, :]
+            alleles_idx = vcf_row.index[vcf_row.str.contains('1')]
+            if len(alleles_idx) != 0:
+                for j in alleles_idx:
+                    name = vcf.loc['ID',j]
+                    genotype = vcf.loc[s,j]
+                    gene = name.split('*')[0].split('_')[-1]
+                    twofield = name.split('*')[1]
+                    if genotype == '1|0':
+                        beagle_hla.loc[i, f'HLA-{gene} 1'] = twofield
+                    elif genotype == '0|1':
+                        beagle_hla.loc[i, f'HLA-{gene} 2'] = twofield
+                    elif genotype == '1|1':
+                        beagle_hla.loc[i, f'HLA-{gene} 1'] = twofield
+                        beagle_hla.loc[i, f'HLA-{gene} 2'] = twofield
+                    else:
+                        pass
+
+        new = read_vcf(start = 25000000, end = 34000000, phased_vcf = input.phased_vcf, hlatypes = beagle_hla)
+        old = read_vcf(start = 25000000, end = 34000000, phased_vcf = input.unphased_vcf, hlatypes = beagle_hla)
+
+        new = pd.merge(new, old[['snp', 'pos']], how = 'inner')
+        old = old.reset_index(drop = True)
+
+        for i,s in enumerate(beagle_hla['Sample ID'].values):
+            for g in HLA_GENES:
+                start = hla_gene_information[hla_gene_information['Name'] == f'HLA-{g}']['Start'].values[0]
+                tmp = new[new['pos']<start]
+                idx = tmp.index[tmp[s].isin(['0|1', '1|0'])][-1]
+                
+                if new.loc[idx, s][::-1] == old.loc[idx, s]:
+                    tmp = hla1.loc[i, f'HLA-{g} 1']
+                    beagle_hla.loc[i, f'HLA-{g} 1'] = beagle_hla.loc[i, f'HLA-{g} 2']
+                    beagle_hla.loc[i, f'HLA-{g} 2'] = tmp
+
+        result = calculate_phasing_concordance(beagle_hla, our_hla)
+        result.to_csv(output.concordance_df, sep = '\t', header = True, index = False)

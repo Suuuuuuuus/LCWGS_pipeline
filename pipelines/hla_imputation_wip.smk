@@ -293,8 +293,7 @@ rule hla_imputation_method:
     output:
         imputed = "results/hla/imputation/QUILT_HLA_result_method/genes{num}/{hla_gene}/quilt.hla.output.combined.all.txt"
     resources:
-        mem = '120G',
-        partition = 'long'
+        mem = '120G'
     threads: 16
     params:
         quilt_sus_hla = tools['quilt_sus_hla'],
