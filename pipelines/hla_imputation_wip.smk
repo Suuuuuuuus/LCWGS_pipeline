@@ -41,7 +41,9 @@ rule prepare_hla_bamlist_wip:
         batch = bam_batches
     shell: """
         mkdir -p results/hla/imputation/bamlists_fv/
-        ls data/bams/*.bam > {output.bam_all}
+        for s in {samples_fv}; do
+            ls data/bams/$s.bam >> {output.bam_all}
+        done
 
         total_lines=$(wc -l < {output.bam_all})
         lines_per_file=$(( (total_lines + 2) / 3 ))

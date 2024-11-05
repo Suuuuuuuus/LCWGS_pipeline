@@ -160,8 +160,8 @@ rule calculate_phasing_concordance:
         concordance_df = "results/phasing/1KG-phasing-concordance-{filter}.tsv"
     params:
         hla_gene_information_file = '/well/band/users/rbx225/software/QUILT_sus/hla_ancillary_files/hla_gene_information.tsv'
-    resources: mem = '80G'
-    threads: 6
+    resources: mem = '120G'
+    threads: 8
     run: 
         hla_gene_information = pd.read_csv(params.hla_gene_information_file, sep = ' ')
         for i, g in enumerate(HLA_GENES):
@@ -211,7 +211,7 @@ rule calculate_phasing_concordance:
                 idx = tmp.index[tmp[s].isin(['0|1', '1|0'])][-1]
                 
                 if new.loc[idx, s][::-1] == old.loc[idx, s]:
-                    tmp = hla1.loc[i, f'HLA-{g} 1']
+                    tmp = beagle_hla.loc[i, f'HLA-{g} 1']
                     beagle_hla.loc[i, f'HLA-{g} 1'] = beagle_hla.loc[i, f'HLA-{g} 2']
                     beagle_hla.loc[i, f'HLA-{g} 2'] = tmp
 
