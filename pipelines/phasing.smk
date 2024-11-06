@@ -181,10 +181,10 @@ rule calculate_phasing_concordance:
     run: 
         hla_gene_information = pd.read_csv(params.hla_gene_information_file, sep = ' ')
         our_hla = pd.read_csv(input.phase_df, sep = '\t')
-
-        start = hla_gene_information[hla_gene_information['Name'] == f'HLA-{g}']['Start'].values[0]
-        end = hla_gene_information[hla_gene_information['Name'] == f'HLA-{g}']['End'].values[0]
+        
         gene = wildcards.gene
+        start = hla_gene_information[hla_gene_information['Name'] == f'HLA-{gene}']['Start'].values[0]
+        end = hla_gene_information[hla_gene_information['Name'] == f'HLA-{gene}']['End'].values[0]
 
         vcf = lcwgsus.read_vcf(input.extracted_vcf)
         vcf = vcf.drop(columns = ['chr', 'pos', 'ref', 'alt', 'QUAL', 'FILTER', 'INFO', 'FORMAT']).reset_index(drop = True).T
