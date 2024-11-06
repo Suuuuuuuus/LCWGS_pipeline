@@ -37,6 +37,7 @@ bam_batches = config['bam_batch']
 bam_numbers = [str(i) for i in range(1, int(bam_batches) + 1)]
 studies = ['1KG', 'GAMCC']
 filters = ['strict', 'loose']
+vcf_versions = ['30x', 'phase3_b38']
 
 rule hla_imputation_prep_all:
     input:
@@ -60,14 +61,15 @@ mGen_chunk_RData, mGen_chunk_vcf_lst, mGen_chunk_vcf_dict = get_vcf_concat_lst(r
 
 rule phasing_all:
     input:
-        vcf = "results/phasing/HLA_1KG_BEAGLE/unphased.1KG.chr6.vcf.gz",
-        phased_vcf = "results/phasing/HLA_1KG_BEAGLE/phased.1KG.chr6.vcf.gz",
+        #vcf = "results/phasing/HLA_1KG_BEAGLE/unphased.1KG.chr6.vcf.gz",
+        #phased_vcf = "results/phasing/HLA_1KG_BEAGLE/phased.1KG.chr6.vcf.gz",
         # oneKG_html = expand("results/phasing/html/oneKG-{filter}-{gene}.html", gene = HLA_GENES, filter = filters), 
-        oneKG_phase_df = expand("results/phasing/phased_dfs/oneKG-{filter}-{gene}.tsv", gene = HLA_GENES, filter = filters),
+        oneKG_phase_df = expand("results/phasing/phased_dfs/oneKG_{vcf_version}-{filter}-{gene}.tsv", gene = HLA_GENES, filter = filters, vcf_version = vcf_versions),
         # GAMCC_html = expand("results/phasing/html/GAMCC-{gene}.html", gene = HLA_GENES), 
-        GAMCC_phase_df = expand("results/phasing/phased_dfs/GAMCC-{gene}.tsv", gene = HLA_GENES),
+        #GAMCC_phase_df = expand("results/phasing/phased_dfs/GAMCC-{gene}.tsv", gene = HLA_GENES),
 
-        concordance_df = expand("results/phasing/1KG-phasing-concordance-{filter}.tsv", filter = filters)
+        concordance_df = expand("results/phasing/oneKG_{vcf_version}-phasing-concordance-{filter}.tsv", filter = filters, vcf_version = vcf_versions),
+        concordance_df_merged = expand("results/phasing/oneKG_{vcf_version}-phasing-concordance-{filter}-{gene}.tsv", filter = filters, gene = HLA_GENES, vcf_version = vcf_versions)
 
 rule hla_ref_panel_all:
     input:
