@@ -68,8 +68,8 @@ rule phasing_all:
         # GAMCC_html = expand("results/phasing/html/GAMCC-{gene}.html", gene = HLA_GENES), 
         #GAMCC_phase_df = expand("results/phasing/phased_dfs/GAMCC-{gene}.tsv", gene = HLA_GENES),
 
-        concordance_df = expand("results/phasing/oneKG_{vcf_version}-phasing-concordance-{filter}.tsv", filter = filters, vcf_version = vcf_versions),
-        concordance_df_merged = expand("results/phasing/oneKG_{vcf_version}-phasing-concordance-{filter}-{gene}.tsv", filter = filters, gene = HLA_GENES, vcf_version = vcf_versions)
+        concordance_df = expand("results/phasing/oneKG_{vcf_version}-phasing-concordance-{filter}.tsv", filter = filters, vcf_version = vcf_versions[0]),
+        concordance_df_merged = expand("results/phasing/oneKG_{vcf_version}-phasing-concordance-{filter}-{gene}.tsv", filter = filters, gene = HLA_GENES, vcf_version = vcf_versions[0])
 
 rule hla_ref_panel_all:
     input:
