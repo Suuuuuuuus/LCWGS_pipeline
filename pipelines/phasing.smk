@@ -214,9 +214,13 @@ rule calculate_phasing_concordance:
         old = read_vcf(start = max(25000000, start - 10000), end = min(34000000, end + 10000), phased_vcf = input.unphased_vcf, hlatypes = beagle_hla)
         new = pd.merge(new, old[['snp', 'pos']], how = 'inner')
         old = old.reset_index(drop = True)
+        new_archive = new.copy()
+        old_archive = old.copy()
 
         for i,s in enumerate(beagle_hla['Sample ID'].values):
             print(f'phasing sample {i}: {s}')
+            new = new_archive.copy()
+            old = old_archive.copy()
             tmp = new[new['pos']<start]
             idx_lst = tmp.index[tmp[s].isin(['0|1', '1|0'])]
             if len(idx_lst) != 0:
