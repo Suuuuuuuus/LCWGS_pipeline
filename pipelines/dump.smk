@@ -1814,3 +1814,23 @@ rule aggregate_phasing_concordance:
         df = pd.concat([pd.read_csv(f"results/phasing/oneKG_{wildcards.vcf_version}-phasing-concordance-{wildcards.filter}-{gene}.tsv", sep = '\t') for gene in HLA_GENES])
 
         df.to_csv(output.concordance_df, sep = '\t', header = True, index = False)
+
+rule prepare_hla_reference_panel_method2:
+    input:
+        bam = "data/bams/{id}.bam",
+        db_file = "/well/band/users/rbx225/recyclable_files/hla_reference_files/v3570_aligners/{hla_gene}.ssv"
+    output:
+        reads1 = temp("results/hla/imputation/ref_panel/QUILT_prepared_reference_method/alignment_likelihoods/{id}-{hla_gene}/reads1.csv"),
+        reads2 = temp("results/hla/imputation/ref_panel/QUILT_prepared_reference_method/alignment_likelihoods/{id}-{hla_gene}/reads2.csv"),
+        mate_matrix = temp("results/hla/imputation/ref_panel/QUILT_prepared_reference_method/alignment_likelihoods/{id}-{hla_gene}/mate_likelihood_matrix.ssv"),
+        pair_matrix = temp("results/hla/imputation/ref_panel/QUILT_prepared_reference_method/alignment_likelihoods/{id}-{hla_gene}/pair_likelihood_matrix.ssv")
+    resources:
+        mem = '120G'
+    threads: 8
+    params:
+        outdir = "results/hla/imputation/ref_panel/QUILT_prepared_reference_method/alignment_likelihoods/{id}-{hla_gene}",
+        hla_gene_information = "/well/band/users/rbx225/recyclable_files/hla_reference_files/v3570_aligners/{hla_gene}.ssv",
+        script = "/well/band/users/rbx225/software/QUILT_sus/QUILT/Python/hla_align.py"
+    shell: """
+        python {params.script} {wildcards.hla_gene} {input.bam} {params.outdir}
+    """

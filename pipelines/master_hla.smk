@@ -3,6 +3,7 @@
 #include: "post_hla.smk"
 #include: "hla_ref_panel.smk"
 include: "hla_imputation_wip.smk"
+include: "hla_imputation_prep.smk"
 include: "phasing.smk"
 include: "auxiliary.smk"
 include: "software.smk"
@@ -42,11 +43,16 @@ vcf_versions = ['30x', 'phase3_b38']
 
 rule hla_imputation_prep_all:
     input:
-        bamlist = expand("results/hla/imputation/bamlists/bamlist{num}.txt", num = bam_numbers),
-        ref_panel = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_v{IPD_IMGT_version}/HLA{gene}fullallelesfilledin.RData", gene = hla_genes, IPD_IMGT_version = IPD_IMGT_versions)
+        reads1 = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_method/alignment_likelihoods/{id}-{hla_gene}/reads1.csv", hla_gene = HLA_GENES, id = samples_fv),
+        reads2 = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_method/alignment_likelihoods/{id}-{hla_gene}/reads2.csv", hla_gene = HLA_GENES, id = samples_fv),
+        mate_matrix = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_method/alignment_likelihoods/{id}-{hla_gene}/mate_likelihood_matrix.ssv", hla_gene = HLA_GENES, id = samples_fv),
+        pair_matrix = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_method/alignment_likelihoods/{id}-{hla_gene}/pair_likelihood_matrix.ssv", hla_gene = HLA_GENES, id = samples_fv)
+        
 
 rule hla_imputation_all:
     input:
+        bamlist = expand("results/hla/imputation/bamlists/bamlist{num}.txt", num = bam_numbers),
+        ref_panel = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_v{IPD_IMGT_version}/HLA{gene}fullallelesfilledin.RData", gene = hla_genes, IPD_IMGT_version = IPD_IMGT_versions),
         hla_imputed = expand("results/hla/imputation/batches/genes{num}/{hla_gene}/quilt.hla.output.combined.all.txt", hla_gene = hla_genes, num = bam_numbers)
 
 two_stage_hla_vcf_outdir = config["two_stage_hla_vcf_outdir"]

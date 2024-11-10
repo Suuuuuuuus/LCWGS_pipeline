@@ -287,6 +287,7 @@ rule prepare_hla_reference_panel_method:
         --nCores=6
     """
 
+'''
 rule prepare_hla_reference_panel_method2:
     input:
         bam = "data/bams/{id}.bam",
@@ -306,6 +307,7 @@ rule prepare_hla_reference_panel_method2:
     shell: """
         python {params.script} {wildcards.hla_gene} {input.bam} {params.outdir}
     """
+'''
 
 rule hla_imputation_method:
     input:
