@@ -29,10 +29,11 @@ from hla_align_functions import *
 from hla_align import *
 
 samples_lc = read_tsv_as_lst(config['samples_lc'])
+samples_fv = read_tsv_as_lst('data/sample_tsvs/fv_idt_names.tsv')
+samples_oneKG = read_tsv_as_lst("/well/band/users/rbx225/recyclable_files/ref_panels/oneKG_30x/samples_to_phase.tsv")
 chromosome = [i for i in range(1,23)]
 hla_genes = ['A', 'B', 'C', 'DRB1', 'DQB1']
 IPD_IMGT_versions = ['3390', '3570']
-samples_fv = read_tsv_as_lst('data/sample_tsvs/fv_idt_names.tsv')
 bam_batches = config['bam_batch']
 bam_numbers = [str(i) for i in range(1, int(bam_batches) + 1)]
 studies = ['1KG', 'GAMCC']
@@ -68,8 +69,8 @@ rule phasing_all:
         # GAMCC_html = expand("results/phasing/html/GAMCC-{gene}.html", gene = HLA_GENES), 
         #GAMCC_phase_df = expand("results/phasing/phased_dfs/GAMCC-{gene}.tsv", gene = HLA_GENES),
 
-        concordance_df = expand("results/phasing/oneKG_{vcf_version}-phasing-concordance-{filter}.tsv", filter = filters, vcf_version = vcf_versions[0]),
-        concordance_df_merged = expand("results/phasing/oneKG_{vcf_version}-phasing-concordance-{filter}-{gene}.tsv", filter = filters, gene = HLA_GENES, vcf_version = vcf_versions[0])
+        beagle_phased = expand("results/phasing/HLA_1KG_BEAGLE/tmp/beagle_phased_per_sample/{gene}.{sample}.1KG.tsv", gene = HLA_GENES, sample = samples_oneKG),
+        concordance_df = expand("results/phasing/oneKG_{vcf_version}-phasing-concordance-{filter}.tsv", filter = filters, vcf_version = vcf_versions[0])
 
 rule hla_ref_panel_all:
     input:
