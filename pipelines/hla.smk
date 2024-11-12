@@ -110,3 +110,22 @@ rule hla_imputation:
         --quilt_hla_haplotype_panelfile={input.ref_dir}/quilt.hrc.hla.{wildcards.hla_gene}.haplotypes.RData \
         --dict_file={params.fa_dict}
     """
+
+rule hla_la_calling:
+    input:
+        bam = "data/bams/{id}.bam",
+        bai = "data/bams/{id}.bam.bai"
+    output:
+        called = "results/hla/call/{id}/hla/R1_bestguess_G.txt"
+    resources:
+        mem = '60G'
+    threads: 4
+    shell: """
+        mkdir -p results/hla/call/{wildcards.id}/
+
+        HLA-LA.pl \
+        --BAM {input.bam} \
+        --graph PRG_MHC_GRCh38_withIMGT \
+        --workingDir /well/band/users/rbx225/GAMCC/results/hla/call/ \
+        --sampleID {wildcards.id}
+    """

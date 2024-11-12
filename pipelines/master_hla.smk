@@ -1,4 +1,4 @@
-#include: "hla.smk"
+include: "hla.smk"
 #include: "alignment.smk"
 #include: "post_hla.smk"
 #include: "hla_ref_panel.smk"
@@ -40,6 +40,10 @@ bam_numbers = [str(i) for i in range(1, int(bam_batches) + 1)]
 studies = ['1KG', 'GAMCC']
 filters = ['strict', 'loose']
 vcf_versions = ['30x', 'phase3_b38']
+
+rule hla_all:
+    input:
+        called = expand("results/hla/call/{id}/hla/R1_bestguess_G.txt", id = samples_fv)
 
 rule hla_imputation_prep_all:
     input:

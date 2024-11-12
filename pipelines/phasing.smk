@@ -288,7 +288,7 @@ rule calculate_and_aggregate_phasing_concordance:
     run: 
         for i, gene in enumerate(HLA_GENES):
             beagle_hla = pd.concat([pd.read_csv(f"results/phasing/HLA_1KG_BEAGLE/tmp/beagle_phased_per_sample/{gene}.{s}.1KG.tsv", sep = '\t') for s in samples_oneKG])
-
+            beagle_hla = beagle_hla.reset_index(drop = True)
             our_hla = pd.read_csv(f"results/phasing/phased_dfs/oneKG_{wildcards.vcf_version}-{wildcards.filter}-{gene}.tsv", sep = '\t')
             
             tmp = calculate_phasing_concordance(beagle_hla, our_hla, gene)
