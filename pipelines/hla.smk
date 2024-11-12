@@ -122,6 +122,7 @@ rule hla_la_calling:
     threads: 4
     shell: """
         mkdir -p results/hla/call/{wildcards.id}/
+        module load Java/17
 
         HLA-LA.pl \
         --BAM {input.bam} \
