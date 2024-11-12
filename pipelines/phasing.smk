@@ -220,7 +220,17 @@ rule adjust_beagle_phasing:
         s = wildcards.sample
         beagle_hla = beagle_hla[beagle_hla['Sample ID'] == s].reset_index(drop = True)
 
-        if (':' not in beagle_hla.iloc[0, 1]) and (':' not in beagle_hla.iloc[0, 2]):
+        if pd.isna(beagle_hla.iloc[0, 1]) and pd.isna(beagle_hla.iloc[0, 2]):
+            beagle_hla.iloc[0, 1] = 'N/A'
+            beagle_hla.iloc[0, 2] = 'N/A'
+            beagle_hla.to_csv(output.beagle_phased, header = True, index = False, sep = '\t')
+        elif (beagle_hla.iloc[0, 1] == 'N/A') and (beagle_hla.iloc[0, 2] == 'N/A'):
+            beagle_hla.iloc[0, 1] = 'N/A'
+            beagle_hla.iloc[0, 2] = 'N/A'
+            beagle_hla.to_csv(output.beagle_phased, header = True, index = False, sep = '\t')
+        elif beagle_hla.iloc[0, 1] == beagle_hla.iloc[0, 2]:
+            beagle_hla.iloc[0, 1] = 'N/A'
+            beagle_hla.iloc[0, 2] = 'N/A'
             beagle_hla.to_csv(output.beagle_phased, header = True, index = False, sep = '\t')
         else:
             start = hla_gene_information[hla_gene_information['Name'] == f'HLA-{gene}']['Start'].values[0]
@@ -228,7 +238,7 @@ rule adjust_beagle_phasing:
 
             idx = []
             multiplier = 1
-            while (len(idx) == 0) or (multiplier > 5):
+            while (len(idx) == 0) and (multiplier < 5):
                 tmp_new_up = read_vcf(start = max(25000000, start - multiplier*10000), end = max(25000000, start - (multiplier - 1)*10000), phased_vcf = input.phased_vcf, hlatypes = beagle_hla, subset_vcf_samples = s)
                 tmp_old_up = read_vcf(start = max(25000000, start - multiplier*10000), end = max(25000000, start - (multiplier - 1)*10000), phased_vcf = input.unphased_vcf, hlatypes = beagle_hla, subset_vcf_samples = s)
                 tmp_new_up = pd.merge(tmp_new_up, tmp_old_up[['snp', 'pos']], how = 'inner')
@@ -261,6 +271,7 @@ rule adjust_beagle_phasing:
                     beagle_hla.loc[0, f'HLA-{gene} 2'] = tmp
             else:
                 beagle_hla.loc[0, f'HLA-{gene} 1'] = 'N/A'
+                beagle_hla.loc[0, f'HLA-{gene} 2'] = 'N/A'
 
             beagle_hla.to_csv(output.beagle_phased, header = True, index = False, sep = '\t')
 
