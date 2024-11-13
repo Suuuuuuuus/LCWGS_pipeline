@@ -1834,3 +1834,34 @@ rule prepare_hla_reference_panel_method2:
     shell: """
         python {params.script} {wildcards.hla_gene} {input.bam} {params.outdir}
     """
+
+rule hla_imputation_method:
+    input:
+        bamlist = "results/hla/imputation/bamlists_fv/bamlist{num}.txt",
+        ref_panel = "results/hla/imputation/ref_panel/QUILT_prepared_reference_method/HLA{hla_gene}fullallelesfilledin.RData",
+        prepared_db = '/well/band/users/rbx225/recyclable_files/hla_reference_files/v3570_aligners/{hla_gene}.ssv',
+        reads1 = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_method/alignment_likelihoods/{id}-{hla_gene}/reads1.csv", id = samples_fv, allow_missing = True),
+        reads2 = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_method/alignment_likelihoods/{id}-{hla_gene}/reads2.csv", id = samples_fv, allow_missing = True),
+        mate_matrix = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_method/alignment_likelihoods/{id}-{hla_gene}/mate_likelihood_matrix.ssv", id = samples_fv, allow_missing = True),
+        pair_matrix = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_method/alignment_likelihoods/{id}-{hla_gene}/pair_likelihood_matrix.ssv", id = samples_fv, allow_missing = True)
+    output:
+        imputed = "results/hla/imputation/QUILT_HLA_result_method/genes{num}/{hla_gene}/quilt.hla.output.combined.all.txt"
+    resources:
+        mem = '60G'
+    threads: 4
+    params:
+        quilt_sus_hla = tools['quilt_sus_hla'],
+        fa_dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict",
+        ref_dir = "results/hla/imputation/ref_panel/QUILT_prepared_reference_method/"
+    conda: "sus1"
+    shell: """
+        mkdir -p results/hla/imputation/QUILT_HLA_result_method/genes{wildcards.num}/{wildcards.hla_gene}/
+
+        {params.quilt_sus_hla} \
+        --outputdir="results/hla/imputation/QUILT_HLA_result_method/genes{wildcards.num}/{wildcards.hla_gene}/" \
+        --bamlist={input.bamlist} \
+        --region={wildcards.hla_gene} \
+        --prepared_hla_reference_dir={params.ref_dir} \
+        --quilt_hla_haplotype_panelfile={params.ref_dir}/quilt.hrc.hla.{wildcards.hla_gene}.haplotypes.RData \
+        --dict_file={params.fa_dict}
+    """
