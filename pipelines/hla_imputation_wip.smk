@@ -336,8 +336,8 @@ rule hla_imputation_method:
         bamlist = temp("results/hla/imputation/bamlists_fv/{id}.{hla_gene}.txt"),
         imputed = "results/hla/imputation/QUILT_HLA_result_method/{id}/{hla_gene}/quilt.hla.output.combined.all.txt"
     resources:
-        mem = '120G'
-    threads: 16
+        mem = '80G'
+    threads: 6
     params:
         quilt_sus_hla = tools['quilt_sus_hla'],
         fa_dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict",
