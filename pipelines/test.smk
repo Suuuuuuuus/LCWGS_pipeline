@@ -11,50 +11,127 @@ import lcwgsus
 
 rule all:
     input:
-        lifted = "data/hla_from_Ruth/multiEth_sites.b38.vcf.gz",
-        vcf = "data/hla_from_Ruth/chr6.vcf.gz"
+        res1 = "results/hla/imputation/QUILT_HLA_result_method/IDT04811/DRB1/quilt.hla.output.combined.all.txt",
+        res2 = "results/hla/imputation/QUILT_HLA_result_method/IDT04812/DRB1/quilt.hla.output.combined.all.txt",
+        res3 = "results/hla/imputation/QUILT_HLA_result_method/IDT04813/DRB1/quilt.hla.output.combined.all.txt",
+        res4 = "results/hla/imputation/QUILT_HLA_result_method/IDT04814/DRB1/quilt.hla.output.combined.all.txt"
         
-rule liftover:
+rule imp1:
     input:
-        vcf = "data/hla_from_Ruth/clean_GGVP_hla_GRCh37.vcf.gz",
-        reference = "data/references/GRCh38_with_alt.fa",
-        chain = "data/ref_panel/b37ToHg38.over.chain",
-        dictionary = "data/references/GRCh38_with_alt.dict"
+        bam = "data/bams/IDT0481.bam",
+        ref_panel = "results/hla/imputation/ref_panel/QUILT_prepared_reference_method/HLADRB1fullallelesfilledin.RData",
+        prepared_db = '/well/band/users/rbx225/recyclable_files/hla_reference_files/v3390_aligners/DRB1.ssv'
     output:
-        tmp_vcf = temp("data/hla_from_Ruth/multiEth_sites.b38.tmp.vcf.gz"),
-        lifted = "data/hla_from_Ruth/multiEth_sites.b38.vcf.gz",
-        rejected = "data/hla_from_Ruth/multiEth_sites.b38.rejected.vcf.gz"
-    resources: mem = '30G'
-    threads: 4
+        bamlist = temp("results/hla/imputation/bamlists_fv/IDT04811.DRB1.txt"),
+        imputed = "results/hla/imputation/QUILT_HLA_result_method/IDT04811/DRB1/quilt.hla.output.combined.all.txt"
+    resources:
+        mem = '80G'
+    threads: 6
     params:
-        picard = tools["picard"]
+        quilt_sus_hla = tools['quilt_sus_hla'],
+        fa_dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict",
+        ref_dir = "results/hla/imputation/ref_panel/QUILT_prepared_reference_method/"
+    conda: "sus1"
     shell: """
-        {params.picard} LiftoverVcf \
-        -I {input.vcf} \
-        -O {output.tmp_vcf} \
-        -CHAIN {input.chain} \
-        -REJECT {output.rejected} \
-        -WMC true \
-        --MAX_RECORDS_IN_RAM 50000 \
-        -R {input.reference}
+        mkdir -p results/hla/imputation/QUILT_HLA_result_method/IDT04811/DRB1/
+        ls {input.bam} > {output.bamlist}
+        ulimit -n 50000
 
-        tabix -f {output.tmp_vcf}
-
-        bcftools view -r chr6 {output.tmp_vcf} | \
-        bcftools sort -Oz -o {output.lifted}
-        tabix -f {output.lifted}
+        {params.quilt_sus_hla} \
+        --outputdir="results/hla/imputation/QUILT_HLA_result_method/IDT04811/DRB1/" \
+        --bamlist={output.bamlist} \
+        --region=DRB1 \
+        --prepared_hla_reference_dir={params.ref_dir} \
+        --quilt_hla_haplotype_panelfile={params.ref_dir}/quilt.hrc.hla.DRB1.haplotypes.RData \
+        --dict_file={params.fa_dict}
     """
 
-rule test:
+rule imp2:
     input:
-        lifted = "data/hla_from_Ruth/multiEth_sites.b38.vcf.gz",
-        b38_scaffold = "results/hla/reference/multiEth_sites.b38.vcf.gz"
+        bam = "data/bams/IDT0481.bam",
+        ref_panel = "results/hla/imputation/ref_panel/QUILT_prepared_reference_method/HLADRB1fullallelesfilledin.RData",
+        prepared_db = '/well/band/users/rbx225/recyclable_files/hla_reference_files/v3390_aligners/DRB1.ssv'
     output:
-        vcf = "data/hla_from_Ruth/chr6.vcf.gz",
-        scaffold = temp("data/hla_from_Ruth/multiEth_sites.b38.txt")
+        bamlist = temp("results/hla/imputation/bamlists_fv/IDT04812.DRB1.txt"),
+        imputed = "results/hla/imputation/QUILT_HLA_result_method/IDT04812/DRB1/quilt.hla.output.combined.all.txt"
+    resources:
+        mem = '120G'
+    threads: 16
+    params:
+        quilt_sus_hla = tools['quilt_sus_hla'],
+        fa_dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict",
+        ref_dir = "results/hla/imputation/ref_panel/QUILT_prepared_reference_method/"
+    conda: "sus1"
     shell: """
-        bcftools query -f '%CHROM\t%POS\n' {input.b38_scaffold} > {output.scaffold}
+        mkdir -p results/hla/imputation/QUILT_HLA_result_method/IDT04812/DRB1/
+        ls {input.bam} > {output.bamlist}
+        ulimit -n 50000
 
-        bcftools view -R {output.scaffold} -m2 -M2 -v snps \
-        -Oz -o {output.vcf} {input.lifted}
+        {params.quilt_sus_hla} \
+        --outputdir="results/hla/imputation/QUILT_HLA_result_method/IDT04812/DRB1/" \
+        --bamlist={output.bamlist} \
+        --region=DRB1 \
+        --prepared_hla_reference_dir={params.ref_dir} \
+        --quilt_hla_haplotype_panelfile={params.ref_dir}/quilt.hrc.hla.DRB1.haplotypes.RData \
+        --dict_file={params.fa_dict}
+    """
+
+rule imp3:
+    input:
+        bam = "data/bams/IDT0481.bam",
+        ref_panel = "results/hla/imputation/ref_panel/QUILT_prepared_reference_method/HLADRB1fullallelesfilledin.RData",
+        prepared_db = '/well/band/users/rbx225/recyclable_files/hla_reference_files/v3390_aligners/DRB1.ssv'
+    output:
+        bamlist = temp("results/hla/imputation/bamlists_fv/IDT04813.DRB1.txt"),
+        imputed = "results/hla/imputation/QUILT_HLA_result_method/IDT04813/DRB1/quilt.hla.output.combined.all.txt"
+    resources:
+        mem = '80G'
+    threads: 6
+    params:
+        quilt_sus_hla = tools['quilt_sus_hla'],
+        fa_dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict",
+        ref_dir = "results/hla/imputation/ref_panel/QUILT_prepared_reference_method/"
+    conda: "sus2"
+    shell: """
+        mkdir -p results/hla/imputation/QUILT_HLA_result_method/IDT04813/DRB1/
+        ls {input.bam} > {output.bamlist}
+        ulimit -n 50000
+
+        {params.quilt_sus_hla} \
+        --outputdir="results/hla/imputation/QUILT_HLA_result_method/IDT04813/DRB1/" \
+        --bamlist={output.bamlist} \
+        --region=DRB1 \
+        --prepared_hla_reference_dir={params.ref_dir} \
+        --quilt_hla_haplotype_panelfile={params.ref_dir}/quilt.hrc.hla.DRB1.haplotypes.RData \
+        --dict_file={params.fa_dict}
+    """
+
+rule imp4:
+    input:
+        bam = "data/bams/IDT0481.bam",
+        ref_panel = "results/hla/imputation/ref_panel/QUILT_prepared_reference_method/HLADRB1fullallelesfilledin.RData",
+        prepared_db = '/well/band/users/rbx225/recyclable_files/hla_reference_files/v3390_aligners/DRB1.ssv'
+    output:
+        bamlist = temp("results/hla/imputation/bamlists_fv/IDT04814.DRB1.txt"),
+        imputed = "results/hla/imputation/QUILT_HLA_result_method/IDT04814/DRB1/quilt.hla.output.combined.all.txt"
+    resources:
+        mem = '120G'
+    threads: 16
+    params:
+        quilt_sus_hla = tools['quilt_sus_hla'],
+        fa_dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict",
+        ref_dir = "results/hla/imputation/ref_panel/QUILT_prepared_reference_method/"
+    conda: "sus2"
+    shell: """
+        mkdir -p results/hla/imputation/QUILT_HLA_result_method/IDT04814/DRB1/
+        ls {input.bam} > {output.bamlist}
+        ulimit -n 50000
+
+        {params.quilt_sus_hla} \
+        --outputdir="results/hla/imputation/QUILT_HLA_result_method/IDT04814/DRB1/" \
+        --bamlist={output.bamlist} \
+        --region=DRB1 \
+        --prepared_hla_reference_dir={params.ref_dir} \
+        --quilt_hla_haplotype_panelfile={params.ref_dir}/quilt.hrc.hla.DRB1.haplotypes.RData \
+        --dict_file={params.fa_dict}
     """
