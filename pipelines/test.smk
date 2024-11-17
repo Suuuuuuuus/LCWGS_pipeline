@@ -12,7 +12,7 @@ import lcwgsus
 rule all:
     input:
         res1 = "results/hla/imputation/QUILT_HLA_result_method/IDT04811/DRB1/quilt.hla.output.combined.all.txt",
-        res2 = "results/hla/imputation/QUILT_HLA_result_method/IDT04812/DRB1/quilt.hla.output.combined.all.txt",
+        #res2 = "results/hla/imputation/QUILT_HLA_result_method/IDT04812/DRB1/quilt.hla.output.combined.all.txt",
         res3 = "results/hla/imputation/QUILT_HLA_result_method/IDT04813/DRB1/quilt.hla.output.combined.all.txt",
         res4 = "results/hla/imputation/QUILT_HLA_result_method/IDT04814/DRB1/quilt.hla.output.combined.all.txt"
         
@@ -86,7 +86,7 @@ rule imp3:
         imputed = "results/hla/imputation/QUILT_HLA_result_method/IDT04813/DRB1/quilt.hla.output.combined.all.txt"
     resources:
         mem = '80G'
-    threads: 6
+    threads: 4
     params:
         quilt_sus_hla = tools['quilt_sus_hla'],
         fa_dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict",
