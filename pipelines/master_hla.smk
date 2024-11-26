@@ -31,6 +31,7 @@ from hla_align import *
 
 samples_lc = read_tsv_as_lst(config['samples_lc'])
 samples_fv = read_tsv_as_lst('data/sample_tsvs/fv_idt_names.tsv')
+samples_fv_gm = read_tsv_as_lst('data/sample_tsvs/fv_gm_names.tsv')
 samples_oneKG = read_tsv_as_lst("/well/band/users/rbx225/recyclable_files/ref_panels/oneKG_30x/samples_to_phase.tsv")
 chromosome = [i for i in range(1,23)]
 hla_genes = ['A', 'B', 'C', 'DRB1', 'DQB1']
@@ -72,15 +73,14 @@ mGen_chunk_RData, mGen_chunk_vcf_lst, mGen_chunk_vcf_dict = get_vcf_concat_lst(r
 
 rule phasing_all:
     input:
-        #vcf = "results/phasing/HLA_1KG_BEAGLE/unphased.1KG.chr6.vcf.gz",
-        #phased_vcf = "results/phasing/HLA_1KG_BEAGLE/phased.1KG.chr6.vcf.gz",
-        # oneKG_html = expand("results/phasing/html/oneKG-{filter}-{gene}.html", gene = HLA_GENES, filter = filters), 
+        # vcf = expand("results/phasing/HLA_{study}_BEAGLE/unphased.{study}.chr6.vcf.gz", study = studies),
+        phased_vcf = expand("results/phasing/HLA_{study}_BEAGLE/phased.{study}.chr6.vcf.gz", study = studies),
         oneKG_phase_df = expand("results/phasing/phased_dfs/oneKG_{vcf_version}-{filter}-{gene}.tsv", gene = HLA_GENES, filter = filters, vcf_version = vcf_versions),
-        # GAMCC_html = expand("results/phasing/html/GAMCC-{gene}.html", gene = HLA_GENES), 
         #GAMCC_phase_df = expand("results/phasing/phased_dfs/GAMCC-{gene}.tsv", gene = HLA_GENES),
 
-        beagle_phased = expand("results/phasing/HLA_1KG_BEAGLE/tmp/beagle_phased_per_sample/{gene}.{sample}.1KG.tsv", gene = HLA_GENES, sample = samples_oneKG),
-        concordance_df = expand("results/phasing/oneKG_{vcf_version}-phasing-concordance-{filter}.tsv", filter = filters, vcf_version = vcf_versions[0])
+        beagle_phased_oneKG = expand("results/phasing/HLA_1KG_BEAGLE/tmp/beagle_phased_per_sample/{gene}.{sample}.1KG.tsv", gene = HLA_GENES, sample = samples_oneKG),
+        beagle_phased_GAMCC = expand("results/phasing/HLA_GAMCC_BEAGLE/tmp/beagle_phased_per_sample/{gene}.{sample}.GAMCC.tsv", gene = HLA_GENES, sample = samples_fv_gm),
+        # concordance_df = expand("results/phasing/oneKG_{vcf_version}-phasing-concordance-{filter}.tsv", filter = filters, vcf_version = vcf_versions[0])
 
 rule hla_ref_panel_all:
     input:

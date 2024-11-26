@@ -14,9 +14,42 @@ import lcwgsus
 from lcwgsus.variables import *
 
 hla_gene_information = pd.read_csv('/well/band/users/rbx225/software/QUILT_sus/hla_ancillary_files/hla_gene_information.tsv', sep = ' ')
-samples = lcwgsus.read_tsv_as_lst('/well/band/users/rbx225/recyclable_files/ref_panels/oneKG_30x/samples_to_phase.tsv')
-hlatypes = pd.read_csv('/well/band/users/rbx225/GAMCC/results/hla/imputation/ref_panel/auxiliary_files/HLA_types_2568_for_phasing.txt', sep = '\t')
-phased_vcf = "/well/band/users/rbx225/recyclable_files/ref_panels/oneKG_30x/oneKG.chr6.vcf.gz"
+samples = lcwgsus.read_tsv_as_lst('/well/band/users/rbx225/GAMCC/data/sample_tsvs/fv_gm_names.tsv')
+
+hla = lcwgsus.read_hla_direct_sequencing(retain = 'fv')
+hla = hla.drop(columns = ['One field1', 'One field2'])
+
+def keep_first_allele(a):
+    if '/' in a:
+        alleles = a.split('/')
+        onefield = alleles[0].split(':')[0]
+        second_fields = [
+            int(re.match(r"(\d+)", allele.split(':')[1]).group(1)) 
+            for allele in alleles
+        ]
+        smallest_second_field = min(second_fields)
+        return f"{onefield}:{smallest_second_field:02d}"
+    elif 'XX' in a:
+        return '-9'
+    else:
+        return a
+
+hla['Two field1'] = hla['Two field1'].apply(keep_first_allele)
+hla['Two field2'] = hla['Two field2'].apply(keep_first_allele)
+
+colnames = ['Sample ID'] + [label for g in HLA_GENES for label in [f'HLA-{g} 1', f'HLA-{g} 2']]
+hlatypes = pd.DataFrame(columns = colnames)
+for s in hla['SampleID'].unique():
+    tmp = hla[hla['SampleID'] == s]
+    row = [s] + tmp[['Two field1', 'Two field2']].values.ravel().tolist()
+    hlatypes.loc[len(hlatypes)] = row
+    
+sl = pd.read_csv(SAMPLE_LINKER_FILE)
+sl = {k:v for k, v in zip(sl['Chip_Name'], sl['Sample_Name'])}
+hlatypes['Sample ID'] = hlatypes['Sample ID'].apply(lambda x: sl[x])
+
+phased_vcf = "/well/band/users/rbx225/GAMCC/results/imputation/vcfs/malariaGen_v1_b38/quilt.chr6.vcf.gz"
+# phased_vcf = "/well/band/users/rbx225/GAMCC/results/two-stage-imputation/vanilla/malariaGen_v1_b38_topmed/emp_vcf/chr6.empiricalDose.vcf.gz"
 
 start = 25000000
 end = 34000000
@@ -34,6 +67,7 @@ for g in HLA_GENES:
     alleles = np.append(hlatypes[f'HLA-{g} 1'].astype(str).to_numpy(), hlatypes[f'HLA-{g} 2'].astype(str).to_numpy())
     alleles = np.unique(alleles)
     alleles = alleles[alleles != 'nan']
+    alleles = alleles[alleles != '-9']
     distinct_alleles[g] = alleles
 
 for g in HLA_GENES:
@@ -48,7 +82,7 @@ for g in HLA_GENES:
             pass
         else:
             twofield = distinct_alleles[g][n_alleles]
-            common_cols = ['chr6', position, f'HLA_{g}*{twofield}', 'T', 'A', '.', 'PASS', '.', 'GT']
+            common_cols = ['chr6', position, f'HLA_{g}*{twofield}', 'T', 'A', '.', '.', 'TYPED', 'GT']
             allele1 = (hlatypes[f'HLA-{g} 1'] == twofield).astype(int).values
             allele2 = (hlatypes[f'HLA-{g} 2'] == twofield).astype(int).values
 
@@ -65,6 +99,6 @@ lcwgsus.save_vcf(vcf,
              metadata,
              rezip = True,
              prefix='',
-             outdir='/well/band/users/rbx225/GAMCC/results/phasing/HLA_1KG_BEAGLE/',
-             save_name='unphased.1KG.chr6.vcf.gz'
+             outdir='/well/band/users/rbx225/GAMCC/results/phasing/HLA_GAMCC_BEAGLE/',
+             save_name='unphased.GAMCC.chr6.vcf.gz'
              )

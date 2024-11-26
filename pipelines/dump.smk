@@ -1865,3 +1865,6 @@ rule hla_imputation_method:
         --quilt_hla_haplotype_panelfile={params.ref_dir}/quilt.hrc.hla.{wildcards.hla_gene}.haplotypes.RData \
         --dict_file={params.fa_dict}
     """
+
+# oneKG_html = expand("results/phasing/html/oneKG-{filter}-{gene}.html", gene = HLA_GENES, filter = filters), 
+# GAMCC_html = expand("results/phasing/html/GAMCC-{gene}.html", gene = HLA_GENES), 

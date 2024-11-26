@@ -137,40 +137,51 @@ rule prepare_1kg_HLA_vcf:
         python scripts/prepare_1KG_BEAGLE_phasing.py
     """
 
-rule beagle_phase_1kg:
+rule prepare_GAMCC_HLA_vcf:
     input:
-        vcf = "results/phasing/HLA_1KG_BEAGLE/unphased.1KG.chr6.vcf.gz"
+        phased_vcf = "results/imputation/vcfs/malariaGen_v1_b38/quilt.chr6.vcf.gz"
     output:
-        phased_vcf = "results/phasing/HLA_1KG_BEAGLE/phased.1KG.chr6.vcf.gz"
+        vcf = "results/phasing/HLA_GAMCC_BEAGLE/unphased.GAMCC.chr6.vcf.gz"
+    resources: mem = '80G'
+    threads: 8
+    shell: """
+        python scripts/prepare_GAMCC_BEAGLE_phasing.py
+    """
+
+rule beagle_phasing:
+    input:
+        vcf = "results/phasing/HLA_{study}_BEAGLE/unphased.{study}.chr6.vcf.gz"
+    output:
+        phased_vcf = "results/phasing/HLA_{study}_BEAGLE/phased.{study}.chr6.vcf.gz"
     params:
         beagle = tools['beagle'],
         recomb_map = "/well/band/users/rbx225/recyclable_files/plink_recomb_maps_b38/chr6.map",
-        output_prefix = "results/phasing/HLA_1KG_BEAGLE/phased.1KG.chr6"
+        output_prefix = "results/phasing/HLA_{study}_BEAGLE/phased.{study}.chr6"
     resources: mem = '40G'
     threads: 4
     shell: """
-        mkdir -p results/phasing/HLA_1KG_BEAGLE/
+        mkdir -p results/phasing/HLA_{wildcards.study}_BEAGLE/
         {params.beagle} gt={input.vcf} map={params.recomb_map} out={params.output_prefix}
     """
 
-rule extract_beagle_phase_1kg_vcf:
+rule extract_beagle_phase_vcf:
     input:
-        vcf = "results/phasing/HLA_1KG_BEAGLE/phased.1KG.chr6.vcf.gz"
+        vcf = "results/phasing/HLA_{study}_BEAGLE/phased.{study}.chr6.vcf.gz"
     output:
-        vcf = temp("results/phasing/HLA_1KG_BEAGLE/tmp/phased.{gene}.1KG.chr6.vcf.gz")
+        vcf = temp("results/phasing/HLA_{study}_BEAGLE/tmp/phased.{gene}.{study}.chr6.vcf.gz")
     resources: mem = '40G'
     threads: 4
     shell: """ 
-        mkdir -p results/phasing/HLA_1KG_BEAGLE/tmp/
+        mkdir -p results/phasing/HLA_{wildcards.study}_BEAGLE/tmp/
         
         bcftools filter -i 'ID ~ "HLA_{wildcards.gene}"' -Oz -o {output.vcf} {input.vcf}
     """
 
-rule extract_beagle_phase_1kg_vcf_hlatypes:
+rule extract_beagle_phase_vcf_hlatypes:
     input:
-        vcf = "results/phasing/HLA_1KG_BEAGLE/tmp/phased.{gene}.1KG.chr6.vcf.gz"
+        vcf = "results/phasing/HLA_{study}_BEAGLE/tmp/phased.{gene}.{study}.chr6.vcf.gz"
     output:
-        tsv = temp("results/phasing/HLA_1KG_BEAGLE/tmp/{gene}.semiphased.1KG.tsv")
+        tsv = temp("results/phasing/HLA_{study}_BEAGLE/tmp/{gene}.semiphased.{study}.tsv")
     resources: mem = '80G'
     threads: 8
     run: 
@@ -203,11 +214,11 @@ rule extract_beagle_phase_1kg_vcf_hlatypes:
 
 rule adjust_beagle_phasing:
     input:
-        unphased_vcf = "results/phasing/HLA_1KG_BEAGLE/unphased.1KG.chr6.vcf.gz",
-        phased_vcf = "results/phasing/HLA_1KG_BEAGLE/phased.1KG.chr6.vcf.gz",
-        beagle_semiphased = "results/phasing/HLA_1KG_BEAGLE/tmp/{gene}.semiphased.1KG.tsv"
+        unphased_vcf = "results/phasing/HLA_{study}_BEAGLE/unphased.{study}.chr6.vcf.gz",
+        phased_vcf = "results/phasing/HLA_{study}_BEAGLE/phased.{study}.chr6.vcf.gz",
+        beagle_semiphased = "results/phasing/HLA_{study}_BEAGLE/tmp/{gene}.semiphased.{study}.tsv"
     output:
-        beagle_phased = "results/phasing/HLA_1KG_BEAGLE/tmp/beagle_phased_per_sample/{gene}.{sample}.1KG.tsv"
+        beagle_phased = "results/phasing/HLA_{study}_BEAGLE/tmp/beagle_phased_per_sample/{gene}.{sample}.{study}.tsv"
     params:
         hla_gene_information_file = '/well/band/users/rbx225/software/QUILT_sus/hla_ancillary_files/hla_gene_information.tsv'
     resources: mem = '40G'
@@ -238,7 +249,7 @@ rule adjust_beagle_phasing:
 
             idx = []
             multiplier = 1
-            while (len(idx) == 0) and (multiplier < 5):
+            while (len(idx) == 0) and (multiplier < 10):
                 tmp_new_up = read_vcf(start = max(25000000, start - multiplier*10000), end = max(25000000, start - (multiplier - 1)*10000), phased_vcf = input.phased_vcf, hlatypes = beagle_hla, subset_vcf_samples = s)
                 tmp_old_up = read_vcf(start = max(25000000, start - multiplier*10000), end = max(25000000, start - (multiplier - 1)*10000), phased_vcf = input.unphased_vcf, hlatypes = beagle_hla, subset_vcf_samples = s)
                 tmp_new_up = pd.merge(tmp_new_up, tmp_old_up[['snp', 'pos']], how = 'inner')
