@@ -28,6 +28,7 @@ vcf = pd.DataFrame(vcf)
 vcf.columns = vcf.iloc[0]  # Set the first row as the header
 vcf = vcf[1:].reset_index(drop = True)
 vcf['POS'] = vcf['POS'].astype(int)
+# vcf = vcf[vcf.columns[:9] + hlatypes['Sample ID'].tolist()]
 
 distinct_alleles = {}
 for g in HLA_GENES:

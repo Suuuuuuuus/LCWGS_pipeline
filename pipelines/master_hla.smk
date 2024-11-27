@@ -73,7 +73,7 @@ mGen_chunk_RData, mGen_chunk_vcf_lst, mGen_chunk_vcf_dict = get_vcf_concat_lst(r
 
 rule phasing_all:
     input:
-        # vcf = expand("results/phasing/HLA_{study}_BEAGLE/unphased.{study}.chr6.vcf.gz", study = studies),
+        vcf = expand("results/phasing/HLA_{study}_BEAGLE/unphased.{study}.chr6.vcf.gz", study = studies),
         phased_vcf = expand("results/phasing/HLA_{study}_BEAGLE/phased.{study}.chr6.vcf.gz", study = studies),
         oneKG_phase_df = expand("results/phasing/phased_dfs/oneKG_{vcf_version}-{filter}-{gene}.tsv", gene = HLA_GENES, filter = filters, vcf_version = vcf_versions),
         #GAMCC_phase_df = expand("results/phasing/phased_dfs/GAMCC-{gene}.tsv", gene = HLA_GENES),

@@ -61,6 +61,8 @@ vcf = pd.DataFrame(vcf)
 vcf.columns = vcf.iloc[0]  # Set the first row as the header
 vcf = vcf[1:].reset_index(drop = True)
 vcf['POS'] = vcf['POS'].astype(int)
+vcf = vcf[vcf.columns[:9] + hlatypes['Sample ID'].tolist()]
+# vcf = vcf[vcf.columns[:9] + hlatypes['Sample ID'].tolist()]
 
 distinct_alleles = {}
 for g in HLA_GENES:
@@ -82,7 +84,7 @@ for g in HLA_GENES:
             pass
         else:
             twofield = distinct_alleles[g][n_alleles]
-            common_cols = ['chr6', position, f'HLA_{g}*{twofield}', 'T', 'A', '.', '.', 'TYPED', 'GT']
+            common_cols = ['chr6', position, f'HLA_{g}*{twofield}', 'T', 'A', '.', '.', '.', 'GT']
             allele1 = (hlatypes[f'HLA-{g} 1'] == twofield).astype(int).values
             allele2 = (hlatypes[f'HLA-{g} 2'] == twofield).astype(int).values
 
