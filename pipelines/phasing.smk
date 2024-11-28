@@ -167,7 +167,9 @@ rule beagle_phasing:
         {params.beagle} gt={input.vcf} map={params.recomb_map} out={params.output_prefix}
 
         mv {output.phased_vcf} {output.tmp_vcf}
+        tabix -f {output.tmp_vcf}
         bcftools view -r -Oz -o {output.phased_vcf} {output.tmp_vcf}
+        tabix -f {output.phased_vcf}
     """
 
 rule extract_beagle_phase_vcf:
