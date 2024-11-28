@@ -149,7 +149,7 @@ rule prepare_GAMCC_HLA_vcf:
     shell: """
         python scripts/prepare_GAMCC_BEAGLE_phasing.py
     """
-
+'''
 rule beagle_phasing:
     input:
         vcf = "results/phasing/HLA_{study}_BEAGLE/unphased.{study}.chr6.vcf.gz"
@@ -217,7 +217,7 @@ rule extract_beagle_phase_vcf_hlatypes:
                     else:
                         pass
         beagle_hla.to_csv(output.tsv, header = True, index = False, sep = '\t')
-'''
+
 rule adjust_beagle_phasing:
     input:
         unphased_vcf = "results/phasing/HLA_{study}_BEAGLE/unphased.{study}.chr6.vcf.gz",
