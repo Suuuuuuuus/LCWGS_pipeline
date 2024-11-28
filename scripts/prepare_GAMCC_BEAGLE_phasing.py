@@ -45,6 +45,7 @@ for s in hla['SampleID'].unique():
     hlatypes.loc[len(hlatypes)] = row
     
 sl = pd.read_csv(SAMPLE_LINKER_FILE)
+sl = sl[~sl['Sample_Name'].str.contains('mini')]
 sl = {k:v for k, v in zip(sl['Chip_Name'], sl['Sample_Name'])}
 hlatypes['Sample ID'] = hlatypes['Sample ID'].apply(lambda x: sl[x])
 
@@ -61,7 +62,7 @@ vcf = pd.DataFrame(vcf)
 vcf.columns = vcf.iloc[0]  # Set the first row as the header
 vcf = vcf[1:].reset_index(drop = True)
 vcf['POS'] = vcf['POS'].astype(int)
-vcf = vcf[vcf.columns[:9] + hlatypes['Sample ID'].tolist()]
+vcf = vcf[vcf.columns[:9].tolist() + hlatypes['Sample ID'].tolist()]
 # vcf = vcf[vcf.columns[:9] + hlatypes['Sample ID'].tolist()]
 
 distinct_alleles = {}

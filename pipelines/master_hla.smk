@@ -73,13 +73,14 @@ mGen_chunk_RData, mGen_chunk_vcf_lst, mGen_chunk_vcf_dict = get_vcf_concat_lst(r
 
 rule phasing_all:
     input:
-        vcf = expand("results/phasing/HLA_{study}_BEAGLE/unphased.{study}.chr6.vcf.gz", study = studies),
-        phased_vcf = expand("results/phasing/HLA_{study}_BEAGLE/phased.{study}.chr6.vcf.gz", study = studies),
-        oneKG_phase_df = expand("results/phasing/phased_dfs/oneKG_{vcf_version}-{filter}-{gene}.tsv", gene = HLA_GENES, filter = filters, vcf_version = vcf_versions),
+        beagle_phased_GAMCC = expand("results/phasing/HLA_GAMCC_BEAGLE/tmp/beagle_phased_per_sample/{gene}.{sample}.GAMCC.tsv", gene = HLA_GENES, sample = samples_fv_gm)
+        # vcf = expand("results/phasing/HLA_{study}_BEAGLE/unphased.{study}.chr6.vcf.gz", study = studies),
+        # phased_vcf = expand("results/phasing/HLA_{study}_BEAGLE/phased.{study}.chr6.vcf.gz", study = studies),
+        # oneKG_phase_df = expand("results/phasing/phased_dfs/oneKG_{vcf_version}-{filter}-{gene}.tsv", gene = HLA_GENES, filter = filters, vcf_version = vcf_versions),
         #GAMCC_phase_df = expand("results/phasing/phased_dfs/GAMCC-{gene}.tsv", gene = HLA_GENES),
 
-        beagle_phased_oneKG = expand("results/phasing/HLA_1KG_BEAGLE/tmp/beagle_phased_per_sample/{gene}.{sample}.1KG.tsv", gene = HLA_GENES, sample = samples_oneKG),
-        beagle_phased_GAMCC = expand("results/phasing/HLA_GAMCC_BEAGLE/tmp/beagle_phased_per_sample/{gene}.{sample}.GAMCC.tsv", gene = HLA_GENES, sample = samples_fv_gm),
+        # beagle_phased_oneKG = expand("results/phasing/HLA_1KG_BEAGLE/tmp/beagle_phased_per_sample/{gene}.{sample}.1KG.tsv", gene = HLA_GENES, sample = samples_oneKG),
+        # beagle_phased_GAMCC = expand("results/phasing/HLA_GAMCC_BEAGLE/tmp/beagle_phased_per_sample/{gene}.{sample}.GAMCC.tsv", gene = HLA_GENES, sample = samples_fv_gm),
         # concordance_df = expand("results/phasing/oneKG_{vcf_version}-phasing-concordance-{filter}.tsv", filter = filters, vcf_version = vcf_versions[0])
 
 rule hla_ref_panel_all:

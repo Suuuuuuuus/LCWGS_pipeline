@@ -18,6 +18,8 @@ from hla_phase import *
 samples_lc = read_tsv_as_lst(config['samples_lc'])
 chromosome = [i for i in range(1,23)]
 
+'''
+
 rule phase_GAMCC_alleles:
     input:
         phased_vcf_file = "results/imputation/vcfs/malariaGen_v1_b38/quilt.chr6.vcf.gz"
@@ -142,8 +144,8 @@ rule prepare_GAMCC_HLA_vcf:
         phased_vcf = "results/imputation/vcfs/malariaGen_v1_b38/quilt.chr6.vcf.gz"
     output:
         vcf = "results/phasing/HLA_GAMCC_BEAGLE/unphased.GAMCC.chr6.vcf.gz"
-    resources: mem = '80G'
-    threads: 8
+    resources: mem = '40G'
+    threads: 4
     shell: """
         python scripts/prepare_GAMCC_BEAGLE_phasing.py
     """
@@ -152,7 +154,8 @@ rule beagle_phasing:
     input:
         vcf = "results/phasing/HLA_{study}_BEAGLE/unphased.{study}.chr6.vcf.gz"
     output:
-        phased_vcf = "results/phasing/HLA_{study}_BEAGLE/phased.{study}.chr6.vcf.gz"
+        phased_vcf = "results/phasing/HLA_{study}_BEAGLE/phased.{study}.chr6.vcf.gz",
+        tmp_vcf = temp("results/phasing/HLA_{study}_BEAGLE/tmp.phased.{study}.chr6.vcf.gz")
     params:
         beagle = tools['beagle'],
         recomb_map = "/well/band/users/rbx225/recyclable_files/plink_recomb_maps_b38/chr6.map",
@@ -162,6 +165,9 @@ rule beagle_phasing:
     shell: """
         mkdir -p results/phasing/HLA_{wildcards.study}_BEAGLE/
         {params.beagle} gt={input.vcf} map={params.recomb_map} out={params.output_prefix}
+
+        mv {output.phased_vcf} {output.tmp_vcf}
+        bcftools view -r -Oz -o {output.phased_vcf} {output.tmp_vcf}
     """
 
 rule extract_beagle_phase_vcf:
@@ -211,7 +217,7 @@ rule extract_beagle_phase_vcf_hlatypes:
                     else:
                         pass
         beagle_hla.to_csv(output.tsv, header = True, index = False, sep = '\t')
-
+'''
 rule adjust_beagle_phasing:
     input:
         unphased_vcf = "results/phasing/HLA_{study}_BEAGLE/unphased.{study}.chr6.vcf.gz",
