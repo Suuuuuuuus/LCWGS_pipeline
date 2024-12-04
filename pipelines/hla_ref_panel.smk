@@ -22,109 +22,6 @@ QUILT_HOME = config["QUILT_HOME"]
 NGEN = config["NGEN"]
 RECOMB_POP = config["RECOMB_POP"]
 studies = ['1KG', 'GAMCC']
-
-'''
-rule subset_vcf_to_chr6:
-    input:
-        vcf = "results/wip_vcfs/oneKG/vanilla/high_info_high_af_high_conf/lc.chr6.vcf.gz"
-    output:
-        tmp_vcf = temp("results/hla_tests/gamcc_vcf/fv.chr6.vcf.gz"),
-        hap = "results/hla_tests/gamcc_vcf/fv.chr6.hap.gz",
-        legend = "results/hla_tests/gamcc_vcf/fv.chr6.legend.gz",
-        samples = "results/hla_tests/gamcc_vcf/fv.chr6.samples"
-    threads: 4
-    resources: mem = '30G'
-    params: 
-        outdir = "results/hla_tests/gamcc_vcf/",
-        fv = "data/sample_tsvs/fv_gm_names.tsv"
-    shell: """
-        mkdir -p {params.outdir}
-
-        bcftools view -S {params.fv} {input.vcf}| \
-        bcftools norm -m+ | \
-        bcftools view -m2 -M2 -v snps | \
-        
-        bcftools sort -Oz -o {output.tmp_vcf}
-        tabix {output.tmp_vcf}
-
-        bcftools convert -h \
-        {params.outdir}fv.chr6 {output.tmp_vcf}
-
-        sed -i 's/sample population group sex/SAMPLE POP GROUP SEX/g' {output.samples}
-    """
-
-
-rule prepare_hla_bamlist:
-    input:
-        bams = expand("data/bams/{id}.bam", id = samples_fv)
-    output:
-        bam_all = "results/hla_tests/bamlist.txt"
-    localrule: True
-    shell: """
-        mkdir -p results/hla_tests/
-        ls {input.bams} > {output.bam_all}
-    """
-
-hla_ref_panel_indir = "results/hla/imputation/ref_panel/auxiliary_files/"
-hla_genes = ['A', 'B', 'C', 'DRB1', 'DQB1']
-IPD_IMGT_versions = ['3390', '3570']
-
-rule prepare_ref:
-    input:
-        hap = "results/hla_tests/gamcc_vcf/fv.chr6.hap.gz",
-        legend = "results/hla_tests/gamcc_vcf/fv.chr6.legend.gz",
-        samples = "results/hla_tests/gamcc_vcf/fv.chr6.samples",
-        genetic_map = "data/imputation_accessories/maps/YRI-chr6-final.b38.txt"
-    output:
-        RData = "results/hla_tests/quilt.hrc.hla.all.haplotypes.RData"
-    resources:
-        mem = '30G'
-    threads: 4
-    params:
-        outputdir = "results/hla_tests/prepared_ref/"
-    shell: """
-        mkdir -p {params.outputdir}
-        R -e 'library("data.table"); library("QUILT");
-        QUILT_prepare_reference(
-        outputdir = "{params.outputdir}",
-        nGen = {NGEN},
-        chr = "chr6",
-        regionStart = 25587319,
-        regionEnd = 33629686,
-        buffer = 500000,
-        reference_haplotype_file = "{input.hap}",
-        reference_legend_file = "{input.legend}",
-        reference_sample_file = "{input.samples}",
-        genetic_map_file = "{input.genetic_map}",
-        reference_exclude_samplelist_file = "",
-        output_file = "{output.RData}")'
-    """
-
-rule hla_imputation:
-    input:
-        bamlist = "results/hla/imputation/bamlists/bamlist{num}.txt",
-        ref_dir = "results/hla/imputation/ref_panel/QUILT_prepared_reference_v{IPD_IMGT_version}/"
-    output:
-        imputed = "results/hla/imputation/QUILT_HLA_result_v{IPD_IMGT_version}/genes{num}/{hla_gene}/quilt.hla.output.combined.all.txt"
-    resources:
-        mem = '50G'
-    threads: 6
-    params:
-        quilt_hla = tools['quilt_hla'],
-        fa_dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict"
-    shell: """
-        mkdir -p results/hla/imputation/QUILT_HLA_result_v{IPD_IMGT_version}/genes{wildcards.num}/{wildcards.hla_gene}/
-
-        {params.quilt_hla} \
-        --outputdir="results/hla/imputation/QUILT_HLA_result_v{wildcards.IPD_IMGT_version}/genes{wildcards.num}/{wildcards.hla_gene}/" \
-        --bamlist={input.bamlist} \
-        --region={wildcards.hla_gene} \
-        --prepared_hla_reference_dir={input.ref_dir} \
-        --quilt_hla_haplotype_panelfile={input.ref_dir}/quilt.hrc.hla.{wildcards.hla_gene}.haplotypes.RData \
-        --dict_file={params.fa_dict}
-    """
-'''
-
 to_merge = ['gamcc', 'oneKG']
 
 rule pre_prepare_merge_GAMCC_vcf:
@@ -151,7 +48,7 @@ rule pre_prepare_merge_GAMCC_vcf:
 
 def get_vcf_from_to_merge(wildcards):
     if wildcards.to_merge == 'oneKG':
-        return "data/ref_panel/oneKG/oneKG.chr" + wildcards.chr + ".vcf.gz"
+        return "data/ref_panel/oneKG_30x/oneKG.chr" + wildcards.chr + ".vcf.gz"
     elif wildcards.to_merge == 'gamcc':
         return "results/hla_ref_panel/oneKG_mGenv1/fv_gamcc_vcf/gamcc.chr" + wildcards.chr + ".vcf.gz"
     else:
@@ -174,14 +71,14 @@ rule prepare_merge_1KG_GAMCC_vcf:
         bcftools sort | \
         bcftools convert -h {params.outdir}{wildcards.to_merge}.chr{wildcards.chr}
 
-        gunzip {params.outdir}{wildcards.to_merge}.chr{wildcards.chr}.hap.gz
-        gunzip {params.outdir}{wildcards.to_merge}.chr{wildcards.chr}.legend.gz
+        gunzip -f {params.outdir}{wildcards.to_merge}.chr{wildcards.chr}.hap.gz
+        gunzip -f {params.outdir}{wildcards.to_merge}.chr{wildcards.chr}.legend.gz
     """
 
 rule prepare_merge_1KG_GAMCC_sample:
     input:
-        mg = "results/hla_ref_panel/oneKG_mGenv1/fv_gamcc_vcf/gamcc.chr22.vcf.gz",
-        oneKG = "data/ref_panel/oneKG/oneKG.chr22.vcf.gz"
+        mg = "results/hla_ref_panel/oneKG_mGenv1/fv_gamcc_vcf/gamcc.chr6.vcf.gz",
+        oneKG = "data/ref_panel/oneKG_30x/oneKG.chr6.vcf.gz"
     output:
         tmp_sample = temp("results/hla_ref_panel/oneKG_mGenv1/tmp/tmp.sample"),
         sample = temp("results/hla_ref_panel/oneKG_mGenv1/tmp/merged.samples")

@@ -151,11 +151,9 @@ rule prepare_hla_vcf_merged_ref:
 
         bcftools convert -h \
         results/hla_ref_panel/oneKG_mGenv1/hla_prepare_ref/oneKG_GAMCC.chr6 {output.tmp_vcf}
-    """
 
-def convert_idt_to_gam(wildcards):
-    ix = samples_fv.index(wildcards.id)
-    return samples_fv_gam[ix]
+        sed -i 's/sample population group sex/SAMPLE POP GROUP SEX/g' {output.sample}
+    """
 
 rule prepare_hla_reference_panel_merged_ref:
     input:
@@ -172,14 +170,14 @@ rule prepare_hla_reference_panel_merged_ref:
     resources:
         mem = '30G'
     threads: 4
+    conda: "sus"
     params:
         quilt_hla_prep = tools['quilt_hla_prep'],
         refseq = "/well/band/users/rbx225/software/QUILT/hla_ancillary_files/refseq.hg38.chr6.26000000.34000000.txt.gz",
         region_exclude_file = "/well/band/users/rbx225/software/QUILT/hla_ancillary_files/hlagenes.txt",
-        hla_ref_panel_outdir = "results/hla/imputation/ref_panel/QUILT_prepared_reference_merged_ref/",
-        exclude_sample_gam = convert_idt_to_gam
+        hla_ref_panel_outdir = "results/hla/imputation/ref_panel/QUILT_prepared_reference_merged_ref/"
     shell: """
-        echo {params.exclude_sample_gam} >> {output.exclude_sample_file}
+        echo {wildcards.id} >> {output.exclude_sample_file}
 
         {params.quilt_hla_prep} \
         --outputdir={params.hla_ref_panel_outdir} \
@@ -222,7 +220,7 @@ rule hla_imputation_merged_ref:
         echo {input.bam} > {output.bamfile}
 
         {params.quilt_hla} \
-        --outputdir="results/hla/imputation/QUILT_HLA_result_merged_ref/{wildcards.hla_gene}/" \
+        --outputdir="results/hla/imputation/QUILT_HLA_result_merged_ref/{wildcards.id}/{wildcards.hla_gene}/" \
         --bamlist={output.bamfile} \
         --region={wildcards.hla_gene} \
         --prepared_hla_reference_dir={params.ref_dir} \
@@ -236,29 +234,12 @@ rule prepare_hla_db:
     input:
         ipd_gen_files = '/well/band/users/rbx225/recyclable_files/hla_reference_files/alignments/{hla_gene}_gen.txt'
     output:
-        output_db = '/well/band/users/rbx225/recyclable_files/hla_reference_files/v3570_aligners/{hla_gene}.ssv'
+        output_db = '/well/band/users/rbx225/recyclable_files/hla_reference_files/v{IPD_IMGT_version}_aligners/{hla_gene}.ssv'
     resources:
         mem = '80G'
     threads: 4
     params:
         ipd_gen_file_dir = '/well/band/users/rbx225/recyclable_files/hla_reference_files/alignments/',
-        hla_gene_information_file = '/well/band/users/rbx225/software/QUILT_sus/hla_ancillary_files/hla_gene_information.tsv'
-    run:
-        hla_gene_information = pd.read_csv(params.hla_gene_information_file, sep = ' ')
-
-        db = process_db_genfile(wildcards.hla_gene, params.ipd_gen_file_dir, hla_gene_information)
-        db.to_csv(output.output_db, sep = ' ', index = False, header = True)
-
-rule prepare_hla_db2:
-    input:
-        ipd_gen_files = '/well/band/users/rbx225/recyclable_files/hla/alignments/{hla_gene}_gen.txt'
-    output:
-        output_db = '/well/band/users/rbx225/recyclable_files/hla_reference_files/v3390_aligners/{hla_gene}.ssv'
-    resources:
-        mem = '80G'
-    threads: 4
-    params:
-        ipd_gen_file_dir = '/well/band/users/rbx225/recyclable_files/hla/alignments/',
         hla_gene_information_file = '/well/band/users/rbx225/software/QUILT_sus/hla_ancillary_files/hla_gene_information.tsv'
     run:
         hla_gene_information = pd.read_csv(params.hla_gene_information_file, sep = ' ')
@@ -305,28 +286,6 @@ rule prepare_hla_reference_panel_method:
         --nCores=6
     """
 
-'''
-rule prepare_hla_reference_panel_method2:
-    input:
-        bam = "data/bams/{id}.bam",
-        db_file = "/well/band/users/rbx225/recyclable_files/hla_reference_files/v3570_aligners/{hla_gene}.ssv"
-    output:
-        reads1 = temp("results/hla/imputation/ref_panel/QUILT_prepared_reference_method/alignment_likelihoods/{id}-{hla_gene}/reads1.csv"),
-        reads2 = temp("results/hla/imputation/ref_panel/QUILT_prepared_reference_method/alignment_likelihoods/{id}-{hla_gene}/reads2.csv"),
-        mate_matrix = temp("results/hla/imputation/ref_panel/QUILT_prepared_reference_method/alignment_likelihoods/{id}-{hla_gene}/mate_likelihood_matrix.ssv"),
-        pair_matrix = temp("results/hla/imputation/ref_panel/QUILT_prepared_reference_method/alignment_likelihoods/{id}-{hla_gene}/pair_likelihood_matrix.ssv")
-    resources:
-        mem = '120G'
-    threads: 8
-    params:
-        outdir = "results/hla/imputation/ref_panel/QUILT_prepared_reference_method/alignment_likelihoods/{id}-{hla_gene}",
-        hla_gene_information = "/well/band/users/rbx225/recyclable_files/hla_reference_files/v3570_aligners/{hla_gene}.ssv",
-        script = "/well/band/users/rbx225/software/QUILT_sus/QUILT/Python/hla_align.py"
-    shell: """
-        python {params.script} {wildcards.hla_gene} {input.bam} {params.outdir}
-    """
-'''
-
 rule hla_imputation_method:
     input:
         bam = "data/bams/{id}.bam",
@@ -369,19 +328,19 @@ rule prepare_hla_reference_panel_optimal:
         legend = "results/hla_ref_panel/oneKG_mGenv1/hla_prepare_ref/oneKG_GAMCC.chr6.legend.gz",
         sample = "results/hla_ref_panel/oneKG_mGenv1/hla_prepare_ref/oneKG_GAMCC.chr6.samples"
     output:
-        ref_panel = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_optimal/no_{id}/HLA{hla_gene}fullallelesfilledin.RData", hla_gene = hla_genes, allow_missing = True),
+        ref_panel = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_optimal/no_{id}/hla{hla_gene}haptypes.RData", hla_gene = hla_genes, allow_missing = True),
         exclude_sample_file = temp("results/hla/imputation/ref_panel/QUILT_prepared_reference_optimal/no_{id}/{id}.tsv")
     resources:
-        mem = '80G'
-    threads: 8
+        mem = '30G'
+    threads: 4
+    conda: "sus2"
     params:
         quilt_hla_prep = tools['quilt_hla_prep'],
         refseq = "/well/band/users/rbx225/software/QUILT/hla_ancillary_files/refseq.hg38.chr6.26000000.34000000.txt.gz",
         region_exclude_file = "/well/band/users/rbx225/software/QUILT/hla_ancillary_files/hlagenes.txt",
-        hla_ref_panel_outdir = "results/hla/imputation/ref_panel/QUILT_prepared_reference_optimal/",
-        exclude_sample_gam = convert_idt_to_gam
+        hla_ref_panel_outdir = "results/hla/imputation/ref_panel/QUILT_prepared_reference_optimal/"
     shell: """
-        echo {params.exclude_sample_gam} >> {output.exclude_sample_file}
+        echo {wildcards.id} >> {output.exclude_sample_file}
 
         {params.quilt_hla_prep} \
         --outputdir={params.hla_ref_panel_outdir} \
@@ -406,28 +365,26 @@ rule prepare_hla_reference_panel_optimal:
 rule hla_imputation_optimal:
     input:
         bam = "data/bams/{id}.bam",
-        ref_panel = "results/hla/imputation/ref_panel/QUILT_prepared_reference_optimal/no_{id}/HLA{hla_gene}fullallelesfilledin.RData",
-        prepared_db = '/well/band/users/rbx225/recyclable_files/hla_reference_files/v3570_aligners/{hla_gene}.ssv'
+        ref_panel = "results/hla/imputation/ref_panel/QUILT_prepared_reference_optimal/no_{id}/hla{hla_gene}haptypes.RData"
     output:
         bamfile = temp("results/hla/imputation/QUILT_HLA_result_optimal/{id}/{id}.{hla_gene}.tsv"),
         imputed = "results/hla/imputation/QUILT_HLA_result_optimal/{id}/{hla_gene}/quilt.hla.output.combined.all.txt"
     resources:
-        mem = '80G',
-        partition = 'long'
-    threads: 8
+        mem = '40G'
+    threads: 4
     params:
-        quilt_sus_hla = tools['quilt_sus_hla'],
+        quilt_hla = tools['quilt_hla'],
         fa_dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict",
         ref_dir = "results/hla/imputation/ref_panel/QUILT_prepared_reference_optimal/no_{id}/"
-    conda: "sus1"
+    conda: "sus2"
     shell: """
         mkdir -p results/hla/imputation/QUILT_HLA_result_optimal/{wildcards.id}/{wildcards.hla_gene}/
 
         echo {input.bam} > {output.bamfile}
         ulimit -n 50000
 
-        {params.quilt_sus_hla} \
-        --outputdir="results/hla/imputation/QUILT_HLA_result_optimal/{wildcards.hla_gene}/" \
+        {params.quilt_hla} \
+        --outputdir="results/hla/imputation/QUILT_HLA_result_optimal/{wildcards.id}/{wildcards.hla_gene}/" \
         --bamlist={output.bamfile} \
         --region={wildcards.hla_gene} \
         --prepared_hla_reference_dir={params.ref_dir} \

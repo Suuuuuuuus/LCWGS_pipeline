@@ -168,7 +168,7 @@ rule beagle_phasing:
 
         mv {output.phased_vcf} {output.tmp_vcf}
         tabix -f {output.tmp_vcf}
-        bcftools view -r -Oz -o {output.phased_vcf} {output.tmp_vcf}
+        bcftools view -Oz -o {output.phased_vcf} {output.tmp_vcf}
         tabix -f {output.phased_vcf}
     """
 
@@ -205,19 +205,22 @@ rule extract_beagle_phase_vcf_hlatypes:
             vcf_row = vcf.loc[s, :]
             alleles_idx = vcf_row.index[vcf_row.str.contains('1')]
             if len(alleles_idx) != 0:
-                for j in alleles_idx:
-                    name = vcf.loc['ID',j]
-                    genotype = vcf.loc[s,j]
-                    twofield = name.split('*')[1]
-                    if genotype == '1|0':
-                        beagle_hla.loc[i, f'HLA-{wildcards.gene} 1'] = twofield
-                    elif genotype == '0|1':
-                        beagle_hla.loc[i, f'HLA-{wildcards.gene} 2'] = twofield
-                    elif genotype == '1|1':
-                        beagle_hla.loc[i, f'HLA-{wildcards.gene} 1'] = twofield
-                        beagle_hla.loc[i, f'HLA-{wildcards.gene} 2'] = twofield
-                    else:
-                        pass
+                if (len(alleles_idx) == 2) and (vcf.loc[s,alleles_idx[0]] == vcf.loc[s,alleles_idx[1]]): # Means beagle phase the two HLA alleles to one haplotype
+                    pass
+                else:
+                    for j in alleles_idx:
+                        name = vcf.loc['ID',j]
+                        genotype = vcf.loc[s,j]
+                        twofield = name.split('*')[1]
+                        if genotype == '1|0':
+                            beagle_hla.loc[i, f'HLA-{wildcards.gene} 1'] = twofield
+                        elif genotype == '0|1':
+                            beagle_hla.loc[i, f'HLA-{wildcards.gene} 2'] = twofield
+                        elif genotype == '1|1':
+                            beagle_hla.loc[i, f'HLA-{wildcards.gene} 1'] = twofield
+                            beagle_hla.loc[i, f'HLA-{wildcards.gene} 2'] = twofield
+                        else:
+                            pass
         beagle_hla.to_csv(output.tsv, header = True, index = False, sep = '\t')
 
 rule adjust_beagle_phasing:
