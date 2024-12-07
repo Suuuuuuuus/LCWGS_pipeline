@@ -1,5 +1,6 @@
 tools = {
     'qctool':"/well/band/users/rbx225/software/QCTool/qctool/build/release/apps/qctool_v2.2.2",
+    'snptest': "/well/band/users/rbx225/software/snptest/snptest_v2.5.6",
     'inthinnerator': "/well/band/users/rbx225/software/QCTool/qctool/build/release/apps/inthinnerator_v2.2.2",
 
     'picard': "java -Xmx20G -Xms10G -jar /well/band/users/rbx225/conda/skylake/envs/sus/share/picard-slim-2.27.4-0/picard.jar",

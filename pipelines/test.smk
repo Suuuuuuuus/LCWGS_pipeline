@@ -1,6 +1,7 @@
 configfile: "pipelines/config.json"
 include: "auxiliary.smk"
 include: "software.smk"
+include: "hla_imputation_wip.smk"
 
 import json
 import pandas as pd
@@ -12,14 +13,16 @@ from lcwgsus.variables import *
 
 hla_ref_panel_indir = "results/hla/imputation/ref_panel/auxiliary_files/"
 hla_genes = ['A', 'B', 'C', 'DRB1', 'DQB1']
+samples_fv = read_tsv_as_lst('data/sample_tsvs/fv_idt_names.tsv')
 
 rule all:
     input:
         ref_panel_optimal = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_optimal/no_{id}/hla{hla_gene}haptypes.RData", hla_gene = hla_genes, id = ['IDT0481']),
-        imputed_optimal = expand("results/hla/imputation/QUILT_HLA_result_optimal/{id}/{hla_gene}/quilt.hla.output.combined.all.txt", hla_gene = hla_genes, id = ['IDT0481'])
+        imputed_optimal = expand("results/hla/imputation/QUILT_HLA_result_optimal/{id}/{hla_gene}/quilt.hla.output.combined.all.txt", hla_gene = hla_genes, id = ['IDT0481']),
+        # ref_panel_merged_ref = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_merged_ref/no_{id}/HLA{hla_gene}fullallelesfilledin.RData", hla_gene = hla_genes, id = samples_fv),
+        # imputed_merged_ref = expand("results/hla/imputation/QUILT_HLA_result_merged_ref/{id}/{hla_gene}/quilt.hla.output.combined.all.txt", hla_gene = hla_genes, id = samples_fv)
 
-        
-rule prepare_hla_reference_panel_optimal:
+rule prepare_hla_reference_panel_optimal1:
     input:
         hla_types_panel = f"results/hla_ref_panel/oneKG_mGenv1/oneKG_mGenv1_HLA_calls_new.tsv",
         ipd_igmt = f"{hla_ref_panel_indir}IPD-IMGT-HLA_v3570.zip",
@@ -32,14 +35,14 @@ rule prepare_hla_reference_panel_optimal:
         ref_panel = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_optimal/no_{id}/hla{hla_gene}haptypes.RData", hla_gene = hla_genes, allow_missing = True),
         exclude_sample_file = temp("results/hla/imputation/ref_panel/QUILT_prepared_reference_optimal/no_{id}/{id}.tsv")
     resources:
-        mem = '30G'
-    threads: 4
+        mem = '20G'
+    threads: 2
     conda: "sus2"
     params:
         quilt_hla_prep = tools['quilt_hla_prep'],
         refseq = "/well/band/users/rbx225/software/QUILT/hla_ancillary_files/refseq.hg38.chr6.26000000.34000000.txt.gz",
         region_exclude_file = "/well/band/users/rbx225/software/QUILT/hla_ancillary_files/hlagenes.txt",
-        hla_ref_panel_outdir = "results/hla/imputation/ref_panel/QUILT_prepared_reference_optimal/"
+        hla_ref_panel_outdir = "results/hla/imputation/ref_panel/QUILT_prepared_reference_optimal/no_{id}/"
     shell: """
         echo {wildcards.id} >> {output.exclude_sample_file}
 
@@ -60,10 +63,10 @@ rule prepare_hla_reference_panel_optimal:
         --reference_sample_file={input.sample} \
         --reference_exclude_samplelist_file={output.exclude_sample_file} \
         --hla_regions_to_prepare="c('A','B','C','DQB1','DRB1')" \
-        --nCores=6
+        --nCores=4
     """
 
-rule hla_imputation_optimal:
+rule hla_imputation_optimal1:
     input:
         bam = "data/bams/{id}.bam",
         ref_panel = "results/hla/imputation/ref_panel/QUILT_prepared_reference_optimal/no_{id}/hla{hla_gene}haptypes.RData"
@@ -71,8 +74,8 @@ rule hla_imputation_optimal:
         bamfile = temp("results/hla/imputation/QUILT_HLA_result_optimal/{id}/{id}.{hla_gene}.tsv"),
         imputed = "results/hla/imputation/QUILT_HLA_result_optimal/{id}/{hla_gene}/quilt.hla.output.combined.all.txt"
     resources:
-        mem = '40G'
-    threads: 4
+        mem = '20G'
+    threads: 2
     params:
         quilt_hla = tools['quilt_hla'],
         fa_dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict",

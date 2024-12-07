@@ -133,21 +133,26 @@ rule prepare_hla_vcf_merged_ref:
         tbi = "results/hla_ref_panel/oneKG_mGenv1/merged/oneKG_GAMCC.chr6.vcf.gz.tbi"
     output:
         tmp_vcf = temp("results/hla_ref_panel/oneKG_mGenv1/hla_prepare_ref/tmp.chr6.vcf.gz"),
+        tmp1_vcf = temp("results/hla_ref_panel/oneKG_mGenv1/hla_prepare_ref/tmp1.chr6.vcf.gz"),
         hap = "results/hla_ref_panel/oneKG_mGenv1/hla_prepare_ref/oneKG_GAMCC.chr6.hap.gz",
         legend = "results/hla_ref_panel/oneKG_mGenv1/hla_prepare_ref/oneKG_GAMCC.chr6.legend.gz",
         sample = "results/hla_ref_panel/oneKG_mGenv1/hla_prepare_ref/oneKG_GAMCC.chr6.samples"
     wildcard_constraints:
         chr='\d{1,2}'
-    threads: 6
-    resources: mem = '80G'
+    threads: 2
+    resources: mem = '20G'
     params: outdir = "results/hla_ref_panel/oneKG_mGenv1/hla_prepare_ref/"
     shell: """
         mkdir -p {params.outdir}
+        bcftools view -r chr6:25000000-34000000 -Oz -o {output.tmp1_vcf} {input.vcf}
+        tabix -f {output.tmp1_vcf}
 
-        bcftools norm -m+ {input.vcf} | \
+        bcftools norm -m+ {output.tmp1_vcf} | \
         bcftools view -m2 -M2 -v snps | \
-        bcftools sort -Oz -o {output.tmp_vcf}
-        tabix {output.tmp_vcf}
+        bcftools sort | \
+        bcftools reheader -s data/rename_tsvs/fv_gam_to_idt.ssv | \
+        bgzip > {output.tmp_vcf}
+        tabix -f {output.tmp_vcf}
 
         bcftools convert -h \
         results/hla_ref_panel/oneKG_mGenv1/hla_prepare_ref/oneKG_GAMCC.chr6 {output.tmp_vcf}
@@ -168,14 +173,14 @@ rule prepare_hla_reference_panel_merged_ref:
         ref_panel = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_merged_ref/no_{id}/HLA{hla_gene}fullallelesfilledin.RData", hla_gene = hla_genes, allow_missing = True),
         exclude_sample_file = temp("results/hla/imputation/ref_panel/QUILT_prepared_reference_merged_ref/no_{id}/{id}.tsv")
     resources:
-        mem = '30G'
+        mem = '40G'
     threads: 4
     conda: "sus"
     params:
         quilt_hla_prep = tools['quilt_hla_prep'],
         refseq = "/well/band/users/rbx225/software/QUILT/hla_ancillary_files/refseq.hg38.chr6.26000000.34000000.txt.gz",
         region_exclude_file = "/well/band/users/rbx225/software/QUILT/hla_ancillary_files/hlagenes.txt",
-        hla_ref_panel_outdir = "results/hla/imputation/ref_panel/QUILT_prepared_reference_merged_ref/"
+        hla_ref_panel_outdir = "results/hla/imputation/ref_panel/QUILT_prepared_reference_merged_ref/no_{id}/"
     shell: """
         echo {wildcards.id} >> {output.exclude_sample_file}
 
@@ -207,8 +212,8 @@ rule hla_imputation_merged_ref:
         bamfile = temp("results/hla/imputation/QUILT_HLA_result_merged_ref/{id}/{id}.{hla_gene}.tsv"),
         imputed = "results/hla/imputation/QUILT_HLA_result_merged_ref/{id}/{hla_gene}/quilt.hla.output.combined.all.txt"
     resources:
-        mem = '50G'
-    threads: 6
+        mem = '40G'
+    threads: 4
     params:
         quilt_hla = tools['quilt_hla'],
         fa_dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict",
@@ -318,6 +323,7 @@ rule hla_imputation_method:
 
 ###### Optimal run in theory ######
 
+'''
 rule prepare_hla_reference_panel_optimal:
     input:
         hla_types_panel = f"results/hla_ref_panel/oneKG_mGenv1/oneKG_mGenv1_HLA_calls.tsv",
@@ -391,3 +397,4 @@ rule hla_imputation_optimal:
         --quilt_hla_haplotype_panelfile={params.ref_dir}/quilt.hrc.hla.{wildcards.hla_gene}.haplotypes.RData \
         --dict_file={params.fa_dict}
     """
+'''

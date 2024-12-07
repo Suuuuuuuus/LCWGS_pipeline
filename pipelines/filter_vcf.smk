@@ -64,8 +64,6 @@ rule concat_chip_sites_vcfs:
     resources:
         mem = '100G'
     threads: 16
-    params:
-        qctool = tools['qctool']
     shell: """
         bcftools concat --threads 8 {input.lc_vcf} | bcftools sort -Oz -o {output.concat}
 

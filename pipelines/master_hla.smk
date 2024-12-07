@@ -3,7 +3,7 @@ include: "hla.smk"
 #include: "post_hla.smk"
 include: "hla_ref_panel.smk"
 include: "hla_imputation_wip.smk"
-include: "hla_imputation_prep.smk"
+#include: "hla_imputation_prep.smk"
 include: "phasing.smk"
 include: "auxiliary.smk"
 include: "software.smk"
@@ -46,14 +46,6 @@ rule hla_all:
     input:
         called = expand("results/hla/call/{id}/hla/R1_bestguess_G.txt", id = samples_fv)
 
-rule hla_imputation_prep_all:
-    input:
-        reads1 = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_method/alignment_likelihoods/{id}-{hla_gene}/reads1.csv", hla_gene = HLA_GENES, id = samples_fv),
-        reads2 = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_method/alignment_likelihoods/{id}-{hla_gene}/reads2.csv", hla_gene = HLA_GENES, id = samples_fv),
-        mate_matrix = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_method/alignment_likelihoods/{id}-{hla_gene}/mate_likelihood_matrix.ssv", hla_gene = HLA_GENES, id = samples_fv),
-        pair_matrix = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_method/alignment_likelihoods/{id}-{hla_gene}/pair_likelihood_matrix.ssv", hla_gene = HLA_GENES, id = samples_fv)
-        
-
 rule hla_imputation_all:
     input:
         bamlist = expand("results/hla/imputation/bamlists/bamlist{num}.txt", num = bam_numbers),
@@ -92,13 +84,14 @@ rule hla_ref_panel_all:
 
 rule hla_imputation_wip_all:
     input:
+        merged_ref_hap = "results/hla_ref_panel/oneKG_mGenv1/hla_prepare_ref/oneKG_GAMCC.chr6.hap.gz",
+        merged_ref_legend = "results/hla_ref_panel/oneKG_mGenv1/hla_prepare_ref/oneKG_GAMCC.chr6.legend.gz",
+        merged_ref_sample = "results/hla_ref_panel/oneKG_mGenv1/hla_prepare_ref/oneKG_GAMCC.chr6.samples",
         ref_panel_merged_ref = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_merged_ref/no_{id}/HLA{hla_gene}fullallelesfilledin.RData", hla_gene = hla_genes, id = samples_fv),
         imputed_merged_ref = expand("results/hla/imputation/QUILT_HLA_result_merged_ref/{id}/{hla_gene}/quilt.hla.output.combined.all.txt", hla_gene = hla_genes, id = samples_fv),
         # output_db = expand('/well/band/users/rbx225/recyclable_files/hla_reference_files/v{IPD_IMGT_version}_aligners/{hla_gene}.ssv', hla_gene = hla_genes, IPD_IMGT_version = IPD_IMGT_versions),
         # bamlist = expand("results/hla/imputation/bamlists_fv/bamlist{num}.txt", num = bam_numbers),
-#        merged_ref_hap = "results/hla_ref_panel/oneKG_mGenv1/hla_prepare_ref/oneKG_GAMCC.chr6.hap.gz",
-#        merged_ref_legend = "results/hla_ref_panel/oneKG_mGenv1/hla_prepare_ref/oneKG_GAMCC.chr6.legend.gz",
-#        merged_ref_sample = "results/hla_ref_panel/oneKG_mGenv1/hla_prepare_ref/oneKG_GAMCC.chr6.samples",
+       
 
         # ref_panel_db = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_db/HLA{hla_gene}fullallelesfilledin.RData", hla_gene = hla_genes),
         # ref_panel_merged_ref = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_merged_ref/no_{id}/HLA{hla_gene}fullallelesfilledin.RData", hla_gene = hla_genes, id = samples_fv),
