@@ -323,10 +323,9 @@ rule hla_imputation_method:
 
 ###### Optimal run in theory ######
 
-'''
 rule prepare_hla_reference_panel_optimal:
     input:
-        hla_types_panel = f"results/hla_ref_panel/oneKG_mGenv1/oneKG_mGenv1_HLA_calls.tsv",
+        hla_types_panel = f"results/hla_ref_panel/oneKG_mGenv1/oneKG_mGenv1_HLA_calls_new.tsv",
         ipd_igmt = f"{hla_ref_panel_indir}IPD-IMGT-HLA_v3570.zip",
         fasta = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta",
         genetic_map = f"{hla_ref_panel_indir}YRI/YRI-chr6-final.b38.txt.gz",
@@ -337,14 +336,14 @@ rule prepare_hla_reference_panel_optimal:
         ref_panel = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_optimal/no_{id}/hla{hla_gene}haptypes.RData", hla_gene = hla_genes, allow_missing = True),
         exclude_sample_file = temp("results/hla/imputation/ref_panel/QUILT_prepared_reference_optimal/no_{id}/{id}.tsv")
     resources:
-        mem = '30G'
+        mem = '40G'
     threads: 4
     conda: "sus2"
     params:
         quilt_hla_prep = tools['quilt_hla_prep'],
         refseq = "/well/band/users/rbx225/software/QUILT/hla_ancillary_files/refseq.hg38.chr6.26000000.34000000.txt.gz",
         region_exclude_file = "/well/band/users/rbx225/software/QUILT/hla_ancillary_files/hlagenes.txt",
-        hla_ref_panel_outdir = "results/hla/imputation/ref_panel/QUILT_prepared_reference_optimal/"
+        hla_ref_panel_outdir = "results/hla/imputation/ref_panel/QUILT_prepared_reference_optimal/no_{id}/"
     shell: """
         echo {wildcards.id} >> {output.exclude_sample_file}
 
@@ -365,7 +364,7 @@ rule prepare_hla_reference_panel_optimal:
         --reference_sample_file={input.sample} \
         --reference_exclude_samplelist_file={output.exclude_sample_file} \
         --hla_regions_to_prepare="c('A','B','C','DQB1','DRB1')" \
-        --nCores=6
+        --nCores=2
     """
 
 rule hla_imputation_optimal:
@@ -376,20 +375,20 @@ rule hla_imputation_optimal:
         bamfile = temp("results/hla/imputation/QUILT_HLA_result_optimal/{id}/{id}.{hla_gene}.tsv"),
         imputed = "results/hla/imputation/QUILT_HLA_result_optimal/{id}/{hla_gene}/quilt.hla.output.combined.all.txt"
     resources:
-        mem = '40G'
-    threads: 4
+        mem = '20G'
+    threads: 2
     params:
-        quilt_hla = tools['quilt_hla'],
+        quilt_test_hla = tools['quilt_test_hla'],
         fa_dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict",
         ref_dir = "results/hla/imputation/ref_panel/QUILT_prepared_reference_optimal/no_{id}/"
     conda: "sus2"
     shell: """
         mkdir -p results/hla/imputation/QUILT_HLA_result_optimal/{wildcards.id}/{wildcards.hla_gene}/
 
-        echo {input.bam} > {output.bamfile}
+        echo {input.bam} >> {output.bamfile}
         ulimit -n 50000
 
-        {params.quilt_hla} \
+        {params.quilt_test_hla} \
         --outputdir="results/hla/imputation/QUILT_HLA_result_optimal/{wildcards.id}/{wildcards.hla_gene}/" \
         --bamlist={output.bamfile} \
         --region={wildcards.hla_gene} \
@@ -397,4 +396,3 @@ rule hla_imputation_optimal:
         --quilt_hla_haplotype_panelfile={params.ref_dir}/quilt.hrc.hla.{wildcards.hla_gene}.haplotypes.RData \
         --dict_file={params.fa_dict}
     """
-'''

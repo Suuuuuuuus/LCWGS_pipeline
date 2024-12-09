@@ -12,6 +12,7 @@ tools = {
     'quilt_hla':"/well/band/users/rbx225/software/QUILT/QUILT_HLA.R",
     'quilt_hla_prep': "/well/band/users/rbx225/software/QUILT/QUILT_HLA_prepare_reference.R",
     'quilt_sus_hla': "/well/band/users/rbx225/software/QUILT_sus/QUILT_HLA.R",
+    'quilt_test_hla': "/well/band/users/rbx225/software/QUILT_test/QUILT_HLA.R",
     'impute2': "/well/band/users/rbx225/software/impute2/impute2",
 
     'beagle': "java -Xmx60G -Xms30G -jar /well/band/users/rbx225/software/BEAGLE/beagle.29Oct24.c8e.jar"

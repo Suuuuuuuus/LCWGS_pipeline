@@ -1,7 +1,7 @@
 configfile: "pipelines/config.json"
 include: "auxiliary.smk"
 include: "software.smk"
-include: "hla_imputation_wip.smk"
+# include: "hla_imputation_wip.smk"
 
 import json
 import pandas as pd
@@ -18,9 +18,7 @@ samples_fv = read_tsv_as_lst('data/sample_tsvs/fv_idt_names.tsv')
 rule all:
     input:
         ref_panel_optimal = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_optimal/no_{id}/hla{hla_gene}haptypes.RData", hla_gene = hla_genes, id = ['IDT0481']),
-        imputed_optimal = expand("results/hla/imputation/QUILT_HLA_result_optimal/{id}/{hla_gene}/quilt.hla.output.combined.all.txt", hla_gene = hla_genes, id = ['IDT0481']),
-        # ref_panel_merged_ref = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_merged_ref/no_{id}/HLA{hla_gene}fullallelesfilledin.RData", hla_gene = hla_genes, id = samples_fv),
-        # imputed_merged_ref = expand("results/hla/imputation/QUILT_HLA_result_merged_ref/{id}/{hla_gene}/quilt.hla.output.combined.all.txt", hla_gene = hla_genes, id = samples_fv)
+        imputed_optimal = expand("results/hla/imputation/QUILT_HLA_result_optimal/{id}/{hla_gene}/quilt.hla.output.combined.all.txt", hla_gene = ['A'], id = ['IDT0481'])
 
 rule prepare_hla_reference_panel_optimal1:
     input:
@@ -77,7 +75,7 @@ rule hla_imputation_optimal1:
         mem = '20G'
     threads: 2
     params:
-        quilt_hla = tools['quilt_hla'],
+        quilt_hla = tools['quilt_test_hla'],
         fa_dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict",
         ref_dir = "results/hla/imputation/ref_panel/QUILT_prepared_reference_optimal/no_{id}/"
     conda: "sus2"
