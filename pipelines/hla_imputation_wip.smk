@@ -378,7 +378,7 @@ rule hla_imputation_optimal:
         mem = '20G'
     threads: 2
     params:
-        quilt_test_hla = tools['quilt_test_hla'],
+        quilt_hla = tools['quilt_hla'],
         fa_dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict",
         ref_dir = "results/hla/imputation/ref_panel/QUILT_prepared_reference_optimal/no_{id}/"
     conda: "sus2"
@@ -388,7 +388,7 @@ rule hla_imputation_optimal:
         echo {input.bam} >> {output.bamfile}
         ulimit -n 50000
 
-        {params.quilt_test_hla} \
+        {params.quilt_hla} \
         --outputdir="results/hla/imputation/QUILT_HLA_result_optimal/{wildcards.id}/{wildcards.hla_gene}/" \
         --bamlist={output.bamfile} \
         --region={wildcards.hla_gene} \

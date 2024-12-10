@@ -75,7 +75,7 @@ rule hla_imputation_optimal1:
         mem = '20G'
     threads: 2
     params:
-        quilt_hla = tools['quilt_test_hla'],
+        quilt_hla = tools['quilt_hla'],
         fa_dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict",
         ref_dir = "results/hla/imputation/ref_panel/QUILT_prepared_reference_optimal/no_{id}/"
     conda: "sus2"

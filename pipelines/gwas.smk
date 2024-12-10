@@ -104,19 +104,25 @@ rule prepare_gamcc_samples:
     input:
         PC = "results/wip_vcfs/oneKG/vanilla/chip_sites/PCs.eigenvec"
     output:
-        gamcc_gen_samples = "results/gwas/mGenv1_topmed/vcf/blood_groups.sample"
+        gamcc_gen_samples = "results/gwas/mGenv1_topmed/{model}/vcf/blood_groups.sample"
     params:
         metadata = "data/metadata/GAMCC-lcWGS_metadata.csv",
         fv_gam_names_file = "data/sample_tsvs/fv_gam_names.tsv",
         n = 4
-    localrule: True
     run:
         metadata = pd.read_csv(params.metadata)
         metadata = metadata[['anon_id', 'Status_v1']]
         fv_gam_names = lcwgsus.read_tsv_as_lst(params.fv_gam_names_file)
         metadata = metadata[metadata['anon_id'].isin(fv_gam_names)]
         metadata.columns = ['ID', 'malaria']
-        metadata['malaria'] = metadata['malaria'].map({'Mild malaria': 'mild', 'Non-malaria control': 'control', 'Severe malaria': 'severe'})
+        if wildcards.model == 'mlr':
+            metadata['malaria'] = metadata['malaria'].map({'Mild malaria': 'mild', 'Non-malaria control': 'control', 'Severe malaria': 'severe'})
+        elif wildcards.model == 'lr1':
+            metadata['malaria'] = metadata['malaria'].map({'Mild malaria': 'case', 'Non-malaria control': 'control', 'Severe malaria': 'case'})
+        elif wildcards.model == 'lr2':
+            metadata['malaria'] = metadata['malaria'].map({'Mild malaria': 'control', 'Non-malaria control': 'control', 'Severe malaria': 'case'})
+        else:
+            pass
         metadata = metadata.reset_index(drop = True)
 
         n_PCs = params.n
@@ -127,7 +133,10 @@ rule prepare_gamcc_samples:
             PCs[c] = PCs[c].astype(str)
 
         sample = pd.merge(metadata, PCs, on = 'ID')
-        sample.loc[-1] = ['0', 'D', 'C', 'C', 'C', 'C']
+        if wildcards.model == 'mlr':
+            sample.loc[-1] = ['0', 'D', 'C', 'C', 'C', 'C']
+        else:
+            sample.loc[-1] = ['0', 'B', 'C', 'C', 'C', 'C']
         sample.index = sample.index + 1
         sample = sample.sort_index()
         sample.to_csv(output.gamcc_gen_samples, sep = ' ', index = False, header = True)
@@ -135,17 +144,16 @@ rule prepare_gamcc_samples:
 rule concat_subset_blood_group_regions:
     input:
         subset_vcf = expand("results/two-stage-imputation/vanilla/malariaGen_v1_b38_topmed/vcf/chr{chr}.tmp.vcf.gz", chr = chromosome),
-        samples = "results/gwas/mGenv1_topmed/vcf/blood_groups.sample"
+        samples = "results/gwas/mGenv1_topmed/{model}/vcf/blood_groups.sample"
     output:
-        concat_vcf = "results/gwas/mGenv1_topmed/vcf/blood_groups.vcf.gz",
-        gen = "results/gwas/mGenv1_topmed/vcf/blood_groups.gen",
-        sample_file = temp("results/gwas/mGenv1_topmed/vcf/samplefile.tsv"),
-        tmp_vcf = temp("results/gwas/mGenv1_topmed/vcf/blood_groups.tmp.vcf.gz")
+        concat_vcf = "results/gwas/mGenv1_topmed/{model}/vcf/blood_groups.vcf.gz",
+        gen = "results/gwas/mGenv1_topmed/{model}/vcf/blood_groups.gen",
+        sample_file = temp("results/gwas/mGenv1_topmed/{model}/vcf/samplefile.tsv"),
+        tmp_vcf = temp("results/gwas/mGenv1_topmed/{model}/vcf/blood_groups.tmp.vcf.gz")
     params:
         qctool = tools['qctool']
-    localrule: True
     shell: """
-        mkdir -p results/gwas/mGenv1_topmed/vcf/
+        mkdir -p results/gwas/mGenv1_topmed/{wildcards.model}/vcf/
 
         bcftools concat {input.subset_vcf} | bcftools sort -Oz -o {output.concat_vcf}
         tabix -f {output.concat_vcf}
@@ -160,16 +168,15 @@ rule concat_subset_blood_group_regions:
 
 rule blood_group_gwas:
     input:
-        gen = "results/gwas/mGenv1_topmed/vcf/blood_groups.gen",
-        samples = "results/gwas/mGenv1_topmed/vcf/blood_groups.sample"
+        gen = "results/gwas/mGenv1_topmed/{model}/vcf/blood_groups.gen",
+        samples = "results/gwas/mGenv1_topmed/{model}/vcf/blood_groups.sample"
     output:
-        result = "results/gwas/mGenv1_topmed/results/stats.out"
+        result = "results/gwas/mGenv1_topmed/{model}/results/stats.out"
     params:
         snptest = tools['snptest'],
         pheno = "malaria"
-    localrule: True
     shell: """
-        mkdir -p results/gwas/mGenv1_topmed/results/
+        mkdir -p results/gwas/mGenv1_topmed/{wildcards.model}/results/
 
         {params.snptest} \
         -data {input.gen} {input.samples} \

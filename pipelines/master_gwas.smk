@@ -23,11 +23,13 @@ samples_fv_gm = read_tsv_as_lst('data/sample_tsvs/fv_gm_names.tsv')
 samples_oneKG = read_tsv_as_lst("/well/band/users/rbx225/recyclable_files/ref_panels/oneKG_30x/samples_to_phase.tsv")
 chromosome = [i for i in range(1,23)]
 
+models = ['mlr', 'lr1', 'lr2']
+
 rule gwas_all:
     input:
         concat_chip_sites = "results/wip_vcfs/oneKG/vanilla/chip_sites/lc.vcf.gz",
         PCs = "results/wip_vcfs/oneKG/vanilla/chip_sites/PCs.eigenvec",
-        # gamcc_gen_samples = "results/gwas/mGenv1_topmed/vcf/blood_groups.sample",
-        blood_groups_vcf = "results/gwas/mGenv1_topmed/vcf/blood_groups.vcf.gz",
-        gamcc_gen = "results/gwas/mGenv1_topmed/vcf/blood_groups.gen",
-        result = "results/gwas/mGenv1_topmed/results/stats.out"
+        blood_groups_vcf = expand("results/gwas/mGenv1_topmed/{model}/vcf/blood_groups.vcf.gz", model = models),
+        gamcc_gen_samples = expand("results/gwas/mGenv1_topmed/{model}/vcf/blood_groups.sample", model = models),
+        gamcc_gen = expand("results/gwas/mGenv1_topmed/{model}/vcf/blood_groups.gen", model = models),
+        result = expand("results/gwas/mGenv1_topmed/{model}/results/stats.out", model = models)
