@@ -121,6 +121,9 @@ rule prepare_gamcc_samples:
             metadata['malaria'] = metadata['malaria'].map({'Mild malaria': 'case', 'Non-malaria control': 'control', 'Severe malaria': 'case'})
         elif wildcards.model == 'lr2':
             metadata['malaria'] = metadata['malaria'].map({'Mild malaria': 'control', 'Non-malaria control': 'control', 'Severe malaria': 'case'})
+        elif wildcards.model == 'lr3':
+            metadata['malaria'] = metadata['malaria'].map({'Mild malaria': 'mild', 'Non-malaria control': 'control', 'Severe malaria': 'case'})
+            metadata = metadata[metadata['malaria'] != 'mild']
         else:
             pass
         metadata = metadata.reset_index(drop = True)
@@ -175,14 +178,25 @@ rule blood_group_gwas:
     params:
         snptest = tools['snptest'],
         pheno = "malaria"
+    localrule: True
     shell: """
         mkdir -p results/gwas/mGenv1_topmed/{wildcards.model}/results/
 
-        {params.snptest} \
-        -data {input.gen} {input.samples} \
-        -o {output.result} \
-        -frequentist gen \
-        -method newml \
-        -pheno {params.pheno} \
-        -baseline_phenotype control
+        if [[ {wildcards.model} == "mlr" ]]
+        then
+            {params.snptest} \
+            -data {input.gen} {input.samples} \
+            -o {output.result} \
+            -frequentist gen \
+            -method newml \
+            -pheno {params.pheno} \
+            -baseline_phenotype control
+        else
+            {params.snptest} \
+            -data {input.gen} {input.samples} \
+            -o {output.result} \
+            -frequentist gen \
+            -method newml \
+            -pheno {params.pheno}
+        fi
     """

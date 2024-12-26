@@ -23,7 +23,7 @@ samples_fv_gm = read_tsv_as_lst('data/sample_tsvs/fv_gm_names.tsv')
 samples_oneKG = read_tsv_as_lst("/well/band/users/rbx225/recyclable_files/ref_panels/oneKG_30x/samples_to_phase.tsv")
 chromosome = [i for i in range(1,23)]
 
-models = ['mlr', 'lr1', 'lr2']
+models = ['mlr', 'lr1', 'lr2', 'lr3']
 
 rule gwas_all:
     input:

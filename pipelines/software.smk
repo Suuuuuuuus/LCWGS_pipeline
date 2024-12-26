@@ -11,6 +11,10 @@ tools = {
 
     'quilt_hla':"/well/band/users/rbx225/software/QUILT/QUILT_HLA.R",
     'quilt_hla_prep': "/well/band/users/rbx225/software/QUILT/QUILT_HLA_prepare_reference.R",
+
+    'quilt_tmp_hla':"/well/band/users/rbx225/software/QUILT_tmp/QUILT_HLA.R",
+    'quilt_tmp_hla_prep': "/well/band/users/rbx225/software/QUILT_tmp/QUILT_HLA_prepare_reference.R",
+
     'quilt_sus_hla': "/well/band/users/rbx225/software/QUILT_sus/QUILT_HLA.R",
     'quilt_test_hla': "/well/band/users/rbx225/software/QUILT_test/QUILT_HLA.R",
     'impute2': "/well/band/users/rbx225/software/impute2/impute2",
