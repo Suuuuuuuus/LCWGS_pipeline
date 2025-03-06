@@ -58,7 +58,7 @@ rule prepare_hla_reference_panel:
         legend = f"{hla_ref_panel_indir}oneKG.legend.gz",
         sample = f"{hla_ref_panel_indir}oneKG.samples"
     output:
-        ref_panel = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_v{IPD_IMGT_version}/HLA{gene}fullallelesfilledin.RData", gene = hla_genes, allow_missing = True)
+        ref_panel = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_v{IPD_IMGT_version}/HLA{hla_gene}fullallelesfilledin.RData", hla_gene = hla_genes, allow_missing = True)
     resources:
         mem = '30G'
     threads: 4
@@ -90,7 +90,7 @@ rule prepare_hla_reference_panel:
 rule hla_imputation:
     input:
         bamlist = "results/hla/imputation/bamlists/bamlist{num}.txt",
-        ref_dir = "results/hla/imputation/ref_panel/QUILT_prepared_reference_v{IPD_IMGT_version}/"
+        RData = "results/hla/imputation/ref_panel/QUILT_prepared_reference_v{IPD_IMGT_version}/HLA{hla_gene}fullallelesfilledin.RData"
     output:
         imputed = "results/hla/imputation/QUILT_HLA_result_v{IPD_IMGT_version}/genes{num}/{hla_gene}/quilt.hla.output.combined.all.txt"
     resources:
@@ -98,35 +98,16 @@ rule hla_imputation:
     threads: 6
     params:
         quilt_hla = tools['quilt_hla'],
-        fa_dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict"
+        fa_dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict",
+        ref_dir = "results/hla/imputation/ref_panel/QUILT_prepared_reference_v{IPD_IMGT_version}/"
     shell: """
-        mkdir -p results/hla/imputation/QUILT_HLA_result_v{IPD_IMGT_version}/genes{wildcards.num}/{wildcards.hla_gene}/
+        mkdir -p results/hla/imputation/QUILT_HLA_result_v{wildcards.IPD_IMGT_version}/genes{wildcards.num}/{wildcards.hla_gene}/
 
         {params.quilt_hla} \
         --outputdir="results/hla/imputation/QUILT_HLA_result_v{wildcards.IPD_IMGT_version}/genes{wildcards.num}/{wildcards.hla_gene}/" \
         --bamlist={input.bamlist} \
         --region={wildcards.hla_gene} \
-        --prepared_hla_reference_dir={input.ref_dir} \
-        --quilt_hla_haplotype_panelfile={input.ref_dir}/quilt.hrc.hla.{wildcards.hla_gene}.haplotypes.RData \
+        --prepared_hla_reference_dir={params.ref_dir} \
+        --quilt_hla_haplotype_panelfile={params.ref_dir}/quilt.hrc.hla.{wildcards.hla_gene}.haplotypes.RData \
         --dict_file={params.fa_dict}
-    """
-
-rule hla_la_calling:
-    input:
-        bam = "data/bams/{id}.bam",
-        bai = "data/bams/{id}.bam.bai"
-    output:
-        called = "results/hla/call/{id}/hla/R1_bestguess_G.txt"
-    resources:
-        mem = '60G'
-    threads: 4
-    shell: """
-        mkdir -p results/hla/call/{wildcards.id}/
-        module load Java/17
-
-        HLA-LA.pl \
-        --BAM {input.bam} \
-        --graph PRG_MHC_GRCh38_withIMGT \
-        --workingDir /well/band/users/rbx225/GAMCC/results/hla/call/ \
-        --sampleID {wildcards.id}
     """

@@ -2120,3 +2120,25 @@ rule hla_imputation_prepare_per_sample:
         pd.set_option('display.float_format', '{:.6e}'.format)
         likemat_mate.to_csv(output.mate_matrix, index=True, header=True, sep = ' ')
         likemat_paired.to_csv(output.pair_matrix, index=True, header=True, sep = ' ')
+
+rule hla_la_calling:
+    input:
+        bam = "data/bams/{id}.bam",
+        bai = "data/bams/{id}.bam.bai"
+    output:
+        called = "results/hla/call/{id}/hla/R1_bestguess_G.txt"
+    resources:
+        mem = '60G'
+    threads: 4
+    shell: """
+        mkdir -p results/hla/call/{wildcards.id}/
+        module load Java/17
+
+        HLA-LA.pl \
+        --BAM {input.bam} \
+        --graph PRG_MHC_GRCh38_withIMGT \
+        --workingDir /well/band/users/rbx225/GAMCC/results/hla/call/ \
+        --sampleID {wildcards.id}
+    """
+called = expand("results/hla/call/{id}/hla/R1_bestguess_G.txt", id = samples_fv),
+        

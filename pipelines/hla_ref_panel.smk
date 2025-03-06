@@ -170,3 +170,30 @@ rule merge_1KG_GAMCC_chunks:
         bcftools concat --ligate-force -Oz -o {output.vcf} {params.input_string}
         tabix {output.vcf}
     """
+
+rule prepare_hla_vcf_merged_ref_hla_region:
+    input:
+        vcf = "results/hla_ref_panel/oneKG_mGenv1/merged/oneKG_GAMCC.chr6.vcf.gz",
+        tbi = "results/hla_ref_panel/oneKG_mGenv1/merged/oneKG_GAMCC.chr6.vcf.gz.tbi"
+    output:
+        hla_vcf = "results/hla_ref_panel/oneKG_mGenv1/merged/hla_only/oneKG_GAMCC.hla.vcf.gz",
+        tmp1_vcf = temp("results/hla_ref_panel/oneKG_mGenv1/merged/hla_only/tmp.oneKG_GAMCC.chr6.vcf.gz"),
+    wildcard_constraints:
+        chr='\d{1,2}'
+    threads: 2
+    resources: mem = '20G'
+    params: outdir = "results/hla_ref_panel/oneKG_mGenv1/merged/hla_only/"
+    shell: """
+        mkdir -p {params.outdir}
+        bcftools view -r chr6:25000000-34000000 -Oz -o {output.tmp1_vcf} {input.vcf}
+        tabix -f {output.tmp1_vcf}
+
+        bcftools norm -m+ {output.tmp1_vcf} | \
+        bcftools view -m2 -M2 -v snps | \
+        bcftools sort | \
+        bcftools reheader -s data/rename_tsvs/fv_gam_to_idt.ssv | \
+        bgzip > {output.hla_vcf}
+        tabix -f {output.hla_vcf}
+
+        rm {output.tmp1_vcf}.tbi
+    """

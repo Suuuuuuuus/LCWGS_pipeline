@@ -2,7 +2,8 @@ include: "hla.smk"
 #include: "alignment.smk"
 #include: "post_hla.smk"
 include: "hla_ref_panel.smk"
-include: "hla_imputation_wip.smk"
+#include: "hla_imputation_wip.smk"
+include: "hla_imputation_method.smk"
 #include: "hla_imputation_prep.smk"
 include: "phasing.smk"
 include: "auxiliary.smk"
@@ -36,15 +37,18 @@ samples_oneKG = read_tsv_as_lst("/well/band/users/rbx225/recyclable_files/ref_pa
 chromosome = [i for i in range(1,23)]
 hla_genes = ['A', 'B', 'C', 'DRB1', 'DQB1']
 IPD_IMGT_versions = ['3390', '3570']
+# IPD_IMGT_versions = ['3390']
 bam_batches = config['bam_batch']
 bam_numbers = [str(i) for i in range(1, int(bam_batches) + 1)]
 studies = ['1KG', 'GAMCC']
 filters = ['strict', 'loose']
 vcf_versions = ['30x', 'phase3_b38']
+panels = ['oneKG', 'merged']
 
 rule hla_all:
     input:
-        called = expand("results/hla/call/{id}/hla/R1_bestguess_G.txt", id = samples_fv)
+        ref_panel = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_v{IPD_IMGT_version}/HLA{hla_gene}fullallelesfilledin.RData", hla_gene = hla_genes, IPD_IMGT_version = IPD_IMGT_versions),
+        imputed = expand("results/hla/imputation/QUILT_HLA_result_v{IPD_IMGT_version}/genes{num}/{hla_gene}/quilt.hla.output.combined.all.txt", IPD_IMGT_version = IPD_IMGT_versions, num = bam_numbers, hla_gene = hla_genes)
 
 rule hla_imputation_all:
     input:
@@ -80,11 +84,15 @@ rule hla_ref_panel_all:
 #        fv_vcf = expand("results/hla_ref_panel/oneKG_mGenv1/fv_gamcc_vcf/gamcc.chr{chr}.vcf.gz", chr = chromosome),
 #        mGen_chunk_vcfs = [mGen_chunk_vcf_lst],
 #        oneKG_gamcc = expand("results/hla_ref_panel/oneKG_mGenv1/merged/oneKG_GAMCC.chr{chr}.vcf.gz", chr = chromosome)
-        oneKG_gamcc = expand("results/hla_ref_panel/oneKG_mGenv1/merged/oneKG_GAMCC.chr{chr}.vcf.gz", chr = [6])
+        oneKG_gamcc = expand("results/hla_ref_panel/oneKG_mGenv1/merged/oneKG_GAMCC.chr{chr}.vcf.gz", chr = [6]),
+        oneKG_gamcc_hla = "results/hla_ref_panel/oneKG_mGenv1/merged/hla_only/oneKG_GAMCC.hla.vcf.gz"
 
 rule hla_imputation_wip_all:
     input:
-        imputed_method = expand("results/hla/imputation/QUILT_HLA_result_method/{id}/{hla_gene}/quilt.hla.output.combined.all.txt", hla_gene = hla_genes, id = samples_fv)
+        imputed_method_v3390 = expand("results/hla/imputation/QUILT_HLA_result_method/{id}/{hla_gene}/quilt.hla.output.combined.all.txt", hla_gene = hla_genes, id = samples_fv)
+        #ref_panel_optimal = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_optimal/no_{id}/hla{hla_gene}haptypes.RData", hla_gene = hla_genes, id = samples_fv),
+        #imputed_optimal = expand("results/hla/imputation/QUILT_HLA_result_optimal/{id}/{hla_gene}/quilt.hla.output.combined.all.txt", hla_gene = hla_genes, id = samples_fv)
+
         # ref_panel_optimal = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_optimal/no_{id}/hla{hla_gene}haptypes.RData", hla_gene = hla_genes, id = samples_fv),
         # imputed_optimal = expand("results/hla/imputation/QUILT_HLA_result_optimal/{id}/{hla_gene}/quilt.hla.output.combined.all.txt", hla_gene = hla_genes, id = samples_fv),
 
@@ -95,13 +103,25 @@ rule hla_imputation_wip_all:
         # bamlist = expand("results/hla/imputation/bamlists_fv/bamlist{num}.txt", num = bam_numbers),
 
         # ref_panel_db = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_db/HLA{hla_gene}fullallelesfilledin.RData", hla_gene = hla_genes),
-        # ref_panel_merged_ref = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_merged_ref/no_{id}/HLA{hla_gene}fullallelesfilledin.RData", hla_gene = hla_genes, id = samples_fv),
-        # ref_panel_method = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_method/HLA{hla_gene}fullallelesfilledin.RData", hla_gene = hla_genes),
+        # ref_panel_merged_ref_v3390 = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_merged_ref/no_{id}/HLA{hla_gene}fullallelesfilledin.RData", hla_gene = hla_genes, id = samples_fv),
+        # ref_panel_merged_ref_v3570 = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_merged_ref_v3570/no_{id}/hla{hla_gene}haptypes.RData", hla_gene = hla_genes, id = samples_fv),
+        # ref_panel_method_v3390 = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_method/HLA{hla_gene}fullallelesfilledin.RData", hla_gene = hla_genes),
+        # ref_panel_method_v3570 = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_method_v3570/hla{hla_gene}haptypes.RData", hla_gene = hla_genes, id = samples_fv),
         # ref_panel_optimal = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_optimal/no_{id}/hla{hla_gene}haptypes.RData", hla_gene = hla_genes, id = samples_fv),
 
         # imputed_db = expand("results/hla/imputation/QUILT_HLA_result_db/genes{num}/{hla_gene}/quilt.hla.output.combined.all.txt", hla_gene = hla_genes, num = bam_numbers),
-        # imputed_merged_ref = expand("results/hla/imputation/QUILT_HLA_result_merged_ref/{id}/{hla_gene}/quilt.hla.output.combined.all.txt", hla_gene = hla_genes, id = samples_fv),
-        # imputed_method = expand("results/hla/imputation/QUILT_HLA_result_method/genes{num}/{hla_gene}/quilt.hla.output.combined.all.txt", hla_gene = hla_genes, num = bam_numbers),
-        # imputed_method = expand("results/hla/imputation/QUILT_HLA_result_method/{id}/{hla_gene}/quilt.hla.output.combined.all.txt", hla_gene = hla_genes, id = samples_fv),
+        # imputed_merged_ref_v3390 = expand("results/hla/imputation/QUILT_HLA_result_merged_ref/{id}/{hla_gene}/quilt.hla.output.combined.all.txt", hla_gene = hla_genes, id = samples_fv),
+        # imputed_merged_ref_v3570 = expand("results/hla/imputation/QUILT_HLA_result_merged_ref_v3570/{id}/{hla_gene}/quilt.hla.output.combined.all.txt", hla_gene = hla_genes, id = samples_fv),
+        # imputed_method_v3390 = expand("results/hla/imputation/QUILT_HLA_result_method/{id}/{hla_gene}/quilt.hla.output.combined.all.txt", hla_gene = hla_genes, id = samples_fv),
+        # imputed_method_v3570 = expand("results/hla/imputation/QUILT_HLA_result_method_v3570/{id}/{hla_gene}/quilt.hla.output.combined.all.txt", hla_gene = hla_genes, id = samples_fv),
         # imputed_optimal = expand("results/hla/imputation/QUILT_HLA_result_optimal/{id}/{hla_gene}/quilt.hla.output.combined.all.txt", hla_gene = hla_genes, id = samples_fv),
+
+rule hla_imputation_method_all:
+    input:
+        db = expand('/well/band/users/rbx225/recyclable_files/hla_reference_files/v{IPD_IMGT_version}_aligners/{gene}.ssv', gene = HLA_GENES_ALL, IPD_IMGT_version = IPD_IMGT_versions),
+        db_filtered = expand('/well/band/users/rbx225/recyclable_files/hla_reference_files/v{IPD_IMGT_version}_{panel}_only/{gene}.ssv', gene = HLA_GENES_ALL, panel = panels, IPD_IMGT_version = IPD_IMGT_versions),
+
+        # ref_panel_method_v3390 = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_method/HLA{gene}fullallelesfilledin.RData", gene = hla_genes),
+
+        # imputed_method_v3390 = expand("results/hla/imputation/QUILT_HLA_result_method/{id}/{gene}/quilt.hla.output.combined.all.txt", gene = hla_genes, id = samples_fv)
 
