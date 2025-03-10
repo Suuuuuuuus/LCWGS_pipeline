@@ -17,73 +17,73 @@ samples_fv = read_tsv_as_lst('data/sample_tsvs/fv_idt_names.tsv')
 
 rule all:
     input:
-        ref_panel = expand("results/hla/imputation/QUILT_HLA_result_method/{id}/{hla_gene}/quilt.hla.output.combined.all.txt", hla_gene = hla_genes, id = ['IDT0555'])
-        
-rule hla_imputation_method:
+        ref_panel = "data/tmp/a.tmp1.bam"
+
+rule HLA_realignment:
     input:
-        bam = "data/bams/{id}.bam",
-        ref_panel = "results/hla/imputation/ref_panel/QUILT_prepared_reference_method/HLA{hla_gene}fullallelesfilledin.RData",
-        prepared_db = '/well/band/users/rbx225/recyclable_files/hla_reference_files/v3390_aligners/{hla_gene}.ssv'
+        bam = "data/tmp/IDT0555.bam"
     output:
-        bamlist = temp("results/hla/imputation/bamlists_fv/{id}.{hla_gene}.txt"),
-        imputed = "results/hla/imputation/QUILT_HLA_result_method/{id}/{hla_gene}/quilt.hla.output.combined.all.txt"
+        bam = "data/tmp/a.bam",
+        fastq1 = temp("data/tmp/a_1.fastq"),
+        fastq2 = temp("data/tmp/a_2.fastq"),
+        readlist = temp("data/tmp/a_readlist.txt"),
+        tmp1 = "data/tmp/a.tmp1.bam"
     resources:
         mem = '40G'
-    threads: 4
-    params:
-        quilt_sus_hla = tools['quilt_sus_hla'],
-        fa_dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict",
-        ref_dir = "results/hla/imputation/ref_panel/QUILT_prepared_reference_method/"
-    conda: "sus1"
+    params: 
+        picard = tools["picard"]
+    threads: 8
     shell: """
-        mkdir -p results/hla/imputation/QUILT_HLA_result_method/{wildcards.id}/{wildcards.hla_gene}/
-        ls {input.bam} > {output.bamlist}
-        ulimit -n 50000
+        samtools view -h {input.bam} "chr6:25000000-34000000" | \
+        samtools sort -n - -o {output.bam}
+        
+        samtools view {output.bam} | cut -f 1 | uniq > {output.readlist} 
 
-        {params.quilt_sus_hla} \
-        --outputdir="results/hla/imputation/QUILT_HLA_result_method/{wildcards.id}/{wildcards.hla_gene}/" \
-        --bamlist={output.bamlist} \
-        --region={wildcards.hla_gene} \
-        --prepared_hla_reference_dir={params.ref_dir} \
-        --quilt_hla_haplotype_panelfile={params.ref_dir}/quilt.hrc.hla.{wildcards.hla_gene}.haplotypes.RData \
-        --dict_file={params.fa_dict}
+        {params.picard} FilterSamReads \
+        -I {input.bam} \
+        -O {output.bam} \
+        -READ_LIST_FILE {output.readlist} \
+        -FILTER includeReadList
+
+        samtools sort -n {output.bam} -o {output.tmp1}
+        bedtools bamtofastq -i {output.tmp1} -fq {output.fastq1} -fq2 {output.fastq2}
     """
 
-rule prepare_hla_reference_panel_method:
-    input:
-        hla_types_panel = f"{hla_ref_panel_indir}20181129_HLA_types_full_1000_Genomes_Project_panel.txt",
-        ipd_igmt = f"{hla_ref_panel_indir}IPD-IMGT-HLA_v3390.zip",
-        fasta = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.fasta",
-        genetic_map = f"{hla_ref_panel_indir}YRI/YRI-chr6-final.b38.txt.gz",
-        hap = f"{hla_ref_panel_indir}oneKG.hap.gz",
-        legend = f"{hla_ref_panel_indir}oneKG.legend.gz",
-        sample = f"{hla_ref_panel_indir}oneKG.samples"
-    output:
-        ref_panel = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_method/HLA{hla_gene}fullallelesfilledin.RData", hla_gene = hla_genes)
-    resources:
-        mem = '60G'
-    threads: 4
-    params:
-        quilt_hla_prep = tools['quilt_hla_prep'],
-        refseq = "/well/band/users/rbx225/software/QUILT/hla_ancillary_files/refseq.hg38.chr6.26000000.34000000.txt.gz",
-        region_exclude_file = "/well/band/users/rbx225/software/QUILT/hla_ancillary_files/hlagenes.txt",
-        hla_ref_panel_outdir = "results/hla/imputation/ref_panel/QUILT_prepared_reference_method/"
-    shell: """
-        {params.quilt_hla_prep} \
-        --outputdir={params.hla_ref_panel_outdir} \
-        --nGen=100 \
-        --hla_types_panel={input.hla_types_panel} \
-        --ipd_igmt_alignments_zip_file={input.ipd_igmt} \
-        --ref_fasta={input.fasta} \
-        --refseq_table_file={params.refseq} \
-        --full_regionStart=25587319 \
-        --full_regionEnd=33629686 \
-        --buffer=500000 \
-        --region_exclude_file={params.region_exclude_file} \
-        --genetic_map_file={input.genetic_map} \
-        --reference_haplotype_file={input.hap} \
-        --reference_legend_file={input.legend} \
-        --reference_sample_file={input.sample} \
-        --hla_regions_to_prepare="c('A','B','C','DQB1','DRB1')" \
-        --nCores=6
-    """
+# rule HLA_realignment:
+#     input:
+#         bam = "data/bams/{id}.bam",
+#         reference = "/well/band/users/rbx225/recyclable_files/hla_reference_files/fasta/v{IPD_IMGT_version}_{panel}/HLA.fasta"
+#     output:
+#         bam = "data/realigned_bams/v{IPD_IMGT_version}_{panel}/{id}.bam",
+#         fastq1 = temp("data/realigned_bams/v{IPD_IMGT_version}_{panel}/{id}_1.fastq"),
+#         fastq2 = temp("data/realigned_bams/v{IPD_IMGT_version}_{panel}/{id}_2.fastq"),
+#         readlist = temp("data/realigned_bams/v{IPD_IMGT_version}_{panel}/{id}_readlist.txt"),
+#         tmp1 = temp("data/realigned_bams/v{IPD_IMGT_version}_{panel}/{id}.tmp1.bam")
+#     resources:
+#         mem = '40G'
+#     params: 
+#         sample = "{id}",
+#         picard = tools["picard"]
+#     threads: 8
+#     shell: """
+#         mkdir -p data/realigned_bams/v{wildcards.IPD_IMGT_version}_{wildcards.panel}
+
+#         samtools view -h {input.bam} "chr6:25000000-34000000" | \
+#         samtools sort -n - -o {output.bam}
+        
+#         samtools view {output.bam} | cut -f 1 | uniq > {output.readlist} 
+
+#         {params.picard} FilterSamReads \
+#         -I {output.bam} \
+#         -O {output.tmp1} \
+#         -READ_LIST_FILE {output.readlist} \
+#         -FILTER includeReadList
+
+#         bedtools bamtofastq -i {output.tmp1} -fq {output.fastq1} -fq2 {output.fastq2}
+
+#         bwa mem -t {threads} -a {input.reference} {output.fastq1} {output.fastq2} | \
+#         samtools view -b -o {output.tmp1}
+        
+#         samtools sort -@{threads} -m 1G -o {output.bam} {output.tmp1}
+#         samtools index {output.bam}
+#     """

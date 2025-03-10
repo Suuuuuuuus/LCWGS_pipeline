@@ -2,7 +2,7 @@ include: "hla.smk"
 #include: "alignment.smk"
 #include: "post_hla.smk"
 include: "hla_ref_panel.smk"
-#include: "hla_imputation_wip.smk"
+# include: "hla_imputation_wip.smk"
 include: "hla_imputation_method.smk"
 #include: "hla_imputation_prep.smk"
 include: "phasing.smk"
@@ -22,7 +22,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import sys
 sys.path.append("/well/band/users/rbx225/software/lcwgsus/")
-sys.path.append('/well/band/users/rbx225/software/QUILT_sus/QUILT/Python/')
+sys.path.append('/well/band/users/rbx225/software/QUILT_test/QUILT/Python/')
 import lcwgsus
 
 from lcwgsus.variables import *
@@ -118,10 +118,13 @@ rule hla_imputation_wip_all:
 
 rule hla_imputation_method_all:
     input:
-        db = expand('/well/band/users/rbx225/recyclable_files/hla_reference_files/v{IPD_IMGT_version}_aligners/{gene}.ssv', gene = HLA_GENES_ALL, IPD_IMGT_version = IPD_IMGT_versions),
-        db_filtered = expand('/well/band/users/rbx225/recyclable_files/hla_reference_files/v{IPD_IMGT_version}_{panel}_only/{gene}.ssv', gene = HLA_GENES_ALL, panel = panels, IPD_IMGT_version = IPD_IMGT_versions),
-
+        db = expand('/well/band/users/rbx225/recyclable_files/hla_reference_files/v{IPD_IMGT_version}_aligners/{gene}.ssv', gene = HLA_GENES_ALL_EXPANDED, IPD_IMGT_version = ['3390']),
+        db_filtered = expand('/well/band/users/rbx225/recyclable_files/hla_reference_files/v{IPD_IMGT_version}_{panel}_only/{gene}.ssv', gene = HLA_GENES_ALL_EXPANDED, panel = ['oneKG'], IPD_IMGT_version = ['3390']),
         # ref_panel_method_v3390 = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_method/HLA{gene}fullallelesfilledin.RData", gene = hla_genes),
+        # imputed_method_v3390 = expand("results/hla/imputation/QUILT_HLA_result_method/{id}/{gene}/quilt.hla.output.combined.all.txt", gene = hla_genes, id = samples_fv),
+        
+        # fasta = expand('/well/band/users/rbx225/recyclable_files/hla_reference_files/fasta/v{IPD_IMGT_version}_{panel}/HLA.fasta', panel = ['oneKG'], IPD_IMGT_version = ['3390']),
+        # fai = expand('/well/band/users/rbx225/recyclable_files/hla_reference_files/fasta/v{IPD_IMGT_version}_{panel}/{gene}.index.tsv', panel = ['oneKG'], IPD_IMGT_version = ['3390'], gene = HLA_GENES_ALL_EXPANDED),
 
-        # imputed_method_v3390 = expand("results/hla/imputation/QUILT_HLA_result_method/{id}/{gene}/quilt.hla.output.combined.all.txt", gene = hla_genes, id = samples_fv)
+        # realigned_bams = expand("data/realigned_bams/{id}.bam", id = samples_fv),
 

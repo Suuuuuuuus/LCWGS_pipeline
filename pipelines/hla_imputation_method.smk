@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import sys
 sys.path.append("/well/band/users/rbx225/software/lcwgsus/")
-sys.path.append('/well/band/users/rbx225/software/QUILT_sus/QUILT/Python/')
+sys.path.append('/well/band/users/rbx225/software/QUILT_test/QUILT/Python/')
 import lcwgsus
 
 from lcwgsus.variables import *
@@ -41,9 +41,9 @@ rule prepare_hla_db:
     threads: 4
     params:
         ipd_gen_file_dir = '/well/band/users/rbx225/recyclable_files/hla_reference_files/alignments_v{IPD_IMGT_version}/',
-        hla_gene_information_file = '/well/band/users/rbx225/software/QUILT_sus/hla_ancillary_files/hla_gene_information.tsv'
+        hla_gene_information_file = '/well/band/users/rbx225/software/QUILT_sus/hla_ancillary_files/hla_gene_information_expanded.tsv'
     run:
-        hla_gene_information = pd.read_csv(params.hla_gene_information_file, sep = ' ')
+        hla_gene_information = pd.read_csv(params.hla_gene_information_file, sep = '\t')
 
         db = process_db_genfile(wildcards.gene, params.ipd_gen_file_dir, hla_gene_information)
         db.to_csv(output.db, sep = ' ', index = False, header = True)
@@ -60,7 +60,7 @@ def get_hlatypes(wildcards):
 rule filter_hla_db:
     input:
         db = '/well/band/users/rbx225/recyclable_files/hla_reference_files/v{IPD_IMGT_version}_aligners/{gene}.ssv',
-        hlatypes = get_hlatypes
+        hlatypes_file = get_hlatypes
     output:
         db_filtered = '/well/band/users/rbx225/recyclable_files/hla_reference_files/v{IPD_IMGT_version}_{panel}_only/{gene}.ssv'
     resources:
@@ -68,12 +68,83 @@ rule filter_hla_db:
     threads: 4
     run:
         db = pd.read_csv(input.db, sep = ' ')
-        alleles = lcwgsus.extract_unique_two_field_resolution_from_hlatypes(input.hlatypes, wildcards.gene)
+        
+        if wildcards.gene in HLA_GENES:
+            hlatypes = pd.read_csv(input.hlatypes_file, sep = '\t')
+            alleles = lcwgsus.extract_unique_two_field_resolution_from_hlatypes(hlatypes, wildcards.gene)
 
-        db_filtered = db[[c for c in db.columns if any(":".join(c.split(':')[:2]) == (f'{wildcards.gene}*{a}') for a in alleles)]]
-        db_filtered.to_csv(output.db_filtered, sep = ' ', index = False, header = True)        
+            db_filtered = db[[c for c in db.columns if any(":".join(c.split(':')[:2]) == (f'{wildcards.gene}*{a}') for a in alleles)]]
+        else:
+            db_filtered = db
 
-rule prepare_hla_reference_panel_method:
+        db_filtered.to_csv(output.db_filtered, sep = ' ', index = False, header = True) 
+
+rule save_hla_db_as_fasta:
+    input:
+        db = '/well/band/users/rbx225/recyclable_files/hla_reference_files/v{IPD_IMGT_version}_{panel}_only/{gene}.ssv'
+    output:
+        fasta = temp('/well/band/users/rbx225/recyclable_files/hla_reference_files/fasta/v{IPD_IMGT_version}_{panel}/{gene}.fasta'),
+        fai = '/well/band/users/rbx225/recyclable_files/hla_reference_files/fasta/v{IPD_IMGT_version}_{panel}/{gene}.index.tsv'
+    resources:
+        mem = '20G'
+    threads: 2
+    run:
+        os.makedirs(f'/well/band/users/rbx225/recyclable_files/hla_reference_files/fasta/v{wildcards.IPD_IMGT_version}_{wildcards.panel}/', exist_ok=True)
+    
+        db = pd.read_csv(input.db, sep = ' ')
+        df = pd.DataFrame(columns = ['Allele', 'Start', 'End'])
+        fake_chr = ''
+        num_N = 300
+
+        for c in db.columns:
+            refseq = ''.join(db[c].tolist()).replace('.', '').lstrip('*').rstrip('*')
+            refseq = refseq.replace('*', 'N')
+            df.loc[len(df)] = [c, len(fake_chr), len(fake_chr) + len(refseq) - 1]
+            fake_chr = fake_chr + refseq + 'N'*num_N
+
+        lcwgsus.write_db_as_fasta(wildcards.gene, fake_chr, output.fasta)
+        df.to_csv(output.fai, sep = '\t', index = False)
+
+rule merge_fastas:
+    input:
+        fasta = expand('/well/band/users/rbx225/recyclable_files/hla_reference_files/fasta/v{IPD_IMGT_version}_{panel}/{gene}.fasta', gene = HLA_GENES_ALL_EXPANDED, allow_missing = True)
+    output:
+        merged_fasta = "/well/band/users/rbx225/recyclable_files/hla_reference_files/fasta/v{IPD_IMGT_version}_{panel}/HLA.fasta"
+    resources:
+        mem = '20G'
+    threads: 2
+    shell: """
+        mkdir -p /well/band/users/rbx225/recyclable_files/hla_reference_files/fasta/v{wildcards.IPD_IMGT_version}_{wildcards.panel}/
+        cat {input.fasta} > {output.merged_fasta}
+
+        bwa index {output.merged_fasta}
+    """
+
+rule HLA_realignment:
+    input:
+        fastq1 = "data/fastq/{id}_1.fastq.gz",
+        fastq2 = "data/fastq/{id}_2.fastq.gz",
+        reference = "/well/band/users/rbx225/recyclable_files/hla_reference_files/fasta/v3390_oneKG.fasta"
+    output:
+        bam = "data/realigned_bams/{id}.bam",
+        tmp1 = temp("data/realigned_bams/{id}.tmp1.bam")
+    resources:
+        mem = '40G'
+    params: 
+        sample = "{id}",
+        picard = tools["picard_plus"]
+    threads: 8
+    shell: """
+        mkdir -p data/realigned_bams/
+
+        bwa mem -t {threads} -a {input.reference} {input.fastq1} {input.fastq2} | \
+        samtools view -b -o {output.tmp1}
+        
+        samtools sort -@{threads} -m 1G -o {output.bam} {output.tmp1}
+        samtools index {output.bam}
+    """
+
+rule prepare_hla_reference_panel_method_new:
     input:
         hla_types_panel = f"{hla_ref_panel_indir}20181129_HLA_types_full_1000_Genomes_Project_panel.txt",
         ipd_igmt = f"{hla_ref_panel_indir}IPD-IMGT-HLA_v3390.zip",
@@ -83,7 +154,7 @@ rule prepare_hla_reference_panel_method:
         legend = f"{hla_ref_panel_indir}oneKG.legend.gz",
         sample = f"{hla_ref_panel_indir}oneKG.samples"
     output:
-        ref_panel = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_method/HLA{hla_gene}fullallelesfilledin.RData", hla_gene = hla_genes)
+        ref_panel = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_method/HLA{gene}fullallelesfilledin.RData", gene = hla_genes)
     resources:
         mem = '60G'
     threads: 4
@@ -112,14 +183,14 @@ rule prepare_hla_reference_panel_method:
         --nCores=6
     """
 
-rule hla_imputation_method:
+rule hla_imputation_method_new:
     input:
         bam = "data/bams/{id}.bam",
-        ref_panel = "results/hla/imputation/ref_panel/QUILT_prepared_reference_method/HLA{hla_gene}fullallelesfilledin.RData",
-        prepared_db = '/well/band/users/rbx225/recyclable_files/hla_reference_files/v3390_aligners/{hla_gene}.ssv'
+        ref_panel = "results/hla/imputation/ref_panel/QUILT_prepared_reference_method/HLA{gene}fullallelesfilledin.RData",
+        prepared_db = '/well/band/users/rbx225/recyclable_files/hla_reference_files/v3390_oneKG_only/{gene}.ssv'
     output:
-        bamlist = temp("results/hla/imputation/bamlists_fv/{id}.{hla_gene}.txt"),
-        imputed = "results/hla/imputation/QUILT_HLA_result_method/{id}/{hla_gene}/quilt.hla.output.combined.all.txt"
+        bamlist = temp("results/hla/imputation/bamlists_fv/{id}.{gene}.txt"),
+        imputed = "results/hla/imputation/QUILT_HLA_result_method/{id}/{gene}/quilt.hla.output.combined.all.txt"
     resources:
         mem = '40G'
     threads: 4
@@ -129,15 +200,15 @@ rule hla_imputation_method:
         ref_dir = "results/hla/imputation/ref_panel/QUILT_prepared_reference_method/"
     conda: "sus1"
     shell: """
-        mkdir -p results/hla/imputation/QUILT_HLA_result_method/{wildcards.id}/{wildcards.hla_gene}/
+        mkdir -p results/hla/imputation/QUILT_HLA_result_method/{wildcards.id}/{wildcards.gene}/
         ls {input.bam} > {output.bamlist}
         ulimit -n 50000
 
         {params.quilt_sus_hla} \
-        --outputdir="results/hla/imputation/QUILT_HLA_result_method/{wildcards.id}/{wildcards.hla_gene}/" \
+        --outputdir="results/hla/imputation/QUILT_HLA_result_method/{wildcards.id}/{wildcards.gene}/" \
         --bamlist={output.bamlist} \
-        --region={wildcards.hla_gene} \
+        --region={wildcards.gene} \
         --prepared_hla_reference_dir={params.ref_dir} \
-        --quilt_hla_haplotype_panelfile={params.ref_dir}/quilt.hrc.hla.{wildcards.hla_gene}.haplotypes.RData \
+        --quilt_hla_haplotype_panelfile={params.ref_dir}/quilt.hrc.hla.{wildcards.gene}.haplotypes.RData \
         --dict_file={params.fa_dict}
     """
