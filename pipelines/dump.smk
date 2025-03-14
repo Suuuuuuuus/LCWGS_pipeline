@@ -2141,4 +2141,173 @@ rule hla_la_calling:
         --sampleID {wildcards.id}
     """
 called = expand("results/hla/call/{id}/hla/R1_bestguess_G.txt", id = samples_fv),
+
+rule hla_alignment_new:
+    input:
+        read1_ary = lambda wildcards: expand("results/hla/imputation/ref_panel/QUILT_bam_aligner/{hla_gene}/{id}/{id}.{idx}.ary1.npy", idx = np.arange(v3570_db_alleles[hla_genes.index(wildcards.hla_gene)]), allow_missing = True),
+        read2_ary = lambda wildcards: expand("results/hla/imputation/ref_panel/QUILT_bam_aligner/{hla_gene}/{id}/{id}.{idx}.ary2.npy", idx = np.arange(v3570_db_alleles[hla_genes.index(wildcards.hla_gene)]), allow_missing = True),
+        bam = "data/bams/{id}.bam",
+        db_files = expand("/well/band/users/rbx225/recyclable_files/hla_reference_files/v3390_aligners/{gene}.ssv", gene = HLA_GENES_ALL_EXPANDED)
+    output:
+        reads1 = temp("results/hla/imputation/QUILT_HLA_result_method/{id}/{gene}/reads1.csv"),
+        reads2 = temp("results/hla/imputation/QUILT_HLA_result_method/{id}/{gene}/reads2.csv"),
+        mate_matrix = temp("results/hla/imputation/QUILT_HLA_result_method/{id}/{gene}/mate_likelihood_matrix.ssv"),
+        pair_matrix = temp("results/hla/imputation/QUILT_HLA_result_method/{id}/{gene}/pair_likelihood_matrix.ssv"),
+        read_topresult = "results/hla/imputation/QUILT_HLA_result_method/{id}/{gene}/quilt.hla.output.onlyreads.topresult.txt"
+    resources:
+        mem = '60G'
+    threads: 4
+    params:
+        hla_gene_information_file = "/well/band/users/rbx225/software/QUILT_sus/hla_ancillary_files/hla_gene_information.tsv",
+        db_dir = "/well/band/users/rbx225/recyclable_files/hla_reference_files/v3390_oneKG_only/",
+        tmp_outdir = "results/hla/imputation/QUILT_HLA_result_method/",
+        reads_df_outdir = "results/hla/imputation/QUILT_HLA_result_method/"
+    run:
+        hla_gene_information = pd.read_csv(params.hla_gene_information_file, sep = ' ')
+        reads_apart_max = 1000
+        reads_extend_max = 1000
         
+        reads1 = get_chr6_reads(wildcards.gene, input.bam, hla_gene_information, 
+                        reads_apart_max = reads_apart_max, 
+                        reads_extend_max = reads_extend_max)
+    
+        rl = reads1['sequence'].str.len().mode().values[0]
+
+        reads2 = get_hla_reads(wildcards.gene, input.bam, reads_extend_max = reads_extend_max)
+
+        if reads1.empty:
+            reads1 = reads2.iloc[:2, :] if not reads2.empty else pd.DataFrame()
+        elif reads2.empty:
+            reads2 = reads1.iloc[:2, :]
+        else:
+            pass
+        
+        ncores = 2*(len(os.sched_getaffinity(0))) - 1
+
+        db_dict = {}
+        for g in HLA_GENES_ALL:
+            db = pd.read_csv(f'{params.db_dir}{g}.ssv', sep = ' ')
+            for c in db.columns:
+                refseq = ''.join(db[c].tolist()).replace('.', '').lstrip('*').rstrip('*')
+                db_dict[c] = refseq
+
+        columns = np.array(list(db_dict.keys()))
+        likemat1 = multi_calculate_loglikelihood_per_allele(reads1, db_dict, ncores)
+        min_valid_prob = n_mismatches*np.log(assumed_bq) + (rl - n_mismatches)*np.log(1 - assumed_bq)
+
+        valid_indices1 = np.any(likemat1 >= min_valid_prob, axis=1)
+        likemat1, reads1 = likemat1[valid_indices1], reads1[valid_indices1]
+        
+        likemat_all = likemat1
+        id1 = reads1.iloc[:, 0].to_numpy()
+
+        unique_ids = np.unique(id1)
+
+        for g in HLA_GENES:
+        likemat_mate = -600*np.ones((len(unique_ids), likemat_all.shape[1]))
+
+        for i, uid in enumerate(unique_ids):
+            tmp = likemat_all[id1 == uid, :]
+
+            keep = False
+            for j in range(tmp.shape[0]):
+                best_indices = np.where(tmp[j,:] == tmp[j,:].max())[0]
+                best_alleles = np.array(columns)[best_indices]
+                aligned_genes = np.unique(np.array([s.split('*')[0] for s in best_alleles]))
+                keep = keep or ((len(aligned_genes) == 1) and (aligned_genes[0] == gene))
+
+            if keep:
+                likemat_mate[i, :] = np.sum(tmp, axis=0)
+
+        columns_to_keep = np.where(np.char.startswith(columns, gene + '*'))[0]
+        scoring_df = pd.DataFrame({'ID': unique_ids, 
+                            'Target': likemat_mate[:,columns_to_keep].max(axis = 1), 
+                            'Others': likemat_mate[:,~np.where(np.char.startswith(columns, gene + '*'))[0]].max(axis = 1)
+                        })
+        scoring_df['diff'] = scoring_df['Target'] - scoring_df['Others']
+        valid_mask = ((scoring_df['diff'] >= score_diff_in_alignment_genes) & (scoring_df['Target'] >= min_valid_prob)).tolist()
+
+        if len(np.where(valid_mask)[0]) <= 2:
+            valid_mask = (scoring_df['Target'] >= min_valid_prob).tolist()
+
+        scoring_df = scoring_df[valid_mask]
+        target_alleles = columns[columns_to_keep]
+        likemat_mate = likemat_mate[valid_mask, :][:, columns_to_keep]
+        unique_ids = unique_ids[valid_mask]
+        reads1 = reads1[reads1['ID'].isin(unique_ids)]
+        likemat_mate_df = pd.DataFrame(likemat_mate, index = unique_ids, columns=target_alleles)
+
+        reads1_archive = reads1.copy()
+        likemat_mate_df_archive = likemat_mate_df.copy()
+        likemat_mate_archive = likemat_mate.copy()
+
+        if likemat_mate.shape[0] > 2:
+            # Filtering out reads aligned to more than one-field resolution
+            df = likemat_mate_df
+            best_alignments = df.max(axis=1)
+            matching_cols = df.eq(best_alignments, axis=0).apply(lambda row: likemat_mate_df.columns[row].tolist(), axis=1)
+            one_field = matching_cols.apply(lambda cols: list(set(col.split(':')[0] for col in cols)))
+            counts = one_field.apply(len)
+            rows_to_remove = counts[counts >= n_unique_onefield].index
+            rows_to_keep = df.index.difference(rows_to_remove)
+            likemat_mate_df = likemat_mate_df.loc[rows_to_keep]
+            reads1 = reads1[reads1['ID'].isin(rows_to_keep)]
+            likemat_mate = likemat_mate_df.values
+            unique_ids = reads1['ID'].tolist()
+
+            if likemat_mate.shape[0] < 2:
+                reads1 = reads1_archive.copy()
+                likemat_mate_df = likemat_mate_df_archive.copy()
+                likemat_mate = likemat_mate_archive.copy()
+                unique_ids = reads1['ID'].unique().tolist()
+
+        if likemat_mate.shape[0] > 2:
+            likemat_mate_normalised = normalize(np.exp(likemat_mate - likemat_mate.max(axis = 1, keepdims = True)), axis=1, norm='l2')
+            gmm = GaussianMixture(n_components=2, tol = 1e-10, max_iter = 1000, n_init = 10)
+            gmm.fit(likemat_mate_normalised)
+            labels = gmm.predict(likemat_mate_normalised)
+
+            group1 = np.where(labels == 0)[0]
+            group2 = np.where(labels == 1)[0]
+
+            l1 = likemat_mate[group1, :].sum(axis=0)
+            l2 = likemat_mate[group2, :].sum(axis=0)
+
+            likemat_mate_phased = np.vstack([l1, l2])
+        else:
+            likemat_mate_phased = likemat_mate
+
+        likemat_norm=likemat_mate_phased-likemat_mate_phased.max(axis = 1, keepdims = True)
+        likemat_norm=0.5*np.exp(likemat_norm)+1e-100
+
+        likemat_pair=pd.DataFrame(0, index=target_alleles, columns=target_alleles)
+        qq=likemat_pair*0
+        for i in range(likemat_mate_phased.shape[0]):
+            qq=qq*0
+            m1=qq+likemat_norm[i,:]
+            m1=m1+m1.T
+            likemat_pair=likemat_pair+np.log(m1)
+
+        likemat_paired_df = pd.DataFrame(likemat_pair, index=target_alleles, columns=target_alleles)
+
+        reads1.to_csv(output.reads1, header = False, index = False)
+        reads2.to_csv(output.reads2, header = False, index = False)
+        likemat_mate_df.to_csv(output.mate_matrix,  index=True, header=True, sep = ' ')
+        likemat_paired_df.to_csv(output.pair_matrix,  index=True, header=True, sep = ' ')
+        
+        logllmax = likemat_paired_df.max().max()
+        row_index, col_index = np.where(likemat_paired_df == logllmax)
+        a1, a2 = likemat_paired_df.index[row_index[0]], likemat_paired_df.columns[col_index[0]]
+
+        if a1.count(':') > 1:
+            a1 = ':'.join(a1.split(':')[:2])
+        if a2.count(':') > 1:
+            a2 = ':'.join(a2.split(':')[:2])
+
+        result = pd.DataFrame({'sample_number': 1,
+                            'sample_name': wildcards.id,
+                            'bestallele1': a1,
+                            'bestallele2': a2,
+                            'post_prob': logllmax,
+                            'sums': 0}, index = ['0'])
+        result.to_csv(output.read_topresult, index = False, header = True, sep = '\t')

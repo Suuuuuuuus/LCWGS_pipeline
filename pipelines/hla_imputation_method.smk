@@ -122,22 +122,40 @@ rule merge_fastas:
 
 rule HLA_realignment:
     input:
-        fastq1 = "data/fastq/{id}_1.fastq.gz",
-        fastq2 = "data/fastq/{id}_2.fastq.gz",
-        reference = "/well/band/users/rbx225/recyclable_files/hla_reference_files/fasta/v3390_oneKG.fasta"
+        bam = "data/bams/{id}.bam",
+        reference = "/well/band/users/rbx225/recyclable_files/hla_reference_files/fasta/v{IPD_IMGT_version}_{panel}/HLA.fasta"
     output:
-        bam = "data/realigned_bams/{id}.bam",
-        tmp1 = temp("data/realigned_bams/{id}.tmp1.bam")
+        bam = "data/realigned_bams/v{IPD_IMGT_version}_{panel}/{id}.bam",
+        fastq1 = temp("data/realigned_bams/v{IPD_IMGT_version}_{panel}/{id}_1.fastq"),
+        fastq2 = temp("data/realigned_bams/v{IPD_IMGT_version}_{panel}/{id}_2.fastq"),
+        readlist = temp("data/realigned_bams/v{IPD_IMGT_version}_{panel}/{id}_readlist.txt"),
+        tmp1 = temp("data/realigned_bams/v{IPD_IMGT_version}_{panel}/{id}.tmp1.bam")
     resources:
         mem = '40G'
     params: 
         sample = "{id}",
-        picard = tools["picard_plus"]
+        picard = tools["picard"]
     threads: 8
     shell: """
-        mkdir -p data/realigned_bams/
+        mkdir -p data/realigned_bams/v{wildcards.IPD_IMGT_version}_{wildcards.panel}
 
-        bwa mem -t {threads} -a {input.reference} {input.fastq1} {input.fastq2} | \
+        samtools view -h {input.bam} "chr6:25000000-34000000" | \
+        samtools sort -n - -o {output.bam}
+        
+        samtools view {output.bam} | cut -f 1 | uniq > {output.readlist} 
+
+        {params.picard} FilterSamReads \
+        -I {input.bam} \
+        -O {output.bam} \
+        -READ_LIST_FILE {output.readlist} \
+        -FILTER includeReadList
+
+        samtools view -h {output.bam} | \
+        samtools sort -n - -o {output.tmp1}
+
+        bedtools bamtofastq -i {output.tmp1} -fq {output.fastq1} -fq2 {output.fastq2}
+
+        bwa mem -t {threads} -a {input.reference} {output.fastq1} {output.fastq2} | \
         samtools view -b -o {output.tmp1}
         
         samtools sort -@{threads} -m 1G -o {output.bam} {output.tmp1}
@@ -193,7 +211,7 @@ rule hla_imputation_method_new:
         imputed = "results/hla/imputation/QUILT_HLA_result_method/{id}/{gene}/quilt.hla.output.combined.all.txt"
     resources:
         mem = '40G'
-    threads: 4
+    threads: 8
     params:
         quilt_sus_hla = tools['quilt_sus_hla'],
         fa_dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict",
