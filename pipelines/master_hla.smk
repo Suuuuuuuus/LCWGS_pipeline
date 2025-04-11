@@ -1,11 +1,12 @@
-include: "hla.smk"
+#include: "hla.smk"
 #include: "alignment.smk"
-#include: "post_hla.smk"
-include: "hla_ref_panel.smk"
+include: "post_hla.smk"
+#include: "hla_ref_panel.smk"
 # include: "hla_imputation_wip.smk"
+include: "hla_imputation_auxiliary.smk"
 include: "hla_imputation_method.smk"
 #include: "hla_imputation_prep.smk"
-include: "phasing.smk"
+#include: "phasing.smk"
 include: "auxiliary.smk"
 include: "software.smk"
 configfile: "pipelines/config.json"
@@ -26,11 +27,12 @@ sys.path.append('/well/band/users/rbx225/software/QUILT_test/QUILT/Python/')
 import lcwgsus
 
 from lcwgsus.variables import *
-from hla_phase import *
+from hla_phase_functions import *
 from hla_align_functions import *
 from hla_align import *
 
 samples_lc = read_tsv_as_lst(config['samples_lc'])
+samples_hc = read_tsv_as_lst(config['samples_hc'])
 samples_fv = read_tsv_as_lst('data/sample_tsvs/fv_idt_names.tsv')
 samples_fv_gm = read_tsv_as_lst('data/sample_tsvs/fv_gm_names.tsv')
 samples_oneKG = read_tsv_as_lst("/well/band/users/rbx225/recyclable_files/ref_panels/oneKG_30x/samples_to_phase.tsv")
@@ -43,7 +45,6 @@ bam_numbers = [str(i) for i in range(1, int(bam_batches) + 1)]
 studies = ['1KG', 'GAMCC']
 filters = ['strict', 'loose']
 vcf_versions = ['30x', 'phase3_b38']
-panels = ['oneKG', 'merged']
 
 rule hla_all:
     input:
@@ -57,11 +58,13 @@ rule hla_imputation_all:
         hla_imputed = expand("results/hla/imputation/batches/genes{num}/{hla_gene}/quilt.hla.output.combined.all.txt", hla_gene = hla_genes, num = bam_numbers)
 
 two_stage_hla_vcf_outdir = config["two_stage_hla_vcf_outdir"]
-
+three_stage_hla_vcf_outdir = config["three_stage_hla_vcf_outdir"]
 rule post_hla_all:
     input:
         lifted = "results/hla/reference/multiEth_sites.b38.vcf.gz",
-        two_stage_vcf = expand("{two_stage_hla_vcf_outdir}chr6.vcf.gz", two_stage_hla_vcf_outdir = two_stage_hla_vcf_outdir)
+        filtered_vcf = "results/wip_vcfs/malariaGen_v1_b38/topmed/chip_sites/lc.chr6.vcf.gz",
+        # two_stage_vcf = expand("{odir2}chr6.vcf.gz", odir2 = two_stage_hla_vcf_outdir),
+        three_stage_vcf = expand("{odir3}chr6.vcf.gz", odir3 = three_stage_hla_vcf_outdir)
 
 region_file = "data/imputation_accessories/5Mb_chunks.json"
 mGen_vcf_prefix = "results/hla_ref_panel/oneKG_mGenv1/merged/regions/chr"
@@ -116,15 +119,33 @@ rule hla_imputation_wip_all:
         # imputed_method_v3570 = expand("results/hla/imputation/QUILT_HLA_result_method_v3570/{id}/{hla_gene}/quilt.hla.output.combined.all.txt", hla_gene = hla_genes, id = samples_fv),
         # imputed_optimal = expand("results/hla/imputation/QUILT_HLA_result_optimal/{id}/{hla_gene}/quilt.hla.output.combined.all.txt", hla_gene = hla_genes, id = samples_fv),
 
+extract_dir = "results/hla/imputation/QUILT_HLA_result_method/"
+score_diff_in_alignment_genes_ary = [0, 8, 20, 50]
+n_mismatches_ary = [1, 3, 5]
+weight_ary = ['T', 'F']
+rule hla_imputation_auxiliary_all:
+    input:
+        db = expand(f"{extract_dir}{{id}}/{{gene}}/extracted.hla{{gene}}.RData", gene = HLA_GENES, id = samples_fv),
+        imputed_all = expand("results/hla/imputation/QUILT_HLA_result_method_determine_optimal/{score}_{n_mismatches}_{weight}/{id}/{gene}/quilt.hla.output.combined.all.txt", score = score_diff_in_alignment_genes_ary, n_mismatches = n_mismatches_ary, weight = weight_ary, id = samples_fv, gene = HLA_GENES),
+        imputed_top = expand("results/hla/imputation/QUILT_HLA_result_method_determine_optimal/{score}_{n_mismatches}_{weight}/{id}/{gene}/quilt.hla.output.combined.topresults.txt", score = score_diff_in_alignment_genes_ary, n_mismatches = n_mismatches_ary, weight = weight_ary, id = samples_fv, gene = HLA_GENES)
+
 rule hla_imputation_method_all:
     input:
-        db = expand('/well/band/users/rbx225/recyclable_files/hla_reference_files/v{IPD_IMGT_version}_aligners/{gene}.ssv', gene = HLA_GENES_ALL_EXPANDED, IPD_IMGT_version = ['3390']),
-        db_filtered = expand('/well/band/users/rbx225/recyclable_files/hla_reference_files/v{IPD_IMGT_version}_{panel}_only/{gene}.ssv', gene = HLA_GENES_ALL_EXPANDED, panel = ['oneKG'], IPD_IMGT_version = ['3390']),
+        db = expand('/well/band/users/rbx225/recyclable_files/hla_reference_files/v{IPD_IMGT_version}_aligners/{gene}.ssv', gene = HLA_GENES_ALL_EXPANDED, IPD_IMGT_version = IPD_IMGT_versions),
+        db_filtered = expand('/well/band/users/rbx225/recyclable_files/hla_reference_files/v{IPD_IMGT_version}_merged_only/{gene}.ssv', gene = HLA_GENES_ALL_EXPANDED, IPD_IMGT_version = IPD_IMGT_versions),
+        
+        AS_matrices = expand("results/hla/imputation/WFA_alignments/v{IPD_IMGT_version}/{id}/{gene}/AS_matrix.ssv", gene = hla_genes, id = samples_fv, IPD_IMGT_version = IPD_IMGT_versions),
+
         ref_panel_method_v3390 = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_method/HLA{gene}fullallelesfilledin.RData", gene = hla_genes),
         imputed_method_v3390 = expand("results/hla/imputation/QUILT_HLA_result_method/{id}/{gene}/quilt.hla.output.combined.all.txt", gene = hla_genes, id = samples_fv),
-        
-        fasta = expand('/well/band/users/rbx225/recyclable_files/hla_reference_files/fasta/v{IPD_IMGT_version}_{panel}/HLA.fasta', panel = ['oneKG'], IPD_IMGT_version = ['3390']),
-        fai = expand('/well/band/users/rbx225/recyclable_files/hla_reference_files/fasta/v{IPD_IMGT_version}_{panel}/{gene}.index.tsv', panel = ['oneKG'], IPD_IMGT_version = ['3390'], gene = HLA_GENES_ALL_EXPANDED),
 
-        realigned_bams = expand("data/realigned_bams/v{IPD_IMGT_version}_{panel}/{id}.bam", id = samples_fv, IPD_IMGT_version = ['3390'], panel = ['oneKG']),
+        ref_panel_optimal = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_optimal/no_{id}/hla{gene}haptypes.RData", gene = hla_genes, id = samples_fv),
+        imputed_optimal = expand("results/hla/imputation/QUILT_HLA_result_optimal/{id}/{gene}/quilt.hla.output.combined.all.txt", gene = hla_genes, id = samples_fv),
+
+        # AS_matrices_hc = expand("results/hla/imputation/WFA_alignments/v{IPD_IMGT_version}/{hc}/{gene}/AS_matrix.ssv", IPD_IMGT_version = ['3390'], hc = samples_hc, gene = hla_genes)
+        
+        # fasta = expand('/well/band/users/rbx225/recyclable_files/hla_reference_files/fasta/v{IPD_IMGT_version}_{panel}/HLA.fasta', panel = ['oneKG'], IPD_IMGT_version = ['3390']),
+        # fai = expand('/well/band/users/rbx225/recyclable_files/hla_reference_files/fasta/v{IPD_IMGT_version}_{panel}/{gene}.index.tsv', panel = ['oneKG'], IPD_IMGT_version = ['3390'], gene = HLA_GENES_ALL_EXPANDED),
+
+        # realigned_bams = expand("data/realigned_bams/v{IPD_IMGT_version}_{panel}/{id}.bam", id = samples_fv, IPD_IMGT_version = ['3390'], panel = ['oneKG']),
 

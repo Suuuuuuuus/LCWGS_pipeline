@@ -11,7 +11,7 @@ sys.path.append("/well/band/users/rbx225/software/lcwgsus/")
 import lcwgsus
 
 chromosome = [i for i in range(1,23)]
-
+'''
 rule liftover_multiEth_vcf:
     input:
         vcf = "results/hla/reference/multiEth_sites.b37.vcf.gz",
@@ -43,26 +43,44 @@ rule liftover_multiEth_vcf:
         tabix -f {output.lifted}
     """
 
-two_stage_hla_vcf_indir = config["two_stage_hla_vcf_indir"]
-two_stage_hla_vcf_outdir = config["two_stage_hla_vcf_outdir"]
+rule retain_lc_mGenv1_topmed_chr6_chip_sites:
+    input:
+        lc_vcf = "results/two-stage-imputation/vanilla/malariaGen_v1_b38_topmed/vcf/chr6.dose.vcf.gz",
+        chip_vcf = "results/chip/vcf/chip_by_chr/chip.chr6.vcf.gz"
+    output:
+        filtered_vcf = "results/wip_vcfs/malariaGen_v1_b38/topmed/chip_sites/lc.chr6.vcf.gz",
+        site = temp("results/wip_vcfs/malariaGen_v1_b38/topmed/chip_sites/chr6.tsv")
+    resources:
+        mem = '30G'
+    threads: 4
+    localrule: True
+    shell: """
+        mkdir -p results/wip_vcfs/malariaGen_v1_b38/topmed/chip_sites/
+
+        zgrep -v '#' {input.chip_vcf} | cut -f1,2 > {output.site}
+        bcftools view -R {output.site} -Oz -o {output.filtered_vcf} {input.lc_vcf}
+    """
+'''
+
+indir_map2 = dict(zip(config["two_stage_hla_vcf_outdir"], config["two_stage_hla_vcf_indir"]))
 
 def get_two_stage_hla_indir(wildcards):
-    ix = two_stage_hla_vcf_outdir.index(wildcards.two_stage_hla_vcf_outdir)
-    return two_stage_hla_vcf_indir[ix]
+    return indir_map2.get(wildcards.odir2, "")
 
-rule filter_chr6_for_hla_imputation:
+rule filter_two_stage_chr6_for_hla_imputation:
     input:
         lc_vcf_dir = get_two_stage_hla_indir,
         b38_scaffold = "results/hla/reference/multiEth_sites.b38.vcf.gz"
     output:
-        vcf = "{two_stage_hla_vcf_outdir}chr6.vcf.gz",
-        tmp_vcf = temp("{two_stage_hla_vcf_outdir}chr6.tmp.vcf.gz"),
-        tmp1_vcf = temp("{two_stage_hla_vcf_outdir}chr6.tmp1.vcf.gz"),
-        scaffold = temp("{two_stage_hla_vcf_outdir}multiEth_sites.b38.txt")
+        vcf = "{odir2}chr6.vcf.gz",
+        tmp_vcf = temp("{odir2}chr6.tmp.vcf.gz"),
+        tmp1_vcf = temp("{odir2}chr6.tmp1.vcf.gz"),
+        scaffold = temp("{odir2}multiEth_sites.b38.txt")
     params:
         info = config['hla_info_filter']
+    localrule: True
     shell: """
-        mkdir -p {wildcards.two_stage_hla_vcf_outdir}
+        mkdir -p {wildcards.odir2}
 
         bcftools query -f '%CHROM\t%POS\n' {input.b38_scaffold} > {output.scaffold}
 
@@ -74,4 +92,32 @@ rule filter_chr6_for_hla_imputation:
 
         bcftools view -R {output.scaffold} -m2 -M2 -v snps \
         -Oz -o {output.vcf} {output.tmp1_vcf}
+    """
+
+indir_map3 = dict(zip(config["three_stage_hla_vcf_outdir"], config["three_stage_hla_vcf_indir"]))
+
+def get_three_stage_hla_indir(wildcards):
+    return indir_map3.get(wildcards.odir3, "")
+
+rule filter_three_stage_chr6_for_hla_imputation:
+    input:
+        lc_vcf_dir = get_three_stage_hla_indir,
+        b38_scaffold = "results/hla/reference/multiEth_sites.b38.vcf.gz"
+    output:
+        vcf = "{odir3}chr6.vcf.gz",
+        tmp_vcf = temp("{odir3}chr6.tmp.vcf.gz"),
+        scaffold = temp("{odir3}multiEth_sites.b38.txt")
+    params:
+        info = config['hla_info_filter']
+    localrule: True
+    shell: """
+        mkdir -p {wildcards.odir3}
+
+        bcftools query -f '%CHROM\t%POS\n' {input.b38_scaffold} > {output.scaffold}
+
+        cp -f {input.lc_vcf_dir}/*chr6.*.gz {output.tmp_vcf}
+        tabix -f {output.tmp_vcf}
+
+        bcftools view -R {output.scaffold} -m2 -M2 -v snps \
+        -Oz -o {output.vcf} {output.tmp_vcf}
     """

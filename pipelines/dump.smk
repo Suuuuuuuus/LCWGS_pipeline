@@ -2311,3 +2311,43 @@ rule hla_alignment_new:
                             'post_prob': logllmax,
                             'sums': 0}, index = ['0'])
         result.to_csv(output.read_topresult, index = False, header = True, sep = '\t')
+
+rule hla_alignment_matrix:
+    input:
+        bam = "data/bams/{id}.bam",
+        db_files = expand("/well/band/users/rbx225/recyclable_files/hla_reference_files/v3390_aligners/{gene}.ssv", gene = HLA_GENES_ALL_EXPANDED)
+    output:
+        matrix = "results/hla/imputation/WFA_alignments/v3390_oneKG/{id}/{gene}/AS_matrix.ssv"
+    resources:
+        mem = '60G'
+    threads: 8
+    params:
+        hla_gene_information_file = "/well/band/users/rbx225/software/QUILT_sus/hla_ancillary_files/hla_gene_information.tsv",
+        db_dir = "/well/band/users/rbx225/recyclable_files/hla_reference_files/v3390_oneKG_only/",
+        tmp_outdir = "results/hla/imputation/QUILT_HLA_result_method/",
+    run:
+        hla_gene_information = pd.read_csv(params.hla_gene_information_file, sep = ' ')
+        reads_apart_max = 1000
+        reads_extend_max = 1000
+        
+        reads1 = get_chr6_reads(wildcards.gene, input.bam, hla_gene_information, 
+                        reads_apart_max = reads_apart_max, 
+                        reads_extend_max = reads_extend_max)
+    
+        rl = reads1['sequence'].str.len().mode().values[0]
+        ncores = 7
+
+        db_dict = {}
+        for g in HLA_GENES_ALL:
+            db = pd.read_csv(f'{params.db_dir}{g}.ssv', sep = ' ')
+            for c in db.columns:
+                refseq = ''.join(db[c].tolist()).replace('.', '').lstrip('*').rstrip('*')
+                db_dict[c] = refseq
+
+        columns = np.array(list(db_dict.keys()))
+        likemat1 = multi_calculate_loglikelihood_per_allele(reads1, db_dict, ncores)
+        
+        alignment_scores_raw = pd.DataFrame(likemat1, index=reads1['ID'].tolist(), columns=columns)
+        alignment_scores_raw.to_csv(output.matrix, float_format='%.6f', sep = ' ', header = True, index = True)
+        
+# ncores = 2*(len(os.sched_getaffinity(0))) - 1

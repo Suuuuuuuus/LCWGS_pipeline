@@ -32,7 +32,7 @@
 
     "bqsr_known_sites": ["data/GATK_resource_bundle/Homo_sapiens_assembly38.known_indels.vcf.gz","data/GATK_resource_bundle/dbsnp_146.hg38.vcf.gz", "data/GATK_resource_bundle/Mills_and_1000G_gold_standard.indels.hg38.vcf.gz"],
     "gatk_to_index": ["data/GATK_resource_bundle/hapmap_3.3.hg38.vcf.gz", "data/GATK_resource_bundle/1000G_omni2.5.hg38.vcf.gz", "data/GATK_resource_bundle/1000G_phase1.snps.high_confidence.hg38.vcf.gz", "data/GATK_resource_bundle/Homo_sapiens_assembly38.known_indels.vcf.gz", "data/GATK_resource_bundle/Mills_and_1000G_gold_standard.indels.hg38.vcf.gz", "data/GATK_resource_bundle/dbsnp_146.hg38.vcf.gz"],
-    "hc_vcf_rename_samples": "/well/band/users/rbx225/GAMCC/data/file_lsts/hc_chip_names.tsv",
+    "hc_vcf_rename_samples": "data/file_lsts/hc_chip_names.tsv",
 
     "QUILT_HOME": "/well/band/users/rbx225/software/QUILT/",
     "RECOMB_POP": "YRI",
@@ -60,7 +60,7 @@
     "mini_bamlist": "/well/band/users/rbx225/GAMCC/results/mini_imputation/bamlist.txt",
 
     "gw_info_filter": 0.9,
-    "hla_info_filter": 0.7,
+    "hla_info_filter": 0.9,
     "maf_filter": 0.01,
 
     "hla_b38_start": 25587319,
@@ -69,146 +69,149 @@
     "hla_b38_end_extra": 34000000,
 
     "imputation_dir": [
-        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/vanilla/lc_oneKG--chip--typed/", 
-        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/vanilla/lc_oneKG--chip--typed_high_info/", 
-        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/vanilla/chip_oneKG--hc--snps_gw/", 
-        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/vanilla/lc_oneKG--hc--snps_gw/", 
-        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/vanilla/chip_topmed--hc--snps_gw/",
-        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/vanilla/lc_oneKG_oneKG--hc--snps_gw/", 
-        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/vanilla/lc_oneKG_hrc--hc--snps_gw/", 
-        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/vanilla/lc_oneKG_topmed--hc--snps_gw/",
-        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/vanilla/lc_oneKG_typed_oneKG--hc--snps_gw/",
-        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/vanilla/lc_oneKG_typed_topmed--hc--snps_gw/",
-        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/vanilla/lc_oneKG_highConfidence_topmed--hc--snps_gw/",
-        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/vanilla/lc_malariaGen_v1_b38_topmed--hc--snps_gw/",
-        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/vanilla/lc_malariaGen_v3_b38_topmed--hc--snps_gw/",
+        "results/imputation_comparison/vanilla/lc_oneKG--chip--typed/", 
+        "results/imputation_comparison/vanilla/lc_oneKG--chip--typed_high_info/", 
+        "results/imputation_comparison/vanilla/chip_oneKG--hc--snps_gw/", 
+        "results/imputation_comparison/vanilla/lc_oneKG--hc--snps_gw/", 
+        "results/imputation_comparison/vanilla/chip_topmed--hc--snps_gw/",
+        "results/imputation_comparison/vanilla/lc_oneKG_oneKG--hc--snps_gw/", 
+        "results/imputation_comparison/vanilla/lc_oneKG_hrc--hc--snps_gw/", 
+        "results/imputation_comparison/vanilla/lc_oneKG_topmed--hc--snps_gw/",
+        "results/imputation_comparison/vanilla/lc_oneKG_typed_oneKG--hc--snps_gw/",
+        "results/imputation_comparison/vanilla/lc_oneKG_typed_topmed--hc--snps_gw/",
+        "results/imputation_comparison/vanilla/lc_oneKG_highConfidence_topmed--hc--snps_gw/",
+        "results/imputation_comparison/vanilla/lc_malariaGen_v1_b38_topmed--hc--snps_gw/",
+        "results/imputation_comparison/vanilla/lc_malariaGen_v3_b38_topmed--hc--snps_gw/",
 
-        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/vanilla/lc_malariaGen_v1_b38--chip--typed/", 
-        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/vanilla/lc_malariaGen_v1_b38--chip--typed_high_info/", 
-        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/vanilla/lc_malariaGen_v1_b38--hc--snps_gw/",
+        "results/imputation_comparison/vanilla/lc_malariaGen_v1_b38--chip--typed/", 
+        "results/imputation_comparison/vanilla/lc_malariaGen_v1_b38--chip--typed_high_info/", 
+        "results/imputation_comparison/vanilla/lc_malariaGen_v1_b38--hc--snps_gw/",
         
-        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/vanilla/lc_malariaGen_v3_b38--chip--typed/", 
-        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/vanilla/lc_malariaGen_v3_b38--chip--typed_high_info/", 
-        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/vanilla/lc_malariaGen_v3_b38--hc--snps_gw/"
-    ],
-    "tmp0": [
-        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/vanilla/lc_oneKG_GIABHighConfidence_topmed--hc--snps_gw/"
+        "results/imputation_comparison/vanilla/lc_malariaGen_v3_b38--chip--typed/", 
+        "results/imputation_comparison/vanilla/lc_malariaGen_v3_b38--chip--typed_high_info/", 
+        "results/imputation_comparison/vanilla/lc_malariaGen_v3_b38--hc--snps_gw/"
     ],
     "lc_vcf_dir": [
-        "/well/band/users/rbx225/GAMCC/results/imputation/vcfs/oneKG/", 
-        "/well/band/users/rbx225/GAMCC/results/wip_vcfs/oneKG/vanilla/high_info_high_af/", 
-        "/well/band/users/rbx225/GAMCC/results/chip/imputed/oneKG/vcf/", 
-        "/well/band/users/rbx225/GAMCC/results/imputation/vcfs/oneKG/", 
-        "/well/band/users/rbx225/GAMCC/results/chip/imputed/topmed/vcf/",
-        "/well/band/users/rbx225/GAMCC/results/two-stage-imputation/vanilla/oneKG_oneKG/vcf/",
-        "/well/band/users/rbx225/GAMCC/results/two-stage-imputation/vanilla/oneKG_hrc/vcf/",
-        "/well/band/users/rbx225/GAMCC/results/two-stage-imputation/vanilla/oneKG_topmed/vcf/",
-        "/well/band/users/rbx225/GAMCC/results/two-stage-imputation/vanilla/oneKG_chip_site_oneKG/vcf/",
-        "/well/band/users/rbx225/GAMCC/results/two-stage-imputation/vanilla/oneKG_chip_site_topmed/vcf/",
-        "/well/band/users/rbx225/GAMCC/results/two-stage-imputation/vanilla/oneKG_strict_topmed/vcf/",
-        "/well/band/users/rbx225/GAMCC/results/two-stage-imputation/vanilla/malariaGen_v1_b38_topmed/vcf/",
-        "/well/band/users/rbx225/GAMCC/results/two-stage-imputation/vanilla/malariaGen_v3_b38_topmed/vcf/",
+        "results/imputation/vcfs/oneKG/", 
+        "results/wip_vcfs/oneKG/vanilla/high_info_high_af/", 
+        "results/chip/imputed/oneKG/vcf/", 
+        "results/imputation/vcfs/oneKG/", 
+        "results/chip/imputed/topmed/vcf/",
+        "results/two-stage-imputation/vanilla/oneKG_oneKG/vcf/",
+        "results/two-stage-imputation/vanilla/oneKG_hrc/vcf/",
+        "results/two-stage-imputation/vanilla/oneKG_topmed/vcf/",
+        "results/two-stage-imputation/vanilla/oneKG_chip_site_oneKG/vcf/",
+        "results/two-stage-imputation/vanilla/oneKG_chip_site_topmed/vcf/",
+        "results/two-stage-imputation/vanilla/oneKG_strict_topmed/vcf/",
+        "results/two-stage-imputation/vanilla/malariaGen_v1_b38_topmed/vcf/",
+        "results/two-stage-imputation/vanilla/malariaGen_v3_b38_topmed/vcf/",
 
-        "/well/band/users/rbx225/GAMCC/results/imputation/vcfs/malariaGen_v1_b38/",
-        "/well/band/users/rbx225/GAMCC/results/wip_vcfs/malariaGen_v1_b38/vanilla/high_info_high_af/",
-        "/well/band/users/rbx225/GAMCC/results/imputation/vcfs/malariaGen_v1_b38/",
+        "results/imputation/vcfs/malariaGen_v1_b38/",
+        "results/wip_vcfs/malariaGen_v1_b38/vanilla/high_info_high_af/",
+        "results/imputation/vcfs/malariaGen_v1_b38/",
 
-        "/well/band/users/rbx225/GAMCC/results/imputation/vcfs/malariaGen_v3_b38/",
-        "/well/band/users/rbx225/GAMCC/results/wip_vcfs/malariaGen_v3_b38/vanilla/high_info_high_af/",
-        "/well/band/users/rbx225/GAMCC/results/imputation/vcfs/malariaGen_v3_b38/"
-    ],
-    "tmp1": [
-        "/well/band/users/rbx225/GAMCC/results/two-stage-imputation/vanilla/oneKG_giab_topmed/vcf/",
-        "/well/band/users/rbx225/GAMCC/results/two-stage-imputation/vanilla/oneKG_hrc/lifted_vcf/"
+        "results/imputation/vcfs/malariaGen_v3_b38/",
+        "results/wip_vcfs/malariaGen_v3_b38/vanilla/high_info_high_af/",
+        "results/imputation/vcfs/malariaGen_v3_b38/"
     ],
     "hc_vcf_dir": [
-        "/well/band/users/rbx225/GAMCC/results/chip/vcf/chip_by_chr/", 
-        "/well/band/users/rbx225/GAMCC/results/chip/vcf/chip_by_chr/", 
-        "/well/band/users/rbx225/GAMCC/results/call/recal_vcf/oneKG/", 
-        "/well/band/users/rbx225/GAMCC/results/call/recal_vcf/oneKG/", 
-        "/well/band/users/rbx225/GAMCC/results/call/recal_vcf/oneKG/",
-        "/well/band/users/rbx225/GAMCC/results/call/recal_vcf/oneKG/",
-        "/well/band/users/rbx225/GAMCC/results/call/recal_vcf/oneKG/", 
-        "/well/band/users/rbx225/GAMCC/results/call/recal_vcf/oneKG/",
-        "/well/band/users/rbx225/GAMCC/results/call/recal_vcf/oneKG/",
-        "/well/band/users/rbx225/GAMCC/results/call/recal_vcf/oneKG/",
-        "/well/band/users/rbx225/GAMCC/results/call/recal_vcf/oneKG/",
-        "/well/band/users/rbx225/GAMCC/results/call/recal_vcf/oneKG/",
-        "/well/band/users/rbx225/GAMCC/results/call/recal_vcf/oneKG/",
+        "results/chip/vcf/chip_by_chr/", 
+        "results/chip/vcf/chip_by_chr/", 
+        "results/call/recal_vcf/oneKG/", 
+        "results/call/recal_vcf/oneKG/", 
+        "results/call/recal_vcf/oneKG/",
+        "results/call/recal_vcf/oneKG/",
+        "results/call/recal_vcf/oneKG/", 
+        "results/call/recal_vcf/oneKG/",
+        "results/call/recal_vcf/oneKG/",
+        "results/call/recal_vcf/oneKG/",
+        "results/call/recal_vcf/oneKG/",
+        "results/call/recal_vcf/oneKG/",
+        "results/call/recal_vcf/oneKG/",
 
-        "/well/band/users/rbx225/GAMCC/results/chip/vcf/chip_by_chr/",
-        "/well/band/users/rbx225/GAMCC/results/chip/vcf/chip_by_chr/",
-        "/well/band/users/rbx225/GAMCC/results/call/recal_vcf/oneKG/",
+        "results/chip/vcf/chip_by_chr/",
+        "results/chip/vcf/chip_by_chr/",
+        "results/call/recal_vcf/oneKG/",
 
-        "/well/band/users/rbx225/GAMCC/results/chip/vcf/chip_by_chr/",
-        "/well/band/users/rbx225/GAMCC/results/chip/vcf/chip_by_chr/",
-        "/well/band/users/rbx225/GAMCC/results/call/recal_vcf/oneKG/"
+        "results/chip/vcf/chip_by_chr/",
+        "results/chip/vcf/chip_by_chr/",
+        "results/call/recal_vcf/oneKG/"
     ],
     "tmp2": [
-        "/well/band/users/rbx225/GAMCC/results/call/recal_vcf/oneKG/"
+        "results/call/recal_vcf/oneKG/"
     ],
     "mini_imputation_dir": [
-        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/fv-mini/fv/lc_oneKG--chip--typed/", 
-        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/fv-mini/fv/lc_oneKG--chip--typed_high_info/", 
-        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/fv-mini/fv/lc_oneKG--hc--snps_gw/",
-        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/fv-mini/mini/lc_oneKG--chip--typed/", 
-        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/fv-mini/mini/lc_oneKG--chip--typed_high_info/", 
-        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/fv-mini/mini/lc_oneKG--hc--snps_gw/",
-        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/fv-mini/fv/lc_oneKG_oneKG--hc--snps_gw/",
-        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/fv-mini/mini/lc_oneKG_oneKG--hc--snps_gw/",
-        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/fv-mini/fv/lc_oneKG_topmed--hc--snps_gw/",
-        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/fv-mini/mini/lc_oneKG_topmed--hc--snps_gw/"
+        "results/imputation_comparison/fv-mini/fv/lc_oneKG--chip--typed/", 
+        "results/imputation_comparison/fv-mini/fv/lc_oneKG--chip--typed_high_info/", 
+        "results/imputation_comparison/fv-mini/fv/lc_oneKG--hc--snps_gw/",
+        "results/imputation_comparison/fv-mini/mini/lc_oneKG--chip--typed/", 
+        "results/imputation_comparison/fv-mini/mini/lc_oneKG--chip--typed_high_info/", 
+        "results/imputation_comparison/fv-mini/mini/lc_oneKG--hc--snps_gw/",
+        "results/imputation_comparison/fv-mini/fv/lc_oneKG_oneKG--hc--snps_gw/",
+        "results/imputation_comparison/fv-mini/mini/lc_oneKG_oneKG--hc--snps_gw/",
+        "results/imputation_comparison/fv-mini/fv/lc_oneKG_topmed--hc--snps_gw/",
+        "results/imputation_comparison/fv-mini/mini/lc_oneKG_topmed--hc--snps_gw/"
     ],
     "mini_lc_vcf_dir" : [
-        "/well/band/users/rbx225/GAMCC/results/mini_imputation/splited_vcfs/oneKG/fv/", 
-        "/well/band/users/rbx225/GAMCC/results/wip_vcfs/oneKG/fv-mini/fv/high_info/",
-        "/well/band/users/rbx225/GAMCC/results/mini_imputation/splited_vcfs/oneKG/fv/", 
-        "/well/band/users/rbx225/GAMCC/results/mini_imputation/splited_vcfs/oneKG/mini/", 
-        "/well/band/users/rbx225/GAMCC/results/wip_vcfs/oneKG/fv-mini/mini/high_info/", 
-        "/well/band/users/rbx225/GAMCC/results/mini_imputation/splited_vcfs/oneKG/mini/",
-        "/well/band/users/rbx225/GAMCC/results/two-stage-imputation/fv-mini/fv/oneKG_oneKG/vcf/",
-        "/well/band/users/rbx225/GAMCC/results/two-stage-imputation/fv-mini/mini/oneKG_oneKG/vcf/",
-        "/well/band/users/rbx225/GAMCC/results/two-stage-imputation/fv-mini/fv/oneKG_topmed/vcf/",
-        "/well/band/users/rbx225/GAMCC/results/two-stage-imputation/fv-mini/mini/oneKG_topmed/vcf/"
+        "results/mini_imputation/splited_vcfs/oneKG/fv/", 
+        "results/wip_vcfs/oneKG/fv-mini/fv/high_info/",
+        "results/mini_imputation/splited_vcfs/oneKG/fv/", 
+        "results/mini_imputation/splited_vcfs/oneKG/mini/", 
+        "results/wip_vcfs/oneKG/fv-mini/mini/high_info/", 
+        "results/mini_imputation/splited_vcfs/oneKG/mini/",
+        "results/two-stage-imputation/fv-mini/fv/oneKG_oneKG/vcf/",
+        "results/two-stage-imputation/fv-mini/mini/oneKG_oneKG/vcf/",
+        "results/two-stage-imputation/fv-mini/fv/oneKG_topmed/vcf/",
+        "results/two-stage-imputation/fv-mini/mini/oneKG_topmed/vcf/"
     ],
     "mini_hc_vcf_dir": [
-        "/well/band/users/rbx225/GAMCC/results/chip/vcf/chip_by_chr/", 
-        "/well/band/users/rbx225/GAMCC/results/chip/vcf/chip_by_chr/", 
-        "/well/band/users/rbx225/GAMCC/results/call/recal_vcf/oneKG/",
-        "/well/band/users/rbx225/GAMCC/results/chip/vcf/chip_by_chr/", 
-        "/well/band/users/rbx225/GAMCC/results/chip/vcf/chip_by_chr/", 
-        "/well/band/users/rbx225/GAMCC/results/call/recal_vcf/oneKG/",
-        "/well/band/users/rbx225/GAMCC/results/call/recal_vcf/oneKG/",
-        "/well/band/users/rbx225/GAMCC/results/call/recal_vcf/oneKG/",
-        "/well/band/users/rbx225/GAMCC/results/call/recal_vcf/oneKG/",
-        "/well/band/users/rbx225/GAMCC/results/call/recal_vcf/oneKG/"
+        "results/chip/vcf/chip_by_chr/", 
+        "results/chip/vcf/chip_by_chr/", 
+        "results/call/recal_vcf/oneKG/",
+        "results/chip/vcf/chip_by_chr/", 
+        "results/chip/vcf/chip_by_chr/", 
+        "results/call/recal_vcf/oneKG/",
+        "results/call/recal_vcf/oneKG/",
+        "results/call/recal_vcf/oneKG/",
+        "results/call/recal_vcf/oneKG/",
+        "results/call/recal_vcf/oneKG/"
     ],
 
     "lr_imputation_dir": [
-        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/lr_simulation/lc_oneKG--hc--snps_gw/"
+        "results/imputation_comparison/lr_simulation/lc_oneKG--hc--snps_gw/"
     ],
     "lr_lc_vcf_dir" : [
-        "/well/band/users/rbx225/GAMCC/results/lr_imputation/vcfs/oneKG/"
+        "results/lr_imputation/vcfs/oneKG/"
     ],
     "lr_hc_vcf_dir": [
-        "/well/band/users/rbx225/GAMCC/results/lr_imputation/truth/"
+        "results/lr_imputation/truth/"
     ],
 
     "sr_imputation_dir": [
-        "/well/band/users/rbx225/GAMCC/results/imputation_comparison/sr_simulation/lc_oneKG--hc--snps_gw/"
+        "results/imputation_comparison/sr_simulation/lc_oneKG--hc--snps_gw/"
     ],
     "sr_lc_vcf_dir" : [
-        "/well/band/users/rbx225/GAMCC/results/sr_imputation/vcfs/oneKG/"
+        "results/sr_imputation/vcfs/oneKG/"
     ],
     "sr_hc_vcf_dir": [
-        "/well/band/users/rbx225/GAMCC/results/sr_imputation/truth/"
+        "results/sr_imputation/truth/"
     ],
     "two_stage_hla_vcf_indir": [
         "results/imputation/vcfs/oneKG/",
-        "results/imputation/vcfs/malariaGen_v1_b38/"
+        "results/imputation/vcfs/malariaGen_v1_b38/",
+        "results/wip_vcfs/malariaGen_v1_b38/vanilla/chip_sites/"
     ],
     "two_stage_hla_vcf_outdir": [
         "results/two-stage-hla/lc_oneKG/",
-        "results/two-stage-hla/lc_mGenv1/"
+        "results/two-stage-hla/lc_mGenv1/",
+        "results/two-stage-hla/lc_mGenv1_chip_sites/"
+    ],
+    "three_stage_hla_vcf_indir": [
+        "results/two-stage-imputation/vanilla/malariaGen_v1_b38_topmed/vcf/",
+        "results/wip_vcfs/malariaGen_v1_b38/topmed/chip_sites/"
+    ],
+    "three_stage_hla_vcf_outdir": [
+        "results/two-stage-hla/lc_mGenv1_topmed/",
+        "results/two-stage-hla/lc_mGenv1_topmed_chip_sites/"
     ]
 }

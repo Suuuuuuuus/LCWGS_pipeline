@@ -13,7 +13,7 @@ import lcwgsus
 chromosome = [i for i in range(1,23)]
 samples_hc = read_tsv_as_lst(config['samples_hc'])
 
-azim_dir = '/well/band/users/rbx225/Azim_chip/'
+azim_dir = '/well/band/users/rbx225/Azim_chip/new/'
 
 rule all:
     input:
@@ -27,17 +27,19 @@ rule idat2gtc:
     input:
         manifest = f"{azim_dir}manifest/manifest.csv",
         bpm = f"{azim_dir}manifest/manifest.bpm",
-        egt = f"{azim_dir}manifest/manifest.egt",
-        idats_folder = f"{azim_dir}results/idats/"
+        egt = f"{azim_dir}manifest/manifest.egt"
     output:
         gtc_folder = directory(f"{azim_dir}results/gtcs/")
+    params:
+        idats_folder = f"{azim_dir}results/idats/"
     shell: """
         mkdir -p {azim_dir}results/gtcs/
+        mkdir -p {params.idats_folder}
         
         bcftools +idat2gtc \
         --bpm {input.bpm} \
         --egt {input.egt} \
-        --idats {input.idats_folder} \
+        --idats {params.idats_folder} \
         --output {output.gtc_folder}
     """   
 
