@@ -20,5 +20,6 @@ tools = {
 
 
     'impute2': "/well/band/users/rbx225/software/impute2/impute2",
-    'beagle': "java -Xmx60G -Xms30G -jar /well/band/users/rbx225/software/BEAGLE/beagle.29Oct24.c8e.jar"
+    'beagle': "java -Xmx60G -Xms30G -jar /well/band/users/rbx225/software/BEAGLE/beagle.29Oct24.c8e.jar",
+    'coverotron': '/well/band/users/rbx225/software/dir/build/apps/coverotron'
 }

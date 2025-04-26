@@ -40,8 +40,8 @@ rule extract_QUILT_alignments:
     script:
         "/well/band/users/rbx225/software/QUILT_test/QUILT/Python/extract_QUILT_alignments.R"
 
-score_diff_in_alignment_genes_ary = [0, 8, 20, 50]
-n_mismatches_ary = [1, 3, 5]
+score_diff_in_alignment_genes_ary = [0, 8]
+n_mismatches_ary = [3, 5]
 weight_ary = ['T', 'F']
 
 rule determine_imputation_hyperparameters:
@@ -51,7 +51,11 @@ rule determine_imputation_hyperparameters:
         matrix = "results/hla/imputation/WFA_alignments/v3390/{id}/{gene}/AS_matrix.ssv"
     output:
         imputed_all = "results/hla/imputation/QUILT_HLA_result_method_determine_optimal/{score}_{n_mismatches}_{weight}/{id}/{gene}/quilt.hla.output.combined.all.txt",
-        imputed_top = "results/hla/imputation/QUILT_HLA_result_method_determine_optimal/{score}_{n_mismatches}_{weight}/{id}/{gene}/quilt.hla.output.combined.topresults.txt"
+        imputed_top = "results/hla/imputation/QUILT_HLA_result_method_determine_optimal/{score}_{n_mismatches}_{weight}/{id}/{gene}/quilt.hla.output.combined.topresult.txt",
+        quilt_all = "results/hla/imputation/QUILT_HLA_result_method_determine_optimal/{score}_{n_mismatches}_{weight}/{id}/{gene}/quilt.hla.output.onlystates.all.txt",
+        quilt_top = "results/hla/imputation/QUILT_HLA_result_method_determine_optimal/{score}_{n_mismatches}_{weight}/{id}/{gene}/quilt.hla.output.onlystates.topresult.txt",
+        read_all = "results/hla/imputation/QUILT_HLA_result_method_determine_optimal/{score}_{n_mismatches}_{weight}/{id}/{gene}/quilt.hla.output.onlyreads.all.txt",
+        read_top = "results/hla/imputation/QUILT_HLA_result_method_determine_optimal/{score}_{n_mismatches}_{weight}/{id}/{gene}/quilt.hla.output.onlyreads.topresult.txt"
     params:
         outputdir = "results/hla/imputation/QUILT_HLA_result_method_determine_optimal/{score}_{n_mismatches}_{weight}/{id}/{gene}/"
     run:
@@ -84,11 +88,27 @@ rule determine_imputation_hyperparameters:
         pair = pair.loc[cols, cols]
         qmat = qmat.loc[cols, cols]
 
+        bestalleles = get_best_alleles(np.log(qmat))
+        bestalleles.columns = ['bestallele1', 'bestallele2', 'post_prob', 'sums']
+        bestalleles['sample_number'] = 1
+        bestalleles['sample_name'] = s
+        bestalleles = bestalleles[['sample_number', 'sample_name', 'bestallele1', 'bestallele2', 'post_prob', 'sums']]
+        bestalleles.to_csv(output.quilt_all, index = False, header = True, sep = '\t')
+        bestalleles.iloc[[0], :].to_csv(output.quilt_top, index = False, header = True, sep = '\t')
+
         pair = pair - pair.max().max()
         mask = np.tril(np.ones(pair.shape), k=-1).astype(bool)
         pair = pair.where(~mask, other=0)
         pair = np.exp(pair)
         pair = pair/pair.sum().sum()
+
+        bestalleles = get_best_alleles(np.log(pair))
+        bestalleles.columns = ['bestallele1', 'bestallele2', 'post_prob', 'sums']
+        bestalleles['sample_number'] = 1
+        bestalleles['sample_name'] = s
+        bestalleles = bestalleles[['sample_number', 'sample_name', 'bestallele1', 'bestallele2', 'post_prob', 'sums']]
+        bestalleles.to_csv(output.read_all, index = False, header = True, sep = '\t')
+        bestalleles.iloc[[0], :].to_csv(output.read_top, index = False, header = True, sep = '\t')
 
         if w:
             w1 = pair.max().max()
@@ -101,8 +121,8 @@ rule determine_imputation_hyperparameters:
             combined = pair*qmat
             
         combined = combined/combined.sum().sum()
-        bestalleles = get_best_alleles(np.log(combined))
 
+        bestalleles = get_best_alleles(np.log(combined))
         bestalleles.columns = ['bestallele1', 'bestallele2', 'post_prob', 'sums']
         bestalleles['sample_number'] = 1
         bestalleles['sample_name'] = s

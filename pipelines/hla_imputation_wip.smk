@@ -14,13 +14,12 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import sys
 sys.path.append("/well/band/users/rbx225/software/lcwgsus/")
-sys.path.append('/well/band/users/rbx225/software/QUILT_sus/QUILT/Python/')
+sys.path.append('/well/band/users/rbx225/software/QUILT_test/QUILT/Python/')
 import lcwgsus
 
 from lcwgsus.variables import *
-from hla_phase import *
+from hla_phase_functions import *
 from hla_align_functions import *
-from hla_align import *
 
 samples_fv = read_tsv_as_lst('data/sample_tsvs/fv_idt_names.tsv')
 samples_fv_gam = read_tsv_as_lst('data/sample_tsvs/fv_gam_names.tsv')

@@ -2,8 +2,8 @@
 #include: "alignment.smk"
 include: "post_hla.smk"
 #include: "hla_ref_panel.smk"
-# include: "hla_imputation_wip.smk"
-include: "hla_imputation_auxiliary.smk"
+#include: "hla_imputation_wip.smk"
+#include: "hla_imputation_auxiliary.smk"
 include: "hla_imputation_method.smk"
 #include: "hla_imputation_prep.smk"
 #include: "phasing.smk"
@@ -92,13 +92,10 @@ rule hla_ref_panel_all:
 
 rule hla_imputation_wip_all:
     input:
-        imputed_method_v3390 = expand("results/hla/imputation/QUILT_HLA_result_method/{id}/{hla_gene}/quilt.hla.output.combined.all.txt", hla_gene = hla_genes, id = samples_fv)
+        ref_panel_method_v3570 = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_method_v3570/hla{hla_gene}haptypes.RData", hla_gene = hla_genes, id = samples_fv),
+        imputed_method_v3570 = expand("results/hla/imputation/QUILT_HLA_result_method_v3570/{id}/{hla_gene}/quilt.hla.output.combined.all.txt", hla_gene = hla_genes, id = samples_fv),
         #ref_panel_optimal = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_optimal/no_{id}/hla{hla_gene}haptypes.RData", hla_gene = hla_genes, id = samples_fv),
-        #imputed_optimal = expand("results/hla/imputation/QUILT_HLA_result_optimal/{id}/{hla_gene}/quilt.hla.output.combined.all.txt", hla_gene = hla_genes, id = samples_fv)
-
-        # ref_panel_optimal = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_optimal/no_{id}/hla{hla_gene}haptypes.RData", hla_gene = hla_genes, id = samples_fv),
-        # imputed_optimal = expand("results/hla/imputation/QUILT_HLA_result_optimal/{id}/{hla_gene}/quilt.hla.output.combined.all.txt", hla_gene = hla_genes, id = samples_fv),
-
+        #imputed_optimal = expand("results/hla/imputation/QUILT_HLA_result_optimal/{id}/{hla_gene}/quilt.hla.output.combined.all.txt", hla_gene = hla_genes, id = samples_fv),
         # merged_ref_hap = "results/hla_ref_panel/oneKG_mGenv1/hla_prepare_ref/oneKG_GAMCC.chr6.hap.gz",
         # merged_ref_legend = "results/hla_ref_panel/oneKG_mGenv1/hla_prepare_ref/oneKG_GAMCC.chr6.legend.gz",
         # merged_ref_sample = "results/hla_ref_panel/oneKG_mGenv1/hla_prepare_ref/oneKG_GAMCC.chr6.samples",
@@ -120,14 +117,19 @@ rule hla_imputation_wip_all:
         # imputed_optimal = expand("results/hla/imputation/QUILT_HLA_result_optimal/{id}/{hla_gene}/quilt.hla.output.combined.all.txt", hla_gene = hla_genes, id = samples_fv),
 
 extract_dir = "results/hla/imputation/QUILT_HLA_result_method/"
-score_diff_in_alignment_genes_ary = [0, 8, 20, 50]
-n_mismatches_ary = [1, 3, 5]
+score_diff_in_alignment_genes_ary = [0, 8]
+n_mismatches_ary = [3, 5]
 weight_ary = ['T', 'F']
 rule hla_imputation_auxiliary_all:
     input:
         db = expand(f"{extract_dir}{{id}}/{{gene}}/extracted.hla{{gene}}.RData", gene = HLA_GENES, id = samples_fv),
+
         imputed_all = expand("results/hla/imputation/QUILT_HLA_result_method_determine_optimal/{score}_{n_mismatches}_{weight}/{id}/{gene}/quilt.hla.output.combined.all.txt", score = score_diff_in_alignment_genes_ary, n_mismatches = n_mismatches_ary, weight = weight_ary, id = samples_fv, gene = HLA_GENES),
-        imputed_top = expand("results/hla/imputation/QUILT_HLA_result_method_determine_optimal/{score}_{n_mismatches}_{weight}/{id}/{gene}/quilt.hla.output.combined.topresults.txt", score = score_diff_in_alignment_genes_ary, n_mismatches = n_mismatches_ary, weight = weight_ary, id = samples_fv, gene = HLA_GENES)
+        imputed_top = expand("results/hla/imputation/QUILT_HLA_result_method_determine_optimal/{score}_{n_mismatches}_{weight}/{id}/{gene}/quilt.hla.output.combined.topresult.txt", score = score_diff_in_alignment_genes_ary, n_mismatches = n_mismatches_ary, weight = weight_ary, id = samples_fv, gene = HLA_GENES),
+        read_all = expand("results/hla/imputation/QUILT_HLA_result_method_determine_optimal/{score}_{n_mismatches}_{weight}/{id}/{gene}/quilt.hla.output.onlyreads.all.txt", score = score_diff_in_alignment_genes_ary, n_mismatches = n_mismatches_ary, weight = weight_ary, id = samples_fv, gene = HLA_GENES),
+        read_top = expand("results/hla/imputation/QUILT_HLA_result_method_determine_optimal/{score}_{n_mismatches}_{weight}/{id}/{gene}/quilt.hla.output.onlyreads.topresult.txt", score = score_diff_in_alignment_genes_ary, n_mismatches = n_mismatches_ary, weight = weight_ary, id = samples_fv, gene = HLA_GENES),
+        quilt_all = expand("results/hla/imputation/QUILT_HLA_result_method_determine_optimal/{score}_{n_mismatches}_{weight}/{id}/{gene}/quilt.hla.output.onlystates.all.txt", score = score_diff_in_alignment_genes_ary, n_mismatches = n_mismatches_ary, weight = weight_ary, id = samples_fv, gene = HLA_GENES),
+        quilt_top = expand("results/hla/imputation/QUILT_HLA_result_method_determine_optimal/{score}_{n_mismatches}_{weight}/{id}/{gene}/quilt.hla.output.onlystates.topresult.txt", score = score_diff_in_alignment_genes_ary, n_mismatches = n_mismatches_ary, weight = weight_ary, id = samples_fv, gene = HLA_GENES)
 
 rule hla_imputation_method_all:
     input:
@@ -138,6 +140,9 @@ rule hla_imputation_method_all:
 
         ref_panel_method_v3390 = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_method/HLA{gene}fullallelesfilledin.RData", gene = hla_genes),
         imputed_method_v3390 = expand("results/hla/imputation/QUILT_HLA_result_method/{id}/{gene}/quilt.hla.output.combined.all.txt", gene = hla_genes, id = samples_fv),
+
+        ref_panel_method_v3570 = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_method_v3570/HLA{gene}fullallelesfilledin.RData", gene = hla_genes),
+        imputed_method_v3570 = expand("results/hla/imputation/QUILT_HLA_result_method_v3570/{id}/{gene}/quilt.hla.output.combined.all.txt", gene = hla_genes, id = samples_fv),
 
         ref_panel_optimal = expand("results/hla/imputation/ref_panel/QUILT_prepared_reference_optimal/no_{id}/hla{gene}haptypes.RData", gene = hla_genes, id = samples_fv),
         imputed_optimal = expand("results/hla/imputation/QUILT_HLA_result_optimal/{id}/{gene}/quilt.hla.output.combined.all.txt", gene = hla_genes, id = samples_fv),
