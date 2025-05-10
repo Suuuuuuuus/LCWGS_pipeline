@@ -22,7 +22,22 @@ rule all:
 # regions are take from the start of GYPE - 0.1Mb and GYPA + 0.1Mb rounded to the nearest 10000s
 rule prepare_chip_manifest:
     input:
-        bam = expand('data/bams/{id}.bam', id = samples_fv)
+        bam = 'data/bams/{id}.bam'
+    output:
+        bam = temp('results/coverage/gyp/tmp/{id}.bam')
+    resources:
+        mem = '30G'
+    shell: """
+        mkdir -p results/coverage/gyp/tmp/
+        
+        samtools view -h -f 2 -F 2304 {input.bam} | 
+        samtools sort - -o {output.bam}
+        samtools index {output.bam}
+    """
+    
+rule calculate_bin_coverage:
+    input:
+        bam = expand('results/coverage/gyp/tmp/{id}.bam', id = samples_fv)
     output:
         gyp_coverage = 'results/coverage/gyp/gyp_coverage.tsv'
     resources:
@@ -30,10 +45,8 @@ rule prepare_chip_manifest:
     params: coverotron = tools['coverotron']
     localrule: True
     shell: """
-        mkdir -p results/coverage/gyp/
-
         {params.coverotron} -bin 10000 \
-        -range chr4:143770000-144240000 \
+        -range chr4:143700000-144250000 \
         -reads {input.bam} > \
         {output.gyp_coverage}
     """
