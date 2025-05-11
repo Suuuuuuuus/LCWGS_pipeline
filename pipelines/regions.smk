@@ -13,40 +13,44 @@ from lcwgsus.variables import *
 
 samples_fv = read_tsv_as_lst('data/sample_tsvs/fv_idt_names.tsv')
 chromosome = [i for i in range(1,23)]
-panels = config['panels']
+
+region_file = "data/imputation_accessories/5Mb_chunks_for_coverage.json"
+coverotron_output_prefix = 'results/coverage/coverotron/chr'
+_, coverotron_lst, coverotron_dict = get_vcf_concat_lst(region_file, '', coverotron_output_prefix, suffix = '.tsv')
 
 rule all:
     input:
-        gyp_coverage = 'results/coverage/gyp/gyp_coverage.tsv'
+        coverage_files = coverotron_lst
 
-# regions are take from the start of GYPE - 0.1Mb and GYPA + 0.1Mb rounded to the nearest 10000s
-rule prepare_chip_manifest:
+rule keep_primary_reads:
     input:
         bam = 'data/bams/{id}.bam'
     output:
-        bam = temp('results/coverage/gyp/tmp/{id}.bam')
+        bam = temp('results/coverage/tmp/{id}.bam')
     resources:
         mem = '30G'
     shell: """
-        mkdir -p results/coverage/gyp/tmp/
-        
-        samtools view -h -f 2 -F 2304 {input.bam} | 
+        mkdir -p results/coverage/tmp/
+
+        samtools view -h -f 2 -F 2304 {input.bam} |
         samtools sort - -o {output.bam}
         samtools index {output.bam}
     """
-    
-rule calculate_bin_coverage:
+
+rule calculate_bin_coverage_per_chunk:
     input:
-        bam = expand('results/coverage/gyp/tmp/{id}.bam', id = samples_fv)
+        bam = expand('results/coverage/tmp/{id}.bam', id = samples_fv)
     output:
-        gyp_coverage = 'results/coverage/gyp/gyp_coverage.tsv'
-    resources:
-        mem = '30G'
+        gyp_coverage = 'results/coverage/coverotron/chr{chr}.{regionStart}.{regionEnd}.tsv'
+    resources: mem = '30G'
+    threads: 4
     params: coverotron = tools['coverotron']
-    localrule: True
     shell: """
-        {params.coverotron} -bin 10000 \
-        -range chr4:143700000-144250000 \
+        mkdir -p results/coverage/coverotron/
+
+        {params.coverotron} -bin 1000 \
+        -range chr{wildcards.chr}:{wildcards.regionStart}-{wildcards.regionEnd} \
+        -threads {threads} \
         -reads {input.bam} > \
         {output.gyp_coverage}
     """

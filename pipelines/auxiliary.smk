@@ -30,7 +30,7 @@ def read_tsv_as_dict(samples, split_path_prefix, split_path_postfix):
 def convert_dict_to_lst(dictionary):
     return [item for sublist in dictionary.values() for item in sublist]
 
-def get_vcf_concat_lst(region_json, ref_prefix, vcf_prefix):
+def get_vcf_concat_lst(region_json, ref_prefix, vcf_prefix, suffix = '.vcf.gz'):
     REGIONS = {}
     for chr in chromosome:
         start = [10000001, 15000001]
@@ -52,7 +52,7 @@ def get_vcf_concat_lst(region_json, ref_prefix, vcf_prefix):
             regionEnd = end[i]
             file = ref_prefix + str(chr) + "." + str(regionStart) + "." + str(regionEnd) + ".RData"
             regions_to_prep.append(file)
-            file = vcf_prefix + str(chr) + "." + str(regionStart) + "." + str(regionEnd) + ".vcf.gz"
+            file = vcf_prefix + str(chr) + "." + str(regionStart) + "." + str(regionEnd) + suffix
             per_chr_vcfs.append(file)
         vcfs_to_concat[str(chr)] = per_chr_vcfs
 
