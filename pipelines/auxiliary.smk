@@ -58,3 +58,32 @@ def get_vcf_concat_lst(region_json, ref_prefix, vcf_prefix, suffix = '.vcf.gz'):
 
     vcfs_to_impute = convert_dict_to_lst(vcfs_to_concat)
     return regions_to_prep, vcfs_to_impute, vcfs_to_concat
+
+def get_bam_concat_lst(region_json, sample_list, ref_prefix, vcf_prefix, bam_suffix = '.bam', output_suffix = '.tsv.gz'):
+    REGIONS = {}
+    for chr in chromosome:
+        start = [10000001, 15000001]
+        end = [  15000000, 20000000]
+        REGIONS[str(chr)] = {"start": start, "end": end}
+
+    if os.path.exists(region_json):
+        with open(region_json) as json_file:
+            REGIONS = json.load(json_file)
+
+    regions_to_prep = {}
+    cov_files_all = []
+    for chr in chromosome:
+        start = REGIONS[str(chr)]["start"]
+        end = REGIONS[str(chr)]["end"]
+        for i in range(0, start.__len__()):
+            regionStart = start[i]
+            regionEnd = end[i]
+            bamlist = []
+            for s in sample_list:
+                file = ref_prefix + str(chr) + "." + str(regionStart) + "." + str(regionEnd) + '/' + s + bam_suffix
+                bamlist.append(file)
+            regions_to_prep[f'{chr}.{regionStart}.{regionEnd}'] = bamlist
+            file = vcf_prefix + str(chr) + "." + str(regionStart) + "." + str(regionEnd) + output_suffix
+            cov_files_all.append(file)
+            
+    return regions_to_prep, cov_files_all

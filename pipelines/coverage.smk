@@ -199,3 +199,39 @@ rule aggregate_ss_uncoverage_rate:
     shell: """
         cat {input.files} >> {output.ss_uncoverage_rate}
     """
+
+rule compute_bedgraph_sex_chr:
+    input:
+        bam = "data/bams/{id}.bam"
+    output:
+        bedgraph = temp("results/coverage/bedgraphs/sex/{id}_bedgraph_nozero.bed")
+    resources: mem = '50G'
+    shell: """
+        mkdir -p results/coverage/bedgraphs/sex/
+
+        bedtools genomecov -ibam {input.bam} -bg | \
+        awk '$1 ~ /^chr(X|Y)$/' \
+        > {output.bedgraph}
+    """
+
+rule calculate_sexchr_coverage:
+    input:
+        bedgraph = "results/coverage/bedgraphs/sex/{id}_bedgraph_nozero.bed"
+    output:
+        cx = temp("results/coverage/sex/{id}.chrXY.tsv"),
+        cov = "results/coverage/sex/{id}.sexchr.tsv",
+    params:
+        lenX = 156040895,
+        lenY = 57227415
+    shell: """
+        mkdir -p results/coverage/sex/
+
+        grep 'chrX' {input.bedgraph} > {output.cx}
+        sum_product=$(awk '{{ sum += ($3-$2)*$4 }} END {{ print sum }}' {output.cx})
+        resultX=$(echo "scale=4; ($sum_product/{params.lenX})" | bc)
+
+        grep 'chrY' {input.bedgraph} > {output.cx}
+        sum_product=$(awk '{{ sum += ($3-$2)*$4 }} END {{ print sum }}' {output.cx})
+        resultY=$(echo "scale=4; ($sum_product/{params.lenY})" | bc)
+        echo "{wildcards.id}\t$resultX\t$resultY" > {output.cov}
+    """

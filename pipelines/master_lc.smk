@@ -25,6 +25,7 @@ import lcwgsus
 from lcwgsus.variables import *
 
 samples_lc = read_tsv_as_lst(config['samples_lc'])
+samples_fv = read_tsv_as_lst('data/sample_tsvs/fv_idt_names.tsv')
 chromosome = [i for i in range(1,23)]
 
 concatenate = config['concatenate']
@@ -95,8 +96,9 @@ rule coverage_all:
     #    uncoverage_rate = "results/coverage/per_chromosome_coverage/uncoverage_rate.txt",
     #    ss_uncoverage_rate = "results/coverage/per_chromosome_ss_coverage/ss_uncoverage_rate.txt"
         # avg_coverage = "results/coverage/per_sample_coverage.txt",
-        hc_bedgraphs = expand("results/coverage/hc_bedgraphs/{hc}_bedgraph_nozero.bed", hc = samples_hc),
-        hc_coverage = "results/coverage/hc_coverage.txt"
+       # hc_bedgraphs = expand("results/coverage/hc_bedgraphs/{hc}_bedgraph_nozero.bed", hc = samples_hc),
+       # hc_coverage = "results/coverage/hc_coverage.txt",
+        sex = expand("results/coverage/sex/{id}.sexchr.tsv", id = samples_fv)
 
 rule dup_rate_all:
     input:
