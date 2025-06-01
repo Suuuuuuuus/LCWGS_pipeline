@@ -21,8 +21,9 @@ chunk_bams, cov_files_all = get_bam_concat_lst(region_file, samples_fv, bam_pref
 
 rule all:
     input:
-        coverage_files = cov_files_all,
-        hba = 'results/coverage/specific_regions/HBA.tsv'
+        hba = 'results/coverage/specific_regions/HBA.tsv',
+        primary_bams = expand('data/bams/primary/{id}.bam', id = samples_fv),
+        # coverage_files = cov_files_all
 
 rule keep_primary_reads:
     input:
@@ -65,18 +66,31 @@ rule calculate_bin_coverage_per_chunk:
         rm -r {params.bam_dir}*bai
     """
 
-rule calculate_bin_coverage_per_chunk:
+rule keep_primary_reads_specific_region:
     input:
-        bam = expand('data/bams/{id}.bam', id = samples_fv)
+        bam = 'data/bams/{id}.bam'
+    output:
+        bam = 'data/bams/primary/{id}.bam'
+    shell: """
+        mkdir -p data/bams/primary/
+
+        samtools view -h -f 2 -F 2304 {input.bam} | \
+        samtools sort - -o {output.bam}
+        samtools index {output.bam}
+    """
+
+rule calculate_bin_coverage_specific_region:
+    input:
+        bam = expand('data/bams/primary/{id}.bam', id = samples_fv)
     output:
         coverage = 'results/coverage/specific_regions/HBA.tsv'
     localrule: True
     params: 
         coverotron_shared = tools['coverotron_shared'],
-        binsize = 300,
+        binsize = 2000,
         c = 16,
-        start = 170000,
-        end = 180200
+        start = 100000,
+        end = 300000
     shell: """
         mkdir -p results/coverage/specific_regions/
 
