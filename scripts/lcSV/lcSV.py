@@ -40,7 +40,49 @@ from lcwgsus.variables import *
 from warnings import simplefilter
 simplefilter(action="ignore", category=pd.errors.PerformanceWarning)
 
+def simulate_coverage(L, Ecov, Dcov, binsize=1000, method="negative_binomial"):
+    Ecov = np.where(Ecov * binsize == 0, 1e-3, Ecov * binsize)
+    Dcov = np.where(Dcov * binsize == 0, 1e-2, Dcov * binsize)
 
+    if method == "negative_binomial":
+        size = (Ecov**2) / (Dcov - Ecov)
+        prob = Ecov / Dcov
+        return nbinom.rvs(size, prob, size=L)
+    elif method == "normal":
+        return np.maximum(norm.rvs(loc=Ecov, scale=np.sqrt(Dcov) + 0.05, size=S), 0)
+    elif method == "poisson":
+        return poisson.rvs(mu=Ecov, size=L)
+    else:
+        raise ValueError("Select from: 1.normal; 2.negative_binomial; 3.poisson.")
+
+def simulate_coverotron(model, N, L, mean_coverage, sd_coverage, nb_var, binsize = 1000, model_sim = 'negative_binomial', ploidy = 2):
+    cumulative = np.cumsum(np.concatenate([[0], model.freqs]))
+
+    means = np.random.normal(loc=mean_coverage, scale=sd_coverage, size=N)
+    variances = nb_var * means
+
+    random_vals = np.random.rand(ploidy * N)
+    hap_indices = [np.where(cumulative < val)[0][-1] for val in random_vals]
+    haplotypes = np.array(hap_indices).reshape(N, ploidy)
+
+    profiles = np.full((L, N), np.nan)
+    coverage = np.full((L, N), np.nan)
+    training = np.full((L, N), np.nan)
+
+    for i in range(N):
+        training[:, i] = simulate_coverage(L, means[i] * ploidy, variances[i] * ploidy, binsize, method=model_sim)
+
+        profile_1 = model.haps[haplotypes[i, 0]]
+        profile_2 = model.haps[haplotypes[i, 1]]
+        profiles[:, i] = profile_1 + profile_2
+
+        Ecov = means[i] * profiles[:, i]
+        Dcov = variances[i] * profiles[:, i]
+        coverage[:, i] = simulate_coverage(L, Ecov, Dcov, binsize, method=model_sim)
+
+    haplotypes = haplotypes.astype(int)
+    haplotypes = [tuple(sorted(i)) for i in haplotypes]
+    return training, coverage, haplotypes
 
 def deresolute_windows(df, window_size, normalise = False):
     len_window = int(df.iloc[1,0] - df.iloc[0,0])
@@ -223,9 +265,10 @@ def run_inverse_length_penalty(hap):
     penalty += 1 / run_length
     return penalty
 
-def multi_evaluate_model(model, N, pre_computed_lls, geom_penalty, bin_size = 1000):
+def multi_evaluate_model(model, N, pre_computed_lls, geom_penalty, L = None, bin_size = 1000):
     n_haps = len(model.haps)
-    L = len(model.haps[0])
+    if L is None:
+        L = len(model.haps[0])
     n_diploid = int(n_haps*(n_haps + 1)/2)
     
     dip_model = generate_diploid_profiles(model)
@@ -238,11 +281,9 @@ def multi_evaluate_model(model, N, pre_computed_lls, geom_penalty, bin_size = 10
     trans_penalty = 0
     for h in model.haps:
         trans_penalty += run_inverse_length_penalty(h)
-#         trans_penalty += np.sum(h[1:] != h[:-1])
-        
+
     final_lls = final_lls + np.log(np.array(dip_model.freqs))[np.newaxis, :] 
     model_ll = logsumexp(final_lls, axis=1).sum()
-#     model_ll = model_ll + np.log(geom.pmf(n_haps, geom_penalty))
     model_ll = ((n_haps-1)*L + trans_penalty)*np.log(N*L) - 2*model_ll
     return model, final_lls, model_ll
     
@@ -317,7 +358,7 @@ def call_sv_samples(samples, genotypes):
             results[g] = [samples[i]]
     return results
 
-def nonahore(means, variances, covs, samples,
+def nonahore(means, variances, covs,
              ploidy = 2, 
              n_iter = 10, 
              n_sample_freq = 200, 
@@ -383,7 +424,10 @@ def nonahore(means, variances, covs, samples,
         best_model = copy.deepcopy(reference_model)
         best_model_ll = ref_model_ll
         
-        ncores = max(2*(len(os.sched_getaffinity(0))) - 1, 1)
+        if sys.platform.startswith("linux"):
+            ncores = max(2*(len(os.sched_getaffinity(0))) - 1, 1)
+        else:
+            ncores = max(2*(multiprocessing.cpu_count()-1) - 1, 1)
 
         with multiprocessing.Pool(processes=ncores) as pool:
             results = pool.starmap(
