@@ -159,7 +159,7 @@ def load_region_files(chunks, chromosome, start, end, indir = 'results/coverage/
     else:
         raise ValueError("No overlapping files found for the specified region.")
 
-def precompute_site_lls(means, variances, coverage, max_cnv=10, mismap_proportion = 0.01, model='negative_binomial'):
+def precompute_site_lls(means, variances, coverage, max_cnv=20, mismap_proportion = 0.01, model='negative_binomial'):
     L, N = coverage.shape
     site_factor = np.ones(L)
     mismap_propn = np.full(L, mismap_proportion)
@@ -475,6 +475,41 @@ def get_ticks(df, tick_step):
     if len(ticks) == 0:
         ticks = [tick_start, tick_end]
     return ticks
+
+def evaluate_sim_model(result_dict, true_hap, true_gt):
+    freq = 0
+    concordance = 0
+    info = 0
+    
+    probs = result_dict['probs']
+    genotypes = result_dict['genotypes']
+    best_model = result_dict['model_ary'][-1]
+    N = len(genotypes)
+    
+    if (len(best_model.haps) != 2) or all(best_model.haps[1] != true_hap):
+        pass
+
+    else:
+        freq = best_model.freqs[1]
+        
+        dosage_ary = []
+        dosage2_ary = []
+
+        for i in range(N):
+            h1, h2 = true_gt[i]
+            t1, t2 = genotypes[i]
+            concordance += (max(((h1 == t1) + (h2 == t2)), ((h1 == t2) + (h2 == t1))))
+            
+            p = probs[i]
+            dosage_ary.append(p[1] + 2*p[2])
+            dosage2_ary.append(p[1] + 4*p[2])
+        
+        concordance = concordance/N
+        dosage_ary = np.array(dosage_ary)
+        dosage2_ary = np.array(dosage2_ary)
+        maf = np.mean(dosage_ary)/2
+        info = 1 - np.mean((dosage2_ary - dosage_ary**2)/(2*maf*(1-maf)))
+    return concordance, info, freq
 
 def plot_sv_coverage(cov, chromosome, start, end, flank, calling_dict, side = 'both', tick_step = 0.1):
     means, _ = normalise_by_flank(cov, start, end, flank, side = side)
