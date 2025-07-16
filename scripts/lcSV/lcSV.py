@@ -7,6 +7,7 @@ import time
 import json
 import secrets
 import copy
+import pickle
 import multiprocessing
 import subprocess
 import resource
@@ -101,6 +102,19 @@ def deresolute_windows(df, window_size, normalise = False):
         for s in agg_df.columns[1:]:
             agg_df[s] = agg_df[s]/window_size
     return agg_df
+
+def delineate_region(start, length, binsize = 1000):
+    s = start - length
+    e = start + 2*length
+    
+    s = int(s/binsize)*binsize
+    e = (int(e/binsize) + 1)*binsize
+    return s,e
+
+def read_pickle(infile):
+    with open(infile, 'rb') as f:
+        data = pickle.load(f)
+    return data
 
 def read_coverage_data(file_path, sep = ','):    
     df = pd.read_csv(file_path, sep = sep)
@@ -226,10 +240,13 @@ class SVModel:
     def replace(self, hap, ix):
         self.haps[ix] = hap
         
-def dirichlet_sampling(freqs, concentration = 10):
+def dirichlet_sampling(freqs, concentration = 10, limit = 1e-4):
     alpha = np.array(freqs) * concentration
+    alpha[alpha <= limit] = limit
     rng = default_rng()
-    return list(rng.dirichlet(alpha))
+    res = rng.dirichlet(alpha)
+    res[res <= limit] = limit
+    return list(res)
 
 def sample_from_freqs(freqs):
     freqs = np.array(freqs)
@@ -366,6 +383,7 @@ def nonahore(means, variances, covs,
              bin_size = 1000,
              geom_penalty = 0.9,
              max_cnv = 10,
+             min_threshold = 0.01,
              verbose = False):
     
     pre_computed_lls = precompute_site_lls(means/ploidy, variances/ploidy, covs)
@@ -400,7 +418,8 @@ def nonahore(means, variances, covs,
                 model = copy.deepcopy(reference_model)
                 model.freqs = dirichlet_sampling(model.freqs)
                 model.normalise()
-                models.append(model)
+                if sum(np.array(model.freqs) >= min_threshold) > 1:
+                    models.append(model)
 
         for _ in range(this_recomb):
             new_hap = sample_recombinants(reference_model, L)
@@ -449,7 +468,7 @@ def nonahore(means, variances, covs,
             print(f'------ Iteration {iteration + 1} ------')
             print(f'Best loglikelihood: {best_ll_ary[iteration]}')
             
-        if len(best_ll_ary) >= 50 and len(set(best_ll_ary[-50:])) == 1:
+        if len(best_ll_ary) >= 100 and len(set(best_ll_ary[-100:])) == 1:
             break
     
     _, lls, _ = multi_evaluate_model(best_model, N, pre_computed_lls, geom_penalty)
@@ -510,6 +529,87 @@ def evaluate_sim_model(result_dict, true_hap, true_gt):
         maf = np.mean(dosage_ary)/2
         info = 1 - np.mean((dosage2_ary - dosage_ary**2)/(2*maf*(1-maf)))
     return concordance, info, freq
+
+def evaluate_real_model(result_dict):
+    freq = 0
+    info = 0
+    
+    probs = result_dict['probs']
+    genotypes = result_dict['genotypes']
+    best_model = result_dict['model_ary'][-1]
+    N = len(genotypes)
+    
+    if (len(best_model.haps) != 2):
+        pass
+    else:
+        freq = best_model.freqs[1]
+        
+        dosage_ary = []
+        dosage2_ary = []
+
+        for i in range(N):
+            t1, t2 = genotypes[i]
+            
+            p = probs[i]
+            dosage_ary.append(p[1] + 2*p[2])
+            dosage2_ary.append(p[1] + 4*p[2])
+        
+        dosage_ary = np.array(dosage_ary)
+        dosage2_ary = np.array(dosage2_ary)
+        maf = np.mean(dosage_ary)/2
+        info = 1 - np.mean((dosage2_ary - dosage_ary**2)/(2*maf*(1-maf)))
+    return info, freq
+
+def estimate_maf(means, variances, coverage, svtype, fillna = True):
+    this_vars = coverage.var(axis = 1)
+
+    seq_means = means/2
+    seq_vars = variances/2
+
+    EM = seq_means.mean()
+    DM = seq_means.var(ddof = 1)
+    V = seq_vars.mean()
+
+    A = 2*DM - 2*(EM**2)
+    
+    if svtype == 'DEL':
+        B = 2*(EM**2-V-4*DM+DM)
+    else:
+        B = 2*(EM**2+V+4*DM+DM)
+    C = 4*DM + 2*V-this_vars
+
+    delta = B**2-4*A*C
+    sqrt_term = np.sqrt(delta)
+    f1 = (-B + sqrt_term) / (2*A)
+    f2 = (-B - sqrt_term) / (2*A)
+    
+    if fillna:
+        f1 = np.nan_to_num(f1, nan=0.0)
+    
+    return f1
+
+def find_intervals(means, f, min_run=5):
+    crit1 = (means >= means.mean() / 2)
+    crit2 = (f >= 0.05)
+    crit = (crit1 & crit2).astype(np.uint8)
+
+    arr = np.asarray(crit, dtype=bool)
+    padded = np.concatenate(([False], arr, [False]))
+
+    diff = np.diff(padded.astype(int))
+    starts = np.where(diff == 1)[0]
+    ends = np.where(diff == -1)[0]
+    lengths = ends - starts
+    
+    valid = lengths >= min_run
+    valid_starts = starts[valid]
+    valid_lengths = lengths[valid]
+
+    df = pd.DataFrame({
+        'POS': valid_starts,
+        'SVLEN': valid_lengths
+    })   
+    return df
 
 def plot_sv_coverage(cov, chromosome, start, end, flank, calling_dict, side = 'both', tick_step = 0.1):
     means, _ = normalise_by_flank(cov, start, end, flank, side = side)
@@ -649,5 +749,19 @@ def plot_sv_heatmap(means, variances, coverage, samples, results, n_sample = 10)
     plt.xlabel("Chromosomal bins")
     plt.ylabel("Individuals")
     plt.tight_layout()
+    
+    return None
+
+def plot_maf(coverage, f1):
+    this_vars = coverage.var(axis = 1) 
+    fig, ax1 = plt.subplots()
+
+    ax1.plot(this_vars, color = 'b', label = 'VarC')
+    ax1.legend()
+    ax1.set_ylabel('Realised variance of coverage')
+    ax2 = ax1.twinx()
+    ax2.plot(f1, color = 'orange', label = 'MAF est.')
+    ax2.legend()
+    ax2.set_ylabel('Estimated SV allele frequency')
     
     return None

@@ -19,9 +19,19 @@ from lcSV import *
 
 replicates = 100
 
+sv_df_file = 'results/nonahore/eichler/manifest.5K.5percent.tsv'
+sv_df = pd.read_csv(sv_df_file, sep = '\t')
+eichler_regions = len(sv_df)
+
+sv_df_file = 'results/nonahore/denovo/manifest.5K.5percent.tsv'
+sv_df = pd.read_csv(sv_df_file, sep = '\t')
+denovo_regions = len(sv_df)
+
 rule all:
     input:
-        pickle = expand('results/nonahore/simulate/plausibility/rep{rep}/eval.pickle', rep = [i for i in range(replicates)])
+        eichler = expand('results/nonahore/eichler/region{eichler}/results.pickle', eichler = [i for i in range(eichler_regions)]),
+        denovo = expand('results/nonahore/denovo/region{denovo}/results.pickle', denovo = [i for i in range(denovo_regions)]),
+        # simulation = expand('results/nonahore/simulate/plausibility/rep{rep}/eval.pickle', rep = [i for i in range(replicates)]),
 
 rule simulate_nonahore:
     output:
@@ -31,3 +41,29 @@ rule simulate_nonahore:
         odir = 'results/nonahore/simulate/plausibility/rep{rep}/'
     script:
         '/well/band/users/rbx225/GAMCC/scripts/simulate_nonahore.py'
+
+rule run_nonahore_on_eichler:
+    input:
+        sv_df_file = 'results/nonahore/eichler/manifest.5K.5percent.tsv'
+    output:
+        pickle = 'results/nonahore/eichler/region{eichler}/results.pickle'
+    threads: 4
+    params:
+        chunk_file = 'data/imputation_accessories/5Mb_chunks_for_coverage.json',
+        odir = 'results/nonahore/eichler/region{eichler}/',
+        row_ix = '{eichler}'
+    script:
+        '/well/band/users/rbx225/GAMCC/scripts/run_nonahore.py'
+
+rule run_nonahore_on_denovo:
+    input:
+        sv_df_file = 'results/nonahore/denovo/manifest.5K.5percent.tsv'
+    output:
+        pickle = 'results/nonahore/denovo/region{denovo}/results.pickle'
+    threads: 4
+    params:
+        chunk_file = 'data/imputation_accessories/5Mb_chunks_for_coverage.json',
+        odir = 'results/nonahore/denovo/region{denovo}/',
+        row_ix = '{denovo}'
+    script:
+        '/well/band/users/rbx225/GAMCC/scripts/run_nonahore.py'

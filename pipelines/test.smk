@@ -22,27 +22,23 @@ samples_hc = read_tsv_as_lst(config['samples_hc'])
 IPD_IMGT_versions = ['3390', '3570']
 HLA_GENES_ALL_EXPANDED_PLUS_DRB26789 = HLA_GENES_ALL_EXPANDED + ['DRB26789']
 
+sv_df_file = 'results/nonahore/denovo/manifest.5K.5percent.tsv'
+sv_df = pd.read_csv(sv_df_file, sep = '\t')
+denovo_regions = len(sv_df)
+
 rule all:
     input:
-        coverage = 'results/coverage/specific_regions/HBA.tsv'
+        denovo = expand('results/nonahore/denovo/region{denovo}/results.pickle', denovo = [130]),
 
-rule calculate_bin_coverage_per_chunk:
+rule run_nonahore_on_denovo:
     input:
-        bam = expand('data/bams/{id}.bam', id = samples_fv)
+        sv_df_file = 'results/nonahore/denovo/manifest.5K.5percent.tsv'
     output:
-        coverage = 'results/coverage/specific_regions/HBA.tsv'
+        pickle = 'results/nonahore/denovo/region{denovo}/results.pickle'
     localrule: True
-    params: 
-        coverotron_shared = tools['coverotron_shared'],
-        binsize = 300,
-        c = 16,
-        start = 170000,
-        end = 180200
-    shell: """
-        mkdir -p results/coverage/specific_regions/
-
-        {params.coverotron_shared} -bin {params.binsize} \
-        -range chr{params.c}:{params.start}-{params.end} \
-        -reads {input.bam} > \
-        {output.coverage}
-    """
+    params:
+        chunk_file = 'data/imputation_accessories/5Mb_chunks_for_coverage.json',
+        odir = 'results/nonahore/denovo/region{denovo}/',
+        row_ix = '{denovo}'
+    script:
+        '/well/band/users/rbx225/GAMCC/scripts/run_nonahore.py'
