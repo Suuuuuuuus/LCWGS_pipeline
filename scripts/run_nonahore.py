@@ -53,6 +53,13 @@ pd.options.mode.chained_assignment = None
 
 def main(regions, sv_df_file, eichler_file, ix, ofile, bin_size = 1000):
     eichler_full = read_eichler(eichler_file)
+    indices = np.where(eichler_full['SVTYPE'] == 'INS')[0]
+    eichler_full.loc[indices, 'END'] = eichler_full.loc[indices, 'POS'] + eichler_full.loc[indices, 'SVLEN']
+    eichler_full.loc[indices, 'POS'] = eichler_full.loc[indices, 'POS'] - eichler_full.loc[indices, 'SVLEN']
+    cols = ['Chromosome', 'Start', 'End']
+    eichler_full.columns = cols + eichler_full.columns[3:].tolist()
+    eichler_full = eichler_full.sort_values(by = cols).reset_index(drop = True)
+    
     manifest = pd.read_csv(sv_df_file, sep = '\t')
     chrom, sv_start, L, svtype = manifest.loc[ix, ['#CHROM', 'POS', 'SVLEN', 'SVTYPE']]
     chromosome = int(chrom.replace('chr', ''))

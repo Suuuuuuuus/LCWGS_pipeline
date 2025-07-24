@@ -121,7 +121,6 @@ def delineate_region2(eichler_full, c, start, length, svtype, binsize = 1000, ex
         e = start + length
         s = start
         
-    eichler_full.columns = ['Chromosome', 'Start', 'End'] + eichler_full.columns[3:].tolist()
     s,e = find_overlapping_svs(eichler_full, c, s, e)
     
     s = int(s/binsize)*binsize - extension*binsize
