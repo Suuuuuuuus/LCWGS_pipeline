@@ -11,6 +11,8 @@ import multiprocessing
 import subprocess
 import resource
 import itertools
+from itertools import combinations_with_replacement
+import pyranges as pr
 import collections
 import sqlite3
 from PIL import Image
@@ -49,26 +51,29 @@ simplefilter(action="ignore", category=pd.errors.PerformanceWarning)
 
 pd.options.mode.chained_assignment = None
 
-def main(regions, sv_df_file, ix, ofile, bin_size = 1000):
-    df = pd.read_csv(sv_df_file, sep = '\t')
-    chrom, start, L, svtype = df.loc[ix, ['#CHROM', 'POS', 'SVLEN', 'SVTYPE']]
+def main(regions, sv_df_file, eichler_file, ix, ofile, bin_size = 1000):
+    eichler_full = read_eichler(eichler_file)
+    manifest = pd.read_csv(sv_df_file, sep = '\t')
+    chrom, sv_start, L, svtype = manifest.loc[ix, ['#CHROM', 'POS', 'SVLEN', 'SVTYPE']]
     chromosome = int(chrom.replace('chr', ''))
-    start, end = delineate_region(start, L)
-    flank = end - start
+    start, end = delineate_region2(eichler_full, chrom, sv_start, L, svtype)
+    flank = 1e6
+    plausible_boundaries = get_sv_boundaries(start, end, sv_start, L, svtype)
 
-    cov = load_region_files(regions, chromosome, start, end)
+    cov = load_region_files(regions, chromosome, start, end, flank = flank)
     cov = cov[['position'] + list(cov.columns[cov.columns.str.contains('coverage')])]
-    means, variances = normalise_by_flank(cov, start, end, flank)
+    means, variances = normalise_by_flank2(cov, start, end, flank)
     samples, coverage = extract_target_cov(cov, start, end)
 
-    results = nonahore(means, variances, coverage, n_recomb = 1000, n_iter = 2000, verbose = False)
+    results = nonahore(means, variances, coverage, n_recomb = 1000, n_iter = 500, verbose = False)
 
     probs, genotypes = results['probs'], results['genotypes']
-    info, freq = evaluate_real_model(results)
+    info, freq, concordance = evaluate_real_model2(results, plausible_boundaries)
     haps = results['model_ary'][-1].haps
 
     outputs = {}
     outputs['chromosome'] = chrom
+    outputs['g_start'] = sv_start
     outputs['start'] = start
     outputs['end'] = end
     outputs['length'] = L
@@ -78,6 +83,7 @@ def main(regions, sv_df_file, ix, ofile, bin_size = 1000):
     outputs['coverage'] = coverage
     outputs['info'] = info
     outputs['freq'] = freq
+    outputs['concordance'] = concordance
     outputs['haps'] = haps
     outputs['probs'] = np.round(probs, 4)
     outputs['genotypes'] = genotypes
@@ -95,7 +101,8 @@ if __name__ == "__main__":
 
     row_ix = int(snakemake.params.row_ix)
     sv_df_file = snakemake.input.sv_df_file
+    eichler_file = snakemake.params.eichler_file
     
     ofile = snakemake.output.pickle
 
-    main(regions, sv_df_file, row_ix, ofile)
+    main(regions, sv_df_file, eichler_file, row_ix, ofile)

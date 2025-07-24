@@ -51,8 +51,9 @@ pd.options.mode.chained_assignment = None
 
 def main(odir):
     N = 210
-    nb_vars = [100, 500, 1000, 2000, 5000]
-    Ls = [5, 10, 20, 30] # translate to 1k, 3k, 6.6k, 10k SVLEN
+    nb_var = 300
+    Ls = [6, 12, 18, 24, 30]
+#     Ls = [5, 10, 20, 30] # translate to 1k, 3k, 6.6k, 10k SVLEN
     fs = [0.05, 0.1, 0.2, 0.3, 0.4, 0.5]
     binsize = 1000
 
@@ -65,25 +66,24 @@ def main(odir):
 
     eval_dict = {}
 
-    for v in nb_vars:
-        for l in Ls:
-            for f1 in fs:  
-                h1 = np.ones(l)
-                h2 = h1.copy()
-                h2[int(l/3):int(2*l/3)] = 0
-                model = SVModel([h1,h2], [1-f1,f1])
-                training, coverage, true_gt = simulate_coverotron(model, N, l, mean_coverage, sd_coverage, v)
+    for l in Ls:
+        for f1 in fs:  
+            h1 = np.ones(l)
+            h2 = h1.copy()
+            h2[int(l/3):int(2*l/3)] = 0
+            model = SVModel([h1,h2], [1-f1,f1])
+            training, coverage, true_gt = simulate_coverotron(model, N, l, mean_coverage, sd_coverage, nb_var)
 
-                np.savetxt(f'{odir}{v}-{l}-{f1}-training.txt', training, delimiter='\t', fmt = "%d")
-                np.savetxt(f'{odir}{v}-{l}-{f1}-coverage.txt', coverage, delimiter='\t', fmt = "%d")
-                np.savetxt(f'{odir}{v}-{l}-{f1}-truth.txt', true_gt, delimiter='\t', fmt = "%d")
+            np.savetxt(f'{odir}{l}-{f1}-training.txt', training, delimiter='\t', fmt = "%d")
+            np.savetxt(f'{odir}{l}-{f1}-coverage.txt', coverage, delimiter='\t', fmt = "%d")
+            np.savetxt(f'{odir}{l}-{f1}-truth.txt', true_gt, delimiter='\t', fmt = "%d")
 
-                means = np.mean(training, axis = 0)
-                variances = np.var(training, axis = 0, ddof = 1)
-                result_dict = nonahore(means, variances, coverage, n_recomb = n_recomb, n_iter = n_iter, verbose = verbose)
+            means = np.mean(training, axis = 0)
+            variances = np.var(training, axis = 0, ddof = 1)
+            result_dict = nonahore(means, variances, coverage, n_recomb = n_recomb, n_iter = n_iter, verbose = verbose)
 
-                concordance, info, freq = evaluate_sim_model(result_dict, h2, true_gt)
-                eval_dict[f'{v}-{l}-{f1}'] = [concordance, info, freq]
+            concordance, info, freq = evaluate_sim_model(result_dict, h2, true_gt)
+            eval_dict[f'{l}-{f1}'] = [concordance, info, freq]
 
     pickle_ofile = f'{odir}eval.pickle'
     with open(pickle_ofile, 'wb') as of:

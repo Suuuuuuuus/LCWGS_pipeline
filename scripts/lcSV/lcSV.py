@@ -12,10 +12,12 @@ import multiprocessing
 import subprocess
 import resource
 import itertools
+from itertools import combinations_with_replacement
 import collections
 import sqlite3
 import random
 
+import pyranges as pr
 import matplotlib.pyplot as plt
 import numpy as np
 from numpy.random import default_rng
@@ -111,6 +113,33 @@ def delineate_region(start, length, binsize = 1000):
     e = (int(e/binsize) + 1)*binsize
     return s,e
 
+def delineate_region2(eichler_full, c, start, length, svtype, binsize = 1000, extension = 3):
+    if svtype == 'INS':
+        e = start + length
+        s = start - length
+    else:
+        e = start + length
+        s = start
+        
+    eichler_full.columns = ['Chromosome', 'Start', 'End'] + eichler_full.columns[3:].tolist()
+    s,e = find_overlapping_svs(eichler_full, c, s, e)
+    
+    s = int(s/binsize)*binsize - extension*binsize
+    e = (int(e/binsize) + 1)*binsize + extension*binsize
+    return s,e
+
+def read_eichler(f, length_filter = 0, af_filter = 0):
+    df = pd.read_csv(f, sep = '\t', compression = 'gzip')
+    main_chrs = [f'chr{i}' for i in range(1,23)] + ['X', 'Y']
+    df = df[df['#CHROM'].isin(main_chrs)]
+    df['PG_AFR_AF'] =  df['PG_INFO_AFR'].str.split(';').str.get(0).str.split('=').str.get(1).astype(float)
+    df = df.sort_values(by = 'POP_AFR_AF', ascending = False)
+    df = df[(df['SVLEN'] >= length_filter)]
+#     df = df[(df['SVLEN'] >= length_filter) & ((df['POP_AFR_AF'] >= af_filter) | (df['PG_AFR_AF'] >= af_filter))]
+    df = df[['#CHROM', 'POS', 'END', 'SVTYPE', 'SVLEN','PG_AFR_AF', 'POP_AFR_AF']]
+    df = df.sort_values(by = df.columns[:3].tolist()).reset_index(drop = True)
+    return df
+
 def read_pickle(infile):
     with open(infile, 'rb') as f:
         data = pickle.load(f)
@@ -134,7 +163,7 @@ def extract_target_cov(df, start, end):
 def normalise_by_flank(df, start, end, flank, side = 'both'):
     fstart = max(start-flank, df.iloc[0,0])
     fend = min(end+flank, df.iloc[-1,0])
-    
+
     if side == 'both':
         criteria = (((df['position'] >= fstart) & (df['position'] < start)) | 
              ((df['position'] > end) & (df['position'] <= fend)))
@@ -146,6 +175,30 @@ def normalise_by_flank(df, start, end, flank, side = 'both'):
         raise ValueError("Unsupported side.")            
             
     cov = df[criteria].iloc[:,1:-1].to_numpy()
+    means = np.mean(cov, axis = 0)
+    variances = np.var(cov, axis = 0, ddof = 1)
+    return means, variances
+
+def normalise_by_flank2(df, start, end, flank, side = 'both'):
+    fstart = max(start-flank, df.iloc[0,0])
+    fend = min(end+flank, df.iloc[-1,0])
+    
+    left_flank = df[(df['position'] >= fstart) & (df['position'] < start)]
+    right_flank = df[(df['position'] > end) & (df['position'] <= fend)]
+
+    left_flank = left_flank[left_flank['total:coverage'] != 0] # Remove unaligned sites
+    right_flank = right_flank[right_flank['total:coverage'] != 0]
+    
+    if side == 'both':
+        cov = pd.concat([left_flank, right_flank], axis = 0)
+        cov = cov.iloc[:,1:-1].to_numpy()
+    elif side == 'left':
+        cov = left_flank.iloc[:,1:-1].to_numpy()
+    elif side == 'right':
+        cov = right_flank.iloc[:,1:-1].to_numpy()
+    else:
+        raise ValueError("Unsupported side.")    
+        
     means = np.mean(cov, axis = 0)
     variances = np.var(cov, axis = 0, ddof = 1)
     return means, variances
@@ -254,7 +307,7 @@ def sample_from_freqs(freqs):
     u = np.random.uniform(0, 1)
     return np.searchsorted(cum_probs, u)
 
-def sample_recombinants(model, L, max_cnv = 10):
+def sample_recombinants(model, L, max_cnv = 10, check_noisy = True):
     hap1 = sample_from_freqs(model.freqs)
     hap2 = sample_from_freqs(model.freqs)
     breakpoints = np.random.choice(np.arange(1, L), size=2, replace=True)
@@ -268,7 +321,32 @@ def sample_recombinants(model, L, max_cnv = 10):
     
     if np.any(new_hap >= max_cnv):
         new_hap = np.ones(L)
+        
+    if check_noisy:
+        if not check_noisy_hap(new_hap):
+            new_hap = np.ones(L)
     return new_hap
+
+def check_noisy_hap(h, t=2):
+    h = np.asarray(h)
+    n = len(h)
+    i = 0
+
+    while i < n:
+        if h[i] == 1:
+            i += 1
+            continue
+
+        # Start of a non-1 segment
+        this_sv = h[i]
+        start = i
+        while i < n and h[i] == this_sv:
+            i += 1
+        length = i - start
+
+        if length <= t:
+            return False  # Too short even though same value
+    return True
 
 def run_inverse_length_penalty(hap):
     penalty = 0
@@ -317,7 +395,21 @@ def generate_diploid_profiles(model):
             result.freqs.append(freq)
     result.normalise()
     return result
-            
+
+def get_sv_boundaries(fstart, fend, start, svlen, svtype, bin_size = 1000):
+    if svtype == 'DEL':
+        start = start
+        end = start + svlen
+    else:
+        end = start + svlen
+        start = start - svlen
+        
+    start_rounded = (start // bin_size) * bin_size
+    end_rounded = ((end + bin_size - 1) // bin_size) * bin_size
+    start_idx = (start_rounded - fstart) // bin_size
+    end_idx = (end_rounded - fstart) // bin_size
+    return start_idx, end_idx
+
 def evaluate_per_hap(hap, pre_computed_lls):
     L, N = pre_computed_lls[0].shape
     
@@ -373,7 +465,7 @@ def call_sv_samples(samples, genotypes):
             results[g].append(samples[i])
         else:
             results[g] = [samples[i]]
-    return results
+    return dict(sorted(results.items()))
 
 def nonahore(means, variances, covs,
              ploidy = 2, 
@@ -560,6 +652,69 @@ def evaluate_real_model(result_dict):
         info = 1 - np.mean((dosage2_ary - dosage_ary**2)/(2*maf*(1-maf)))
     return info, freq
 
+def evaluate_real_model2(result_dict, plausible_boundaries):
+    freq = 0
+    info = 0
+    concordance = 0
+    
+    probs = result_dict['probs']
+    genotypes = result_dict['genotypes']
+    best_model = result_dict['model_ary'][-1]
+    N = len(genotypes)
+    
+    true_hap = None
+    true_hap_idx = None
+    if len(best_model.haps) == 1:
+        pass
+    else:
+        for i, h in enumerate(best_model.haps):
+            start_idx, end_idx = plausible_boundaries
+            true_hap_ind = compare_plausible_sv(h, start_idx, end_idx)
+            if true_hap_ind:
+                true_hap = h
+                true_hap_idx = i
+                concordance = 1
+                break
+    
+    if true_hap is None:
+        pass
+    else:
+        freq = best_model.freqs[true_hap_idx]
+        
+        info = compute_multiallelic_info(probs, true_hap_idx)
+    return info, freq, concordance
+
+def compare_plausible_sv(arr, start_idx, end_idx):
+    sub = arr[start_idx:end_idx]
+    non1 = np.array(sub) != 1
+    padded = np.r_[False, non1, False]
+    starts = np.where(~padded[:-1] & padded[1:])[0]
+    ends = np.where(padded[:-1] & ~padded[1:])[0]
+    return len(starts) == 1
+
+def compute_multiallelic_info(GP, alt_index):
+    N, K = GP.shape
+    A = int((np.sqrt(8 * K + 1) - 1) / 2)
+    if A * (A + 1) // 2 != K:
+        raise ValueError("Invalid number of genotype columns in GP.")
+    if alt_index < 1 or alt_index >= A:
+        raise ValueError(f"alt_index must be in [1, {A-1}] for {A} alleles.")
+
+    genotypes = list(combinations_with_replacement(range(A), 2))
+    alt_copy_per_genotype = np.array([g.count(alt_index) for g in genotypes])
+
+    dosage = GP @ alt_copy_per_genotype
+    dosage2 = GP @ (alt_copy_per_genotype ** 2)
+
+    var_g = np.mean(dosage2 - dosage**2)
+    p = np.mean(dosage) / 2
+
+    if p == 0 or p == 1:
+        return 0.0
+
+    info = 1 - var_g / (2 * p * (1 - p))
+    return info
+
 def estimate_maf(means, variances, coverage, svtype, fillna = True):
     this_vars = coverage.var(axis = 1)
 
@@ -611,6 +766,24 @@ def find_intervals(means, f, min_run=5):
     })   
     return df
 
+def find_overlapping_svs(df, c, start, end):
+    gr = pr.PyRanges(df)
+    gr_chr = gr[gr.Chromosome == c]
+    match = (start, end)
+
+    input_row = df[(df["Chromosome"] == c) &
+                    (df["Start"] == start) &
+                    (df["End"] == end)]
+
+    df_clustered = gr_chr.cluster().df
+    query_cluster_id = df_clustered[
+        (df_clustered["Start"] == start) &
+        (df_clustered["End"] == end)
+    ]["Cluster"].values[0]
+
+    cluster_df = df_clustered[df_clustered["Cluster"] == query_cluster_id]
+    return cluster_df["Start"].min(), cluster_df["End"].max()
+
 def plot_sv_coverage(cov, chromosome, start, end, flank, calling_dict, side = 'both', tick_step = 0.1):
     means, _ = normalise_by_flank(cov, start, end, flank, side = side)
     
@@ -631,9 +804,14 @@ def plot_sv_coverage(cov, chromosome, start, end, flank, calling_dict, side = 'b
                 plt.plot(region['position'], region[f'{s}:coverage']/means[index], alpha = 1, color = '0.8')
             else:
                 plt.plot(region['position'], region[f'{s}:coverage']/means[index], alpha = 1, color = colors[i - 1])
-
+   
     ticks = get_ticks(region, tick_step)
-    plt.xticks(ticks, [f"{tick:.{int(np.log10(1/tick_step))}f}" for tick in ticks], rotation = 45)
+    if tick_step == 0.001:
+        plt.xticks(ticks, [f"{int(tick*1000)}" for tick in ticks], rotation = 45)
+        plt.xlabel(f'Chromosome {chromosome} (Kb)')
+    else:
+        plt.xticks(ticks, [f"{tick:.{int(np.log10(1/tick_step))}f}" for tick in ticks], rotation = 45)
+        plt.xlabel(f'Chromosome {chromosome} (Mb)')
 
     color_handles = []
     color_index = [0,0]
@@ -645,7 +823,48 @@ def plot_sv_coverage(cov, chromosome, start, end, flank, calling_dict, side = 'b
     legend1.get_title().set_fontsize(9)
     plt.gca().add_artist(legend1)
 
-    plt.xlabel(f'Chromosome {chromosome} (Mb)')
+    plt.ylabel('Coverage (X)')
+    return None
+
+def plot_sv_coverage_by_gt(cov, chromosome, start, end, flank, calling_dict, side = 'both', tick_step = 0.1):
+    means, _ = normalise_by_flank(cov, start, end, flank, side = side)
+    
+    region = cov[(cov['position'] >= start) & (cov['position'] <= end)]
+    region['position'] = region['position']/1e6
+    region.iloc[:,1:-1] = region.iloc[:,1:-1]/means[np.newaxis,:]
+    
+    if len(calling_dict.keys()) > 10:
+        print('Only region with less than 3 different haplotypes can be printed.')
+        return None
+    
+    colors = plt.get_cmap(CATEGORY_CMAP_STR).colors[:10]
+    colors = [mcolors.to_hex(c) for c in colors]
+    
+    all_samples = np.array([s.split(':')[0] for s in region.columns[1:-1]])
+    for i, k in enumerate(calling_dict.keys()):
+        samples = calling_dict[k]
+        indices = np.where(np.isin(all_samples, samples))[0] + 1
+        
+        tmp = pd.concat([region.iloc[:, 0], region.iloc[:,indices]], axis = 1)
+        plt.plot(tmp['position'], tmp.iloc[:,1:].mean(axis = 1), alpha = 1, color = colors[i])
+   
+    ticks = get_ticks(region, tick_step)
+    if tick_step == 0.001:
+        plt.xticks(ticks, [f"{int(tick*1000)}" for tick in ticks], rotation = 45)
+        plt.xlabel(f'Chromosome {chromosome} (Kb)')
+    else:
+        plt.xticks(ticks, [f"{tick:.{int(np.log10(1/tick_step))}f}" for tick in ticks], rotation = 45)
+        plt.xlabel(f'Chromosome {chromosome} (Mb)')
+
+    color_handles = []
+    color_index = [0,0]
+    for i, k in enumerate(calling_dict.keys()):
+        color_handles.append(Line2D([0], [0], color=colors[i], label=k))
+
+    legend1 = plt.legend(handles=color_handles, loc='upper left', prop={'size': 10}, framealpha=1)
+    legend1.get_title().set_fontsize(9)
+    plt.gca().add_artist(legend1)
+
     plt.ylabel('Coverage (X)')
     return None
 
@@ -672,7 +891,7 @@ def plot_training(results, show_legends = True):
 
     ax1.plot(x, lls, ls = '--', color='black')
     ax1.set_xlabel('Iterations')
-    ax1.set_ylabel('logL')
+    ax1.set_ylabel('Model score')
     ax1.tick_params(axis='y')
     y1_max = lls[0]
     y1_min = lls[-1]
@@ -703,9 +922,9 @@ def plot_training(results, show_legends = True):
         plt.gca().add_artist(legend1)
 
         linestyle_handles = [
-            Line2D([0], [0], color='black', lw=2, linestyle='--', label='logL')
+            Line2D([0], [0], color='black', lw=2, linestyle='--', label='Model score')
         ]
-        legend2 = plt.legend(handles=linestyle_handles, title='Training Process', 
+        legend2 = plt.legend(handles=linestyle_handles, title='Modified Bayesian Information Criteria', 
                              prop={'size': 10}, framealpha=1, bbox_to_anchor = (1, 0.8))
         legend2.get_title().set_fontsize(10)
         plt.gca().add_artist(legend2)   

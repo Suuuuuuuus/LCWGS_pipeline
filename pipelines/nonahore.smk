@@ -30,8 +30,8 @@ denovo_regions = len(sv_df)
 rule all:
     input:
         eichler = expand('results/nonahore/eichler/region{eichler}/results.pickle', eichler = [i for i in range(eichler_regions)]),
-        denovo = expand('results/nonahore/denovo/region{denovo}/results.pickle', denovo = [i for i in range(denovo_regions)]),
-        # simulation = expand('results/nonahore/simulate/plausibility/rep{rep}/eval.pickle', rep = [i for i in range(replicates)]),
+        # denovo = expand('results/nonahore/denovo/region{denovo}/results.pickle', denovo = [i for i in range(denovo_regions)]),
+        simulation = expand('results/nonahore/simulate/plausibility/rep{rep}/eval.pickle', rep = [i for i in range(replicates)]),
 
 rule simulate_nonahore:
     output:
@@ -49,6 +49,7 @@ rule run_nonahore_on_eichler:
         pickle = 'results/nonahore/eichler/region{eichler}/results.pickle'
     threads: 4
     params:
+        eichler_file = '/well/band/users/rbx225/recyclable_files/eichler_sv/variants_freeze4_sv_insdel.tsv.gz',
         chunk_file = 'data/imputation_accessories/5Mb_chunks_for_coverage.json',
         odir = 'results/nonahore/eichler/region{eichler}/',
         row_ix = '{eichler}'

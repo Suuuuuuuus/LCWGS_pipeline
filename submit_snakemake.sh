@@ -10,7 +10,7 @@ elif [ "$#" -eq 4 ]; then
     cores="$2"
     rule="$3"
     option="$4"
-    snakemake -s pipelines/master_"$master".smk -c "$cores" "$option" --profile slurm/ "$rule"
+    snakemake -s pipelines/master_"$master".smk -c "$cores" "$option" --profile slurm/ --scheduler greedy "$rule"
 else
     echo "Invalid inputs."
     exit 1  # Exit with an error status

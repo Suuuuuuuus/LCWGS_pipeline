@@ -28,17 +28,18 @@ denovo_regions = len(sv_df)
 
 rule all:
     input:
-        denovo = expand('results/nonahore/denovo/region{denovo}/results.pickle', denovo = [130]),
+        denovo = expand('results/nonahore/eichler/region{eichler}/results.pickle', eichler = [1175]),
 
-rule run_nonahore_on_denovo:
+rule run_nonahore_on_eichler:
     input:
-        sv_df_file = 'results/nonahore/denovo/manifest.5K.5percent.tsv'
+        sv_df_file = 'results/nonahore/eichler/manifest.5K.5percent.tsv'
     output:
-        pickle = 'results/nonahore/denovo/region{denovo}/results.pickle'
+        pickle = 'results/nonahore/eichler/region{eichler}/results.pickle'
     localrule: True
     params:
+        eichler_file = '/well/band/users/rbx225/recyclable_files/eichler_sv/variants_freeze4_sv_insdel.tsv.gz',
         chunk_file = 'data/imputation_accessories/5Mb_chunks_for_coverage.json',
-        odir = 'results/nonahore/denovo/region{denovo}/',
-        row_ix = '{denovo}'
+        odir = 'results/nonahore/eichler/region{eichler}/',
+        row_ix = '{eichler}'
     script:
         '/well/band/users/rbx225/GAMCC/scripts/run_nonahore.py'
