@@ -72,10 +72,10 @@ def main(regions, sv_df_file, eichler_file, ix, ofile, bin_size = 1000):
     means, variances = normalise_by_flank2(cov, start, end, flank)
     samples, coverage = extract_target_cov(cov, start, end)
 
-    results = nonahore(means, variances, coverage, n_recomb = 1000, n_iter = 500, verbose = False)
+    results = nonahore(means, variances, coverage, n_recomb = 1000, n_iter = 2000, verbose = False)
 
     probs, genotypes = results['probs'], results['genotypes']
-    info, freq, concordance = evaluate_real_model2(results, plausible_boundaries)
+    info, freq, concordance = evaluate_real_model2(results, plausible_boundaries, svtype)
     haps = results['model_ary'][-1].haps
 
     outputs = {}

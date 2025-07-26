@@ -651,7 +651,7 @@ def evaluate_real_model(result_dict):
         info = 1 - np.mean((dosage2_ary - dosage_ary**2)/(2*maf*(1-maf)))
     return info, freq
 
-def evaluate_real_model2(result_dict, plausible_boundaries):
+def evaluate_real_model2(result_dict, plausible_boundaries, svtype):
     freq = 0
     info = 0
     concordance = 0
@@ -663,13 +663,18 @@ def evaluate_real_model2(result_dict, plausible_boundaries):
     
     true_hap = None
     true_hap_idx = None
+    if svtype == 'INS':
+        digit = 2
+    else:
+        digit = 0
+        
     if len(best_model.haps) == 1:
         pass
     else:
         for i, h in enumerate(best_model.haps):
             start_idx, end_idx = plausible_boundaries
             true_hap_ind = compare_plausible_sv(h, start_idx, end_idx)
-            if true_hap_ind:
+            if true_hap_ind and (digit in h):
                 true_hap = h
                 true_hap_idx = i
                 concordance = 1
