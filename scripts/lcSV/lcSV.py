@@ -663,10 +663,6 @@ def evaluate_real_model2(result_dict, plausible_boundaries, svtype):
     
     true_hap = None
     true_hap_idx = None
-    if svtype == 'INS':
-        digit = 2
-    else:
-        digit = 0
         
     if len(best_model.haps) == 1:
         pass
@@ -674,7 +670,7 @@ def evaluate_real_model2(result_dict, plausible_boundaries, svtype):
         for i, h in enumerate(best_model.haps):
             start_idx, end_idx = plausible_boundaries
             true_hap_ind = compare_plausible_sv(h, start_idx, end_idx)
-            if true_hap_ind and (digit in h):
+            if true_hap_ind and ((svtype == 'INS' and np.any(h >= 2)) or (svtype == 'DEL' and np.any(h == 0))):
                 true_hap = h
                 true_hap_idx = i
                 concordance = 1
@@ -787,6 +783,11 @@ def find_overlapping_svs(df, c, start, end):
 
     cluster_df = df_clustered[df_clustered["Cluster"] == query_cluster_id]
     return cluster_df["Start"].min(), cluster_df["End"].max()
+
+def print_avg_concordance(df):
+    print('DEL:', df[df['SVTYPE'] == 'DEL']['concordance'].mean())
+    print('INS:', df[df['SVTYPE'] == 'INS']['concordance'].mean())
+    return None
 
 def plot_sv_coverage(cov, chromosome, start, end, flank, calling_dict, side = 'both', tick_step = 0.1):
     means, _ = normalise_by_flank(cov, start, end, flank, side = side)
