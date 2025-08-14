@@ -68,6 +68,11 @@ def main(regions, sv_df_file, eichler_file, ix, ofile, bin_size = 1000):
     plausible_boundaries = get_sv_boundaries(start, end, sv_start, L, svtype)
 
     cov = load_region_files(regions, chromosome, start, end, flank = flank)
+    
+    tmp = cov[(cov['position'] >= start) & (cov['position'] <= end)]
+    mq = tmp['total:mean_mq'].to_numpy()
+    mean_mq = tmp['total:mean_mq'].mean()
+    
     cov = cov[['position'] + list(cov.columns[cov.columns.str.contains('coverage')])]
     means, variances = normalise_by_flank2(cov, start, end, flank)
     samples, coverage = extract_target_cov(cov, start, end)
@@ -75,7 +80,7 @@ def main(regions, sv_df_file, eichler_file, ix, ofile, bin_size = 1000):
     results = nonahore(means, variances, coverage, n_recomb = 1000, n_iter = 2000, verbose = False)
 
     probs, genotypes = results['probs'], results['genotypes']
-    info, freq, concordance = evaluate_real_model2(results, plausible_boundaries, svtype)
+    info, freq, concordance, true_hap_idx = evaluate_real_model2(results, plausible_boundaries, svtype)
     haps = results['model_ary'][-1].haps
 
     outputs = {}
@@ -83,6 +88,8 @@ def main(regions, sv_df_file, eichler_file, ix, ofile, bin_size = 1000):
     outputs['g_start'] = sv_start
     outputs['start'] = start
     outputs['end'] = end
+    outputs['mq'] = mq
+    outputs['mean_mq'] = mean_mq
     outputs['length'] = L
     outputs['svtype'] = svtype
     outputs['means'] = means
@@ -91,6 +98,7 @@ def main(regions, sv_df_file, eichler_file, ix, ofile, bin_size = 1000):
     outputs['info'] = info
     outputs['freq'] = freq
     outputs['concordance'] = concordance
+    outputs['true_hap_idx'] = true_hap_idx
     outputs['haps'] = haps
     outputs['probs'] = np.round(probs, 4)
     outputs['genotypes'] = genotypes

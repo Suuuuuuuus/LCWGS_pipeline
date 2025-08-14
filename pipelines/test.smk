@@ -28,7 +28,7 @@ denovo_regions = len(sv_df)
 
 rule all:
     input:
-        denovo = expand('results/nonahore/eichler/region{eichler}/results.pickle', eichler = [1175]),
+        denovo = expand('results/nonahore/eichler/region{eichler}/results.pickle', eichler = [67]),
 
 rule run_nonahore_on_eichler:
     input:

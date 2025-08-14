@@ -139,6 +139,33 @@ def read_eichler(f, length_filter = 0, af_filter = 0):
     df = df.sort_values(by = df.columns[:3].tolist()).reset_index(drop = True)
     return df
 
+def read_tabix(vcf, c, regstart, regend):
+    command = f"tabix {vcf} chr{c}:{regstart}-{regend}"
+    seqs = subprocess.run(command, shell = True, capture_output = True, text = True).stdout[:-1].split('\n')
+    if seqs == ['']:
+        return pd.DataFrame()
+
+    seqs = [i.split('\t') for i in seqs if '##' not in i]
+    seqs = pd.DataFrame(seqs).iloc[:, :5]
+    seqs.columns = ['chr', 'pos', 'id', 'ref', 'alt']
+    return seqs
+
+def read_bam(bam, c, regstart, regend):
+    command = f"samtools view {bam} chr{c}:{regstart}-{regend}"
+    reads = subprocess.run(command, shell = True, capture_output = True, text = True).stdout[:-1].split('\n')
+    if reads == ['']:
+        return pd.DataFrame()
+
+    reads = [i.split('\t') for i in reads if '##' not in i]
+    reads = pd.DataFrame(reads)
+    reads.columns = [
+        "ID", "flag", "chr", "pos", "map_quality", "CIGAR", "chr_alt", "pos_alt", "insert_size", "sequence", "base_quality"
+    ] + [f'col{i}' for i in range(11, reads.shape[1])]
+
+    reads['pos'] = reads['pos'].astype(int)
+    reads['pos_alt'] = reads['pos_alt'].astype(int)
+    return reads
+
 def read_pickle(infile):
     with open(infile, 'rb') as f:
         data = pickle.load(f)
@@ -586,6 +613,12 @@ def get_ticks(df, tick_step):
         ticks = [tick_start, tick_end]
     return ticks
 
+def check_low_mq(arr, n = 3, score = 20):
+    mask = arr < score
+    window_sum = np.convolve(mask, np.ones(n, dtype=int), 'valid')
+    has_consecutive = np.any(window_sum == n)
+    return has_consecutive
+
 def evaluate_sim_model(result_dict, true_hap, true_gt):
     freq = 0
     concordance = 0
@@ -651,9 +684,42 @@ def evaluate_real_model(result_dict):
         info = 1 - np.mean((dosage2_ary - dosage_ary**2)/(2*maf*(1-maf)))
     return info, freq
 
+# def evaluate_real_model2(result_dict, plausible_boundaries, svtype):
+#     freq = 0
+#     info = 0
+#     concordance = 0
+    
+#     probs = result_dict['probs']
+#     genotypes = result_dict['genotypes']
+#     best_model = result_dict['model_ary'][-1]
+#     N = len(genotypes)
+    
+#     true_hap = None
+#     true_hap_idx = None
+        
+#     if len(best_model.haps) == 1:
+#         pass
+#     else:
+#         for i, h in enumerate(best_model.haps):
+#             start_idx, end_idx = plausible_boundaries
+#             true_hap_ind = compare_plausible_sv(h, start_idx, end_idx)
+#             if true_hap_ind and ((svtype == 'INS' and np.any(h >= 2)) or (svtype == 'DEL' and np.any(h == 0))):
+#                 true_hap = h
+#                 true_hap_idx = i
+#                 concordance = 1
+#                 break
+    
+#     if true_hap is None:
+#         pass
+#     else:
+#         freq = best_model.freqs[true_hap_idx]
+        
+#         info = compute_multiallelic_info(probs, true_hap_idx)
+#     return info, freq, concordance
+
 def evaluate_real_model2(result_dict, plausible_boundaries, svtype):
-    freq = 0
-    info = 0
+    freqs = []
+    infos = [1]
     concordance = 0
     
     probs = result_dict['probs']
@@ -662,27 +728,25 @@ def evaluate_real_model2(result_dict, plausible_boundaries, svtype):
     N = len(genotypes)
     
     true_hap = None
-    true_hap_idx = None
+    true_hap_idx = -9
         
     if len(best_model.haps) == 1:
-        pass
+        freqs = [1]
     else:
         for i, h in enumerate(best_model.haps):
             start_idx, end_idx = plausible_boundaries
             true_hap_ind = compare_plausible_sv(h, start_idx, end_idx)
+            
+            freqs.append(best_model.freqs[i])
+            if i != 0:
+                infos.append(compute_multiallelic_info(probs, i))
+            
             if true_hap_ind and ((svtype == 'INS' and np.any(h >= 2)) or (svtype == 'DEL' and np.any(h == 0))):
                 true_hap = h
                 true_hap_idx = i
                 concordance = 1
-                break
     
-    if true_hap is None:
-        pass
-    else:
-        freq = best_model.freqs[true_hap_idx]
-        
-        info = compute_multiallelic_info(probs, true_hap_idx)
-    return info, freq, concordance
+    return infos, freqs, concordance, true_hap_idx
 
 def compare_plausible_sv(arr, start_idx, end_idx):
     sub = arr[start_idx:end_idx]
@@ -930,7 +994,9 @@ def plot_training(results, show_legends = True):
             Line2D([0], [0], color='black', lw=2, linestyle='--', label='Model score')
         ]
         legend2 = plt.legend(handles=linestyle_handles, title='Modified Bayesian Information Criteria', 
-                             prop={'size': 10}, framealpha=1, bbox_to_anchor = (1, 0.8))
+                             prop={'size': 10}, framealpha=1)
+#         legend2 = plt.legend(handles=linestyle_handles, title='Modified Bayesian Information Criteria', 
+#                              prop={'size': 10}, framealpha=1, bbox_to_anchor = (1, 0.8))
         legend2.get_title().set_fontsize(10)
         plt.gca().add_artist(legend2)   
         legend2.get_frame().set_zorder(2)
@@ -989,3 +1055,59 @@ def plot_maf(coverage, f1):
     ax2.set_ylabel('Estimated SV allele frequency')
     
     return None
+
+def plot_sv_result_category(tmp, info_cutoff = 0.8):
+    counts = pd.DataFrame(np.zeros((2,4)),columns = ['Monomorphic', 'Wrong SV', f'True SV (<{info_cutoff})', f'True SV (>{info_cutoff})'])
+
+    Ns = []
+    for i, t in enumerate(['DEL', 'INS']):
+        tmp1 = tmp[tmp['SVTYPE'] == t]
+        N = len(tmp1)
+        Ns.append(N)
+
+        counts.iloc[i, 0] = (tmp1['n_hap'] == 1).sum()/N
+        counts.iloc[i, 1] = (tmp1['concordance'] == 0).sum()/N - counts.iloc[i, 0]
+
+        tmp2 = tmp1[tmp1['concordance'] != 0]
+        counts.iloc[i, 2] = (tmp2['true_info'] <= info_cutoff).sum()/N
+        counts.iloc[i, 3] = (tmp2['true_info'] > info_cutoff).sum()/N
+
+    rgba_colors = plt.cm.RdYlBu(np.linspace(0, 1, 4))
+    hex_codes = [mcolors.to_hex(c) for c in rgba_colors]
+
+    ax = counts.plot(kind='bar', stacked=True, color = hex_codes, alpha = 0.7)
+    for bar_idx, row in enumerate(counts.values):
+        cumulative = 0
+        for col_idx, value in enumerate(row):
+            percent = value*100
+            if value > 0:  
+                ax.text(
+                    bar_idx,                    
+                    cumulative + value / 2,
+                    f"{percent:.1f}%",
+                    ha='center', va='center', color='black', fontsize=10
+                )
+            cumulative += value
+
+    plt.xticks(np.arange(2), [f'Deletion\nN={Ns[0]}', f'Insertion\nN={Ns[1]}'], rotation = 0)
+    plt.yticks(np.arange(6)*0.2, np.arange(6)*20)
+    plt.ylabel('Proportion (%)')
+    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+    plt.tight_layout()
+    return None
+
+
+
+def calculate_score_per_alignment(cigars, cg = -6, cm = 0, cx = -4, ce = -2):
+    score = 0
+    
+    for i, c in enumerate(cigars):
+        code, l = c
+        if code == 1 or code == 2 or code == 4:
+            score += ce*l
+            score += cg
+        elif code == 8:
+            score += cx*l
+        else:
+            pass
+    return score  
