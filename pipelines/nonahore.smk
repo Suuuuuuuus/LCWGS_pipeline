@@ -29,7 +29,9 @@ denovo_regions = len(sv_df)
 
 rule all:
     input:
-        eichler = expand('results/nonahore/eichler/region{eichler}/results.pickle', eichler = [i for i in range(eichler_regions)]),
+        eichler1 = expand('results/nonahore/eichler/nonahore1/region{eichler}/results.pickle', eichler = [i for i in range(eichler_regions)]),
+        eichler2 = expand('results/nonahore/eichler/nonahore2/region{eichler}/results.pickle', eichler = [i for i in range(eichler_regions)]),
+        eichler3 = expand('results/nonahore/eichler/nonahore3/region{eichler}/results.pickle', eichler = [i for i in range(eichler_regions)]),
         # denovo = expand('results/nonahore/denovo/region{denovo}/results.pickle', denovo = [i for i in range(denovo_regions)]),
         simulation = expand('results/nonahore/simulate/plausibility/rep{rep}/eval.pickle', rep = [i for i in range(replicates)]),
 
@@ -42,20 +44,48 @@ rule simulate_nonahore:
     script:
         '/well/band/users/rbx225/GAMCC/scripts/simulate_nonahore.py'
 
-rule run_nonahore_on_eichler:
+rule run_nonahore1_on_eichler:
     input:
         sv_df_file = 'results/nonahore/eichler/manifest.5K.5percent.tsv'
     output:
-        pickle = 'results/nonahore/eichler/region{eichler}/results.pickle'
+        pickle = 'results/nonahore/eichler/nonahore1/region{eichler}/results.pickle'
     threads: 4
     params:
         eichler_file = '/well/band/users/rbx225/recyclable_files/eichler_sv/variants_freeze4_sv_insdel.tsv.gz',
         chunk_file = 'data/imputation_accessories/5Mb_chunks_for_coverage.json',
-        odir = 'results/nonahore/eichler/region{eichler}/',
+        odir = 'results/nonahore/eichler/nonahore1/region{eichler}/',
         row_ix = '{eichler}'
     script:
-        '/well/band/users/rbx225/GAMCC/scripts/run_nonahore.py'
+        '/well/band/users/rbx225/GAMCC/scripts/run_nonahore1.py'
 
+rule run_nonahore2_on_eichler:
+    input:
+        sv_df_file = 'results/nonahore/eichler/manifest.5K.5percent.tsv'
+    output:
+        pickle = 'results/nonahore/eichler/nonahore2/region{eichler}/results.pickle'
+    threads: 4
+    params:
+        eichler_file = '/well/band/users/rbx225/recyclable_files/eichler_sv/variants_freeze4_sv_insdel.tsv.gz',
+        chunk_file = 'data/imputation_accessories/5Mb_chunks_for_coverage.json',
+        odir = 'results/nonahore/eichler/nonahore2/region{eichler}/',
+        row_ix = '{eichler}'
+    script:
+        '/well/band/users/rbx225/GAMCC/scripts/run_nonahore2.py'
+
+rule run_nonahore3_on_eichler:
+    input:
+        sv_df_file = 'results/nonahore/eichler/manifest.5K.5percent.tsv'
+    output:
+        pickle = 'results/nonahore/eichler/nonahore3/region{eichler}/results.pickle'
+    threads: 4
+    params:
+        eichler_file = '/well/band/users/rbx225/recyclable_files/eichler_sv/variants_freeze4_sv_insdel.tsv.gz',
+        chunk_file = 'data/imputation_accessories/5Mb_chunks_for_coverage.json',
+        odir = 'results/nonahore/eichler/nonahore3/region{eichler}/',
+        row_ix = '{eichler}'
+    script:
+        '/well/band/users/rbx225/GAMCC/scripts/run_nonahore3.py'
+        
 rule run_nonahore_on_denovo:
     input:
         sv_df_file = 'results/nonahore/denovo/manifest.5K.5percent.tsv'

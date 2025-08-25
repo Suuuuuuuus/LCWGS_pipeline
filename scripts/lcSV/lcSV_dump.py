@@ -127,3 +127,74 @@ def evaluate_model(model, N, pre_computed_lls, geom_penalty, bin_size = 1000):
 #     model_ll = model_ll + np.log(geom.pmf(n_haps, geom_penalty))
     model_ll = ((n_haps-1)*L + trans)*np.log(N*L) - 2*model_ll
     return final_lls, model_ll
+
+def main(regions, sv_df_file, eichler_file, ix, ofile, bin_size = 1000):
+    eichler_full = read_eichler(eichler_file)
+    indices = np.where(eichler_full['SVTYPE'] == 'INS')[0]
+    eichler_full.loc[indices, 'END'] = eichler_full.loc[indices, 'POS'] + eichler_full.loc[indices, 'SVLEN']
+    eichler_full.loc[indices, 'POS'] = eichler_full.loc[indices, 'POS'] - eichler_full.loc[indices, 'SVLEN']
+    cols = ['Chromosome', 'Start', 'End']
+    eichler_full.columns = cols + eichler_full.columns[3:].tolist()
+    eichler_full = eichler_full.sort_values(by = cols).reset_index(drop = True)
+    
+    manifest = pd.read_csv(sv_df_file, sep = '\t')
+    chrom, sv_start, L, svtype = manifest.loc[ix, ['#CHROM', 'POS', 'SVLEN', 'SVTYPE']]
+    chromosome = int(chrom.replace('chr', ''))
+    start, end = delineate_region2(eichler_full, chrom, sv_start, L, svtype)
+    flank = 1e6
+    plausible_boundaries = get_sv_boundaries(start, end, sv_start, L, svtype)
+
+    cov = load_region_files(regions, chromosome, start, end, flank = flank)
+    
+    tmp = cov[(cov['position'] >= start) & (cov['position'] <= end)]
+    mq = tmp['total:mean_mq'].to_numpy()
+    mean_mq = tmp['total:mean_mq'].mean()
+    
+    cov = cov[['position'] + list(cov.columns[cov.columns.str.contains('coverage')])]
+    means, variances = normalise_by_flank2(cov, start, end, flank)
+    samples, coverage = extract_target_cov(cov, start, end)
+
+    results = nonahore(means, variances, coverage, n_recomb = 1000, n_iter = 2000, verbose = False)
+
+    probs, genotypes = results['probs'], results['genotypes']
+    info, freq, concordance, true_hap_idx = evaluate_real_model2(results, plausible_boundaries, svtype)
+    haps = results['model_ary'][-1].haps
+
+    outputs = {}
+    outputs['chromosome'] = chrom
+    outputs['g_start'] = sv_start
+    outputs['start'] = start
+    outputs['end'] = end
+    outputs['mq'] = mq
+    outputs['mean_mq'] = mean_mq
+    outputs['length'] = L
+    outputs['svtype'] = svtype
+    outputs['means'] = means
+    outputs['variances'] = variances
+    outputs['coverage'] = coverage
+    outputs['info'] = info
+    outputs['freq'] = freq
+    outputs['concordance'] = concordance
+    outputs['true_hap_idx'] = true_hap_idx
+    outputs['haps'] = haps
+    outputs['probs'] = np.round(probs, 4)
+    outputs['genotypes'] = genotypes
+
+    with open(ofile, 'wb') as of:
+        pickle.dump(outputs, of)
+    
+if __name__ == "__main__":
+    chunk_file = snakemake.params.chunk_file
+    with open(chunk_file, 'r') as file:
+        regions = json.load(file)
+
+    odir = snakemake.params.odir
+    os.makedirs(odir,  exist_ok=True)
+
+    row_ix = int(snakemake.params.row_ix)
+    sv_df_file = snakemake.input.sv_df_file
+    eichler_file = snakemake.params.eichler_file
+    
+    ofile = snakemake.output.pickle
+
+    main(regions, sv_df_file, eichler_file, row_ix, ofile)

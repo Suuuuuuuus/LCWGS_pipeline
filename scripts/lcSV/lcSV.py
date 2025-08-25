@@ -127,6 +127,18 @@ def delineate_region2(eichler_full, c, start, length, svtype, binsize = 1000, ex
     e = (int(e/binsize) + 1)*binsize + extension*binsize
     return s,e
 
+def delineate_region3(start, length, svtype, binsize = 1000, extension = 3):
+    if svtype == 'INS':
+        e = start + length
+        s = start - length
+    else:
+        e = start + length
+        s = start
+    
+    s = int(s/binsize)*binsize - extension*binsize
+    e = (int(e/binsize) + 1)*binsize + extension*binsize
+    return s,e
+
 def read_eichler(f, length_filter = 0, af_filter = 0):
     df = pd.read_csv(f, sep = '\t', compression = 'gzip')
     main_chrs = [f'chr{i}' for i in range(1,23)] + ['X', 'Y']
@@ -139,6 +151,212 @@ def read_eichler(f, length_filter = 0, af_filter = 0):
     df = df.sort_values(by = df.columns[:3].tolist()).reset_index(drop = True)
     return df
 
+def parse_eichler_full(f = '/well/band/users/rbx225/recyclable_files/eichler_sv/variants_freeze4_sv_insdel.tsv.gz'):
+    eichler_full = read_eichler(f)
+    indices = np.where(eichler_full['SVTYPE'] == 'INS')[0]
+    eichler_full.loc[indices, 'END'] = eichler_full.loc[indices, 'POS'] + eichler_full.loc[indices, 'SVLEN']
+    eichler_full.loc[indices, 'POS'] = eichler_full.loc[indices, 'POS'] - eichler_full.loc[indices, 'SVLEN']
+    cols = ['Chromosome', 'Start', 'End']
+    eichler_full.columns = cols + eichler_full.columns[3:].tolist()
+    eichler_full = eichler_full.sort_values(by = cols).reset_index(drop = True)
+    return eichler_full
+
+def find_eichler_region(ix, eichler_full, eichler_manifest = 'results/nonahore/eichler/manifest.5K.5percent.tsv'):
+    manifest = pd.read_csv(eichler_manifest, sep = '\t')
+    chrom, sv_start, L, svtype = manifest.loc[ix, ['#CHROM', 'POS', 'SVLEN', 'SVTYPE']]
+    chromosome = int(chrom.replace('chr', ''))
+    start, end = delineate_region2(eichler_full, chrom, sv_start, L, svtype)
+    return start, end
+
+def parse_nonahore_result1(bed = '/well/band/users/rbx225/GAMCC/data/bedgraph/GRCh38.autosomes.bed', 
+                          eichler_manifest = '/well/band/users/rbx225/recyclable_files/eichler_sv/variants_freeze4_sv_insdel.tsv.gz',
+                         eichler_vcf = '/well/band/users/rbx225/recyclable_files/eichler_sv/variants_freeze4_sv_insdel_alt.vcf.gz'):
+    df = pd.read_csv(eichler_manifest, sep = '\t', compression = 'gzip')
+    main_chrs = [f'chr{i}' for i in range(1,23)] + ['X', 'Y']
+    df = df[df['#CHROM'].isin(main_chrs)]
+    df['PG_AFR_AF'] =  df['PG_INFO_AFR'].str.split(';').str.get(0).str.split('=').str.get(1).astype(float)
+    df = df.sort_values(by = 'POP_AFR_AF', ascending = False)
+    df = df[(df['SVLEN'] > 5000) & ((df['POP_AFR_AF'] >= 0.05) | (df['PG_AFR_AF'] >= 0.05))]
+    df = df[['#CHROM', 'POS', 'END', 'SVTYPE', 'SVLEN','ID']].reset_index(drop = True)
+
+    x = lcwgsus.read_vcf(eichler_vcf)
+    x = x[x['ID'].isin(df['ID'])].reset_index(drop = True)
+    df = pd.merge(df, x[['ID', 'ref', 'alt', 'INFO']], on = ['ID'])
+    df['TRF'] = df['INFO'].apply(lambda x: 1 if 'REF_TRF' in x else 0)
+
+    n_hap_ary = []
+    true_info_ary = []
+    concordance_ary = []
+    est_freq_ary = []
+    mq_ary = []
+    bad_alignment_region_ary = []
+    true_hap_idx_ary = []
+    second_info_ary = []
+    max_info_ary = []
+    max_maf_ary = []
+
+    for ix in range(len(df)):
+        infile = f'results/nonahore/eichler/nonahore1/region{ix}/results.pickle'
+        if os.path.exists(infile):
+            data = read_pickle(infile)
+            n_hap = len(data['haps'])
+            n_hap_ary.append(n_hap)
+            est_freq_ary.append(data['freq'])
+            concordance_ary.append(data['concordance'])
+            mq_ary.append(data['mean_mq'])
+            bad_alignment_region_ary.append(check_low_mq(data['mq']))
+
+            true_hap_idx = data['true_hap_idx']
+            if true_hap_idx == -9:
+                true_hap_idx_ary.append(-9)
+                true_info_ary.append(0)
+            else:
+                true_hap_idx_ary.append(true_hap_idx)
+                true_info_ary.append(data['info'][true_hap_idx])
+
+            if n_hap == 1:
+                max_info_ary.append(0)
+                max_maf_ary.append(0)
+                second_info_ary.append(0)
+            else:
+                max_info_idx = np.array(data['info'][1:]).argmax() + 1
+                max_info_ary.append(data['info'][max_info_idx])
+                max_maf_ary.append(data['freq'][max_info_idx])
+                second_info_ary.append(data['info'][1])
+        else:
+            n_hap_ary.append(0)
+            true_info_ary.append(0)
+            est_freq_ary.append(0)     
+            concordance_ary.append(0)
+            mq_ary.append(0)
+            bad_alignment_region_ary.append(0)
+            true_hap_idx_ary.append(-9)
+            max_info_ary.append(0)
+            max_maf_ary.append(0)
+            second_info_ary.append(0)
+
+    df['n_hap'] = n_hap_ary
+    df['freq'] = est_freq_ary
+    df['concordance'] = concordance_ary
+    df['mean_mq'] = mq_ary
+    df['contain_bad_alignment'] = bad_alignment_region_ary
+
+    df['true_hap_idx'] = true_hap_idx_ary
+    df['true_info'] = true_info_ary
+    df['max_info'] = max_info_ary
+    df['max_maf'] = max_maf_ary
+    df['second_info'] = second_info_ary
+
+#     bed = pd.read_csv(bed, sep = '\t', header = None)
+#     bed.columns = ['chr', 'start', 'end']
+
+    df1 = df.copy()
+#     df1['is_endchr'] = False
+#     df1 = df1.apply(check_endchr, axis = 1)
+    return df1
+
+def parse_nonahore_result2(bed = '/well/band/users/rbx225/GAMCC/data/bedgraph/GRCh38.autosomes.bed', 
+                          eichler_manifest = '/well/band/users/rbx225/recyclable_files/eichler_sv/variants_freeze4_sv_insdel.tsv.gz',
+                         eichler_vcf = '/well/band/users/rbx225/recyclable_files/eichler_sv/variants_freeze4_sv_insdel_alt.vcf.gz'):
+    df = pd.read_csv(eichler_manifest, sep = '\t', compression = 'gzip')
+    main_chrs = [f'chr{i}' for i in range(1,23)] + ['X', 'Y']
+    df = df[df['#CHROM'].isin(main_chrs)]
+    df['PG_AFR_AF'] =  df['PG_INFO_AFR'].str.split(';').str.get(0).str.split('=').str.get(1).astype(float)
+    df = df.sort_values(by = 'POP_AFR_AF', ascending = False)
+    df = df[(df['SVLEN'] > 5000) & ((df['POP_AFR_AF'] >= 0.05) | (df['PG_AFR_AF'] >= 0.05))]
+    df = df[['#CHROM', 'POS', 'END', 'SVTYPE', 'SVLEN','ID']].reset_index(drop = True)
+
+    x = lcwgsus.read_vcf(eichler_vcf)
+    x = x[x['ID'].isin(df['ID'])].reset_index(drop = True)
+    df = pd.merge(df, x[['ID', 'ref', 'alt', 'INFO']], on = ['ID'])
+    df['TRF'] = df['INFO'].apply(lambda x: 1 if 'REF_TRF' in x else 0)
+
+    n_hap_ary = []
+    true_info_ary = []
+    concordance_ary = []
+    est_freq_ary = []
+    mq_ary = []
+    bad_alignment_region_ary = []
+    true_hap_idx_ary = []
+    second_info_ary = []
+    max_info_ary = []
+    max_maf_ary = []
+    to_call_ary = []
+    callable_windows_ary = []
+
+    for ix in range(len(df)):
+        infile = f'results/nonahore/eichler/nonahore2/region{ix}/results.pickle'
+        if os.path.exists(infile):
+            data = read_pickle(infile)
+            to_call = data['to_call']
+            callable_windows_ary.append(data['callable_windows'])
+        else:
+            data = {}
+            to_call = False
+            callable_windows_ary.append(0)
+        
+        to_call_ary.append(to_call)
+            
+        if to_call:
+            n_hap = len(data['haps'])
+            n_hap_ary.append(n_hap)
+            est_freq_ary.append(data['freq'])
+            concordance_ary.append(data['concordance'])
+            mq_ary.append(data['mean_mq'])
+            bad_alignment_region_ary.append(check_low_mq(data['mq']))
+
+            true_hap_idx = data['true_hap_idx']
+            if true_hap_idx == -9:
+                true_hap_idx_ary.append(-9)
+                true_info_ary.append(0)
+            else:
+                true_hap_idx_ary.append(true_hap_idx)
+                true_info_ary.append(data['info'][true_hap_idx])
+
+            if n_hap == 1:
+                max_info_ary.append(0)
+                max_maf_ary.append(0)
+                second_info_ary.append(0)
+            else:
+                max_info_idx = np.array(data['info'][1:]).argmax() + 1
+                max_info_ary.append(data['info'][max_info_idx])
+                max_maf_ary.append(data['freq'][max_info_idx])
+                second_info_ary.append(data['info'][1])
+        else:
+            n_hap_ary.append(0)
+            true_info_ary.append(0)
+            est_freq_ary.append(0)     
+            concordance_ary.append(0)
+            mq_ary.append(0)
+            bad_alignment_region_ary.append(0)
+            true_hap_idx_ary.append(-9)
+            max_info_ary.append(0)
+            max_maf_ary.append(0)
+            second_info_ary.append(0)
+
+    df['n_hap'] = n_hap_ary
+    df['freq'] = est_freq_ary
+    df['concordance'] = concordance_ary
+    df['mean_mq'] = mq_ary
+    df['contain_bad_alignment'] = bad_alignment_region_ary
+
+    df['true_hap_idx'] = true_hap_idx_ary
+    df['true_info'] = true_info_ary
+    df['max_info'] = max_info_ary
+    df['max_maf'] = max_maf_ary
+    df['second_info'] = second_info_ary
+    
+    df['to_call'] = to_call_ary
+    df['callable_windows'] = callable_windows_ary
+
+#     bed = pd.read_csv(bed, sep = '\t', header = None)
+#     bed.columns = ['chr', 'start', 'end']
+
+    df1 = df.copy()
+#     df1['is_endchr'] = False
+#     df1 = df1.apply(check_endchr, axis = 1)
+    return df1
+
 def read_tabix(vcf, c, regstart, regend):
     command = f"tabix {vcf} chr{c}:{regstart}-{regend}"
     seqs = subprocess.run(command, shell = True, capture_output = True, text = True).stdout[:-1].split('\n')
@@ -149,6 +367,47 @@ def read_tabix(vcf, c, regstart, regend):
     seqs = pd.DataFrame(seqs).iloc[:, :5]
     seqs.columns = ['chr', 'pos', 'id', 'ref', 'alt']
     return seqs
+
+def read_bed_tabix(vcf, c, regstart, regend):
+    command = f"tabix {vcf} chr{c}:{regstart}-{regend}"
+    seqs = subprocess.run(command, shell = True, capture_output = True, text = True).stdout[:-1].split('\n')
+    if seqs == ['']:
+        return pd.DataFrame()
+
+    seqs = pd.DataFrame([i.split('\t') for i in seqs if '##' not in i], 
+                        columns=["chr", "start", "end", "value"]).astype({"start": int, "end": int, "value": float})
+    
+    if seqs.loc[0, 'start'] < regstart:
+        seqs.loc[0, 'start'] = regstart
+    elif seqs.loc[0, 'start'] > regstart:
+        new_row = {'chr': c, 'start': regstart, 'end': seqs.loc[0, 'start'], 'value': 0}
+        seqs = pd.concat([pd.DataFrame([new_row]), seqs], ignore_index=True).reset_index(drop = True)
+    else:
+        pass
+
+    if seqs.loc[len(seqs)-1, 'end'] > regend:
+        seqs.loc[len(seqs)-1, 'end'] = regend
+    elif seqs.loc[len(seqs)-1, 'end'] < regend:
+        new_row = {'chr': c, 'start': seqs.loc[len(seqs)-1, 'end'], 'end': regend, 'value': 0}
+        seqs = pd.concat([seqs, pd.DataFrame([new_row])], ignore_index=True).reset_index(drop = True)
+    else:
+        pass
+    
+    filled = []
+    prev_end = regstart
+    for _, row in seqs.iterrows():
+        if row["start"] > prev_end:
+            filled.append([prev_end, row["start"], 0.0])
+        filled.append([row["start"], row["end"], row["value"]])
+        prev_end = row["end"]
+
+    if prev_end < regend:
+        filled.append([prev_end, regend, 0.0])
+        
+    filled = pd.DataFrame(filled, columns = seqs.columns[1:])
+    filled['chr'] = c
+    filled = filled[['chr'] + seqs.columns[1:].tolist()]
+    return filled
 
 def read_bam(bam, c, regstart, regend):
     command = f"samtools view {bam} chr{c}:{regstart}-{regend}"
@@ -179,8 +438,61 @@ def read_coverage_data(file_path, sep = ','):
     samples = [s.split(':')[0] for s in samples]
     return samples, bins, coverage
 
+def check_endchr(r, cutoff = 1e6):
+    c = r['#CHROM']
+    s = r['POS']
+    endchr = bed[bed['chr'] == c]['end'].values[0]
+
+    if s > cutoff and s < endchr - cutoff:
+        r['is_endchr'] = False
+    else:
+        r['is_endchr'] = True
+    return r
+
+def calculate_mappability_per_bin(df, start, end, binsize=1000):
+    bins = np.arange(start, end, binsize)
+    n_bins = len(bins)
+    out = pd.DataFrame({
+        "start": bins,
+        "end": bins + binsize,
+        "total_score": 0.0,
+        "total_len": 0
+    })
+
+    for _, row in df.iterrows():
+        istart, iend, val = row["start"], row["end"], row["value"]
+        b0 = (istart - start) // binsize
+        b1 = min((iend - start) // binsize, n_bins - 1)
+        for b in range(int(b0), int(b1) + 1):
+            bstart, bend = out.loc[b, ["start", "end"]]
+            overlap = max(0, min(iend, bend) - max(istart, bstart))
+            if overlap > 0:
+                out.at[b, "total_score"] += val * overlap
+                out.at[b, "total_len"]   += overlap
+
+    out["mappability"] = out["total_score"] / out["total_len"]
+    out = out[["start","mappability"]]
+    out.columns = ['position', 'mappability']
+    return out
+
+def assess_bins(df, plausible_boundaries, map_t = 0.9, mq_t = 20, percent_windows_t = 0.5):
+    start_idx, end_idx = plausible_boundaries
+    metrics = df.copy()
+    indices = np.where((metrics['mappability'] >= map_t) & (metrics['total:mean_mq'] >= mq_t))[0]
+    metrics['valid'] = 0
+    metrics.loc[indices, 'valid'] = 1
+    
+    tmp = metrics.loc[start_idx:end_idx,:]
+    percent_windows = tmp['valid'].sum()/len(tmp)
+    if percent_windows <= percent_windows_t:
+        to_call = False
+    else:
+        to_call = True
+    include_bins = np.where(metrics['valid'] == 1)[0]
+    return to_call, include_bins
+
 def extract_target_cov(df, start, end):
-    df = df[(df['position'] >= start) & (df['position'] <= end)].reset_index(drop = True)
+    df = df[(df['position'] >= start) & (df['position'] < end)].reset_index(drop = True)
     samples = [col for col in df.columns if col.endswith(":coverage") and col != "total:coverage"]
     coverage = df.loc[:,samples].replace("NA", 0).astype(float).to_numpy()
     samples = [s.split(':')[0] for s in samples]
@@ -192,11 +504,11 @@ def normalise_by_flank(df, start, end, flank, side = 'both'):
 
     if side == 'both':
         criteria = (((df['position'] >= fstart) & (df['position'] < start)) | 
-             ((df['position'] > end) & (df['position'] <= fend)))
+             ((df['position'] >= end) & (df['position'] < fend)))
     elif side == 'left':
         criteria = ((df['position'] >= fstart) & (df['position'] < start))
     elif side == 'right':
-        criteria = ((df['position'] > end) & (df['position'] <= fend))
+        criteria = ((df['position'] >= end) & (df['position'] < fend))
     else:
         raise ValueError("Unsupported side.")            
             
@@ -210,7 +522,7 @@ def normalise_by_flank2(df, start, end, flank, side = 'both'):
     fend = min(end+flank, df.iloc[-1,0])
     
     left_flank = df[(df['position'] >= fstart) & (df['position'] < start)]
-    right_flank = df[(df['position'] > end) & (df['position'] <= fend)]
+    right_flank = df[(df['position'] >= end) & (df['position'] < fend)]
 
     left_flank = left_flank[left_flank['total:coverage'] != 0] # Remove unaligned sites
     right_flank = right_flank[right_flank['total:coverage'] != 0]
@@ -684,39 +996,6 @@ def evaluate_real_model(result_dict):
         info = 1 - np.mean((dosage2_ary - dosage_ary**2)/(2*maf*(1-maf)))
     return info, freq
 
-# def evaluate_real_model2(result_dict, plausible_boundaries, svtype):
-#     freq = 0
-#     info = 0
-#     concordance = 0
-    
-#     probs = result_dict['probs']
-#     genotypes = result_dict['genotypes']
-#     best_model = result_dict['model_ary'][-1]
-#     N = len(genotypes)
-    
-#     true_hap = None
-#     true_hap_idx = None
-        
-#     if len(best_model.haps) == 1:
-#         pass
-#     else:
-#         for i, h in enumerate(best_model.haps):
-#             start_idx, end_idx = plausible_boundaries
-#             true_hap_ind = compare_plausible_sv(h, start_idx, end_idx)
-#             if true_hap_ind and ((svtype == 'INS' and np.any(h >= 2)) or (svtype == 'DEL' and np.any(h == 0))):
-#                 true_hap = h
-#                 true_hap_idx = i
-#                 concordance = 1
-#                 break
-    
-#     if true_hap is None:
-#         pass
-#     else:
-#         freq = best_model.freqs[true_hap_idx]
-        
-#         info = compute_multiallelic_info(probs, true_hap_idx)
-#     return info, freq, concordance
-
 def evaluate_real_model2(result_dict, plausible_boundaries, svtype):
     freqs = []
     infos = [1]
@@ -748,6 +1027,81 @@ def evaluate_real_model2(result_dict, plausible_boundaries, svtype):
     
     return infos, freqs, concordance, true_hap_idx
 
+def evaluate_real_model3(result_dict, plausible_boundaries, svtype, include_bins, n_bins):
+    freqs = []
+    infos = [1]
+    concordance = 0
+    
+    probs = result_dict['probs']
+    genotypes = result_dict['genotypes']
+    best_model = result_dict['model_ary'][-1]
+    N = len(genotypes)
+    
+    true_hap = None
+    true_hap_idx = -9
+        
+    if len(best_model.haps) == 1:
+        freqs = [1]
+    else:
+        for i, h in enumerate(best_model.haps):
+            start_idx, end_idx = plausible_boundaries
+            true_hap_ind = compare_plausible_sv2(h, start_idx, end_idx, include_bins, n_bins)
+            
+            freqs.append(best_model.freqs[i])
+            if i != 0:
+                infos.append(compute_multiallelic_info(probs, i))
+            
+            if check_sv2(true_hap_ind, h, svtype, plausible_boundaries, include_bins):
+                true_hap = h
+                true_hap_idx = i
+                concordance = 1
+    
+    return infos, freqs, concordance, true_hap_idx
+
+def check_sv2(true_hap_ind, h, svtype, plausible_boundaries, include_bins):
+    start_idx, end_idx = plausible_boundaries
+    called_bins = np.where((include_bins >= start_idx) & (include_bins < end_idx))[0].size
+    c1 = true_hap_ind
+    c2 = (np.where(h != 1)[0].size <= called_bins + 1)
+    if svtype == 'INS':
+        c2p = ((h[h > 1] - 1).sum() <= called_bins + 1)
+    else:
+        c2p = False
+    c3 = ((svtype == 'INS' and np.any(h >= 2)) or (svtype == 'DEL' and np.any(h == 0)))
+    return c1 and (c2 or c2p) and c3
+
+def check_sv(true_hap_ind, h, svtype, plausible_boundaries, include_bins):
+    start_idx, end_idx = plausible_boundaries
+    called_bins = np.where((include_bins >= start_idx) & (include_bins < end_idx))[0].size
+    c1 = true_hap_ind
+    c2 = (np.where(h != 1)[0].size >= called_bins - 1) and (np.where(h != 1)[0].size <= called_bins + 1)
+    if svtype == 'INS':
+        c2p = ((h[h > 1] - 1).sum() >= called_bins - 1) and ((h[h > 1] - 1).sum() <= called_bins + 1)
+    else:
+        c2p = False
+    c3 = ((svtype == 'INS' and np.any(h >= 2)) or (svtype == 'DEL' and np.any(h == 0)))
+    
+    return c1 and (c2 or c2p) and c3
+
+def compare_plausible_sv2(arr, start_idx, end_idx, include_bins, n_bins):
+    full = np.full(n_bins, None)
+    for i, b in enumerate(include_bins):
+        full[b] = arr[i]
+
+    sub_bins = np.arange(start_idx, end_idx)
+    sub_vals = [full[b] for b in sub_bins if full[b] is not None]
+
+    if not sub_vals:
+        return False
+
+    non1 = np.array(sub_vals) != 1
+    padded = np.r_[False, non1, False]
+    starts = np.where(~padded[:-1] & padded[1:])[0]
+    ends   = np.where(padded[:-1] & ~padded[1:])[0]
+
+    return len(starts) == 1
+#     return (len(starts) == 1) and (np.unique(arr).size == 2)
+
 def compare_plausible_sv(arr, start_idx, end_idx):
     sub = arr[start_idx:end_idx]
     non1 = np.array(sub) != 1
@@ -755,6 +1109,7 @@ def compare_plausible_sv(arr, start_idx, end_idx):
     starts = np.where(~padded[:-1] & padded[1:])[0]
     ends = np.where(padded[:-1] & ~padded[1:])[0]
     return len(starts) == 1
+#     return (len(starts) == 1) and (np.unique(arr).size == 2)
 
 def compute_multiallelic_info(GP, alt_index):
     N, K = GP.shape
@@ -985,7 +1340,7 @@ def plot_training(results, show_legends = True):
         for i in range(n_haps):
             color_handles.append(Line2D([0], [0], color=colors[i], label=f'Haplotype {i}'))
 
-        legend1 = plt.legend(handles=color_handles, title='Haplotype frequencies', 
+        legend1 = plt.legend(handles=color_handles, title='Haplotypes', 
                              prop={'size': 10}, framealpha=1)
         legend1.get_title().set_fontsize(10)
         plt.gca().add_artist(legend1)
@@ -993,10 +1348,8 @@ def plot_training(results, show_legends = True):
         linestyle_handles = [
             Line2D([0], [0], color='black', lw=2, linestyle='--', label='Model score')
         ]
-        legend2 = plt.legend(handles=linestyle_handles, title='Modified Bayesian Information Criteria', 
-                             prop={'size': 10}, framealpha=1)
-#         legend2 = plt.legend(handles=linestyle_handles, title='Modified Bayesian Information Criteria', 
-#                              prop={'size': 10}, framealpha=1, bbox_to_anchor = (1, 0.8))
+        legend2 = plt.legend(handles=linestyle_handles, title='Modified BIC', 
+                             prop={'size': 10}, framealpha=1, bbox_to_anchor = (1, 0.8))
         legend2.get_title().set_fontsize(10)
         plt.gca().add_artist(legend2)   
         legend2.get_frame().set_zorder(2)
@@ -1057,7 +1410,7 @@ def plot_maf(coverage, f1):
     return None
 
 def plot_sv_result_category(tmp, info_cutoff = 0.8):
-    counts = pd.DataFrame(np.zeros((2,4)),columns = ['Monomorphic', 'Wrong SV', f'True SV (<{info_cutoff})', f'True SV (>{info_cutoff})'])
+    counts = pd.DataFrame(np.zeros((2,4)),columns = ['Monomorphic', 'Wrong SV', f'True SV (INFO<{info_cutoff})', f'True SV (INFO>{info_cutoff})'])
 
     Ns = []
     for i, t in enumerate(['DEL', 'INS']):
@@ -1096,6 +1449,19 @@ def plot_sv_result_category(tmp, info_cutoff = 0.8):
     plt.tight_layout()
     return None
 
+def plot_mappability(df):
+    x = []
+    y = []
+    for _, row in df.iterrows():
+        x.extend([row["start"], row["end"]])
+        y.extend([row["value"], row["value"]])
+
+    plt.figure(figsize=(8,3))
+    plt.plot(x, y, drawstyle="steps-post")
+    plt.ylim(-0.05, 1.05)
+    plt.xlabel("Genomic position")
+    plt.ylabel("Mappability")
+    return None
 
 
 def calculate_score_per_alignment(cigars, cg = -6, cm = 0, cx = -4, ce = -2):
