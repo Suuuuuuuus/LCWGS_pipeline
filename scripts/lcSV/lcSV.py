@@ -283,20 +283,23 @@ def parse_nonahore_result2(bed = '/well/band/users/rbx225/GAMCC/data/bedgraph/GR
     max_maf_ary = []
     to_call_ary = []
     callable_windows_ary = []
-
+    mean_ratio_ary = []
+    
     for ix in range(len(df)):
         infile = f'results/nonahore/eichler/nonahore2/region{ix}/results.pickle'
         if os.path.exists(infile):
             data = read_pickle(infile)
             to_call = data['to_call']
             callable_windows_ary.append(data['callable_windows'])
+            mean_ratio_ary.append(data['mean_ratio'])
         else:
             data = {}
             to_call = False
             callable_windows_ary.append(0)
+            mean_ratio_ary.append(0)
         
         to_call_ary.append(to_call)
-            
+        
         if to_call:
             n_hap = len(data['haps'])
             n_hap_ary.append(n_hap)
@@ -348,6 +351,7 @@ def parse_nonahore_result2(bed = '/well/band/users/rbx225/GAMCC/data/bedgraph/GR
     
     df['to_call'] = to_call_ary
     df['callable_windows'] = callable_windows_ary
+    df['mean_ratio'] = mean_ratio_ary
 
 #     bed = pd.read_csv(bed, sep = '\t', header = None)
 #     bed.columns = ['chr', 'start', 'end']
