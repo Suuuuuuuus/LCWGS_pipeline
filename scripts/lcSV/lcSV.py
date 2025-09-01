@@ -247,12 +247,12 @@ def parse_nonahore_result1(bed = '/well/band/users/rbx225/GAMCC/data/bedgraph/GR
     df['max_maf'] = max_maf_ary
     df['second_info'] = second_info_ary
 
-#     bed = pd.read_csv(bed, sep = '\t', header = None)
-#     bed.columns = ['chr', 'start', 'end']
+    bed = pd.read_csv(bed, sep = '\t', header = None)
+    bed.columns = ['chr', 'start', 'end']
 
     df1 = df.copy()
-#     df1['is_endchr'] = False
-#     df1 = df1.apply(check_endchr, axis = 1)
+    df1['is_endchr'] = False
+    df1 = df1.apply(check_endchr, args = (bed,), axis = 1)
     return df1
 
 def parse_nonahore_result2(bed = '/well/band/users/rbx225/GAMCC/data/bedgraph/GRCh38.autosomes.bed', 
@@ -287,6 +287,112 @@ def parse_nonahore_result2(bed = '/well/band/users/rbx225/GAMCC/data/bedgraph/GR
     
     for ix in range(len(df)):
         infile = f'results/nonahore/eichler/nonahore2/region{ix}/results.pickle'
+        if os.path.exists(infile):
+            data = read_pickle(infile)
+            to_call = data['to_call']
+            callable_windows_ary.append(data['callable_windows'])
+            mean_ratio_ary.append(data['mean_ratio'])
+        else:
+            data = {}
+            to_call = False
+            callable_windows_ary.append(0)
+            mean_ratio_ary.append(0)
+        
+        to_call_ary.append(to_call)
+        
+        if to_call:
+            n_hap = len(data['haps'])
+            n_hap_ary.append(n_hap)
+            est_freq_ary.append(data['freq'])
+            concordance_ary.append(data['concordance'])
+            mq_ary.append(data['mean_mq'])
+            bad_alignment_region_ary.append(check_low_mq(data['mq']))
+
+            true_hap_idx = data['true_hap_idx']
+            if true_hap_idx == -9:
+                true_hap_idx_ary.append(-9)
+                true_info_ary.append(0)
+            else:
+                true_hap_idx_ary.append(true_hap_idx)
+                true_info_ary.append(data['info'][true_hap_idx])
+
+            if n_hap == 1:
+                max_info_ary.append(0)
+                max_maf_ary.append(0)
+                second_info_ary.append(0)
+            else:
+                max_info_idx = np.array(data['info'][1:]).argmax() + 1
+                max_info_ary.append(data['info'][max_info_idx])
+                max_maf_ary.append(data['freq'][max_info_idx])
+                second_info_ary.append(data['info'][1])
+        else:
+            n_hap_ary.append(0)
+            true_info_ary.append(0)
+            est_freq_ary.append(0)     
+            concordance_ary.append(0)
+            mq_ary.append(0)
+            bad_alignment_region_ary.append(0)
+            true_hap_idx_ary.append(-9)
+            max_info_ary.append(0)
+            max_maf_ary.append(0)
+            second_info_ary.append(0)
+
+    df['n_hap'] = n_hap_ary
+    df['freq'] = est_freq_ary
+    df['concordance'] = concordance_ary
+    df['mean_mq'] = mq_ary
+    df['contain_bad_alignment'] = bad_alignment_region_ary
+
+    df['true_hap_idx'] = true_hap_idx_ary
+    df['true_info'] = true_info_ary
+    df['max_info'] = max_info_ary
+    df['max_maf'] = max_maf_ary
+    df['second_info'] = second_info_ary
+    
+    df['to_call'] = to_call_ary
+    df['callable_windows'] = callable_windows_ary
+    df['mean_ratio'] = mean_ratio_ary
+
+    bed = pd.read_csv(bed, sep = '\t', header = None)
+    bed.columns = ['chr', 'start', 'end']
+
+    df1 = df.copy()
+    df1['is_endchr'] = False
+    df1 = df1.apply(check_endchr, args = (bed,), axis = 1)
+    return df1
+
+def parse_nonahore_result3(bed = '/well/band/users/rbx225/GAMCC/data/bedgraph/GRCh38.autosomes.bed', 
+                          eichler_manifest = '/well/band/users/rbx225/recyclable_files/eichler_sv/variants_freeze4_sv_insdel.tsv.gz',
+                         eichler_vcf = '/well/band/users/rbx225/recyclable_files/eichler_sv/variants_freeze4_sv_insdel_alt.vcf.gz'):
+    df = pd.read_csv(eichler_manifest, sep = '\t', compression = 'gzip')
+    main_chrs = [f'chr{i}' for i in range(1,23)] + ['X', 'Y']
+    df = df[df['#CHROM'].isin(main_chrs)]
+    df['PG_AFR_AF'] =  df['PG_INFO_AFR'].str.split(';').str.get(0).str.split('=').str.get(1).astype(float)
+    df = df.sort_values(by = 'POP_AFR_AF', ascending = False)
+    df = df[(df['SVLEN'] > 5000) & ((df['POP_AFR_AF'] >= 0.05) | (df['PG_AFR_AF'] >= 0.05))]
+    df = df[['#CHROM', 'POS', 'END', 'SVTYPE', 'SVLEN','ID']].reset_index(drop = True)
+
+    x = lcwgsus.read_vcf(eichler_vcf)
+    x = x[x['ID'].isin(df['ID'])].reset_index(drop = True)
+    df = pd.merge(df, x[['ID', 'ref', 'alt', 'INFO']], on = ['ID'])
+    df['TRF'] = df['INFO'].apply(lambda x: 1 if 'REF_TRF' in x else 0)
+
+    n_hap_ary = []
+    true_info_ary = []
+    concordance_ary = []
+    est_freq_ary = []
+    mq_ary = []
+    bad_alignment_region_ary = []
+    true_hap_idx_ary = []
+    second_info_ary = []
+    max_info_ary = []
+    max_maf_ary = []
+    to_call_ary = []
+    callable_windows_ary = []
+    mean_ratio_ary = []
+    
+    for ix in range(len(df)):
+        infile = f'results/nonahore/eichler/nonahore3/region{ix}/results.pickle'
         if os.path.exists(infile):
             data = read_pickle(infile)
             to_call = data['to_call']
@@ -442,7 +548,7 @@ def read_coverage_data(file_path, sep = ','):
     samples = [s.split(':')[0] for s in samples]
     return samples, bins, coverage
 
-def check_endchr(r, cutoff = 1e6):
+def check_endchr(r, bed, cutoff = 1e6):
     c = r['#CHROM']
     s = r['POS']
     endchr = bed[bed['chr'] == c]['end'].values[0]
@@ -479,7 +585,7 @@ def calculate_mappability_per_bin(df, start, end, binsize=1000):
     out.columns = ['position', 'mappability']
     return out
 
-def assess_bins(df, plausible_boundaries, map_t = 0.9, mq_t = 20, percent_windows_t = 0.5):
+def assess_bins(df, plausible_boundaries, map_t = 0.9, mq_t = 20, percent_windows_t = 0.25):
     start_idx, end_idx = plausible_boundaries
     metrics = df.copy()
     indices = np.where((metrics['mappability'] >= map_t) & (metrics['total:mean_mq'] >= mq_t))[0]
@@ -538,6 +644,38 @@ def normalise_by_flank2(df, start, end, flank, side = 'both'):
         cov = left_flank.iloc[:,1:-1].to_numpy()
     elif side == 'right':
         cov = right_flank.iloc[:,1:-1].to_numpy()
+    else:
+        raise ValueError("Unsupported side.")    
+        
+    means = np.mean(cov, axis = 0)
+    variances = np.var(cov, axis = 0, ddof = 1)
+    return means, variances
+
+def normalise_by_flank3(df, chromosome, start, end, flank, side = 'both', 
+                        mapp = '/well/band/users/rbx225/recyclable_files/eichler_sv/mappability.bed.gz',
+                        map_cutoff = 0.9):
+    fstart = max(start-flank, df.iloc[0,0])
+    fend = min(end+flank, df.iloc[-1,0])
+    
+    tsv1 = read_bed_tabix(mapp, chromosome, fstart, start)
+    metrics1 = calculate_mappability_per_bin(tsv1, fstart, start)
+    tsv2 = read_bed_tabix(mapp, chromosome, end, fend)
+    metrics2 = calculate_mappability_per_bin(tsv2, end, fend)
+    
+    left_flank = df[(df['position'] >= fstart) & (df['position'] < start)]
+    left_flank = pd.merge(left_flank, metrics1, on = ['position'])
+    left_flank = left_flank[(left_flank['mappability'] >= map_cutoff) & (left_flank['total:coverage'] != 0)]
+    right_flank = df[(df['position'] >= end) & (df['position'] < fend)]
+    right_flank = pd.merge(right_flank, metrics2, on = ['position'])
+    right_flank = right_flank[(right_flank['mappability'] >= map_cutoff) & (right_flank['total:coverage'] != 0)]
+    
+    if side == 'both':
+        cov = pd.concat([left_flank, right_flank], axis = 0)
+        cov = cov.iloc[:,1:-2].to_numpy()
+    elif side == 'left':
+        cov = left_flank.iloc[:,1:-2].to_numpy()
+    elif side == 'right':
+        cov = right_flank.iloc[:,1:-2].to_numpy()
     else:
         raise ValueError("Unsupported side.")    
         
@@ -1072,7 +1210,8 @@ def check_sv2(true_hap_ind, h, svtype, plausible_boundaries, include_bins):
     else:
         c2p = False
     c3 = ((svtype == 'INS' and np.any(h >= 2)) or (svtype == 'DEL' and np.any(h == 0)))
-    return c1 and (c2 or c2p) and c3
+    c4 = (not np.any(h == 9))
+    return c1 and (c2 or c2p) and c3 and c4
 
 def check_sv(true_hap_ind, h, svtype, plausible_boundaries, include_bins):
     start_idx, end_idx = plausible_boundaries
@@ -1084,8 +1223,8 @@ def check_sv(true_hap_ind, h, svtype, plausible_boundaries, include_bins):
     else:
         c2p = False
     c3 = ((svtype == 'INS' and np.any(h >= 2)) or (svtype == 'DEL' and np.any(h == 0)))
-    
-    return c1 and (c2 or c2p) and c3
+    c4 = (not np.any(h == 9))
+    return c1 and (c2 or c2p) and c3 and c4
 
 def compare_plausible_sv2(arr, start_idx, end_idx, include_bins, n_bins):
     full = np.full(n_bins, None)
@@ -1211,6 +1350,44 @@ def print_avg_concordance(df):
     print('DEL:', df[df['SVTYPE'] == 'DEL']['concordance'].mean())
     print('INS:', df[df['SVTYPE'] == 'INS']['concordance'].mean())
     return None
+
+def calculate_sv_result_category(df, info_cutoff = 0.8):
+    counts = pd.DataFrame(np.zeros((2,4)),columns = ['Monomorphic', 'Wrong SV', f'True SV (INFO<{info_cutoff})', f'True SV (INFO>{info_cutoff})'])
+    svtypes = ['DEL', 'INS']
+    Ns = []
+    for i, t in enumerate(svtypes):
+        tmp1 = df[df['SVTYPE'] == t]
+        N = len(tmp1)
+        Ns.append(N)
+
+        counts.iloc[i, 0] = (tmp1['n_hap'] == 1).sum()/N
+        counts.iloc[i, 1] = (tmp1['concordance'] == 0).sum()/N - counts.iloc[i, 0]
+
+        tmp2 = tmp1[tmp1['concordance'] != 0]
+        counts.iloc[i, 2] = (tmp2['true_info'] <= info_cutoff).sum()/N
+        counts.iloc[i, 3] = (tmp2['true_info'] > info_cutoff).sum()/N
+        
+    counts['svtype'] = svtypes
+    return counts
+
+def calculate_sv_result_category2(df):
+    counts = pd.DataFrame(np.zeros((2,4)),columns = ['Monomorphic', 'Wrong SV', 'True SV (biallelic)', 'True SV (multi-allelic)'])
+    svtypes = ['DEL', 'INS']
+    Ns = []
+    for i, t in enumerate(svtypes):
+        tmp1 = df[df['SVTYPE'] == t]
+        N = len(tmp1)
+        Ns.append(N)
+
+        counts.iloc[i, 0] = (tmp1['n_hap'] == 1).sum()/N
+        counts.iloc[i, 1] = (tmp1['concordance'] == 0).sum()/N - counts.iloc[i, 0]
+
+        tmp2 = tmp1[tmp1['concordance'] != 0]
+        counts.iloc[i, 2] = (tmp2['n_hap'] == 2).sum()/N
+        counts.iloc[i, 3] = (tmp2['n_hap'] > 2).sum()/N
+        
+    counts['svtype'] = svtypes
+    return counts
 
 def plot_sv_coverage(cov, chromosome, start, end, flank, calling_dict, side = 'both', tick_step = 0.1):
     means, _ = normalise_by_flank(cov, start, end, flank, side = side)
@@ -1467,6 +1644,36 @@ def plot_mappability(df):
     plt.ylabel("Mappability")
     return None
 
+def plot_sv_category_pie(df, svtype = 'DEL'):
+    if svtype == 'DEL':
+        ix = 0
+    else:
+        ix = 1
+        
+    tmp = df.iloc[:,:4]
+    labels = tmp.columns.tolist()
+    counts = tmp.loc[ix,:].values
+    
+    true_fractions = counts / counts.sum()
+
+    adjustment = 0
+    fake_counts = counts + adjustment
+    visual_fractions = fake_counts / fake_counts.sum()
+
+    colors = plt.cm.RdYlBu(np.linspace(0, 1, len(labels)))
+
+    fig, ax = plt.subplots(figsize=(5,5))
+    wedges, texts, autotexts = ax.pie(
+        visual_fractions,
+        colors=colors,
+        autopct='%1.1f%%',
+        wedgeprops={'edgecolor': 'black', 'linewidth': 1, 'alpha': 0.7}
+    )
+
+    ax.legend(wedges, labels, title="Categories", loc = 'center left', bbox_to_anchor = (1,0.5))
+
+    plt.axis('equal')
+    return None
 
 def calculate_score_per_alignment(cigars, cg = -6, cm = 0, cx = -4, ce = -2):
     score = 0

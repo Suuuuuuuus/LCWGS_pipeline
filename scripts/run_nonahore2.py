@@ -109,7 +109,7 @@ def main(regions, sv_df_file, eichler_file, ix, ofile, bin_size = 1000):
             pickle.dump(outputs, of)
         return
     
-    means, variances = normalise_by_flank2(cov, start, end, flank)
+    means, variances = normalise_by_flank3(cov, chromosome, start, end, flank)
     samples, coverage = extract_target_cov(cov, start, end)
     coverage = coverage[include_bins, :]
     results = nonahore(means, variances, coverage, n_recomb = 1000, n_iter = 2000, verbose = False)
