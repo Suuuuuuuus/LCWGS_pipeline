@@ -24,6 +24,13 @@ pair = ['lc', 'hc']
 axis = ['h', 'v']
 
 imputation_dir = config['imputation_dir']
+imputation_dir_new = config['imputation_dir'][:2]
+
+rule new_all:
+    input:
+        vcf = expand("results/wip_vcfs/malariaGen_v1_b38/vanilla/combined_sites/lc.chr{chr}.vcf.gz", chr = chromosome),
+        v_impacc_eth = expand("{imp_dir}impacc/by_eth/by_sample/{eth}.chr{chr}.v.impacc.tsv", imp_dir = imputation_dir_new, eth = ethnicities, chr = chromosome),
+        eth_impacc_h = expand("{imp_dir}impacc/by_eth/by_variant/{eth}.all.h.impacc.tsv", imp_dir = imputation_dir_new, eth = ethnicities),
 
 rule post_gw_all:
     input:

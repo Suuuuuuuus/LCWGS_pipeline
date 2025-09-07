@@ -28,33 +28,25 @@ denovo_regions = len(sv_df)
 
 rule all:
     input:
-        pickle1 = expand('results/nonahore/eichler/nonahore3/region{eichler}/results.pickle', eichler = [40]),
-        pickle2 = expand('results/nonahore/eichler/nonahore2/region{eichler}/results.pickle', eichler = [40]),
+        called = expand("results/hla/call/{id}/hla/R1_bestguess_G.txt", id = ['IDT0481'])
 
-rule run_nonahore3_on_eichler:
+rule hla_la_calling:
     input:
-        sv_df_file = 'results/nonahore/eichler/manifest.5K.5percent.tsv'
+        bam = "data/bams/{id}.bam",
+        bai = "data/bams/{id}.bam.bai"
     output:
-        pickle = 'results/nonahore/eichler/nonahore3/region{eichler}/results.pickle'
+        called = "results/hla/call/{id}/hla/R1_bestguess_G.txt"
+    resources:
+        mem = '60G'
     threads: 4
-    params:
-        eichler_file = '/well/band/users/rbx225/recyclable_files/eichler_sv/variants_freeze4_sv_insdel.tsv.gz',
-        chunk_file = 'data/imputation_accessories/5Mb_chunks_for_coverage.json',
-        odir = 'results/nonahore/eichler/nonahore3/region{eichler}/',
-        row_ix = '{eichler}'
-    script:
-        '/well/band/users/rbx225/GAMCC/scripts/run_nonahore3.py'
+    shell: """
+        mkdir -p results/hla/call/{wildcards.id}/
+        module load Java/17
 
-rule run_nonahore2_on_eichler:
-    input:
-        sv_df_file = 'results/nonahore/eichler/manifest.5K.5percent.tsv'
-    output:
-        pickle = 'results/nonahore/eichler/nonahore2/region{eichler}/results.pickle'
-    threads: 4
-    params:
-        eichler_file = '/well/band/users/rbx225/recyclable_files/eichler_sv/variants_freeze4_sv_insdel.tsv.gz',
-        chunk_file = 'data/imputation_accessories/5Mb_chunks_for_coverage.json',
-        odir = 'results/nonahore/eichler/nonahore2/region{eichler}/',
-        row_ix = '{eichler}'
-    script:
-        '/well/band/users/rbx225/GAMCC/scripts/run_nonahore2.py'
+        HLA-LA.pl \
+        --BAM {input.bam} \
+        --graph PRG_MHC_GRCh38_withIMGT \
+        --workingDir /well/band/users/rbx225/GAMCC/results/hla/call/ \
+        --sampleID {wildcards.id} \
+        --maxThreads {threads}
+    """
