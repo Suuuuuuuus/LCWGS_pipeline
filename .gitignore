@@ -7,11 +7,14 @@
 data/
 results/
 *.tsv
-scripts/submit_test.sh
 logs/
 graphs/
 tmp/
 __pycache__
+scripts/submit_test.sh
+scripts/lcSV/*
+scripts/*nonahore*
+scripts/notebooks/*
 scripts/__pycache__
 .vscode/
 *.pdf
