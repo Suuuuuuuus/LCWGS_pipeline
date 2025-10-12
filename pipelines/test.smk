@@ -18,35 +18,41 @@ from hla_align_functions import *
 hla_ref_panel_indir = "results/hla/imputation/ref_panel/auxiliary_files/"
 hla_genes = ['A', 'B', 'C', 'DRB1', 'DQB1']
 samples_fv = read_tsv_as_lst('data/sample_tsvs/fv_idt_names.tsv')
-samples_hc = read_tsv_as_lst(config['samples_hc'])
-IPD_IMGT_versions = ['3390', '3570']
-HLA_GENES_ALL_EXPANDED_PLUS_DRB26789 = HLA_GENES_ALL_EXPANDED + ['DRB26789']
-
-sv_df_file = 'results/nonahore/denovo/manifest.5K.5percent.tsv'
-sv_df = pd.read_csv(sv_df_file, sep = '\t')
-denovo_regions = len(sv_df)
+SEED = 42
 
 rule all:
     input:
-        called = expand("results/hla/call/{id}/hla/R1_bestguess_G.txt", id = ['IDT0481'])
+        imputed_merged_ref_v3570 = expand("results/hla/imputation/QUILT_HLA_result_db/{id}/{hla_gene}/quilt.hla.output.combined.all.txt", hla_gene = ['A'], id = ['IDT0481'])
 
-rule hla_la_calling:
+
+
+rule hla_imputation_db:
     input:
         bam = "data/bams/{id}.bam",
-        bai = "data/bams/{id}.bam.bai"
+        ref_panel = "results/hla/imputation/ref_panel/QUILT_prepared_reference_db/HLA{hla_gene}fullallelesfilledin.RData"
     output:
-        called = "results/hla/call/{id}/hla/R1_bestguess_G.txt"
+        bamlist = temp("results/hla/imputation/QUILT_HLA_result_db/{id}/{id}.{hla_gene}.tsv"),
+        imputed = "results/hla/imputation/QUILT_HLA_result_db/{id}/{hla_gene}/quilt.hla.output.combined.all.txt"
     resources:
-        mem = '60G'
-    threads: 4
+        mem = '20G'
+    threads: 2
+    conda: "sus"
+    params:
+        quilt_hla = tools['quilt_hla'],
+        fa_dict = "data/references/concatenated/GRCh38_no_alt_Pf3D7_v3_phiX.dict",
+        ref_dir = "results/hla/imputation/ref_panel/QUILT_prepared_reference_db/",
+        seed = SEED
     shell: """
-        mkdir -p results/hla/call/{wildcards.id}/
-        module load Java/17
+        mkdir -p results/hla/imputation/QUILT_HLA_result_optimal/{wildcards.id}/{wildcards.hla_gene}/
+        echo {input.bam} >> {output.bamlist}
 
-        HLA-LA.pl \
-        --BAM {input.bam} \
-        --graph PRG_MHC_GRCh38_withIMGT \
-        --workingDir /well/band/users/rbx225/GAMCC/results/hla/call/ \
-        --sampleID {wildcards.id} \
-        --maxThreads {threads}
+        {params.quilt_hla} \
+        --outputdir="results/hla/imputation/QUILT_HLA_result_db/{wildcards.id}/{wildcards.hla_gene}/" \
+        --quilt_seed={params.seed} \
+        --bamlist={output.bamlist} \
+        --region={wildcards.hla_gene} \
+        --n_seek_iterations=2 \
+        --prepared_hla_reference_dir={params.ref_dir} \
+        --quilt_hla_haplotype_panelfile={params.ref_dir}/quilt.hrc.hla.{wildcards.hla_gene}.haplotypes.RData \
+        --dict_file={params.fa_dict}
     """

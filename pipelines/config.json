@@ -89,7 +89,9 @@
         
         "results/imputation_comparison/vanilla/lc_malariaGen_v3_b38--chip--typed/", 
         "results/imputation_comparison/vanilla/lc_malariaGen_v3_b38--chip--typed_high_info/", 
-        "results/imputation_comparison/vanilla/lc_malariaGen_v3_b38--hc--snps_gw/"
+        "results/imputation_comparison/vanilla/lc_malariaGen_v3_b38--hc--snps_gw/",
+
+        "results/imputation_comparison/vanilla/lc_malariaGen_v1_b38_topmed_new--hc--snps_gw/"
     ],
     "lc_vcf_dir": [
         "results/imputation/vcfs/oneKG/", 
@@ -112,7 +114,9 @@
 
         "results/imputation/vcfs/malariaGen_v3_b38/",
         "results/wip_vcfs/malariaGen_v3_b38/vanilla/high_info_high_af/",
-        "results/imputation/vcfs/malariaGen_v3_b38/"
+        "results/imputation/vcfs/malariaGen_v3_b38/",
+
+        "results/two-stage-imputation/vanilla/malariaGen_v1_b38_topmed_new/vcf/"
     ],
     "hc_vcf_dir": [
         "results/chip/vcf/chip_by_chr/", 
@@ -135,6 +139,8 @@
 
         "results/chip/vcf/chip_by_chr/",
         "results/chip/vcf/chip_by_chr/",
+        "results/call/recal_vcf/oneKG/",
+
         "results/call/recal_vcf/oneKG/"
     ],
     "tmp2": [

@@ -187,6 +187,22 @@ rule filter_lc_sites:
             save_name="lc.chr" + str(wildcards.chr) + ".vcf.gz"
             )
 
+rule filter_lc_sites1:
+    input:
+        vcf = "results/wip_vcfs/oneKG/vanilla/high_info_high_af/lc.chr{chr}.vcf.gz",
+        sites = "data/chip/Affy6_with_omni5m.tsv"
+    output:
+        filtered_vcf = "results/wip_vcfs/oneKG/vanilla/combined_sites/lc.chr{chr}.vcf.gz"
+    resources:
+        mem = '40G'
+    threads: 4
+    shell: """
+        mkdir -p results/wip_vcfs/oneKG/vanilla/combined_sites/
+        
+        bcftools view -R {input.sites} -Oz -o {output.filtered_vcf} {input.vcf}
+        tabix -f {output.filtered_vcf}
+    """
+
 rule filter_oneKG_low_confidence_regions:
     input:
         filtered_vcf = "results/wip_vcfs/{panel}/vanilla/high_info_high_af/lc.chr{chr}.vcf.gz"

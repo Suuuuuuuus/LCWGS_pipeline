@@ -2351,3 +2351,35 @@ rule hla_alignment_matrix:
         alignment_scores_raw.to_csv(output.matrix, float_format='%.6f', sep = ' ', header = True, index = True)
         
 # ncores = 2*(len(os.sched_getaffinity(0))) - 1
+
+rule all:
+    input:
+        filtered_vcf = expand("results/wip_vcfs/malariaGen_v1_b38/vanilla/topmed_sites/lc.chr{chr}.vcf.gz", chr = chromosome)
+
+rule get_TOPMed_sites:
+    input:
+        vcf = "results/two-stage-imputation/vanilla/malariaGen_v1_b38_topmed/vcf/chr{chr}.dose.vcf.gz"
+    output:
+        sites = "data/topmed_variants/chr{chr}.tsv"
+    resources:
+        mem = '40G'
+    threads: 4
+    shell: """
+        bcftools query -f '%CHROM\t%POS\n' {input.vcf} | sort -u > {output.sites}
+    """
+
+rule filter_topmed_sites:
+    input:
+        vcf = "results/wip_vcfs/malariaGen_v1_b38/vanilla/high_info_high_af/lc.chr{chr}.vcf.gz",
+        sites = "data/topmed_variants/chr{chr}.tsv"
+    output:
+        filtered_vcf = "results/wip_vcfs/malariaGen_v1_b38/vanilla/topmed_sites/lc.chr{chr}.vcf.gz"
+    resources:
+        mem = '40G'
+    threads: 4
+    shell: """
+        mkdir -p results/wip_vcfs/malariaGen_v1_b38/vanilla/topmed_sites/
+
+        bcftools view -R {input.sites} -Oz -o {output.filtered_vcf} {input.vcf}
+        tabix -f {output.filtered_vcf}
+    """
