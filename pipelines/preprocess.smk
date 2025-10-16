@@ -23,7 +23,7 @@ rule trimmomatic_lc:
         fwd_unpair = "data/fastq_cleaned/{id}_unpaired_1.fastq.gz",
         rev_unpair = "data/fastq_cleaned/{id}_unpaired_2.fastq.gz"
     params:
-        adapters = "/well/band/users/rbx225/conda/skylake/pkgs/trimmomatic-0.39-hdfd78af_2/share/trimmomatic-0.39-2/adapters/TruSeq3-PE-2.fa"
+        adapters = f"{home_dir}/conda/skylake/pkgs/trimmomatic-0.39-hdfd78af_2/share/trimmomatic-0.39-2/adapters/TruSeq3-PE-2.fa"
     threads: 4
     resources:
         mem = '30G'
@@ -52,7 +52,7 @@ rule trimmomatic_hc:
         fwd_unpair = "data/fastq_cleaned/{id}_unpaired_1.fastq.gz",
         rev_unpair = "data/fastq_cleaned/{id}_unpaired_2.fastq.gz"
     params:
-        adapters = "/well/band/users/rbx225/conda/skylake/pkgs/trimmomatic-0.39-hdfd78af_2/share/trimmomatic-0.39-2/adapters/TruSeq3-PE-2.fa"
+        adapters = f"{home_dir}/conda/skylake/pkgs/trimmomatic-0.39-hdfd78af_2/share/trimmomatic-0.39-2/adapters/TruSeq3-PE-2.fa"
     threads: 4
     resources:
         mem = '30G'

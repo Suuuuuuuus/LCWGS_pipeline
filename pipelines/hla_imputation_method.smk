@@ -15,7 +15,7 @@ import seaborn as sns
 import sys
 home_dir = config['home_dir']
 sys.path.append(f"{home_dir}software/lcwgsus/")
-sys.path.append(f'{homedir}software/QUILT_test/QUILT/Python/')
+sys.path.append(f'{home_dir}software/QUILT_test/QUILT/Python/')
 import lcwgsus
 
 from lcwgsus.variables import *

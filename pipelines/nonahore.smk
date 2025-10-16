@@ -47,7 +47,7 @@ rule run_nonahore1_on_eichler:
         pickle = 'results/nonahore/eichler/nonahore1/region{eichler}/results.pickle'
     threads: 4
     params:
-        eichler_file = '/well/band/users/rbx225/recyclable_files/eichler_sv/variants_freeze4_sv_insdel.tsv.gz',
+        eichler_file = f'{home_dir}recyclable_files/eichler_sv/variants_freeze4_sv_insdel.tsv.gz',
         chunk_file = 'data/imputation_accessories/5Mb_chunks_for_coverage.json',
         odir = 'results/nonahore/eichler/nonahore1/region{eichler}/',
         row_ix = '{eichler}'
@@ -61,7 +61,7 @@ rule run_nonahore2_on_eichler:
         pickle = 'results/nonahore/eichler/nonahore2/region{eichler}/results.pickle'
     threads: 4
     params:
-        eichler_file = '/well/band/users/rbx225/recyclable_files/eichler_sv/variants_freeze4_sv_insdel.tsv.gz',
+        eichler_file = f'{home_dir}recyclable_files/eichler_sv/variants_freeze4_sv_insdel.tsv.gz',
         chunk_file = 'data/imputation_accessories/5Mb_chunks_for_coverage.json',
         odir = 'results/nonahore/eichler/nonahore2/region{eichler}/',
         row_ix = '{eichler}'
@@ -75,7 +75,7 @@ rule run_nonahore3_on_eichler:
         pickle = 'results/nonahore/eichler/nonahore3/region{eichler}/results.pickle'
     threads: 4
     params:
-        eichler_file = '/well/band/users/rbx225/recyclable_files/eichler_sv/variants_freeze4_sv_insdel.tsv.gz',
+        eichler_file = f'{home_dir}recyclable_files/eichler_sv/variants_freeze4_sv_insdel.tsv.gz',
         chunk_file = 'data/imputation_accessories/5Mb_chunks_for_coverage.json',
         odir = 'results/nonahore/eichler/nonahore3/region{eichler}/',
         row_ix = '{eichler}'
