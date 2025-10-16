@@ -22,8 +22,9 @@ import subprocess
 import matplotlib.pyplot as plt
 import seaborn as sns
 import sys
-sys.path.append("/well/band/users/rbx225/software/lcwgsus/")
-sys.path.append('/well/band/users/rbx225/software/QUILT_test/QUILT/Python/')
+home_dir = config['home_dir']
+sys.path.append(f"{home_dir}software/lcwgsus/")
+sys.path.append(f'{home_dir}software/QUILT_test/QUILT/Python/')
 import lcwgsus
 
 from lcwgsus.variables import *
@@ -35,7 +36,7 @@ samples_lc = read_tsv_as_lst(config['samples_lc'])
 samples_hc = read_tsv_as_lst(config['samples_hc'])
 samples_fv = read_tsv_as_lst('data/sample_tsvs/fv_idt_names.tsv')
 samples_fv_gm = read_tsv_as_lst('data/sample_tsvs/fv_gm_names.tsv')
-samples_oneKG = read_tsv_as_lst("/well/band/users/rbx225/recyclable_files/ref_panels/oneKG_30x/samples_to_phase.tsv")
+samples_oneKG = read_tsv_as_lst(f"{home_dir}recyclable_files/ref_panels/oneKG_30x/samples_to_phase.tsv")
 chromosome = [i for i in range(1,23)]
 hla_genes = ['A', 'B', 'C', 'DRB1', 'DQB1']
 IPD_IMGT_versions = ['3390', '3570']

@@ -11,7 +11,6 @@
     "sample_linker": "data/metadata/sample_linker.csv",
     "concatenate": true,
     "clean_fastq": true,
-    "adapter": "/well/band/users/rbx225/conda/skylake/pkgs/trimmomatic-0.39-hdfd78af_2/share/trimmomatic-0.39-2/adapters/TruSeq3-PE-2.fa",
     "reheader": false,
     "subsample_depth_1x": 10596026,
     "subsample_depth": 0.6,
@@ -34,7 +33,6 @@
     "gatk_to_index": ["data/GATK_resource_bundle/hapmap_3.3.hg38.vcf.gz", "data/GATK_resource_bundle/1000G_omni2.5.hg38.vcf.gz", "data/GATK_resource_bundle/1000G_phase1.snps.high_confidence.hg38.vcf.gz", "data/GATK_resource_bundle/Homo_sapiens_assembly38.known_indels.vcf.gz", "data/GATK_resource_bundle/Mills_and_1000G_gold_standard.indels.hg38.vcf.gz", "data/GATK_resource_bundle/dbsnp_146.hg38.vcf.gz"],
     "hc_vcf_rename_samples": "data/file_lsts/hc_chip_names.tsv",
 
-    "QUILT_HOME": "/well/band/users/rbx225/software/QUILT/",
     "RECOMB_POP": "YRI",
     "NGEN": 100,
     "WINDOWSIZE": 5000000,
@@ -55,9 +53,6 @@
     "sr_error2": ["0.0034-0.0105", "0", "0.0034-0.0105", "0", "0.0001", "0", "0.0001", "0"],
     "sr_haplotypes": ["mat", "pat"],
     "sr_sim_coverage": "0.6",
-
-    "mini_analysis_dir": "/well/band/users/rbx225/GAMCC/results/mini_imputation/",
-    "mini_bamlist": "/well/band/users/rbx225/GAMCC/results/mini_imputation/bamlist.txt",
 
     "gw_info_filter": 0.9,
     "hla_info_filter": 0.9,

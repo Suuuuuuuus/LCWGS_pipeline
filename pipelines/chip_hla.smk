@@ -1,13 +1,14 @@
 configfile: "pipelines/config.json"
 include: "auxiliary.smk"
 include: "software.smk"
+home_dir = config['home_dir']
 
 import json
 import pandas as pd
 import numpy as np
 import sys
 import os
-sys.path.append("/well/band/users/rbx225/software/lcwgsus/")
+sys.path.append(f"{home_dir}software/lcwgsus/")
 import lcwgsus
 
 chromosome = [i for i in range(1,23)]

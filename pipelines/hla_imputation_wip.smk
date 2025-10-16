@@ -13,8 +13,9 @@ import subprocess
 import matplotlib.pyplot as plt
 import seaborn as sns
 import sys
-sys.path.append("/well/band/users/rbx225/software/lcwgsus/")
-sys.path.append('/well/band/users/rbx225/software/QUILT_test/QUILT/Python/')
+home_dir = config['home_dir']
+sys.path.append(f"{home_dir}software/lcwgsus/")
+sys.path.append(f'{home_dir}software/QUILT_test/QUILT/Python/')
 import lcwgsus
 
 from lcwgsus.variables import *

@@ -8,7 +8,8 @@ import pandas as pd
 import numpy as np
 import sys
 import os
-sys.path.append("/well/band/users/rbx225/software/lcwgsus/")
+home_dir = config['home_dir']
+sys.path.append(f"{home_dir}software/lcwgsus/")
 import lcwgsus
 
 # chunks = read_tsv_as_lst("data/bedgraph/bam_chunks.bed")

@@ -55,17 +55,21 @@ Explanation of entries in the config file
     * `bed_regions`: Regions to be removed
     * `access_bed`: Accessible region from the 1KG accessibility track. This is more generally considered in coverage analysis
     * `panels`: List of reference panels to be used for imputation
-    * `QUILT_HOME`: Address where the `QUILT` software resides
     * `ANALYSIS_DIR`: Address for the analysis folder. Should be `results/imputation/`
     * `RECOMB_POP`: Three-letter 1KG abbreviation for the population to be used
     * `NGEN`: Number of generations
     * `WINDOWSIZE`: Size of imputation chunks 
     * `BUFFER`: Imputation buffer size
-    * `BAMLIST`: Address of the `bamlist.txt` file which stores all bam files to be imputed
-    * `PANEL_NAME`: Name of the current imputation panel
+    * `bam_batch`: Number of QUILT job to submit for parallelisation purposes
+
+Lots of the other entries in this file are currently for private use and can be neglected.
 
 Run the pipeline
 -------------
+
+* Before running the pipeline, make sure this variable is made global from which the pipeline will learn the home directory.
+
+`export HOME_DIR="<path_to_dir>"`
 
 * For now, the whole pipeline is separated into different snakemake files that groups a bunch of jobs together. There are three master files for either lc, hc and chip analysis are in place. To run a specific rule in a specific file, use, for example, `snakemake -s pipelines/master_lc.smk -c 1 alignment_all` (needless to say, don't forget to dry-run first by `-n`).
 * Alternatively, a `submit_snakemake.sh` submission script is provided specifically for cluster users. You should first modify the files in the `slurm/` folder to enable a correct communication between snakemake and your job management system. After that, you can run this file with 0, 3 or 4 parameters:

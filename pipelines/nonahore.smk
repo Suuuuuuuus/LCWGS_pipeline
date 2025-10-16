@@ -8,14 +8,10 @@ import numpy as np
 import sys
 import os
 import pyreadr
-sys.path.append("/well/band/users/rbx225/software/lcwgsus/")
-sys.path.append('/well/band/users/rbx225/software/QUILT_test/QUILT/Python/')
+home_dir = config['home_dir']
+sys.path.append(f"{home_dir}software/lcwgsus/")
 import lcwgsus
 from lcwgsus.variables import *
-
-sys.path.append('/well/band/users/rbx225/GAMCC/scripts/lcSV/')
-sys.path.append('/Users/sus_zhang/Desktop/Suuuuuuuus/Low Coverage Data/gamcc/scripts/lcSV/')
-from lcSV import *
 
 replicates = 100
 
@@ -42,7 +38,7 @@ rule simulate_nonahore:
     params:
         odir = 'results/nonahore/simulate/plausibility/rep{rep}/'
     script:
-        '/well/band/users/rbx225/GAMCC/scripts/simulate_nonahore.py'
+        'scripts/simulate_nonahore.py'
 
 rule run_nonahore1_on_eichler:
     input:
@@ -56,7 +52,7 @@ rule run_nonahore1_on_eichler:
         odir = 'results/nonahore/eichler/nonahore1/region{eichler}/',
         row_ix = '{eichler}'
     script:
-        '/well/band/users/rbx225/GAMCC/scripts/run_nonahore1.py'
+        'scripts/run_nonahore1.py'
 
 rule run_nonahore2_on_eichler:
     input:
@@ -70,7 +66,7 @@ rule run_nonahore2_on_eichler:
         odir = 'results/nonahore/eichler/nonahore2/region{eichler}/',
         row_ix = '{eichler}'
     script:
-        '/well/band/users/rbx225/GAMCC/scripts/run_nonahore2.py'
+        'scripts/run_nonahore2.py'
 
 rule run_nonahore3_on_eichler:
     input:
@@ -84,7 +80,7 @@ rule run_nonahore3_on_eichler:
         odir = 'results/nonahore/eichler/nonahore3/region{eichler}/',
         row_ix = '{eichler}'
     script:
-        '/well/band/users/rbx225/GAMCC/scripts/run_nonahore3.py'
+        'scripts/run_nonahore3.py'
         
 rule run_nonahore_on_denovo:
     input:
@@ -97,4 +93,4 @@ rule run_nonahore_on_denovo:
         odir = 'results/nonahore/denovo/region{denovo}/',
         row_ix = '{denovo}'
     script:
-        '/well/band/users/rbx225/GAMCC/scripts/run_nonahore.py'
+        'scripts/run_nonahore.py'

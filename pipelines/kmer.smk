@@ -1,3 +1,5 @@
+include: "auxiliary.smk"
+include: "software.smk"
 configfile: "pipelines/config.json"
 
 import pandas as pd
@@ -12,11 +14,12 @@ rule classify_kmers:
         jf_quality = "results/kmer/{id}/read{read}/{id}_quality{read}.tsv",
         jf_position = "results/kmer/{id}/read{read}/{id}_position{read}.tsv"
     params:
-        read_length = 151
+        read_length = 151,
+        kmer = config["classify-kmers"]
     resources:
         mem_mb = 80000
     shell: """
-        /well/band/users/rbx225/software/dir/build/apps/classify-kmers -jf {input.jf} -op {output.jf_position} -oq {output.jf_quality} -or {output.jf_read} \
+        {params.kmer} -jf {input.jf} -op {output.jf_position} -oq {output.jf_quality} -or {output.jf_read} \
         -reads {input.ss_fastq} -length-to-track-5p {params.read_length} -length-to-track-3p 0
     """
 

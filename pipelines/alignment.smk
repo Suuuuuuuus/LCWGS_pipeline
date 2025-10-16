@@ -1,7 +1,7 @@
 configfile: "pipelines/config.json"
-
 include: "software.smk"
 include: "auxiliary.smk"
+home_dir = config['home_dir']
 
 clean_fastq = config['clean_fastq']
 reheader = config['reheader']

@@ -11,7 +11,8 @@ import pandas as pd
 import numpy as np
 import sys
 import os
-sys.path.append("/well/band/users/rbx225/software/lcwgsus/")
+home_dir = config['home_dir']
+sys.path.append(f"{home_dir}software/lcwgsus/")
 import lcwgsus
 
 samples_chip = read_tsv_as_lst(config['samples_chip'])
@@ -49,10 +50,3 @@ rule chip_qc_all:
         #UDUT2 = expand("results/chip/qc/PCs/chip_UDUT_{thinning}.exclude-duplicates.tsv.gz", thinning = chip_thinning)
         #vcf_qced = "results/chip/vcf/chip_qced.vcf.gz"
         PC = f"results/chip/qc/PCs/PCs.eigenvec"
-
-rule chip_imputation_all:
-    input:
-
-rule test_all:
-    input:
-        vcf = "results/tmp/{id}.{chr}.txt"

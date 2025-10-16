@@ -9,11 +9,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import sys
-sys.path.append("/well/band/users/rbx225/software/lcwgsus/")
+home_dir = config['home_dir']
+sys.path.append(f"{home_dir}software/lcwgsus/")
 import lcwgsus
 chromosome = [i for i in range(1,23)]
 
-QUILT_HOME = config["QUILT_HOME"]
 RECOMB_POP = config["RECOMB_POP"]
 NGEN = config["NGEN"]
 WINDOWSIZE = config["WINDOWSIZE"]
@@ -43,7 +43,7 @@ rule convert_recomb:
     wildcard_constraints:
         chr='\d{1,2}'
     shell: """
-        R -f {QUILT_HOME}scripts/make_b38_recomb_map.R \
+        R -f scripts/quilt_accessories/make_b38_recomb_map.R \
         --args results/imputation/ {RECOMB_POP} {wildcards.chr}
     """
 

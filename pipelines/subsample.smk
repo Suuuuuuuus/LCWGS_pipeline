@@ -1,5 +1,4 @@
 configfile: "pipelines/config.json"
-
 include: "software.smk"
 include: "auxiliary.smk"
 

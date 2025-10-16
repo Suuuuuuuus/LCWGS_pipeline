@@ -7,7 +7,8 @@ import pandas as pd
 import numpy as np
 import sys
 import os
-sys.path.append("/well/band/users/rbx225/software/lcwgsus/")
+home_dir = config['home_dir']
+sys.path.append(f"{home_dir}software/lcwgsus/")
 import lcwgsus
 from lcwgsus.variables import *
 

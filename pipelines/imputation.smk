@@ -9,7 +9,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import sys
-sys.path.append("/well/band/users/rbx225/software/lcwgsus/")
+home_dir = config['home_dir']
+sys.path.append(f"{home_dir}software/lcwgsus/")
 import lcwgsus
 
 chromosome = [i for i in range(1,23)]
