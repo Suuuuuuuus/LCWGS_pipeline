@@ -1,19 +1,18 @@
 LCWGS_pipeline
 =======================================
 
-LCWGS_pipeline is a low-coverage whole-genome sequencing (lcWGS) pipeline to process low, high coverage paired Illumina short-read sequencing data and DNA microarray data. 
+LCWGS_pipeline is a low-coverage whole-genome sequencing (lcWGS) pipeline, mainly developed for processing lcWGS paired-end data for genome-wide imputation and HLA imputation. In this repository, pipelines for processing high-coverage data and microarray data have also been included.
 
-Current analysis
+Overview
 -------------
 * Low-coverage (lc):
     * Preprocessing: adapter trimming using `trimmomatic` and duplicates removal using `fastuniq`
     * Fastqc
     * Subsampling using `seqtk`
-    * Breadth of coverage (see `mosdepth`)
-    * Depth of coverage
-    * Jellyfish k-mer analysis of error rate
-    * Duplication rate
-    * `QUILT` imputation with user-supplied reference panel
+    * Coverage analysis
+    * Sample sequencing QC to assess lcWGS data quality
+    * `QUILT` imputation
+    * HLA imputation
 * High-coverage (hc):
     * Preprocessing
     * Chunking up large fastqs for separate alignment using `seqkit`, followed by merging
@@ -21,19 +20,18 @@ Current analysis
 * DNA microarray (chip):
     * Convertion to vcf file format and basic qc
     * Preparing for imputation on the servers
-* Others:
-    * Lots of plotting, filtering and calculation utilities (though yet under-developped)
+
+Since this pipeline is mainly developed to process lcWGS data, description below focuses on such.
 
 Inputs
 -------------
 
 * A `pipelines/config.json` file to specify sample names, etc. You should modify this file which is under directory `pipelines`.
-* A `data/sample_tsvs/samples_lc.tsv`, a `data/sample_tsvs/chip.tsv` and a `data/sample_tsvs/samples_hc.tsv` file that stores sample name information for lc, hc and chip samples, respectively. Note that each bit of analysis can be run separately, and three corresponding snakemake master files are in place for separate data processing.
-* A bunch of `fastq` files for lc and hc samples.
-* A bunch of chip files for data processing. Our data requires a genotype file, a sample file and an annotation file.
-* An index `fa` file, or several `fa` files if concatenate is set `True` to join them up.
+* A `data/sample_tsvs/samples_lc.tsv` file that stores sample name information for lc samples. Note that each bit of analysis can be run separately, and three corresponding snakemake master files are in place for separate data processing.
+* Sequencing `fastq` files, must be placed and named `data/fastq/{id}_[1|2].fastq.gz` with `{id}` matching the sample identifiers in the specified sample files.
+* An index `fa` file.
 * If k-mer analysis is to be performed, high coverage jellyfish `jf` files should be provided for `classify-kmers` to find errors.
-* If imputation is to be performed, reference panel (as `vcf` files) and allele frequency files (a bash script under `scripts/extract_gnomAD_MAF.sh` is provided) should be provided. This part will be facilitated with (Prof. Robert Davis' QUILT package (https://github.com/rwdavies/QUILT) and a QUILT-wrap code (https://github.com/rwdavies/QUILT-wrap)).
+* If imputation is to be performed, reference panel (as `vcf` files) and allele frequency files (a bash script under `scripts/extract_gnomAD_MAF.sh` is provided) should be provided. This part will be facilitated with (Prof. Robert Davis' QUILT package (https://github.com/rwdavies/QUILT)).
 
 Explanation of entries in the config file
 -------------
@@ -65,16 +63,6 @@ Explanation of entries in the config file
     * `BUFFER`: Imputation buffer size
     * `BAMLIST`: Address of the `bamlist.txt` file which stores all bam files to be imputed
     * `PANEL_NAME`: Name of the current imputation panel
-* Hc:
-    * `samples_hc`: All high-coverage (hc) sample names
-    * `make_chunk`: `True` if the hc files need to be chunked
-    * `fastq_chunk_size`: Chunk size
-    * `hc_panel`: Name of the reference panel to be used for GATK HapCaller to call variants. Only sites in these vcfs will be called to ease comparison
-    * `bqsr_known_sites`: For GATK HapCaller to call variants
-* Chip:
-    * `chip_genotypes`: Chip genotype file
-    * `chip_samples`: Chip sample file
-    * `chip_annotation`: Chip annotation file
 
 Run the pipeline
 -------------
@@ -82,15 +70,9 @@ Run the pipeline
 * For now, the whole pipeline is separated into different snakemake files that groups a bunch of jobs together. There are three master files for either lc, hc and chip analysis are in place. To run a specific rule in a specific file, use, for example, `snakemake -s pipelines/master_lc.smk -c 1 alignment_all` (needless to say, don't forget to dry-run first by `-n`).
 * Alternatively, a `submit_snakemake.sh` submission script is provided specifically for cluster users. You should first modify the files in the `slurm/` folder to enable a correct communication between snakemake and your job management system. After that, you can run this file with 0, 3 or 4 parameters:
     * If no parameter is passed in, it generates the DAG for all rules.
-    * If multiple parameters are passed in, the first should be the name of the master file to run (lc, hc or chip), the second to be number of cores required, and the third should be the name of the snakemake rule file to be run (e.g.: alignment, chip_qc, etc.). The fourth is for other options that are passed to snakemake, like a dry-run option `-nr`.
-For example, you can submit by `./submit_snakemake.sh lc 8 alignment_all` which will run all rules till the end of everything in `alignment_all`. It will also run preprocessing rules as alignment requires pre-cleaning of the data. However, running multiple snakemake files are disencouraged, as between some rules the user might need to manually input something or run some scripts. It is always suggested to run the pipeline as granular (per snakemake rule file) as possible.
+    * If multiple parameters are passed in, the first should be the name of the master file to run (lc, hc or chip), the second to be number of cores required, and the third should be the name of the snakemake rule file to be run (e.g.: alignment, chip_qc, etc.). The fourth is for other options that are passed to snakemake, like a dry-run option `-nr`. For example, this will run all rules till the end of everything in `alignment_all`:
 
-Documentation
--------------
-
-Online documentation is currently UNAVAILABLE, due to its lack of priority :) 
-
-However, feel free to reach out, submit bugs, and/or make suggestions on improvement of this library. All are welcomed!
+    `./submit_snakemake.sh lc 1000 alignment_all -nr`
 
 Dependencies
 ------------
@@ -102,11 +84,11 @@ The pipeline requires a variety of utilities and packages, including but not lim
 Citation
 ------------
 
-LCWGS_pipeline is not a published work, so citing the GitHub repo suffices.
+LCWGS_pipeline is not yet a published work, so citing the GitHub repo suffices.
 
 Development
 -----------
 
 See the main site of LCWGS_pipeline: https://github.com/Suuuuuuuus/LCWGS_pipeline.
 
-Bugs shall be submitted to the [issue tracker](https://github.com/Suuuuuuuus/LCWGS_pipeline/issues). Please kindly provide a REPRODUCIBLE example demonstrating the problem, otherwise debugging per se is foolhardy :)
+Bugs shall be submitted to the [issue tracker](https://github.com/Suuuuuuuus/LCWGS_pipeline/issues).
