@@ -1,4 +1,5 @@
 {
+    "home_dir": "/well/band/users/rbx225/",
     "samples_lc": "data/sample_tsvs/samples_lc.tsv",
     "samples_hc": "data/sample_tsvs/samples_hc.tsv",
     "samples_chip": "data/sample_tsvs/samples_chip.tsv",
