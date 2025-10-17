@@ -67,7 +67,7 @@ Lots of the other entries in this file are currently for private use and can be 
 Run the pipeline
 -------------
 
-* Before running the pipeline, make sure this variable is made global from which the pipeline will learn the home directory.
+* Before running the pipeline, make sure this variable is made global in your environment as well as correctly specified in `pipelines/config.json`, from which the pipeline will learn the home directory.
 
 `export HOME_DIR="<path_to_dir>"`
 
