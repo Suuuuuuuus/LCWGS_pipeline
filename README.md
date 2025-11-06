@@ -46,7 +46,7 @@ git clone https://github.com/Suuuuuuuus/LCWGS_pipeline.git
 cd LCWGS_pipeline
 ```
 
-* Use a conda environment for software management. An example of environment fyi is in `scripts/conda.yml`. Additional software that is not installable via conda can be placed at `software/` (parallel to `LCWGS_pipeline`), and you can refer to `pipelines/software.smk` as additional examples. 
+* Use a conda environment for software management. An example of environment fyi is in `files/conda.yml`. Additional software that is not installable via conda can be placed at `software/` (parallel to `LCWGS_pipeline`), and you can refer to `pipelines/software.smk` as additional examples. 
 
 * Create directories to store data and results.
 
