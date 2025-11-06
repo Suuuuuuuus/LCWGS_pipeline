@@ -825,4 +825,3 @@ dependencies:
       - seaborn==0.13.0
       - statsmodels==0.14.0
       - threadpoolctl==3.5.0
-prefix: /well/band/users/rbx225/conda/skylake/envs/sus
